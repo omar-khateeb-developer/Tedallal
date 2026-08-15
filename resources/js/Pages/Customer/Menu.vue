@@ -1,7 +1,10 @@
 <script setup lang="ts">
+import AddItemModal from '@/Components/Customer/AddItemModal.vue';
+import CartDrawer from '@/Components/Customer/CartDrawer.vue';
+import CheckoutModal from '@/Components/Customer/CheckoutModal.vue';
 import CustomerLayout from '@/Layouts/CustomerLayout.vue';
-import { Link } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { router } from '@inertiajs/vue3';
+import { computed, onMounted, ref } from 'vue';
 import axios from 'axios';
 
 interface MenuItem {
@@ -22,36 +25,82 @@ const props = defineProps<{
     restaurant: { name: string; currency: string };
     table: { name: string; public_token: string };
     categories: Category[];
+    openCart?: boolean;
 }>();
 
 const activeCategory = ref(props.categories[0]?.id ?? 0);
 const cartCount = ref(0);
-const adding = ref<number | null>(null);
+const cartOpen = ref(false);
+const checkoutOpen = ref(false);
+const selectedItem = ref<MenuItem | null>(null);
+const adding = ref(false);
+const submitting = ref(false);
+const customerNote = ref('');
+const cartSubtotal = ref('0.00');
+const cartDrawerRef = ref<InstanceType<typeof CartDrawer> | null>(null);
+const errorMessage = ref('');
 
 const visibleItems = computed(() => {
     const cat = props.categories.find((c) => c.id === activeCategory.value);
     return cat?.active_items ?? [];
 });
 
-async function refreshCartCount() {
+async function refreshCartSummary() {
     try {
         const { data } = await axios.get('/api/public/cart');
         cartCount.value = data.data?.count ?? 0;
+        cartSubtotal.value = data.data?.subtotal ?? '0.00';
+        cartDrawerRef.value?.load();
     } catch {
         cartCount.value = 0;
     }
 }
 
-async function addToCart(item: MenuItem) {
-    adding.value = item.id;
+function openAddModal(item: MenuItem) {
+    selectedItem.value = item;
+}
+
+async function confirmAdd(payload: { quantity: number; note: string | null }) {
+    if (!selectedItem.value) return;
+    adding.value = true;
+    errorMessage.value = '';
     try {
         await axios.post('/api/public/cart/items', {
-            menu_item_id: item.id,
-            quantity: 1,
+            menu_item_id: selectedItem.value.id,
+            quantity: payload.quantity,
+            note: payload.note,
         });
-        await refreshCartCount();
+        selectedItem.value = null;
+        await refreshCartSummary();
+        cartOpen.value = true;
+    } catch {
+        errorMessage.value = 'تعذر إضافة الصنف. قد يكون غير متاح.';
     } finally {
-        adding.value = null;
+        adding.value = false;
+    }
+}
+
+function openCheckout() {
+    cartOpen.value = false;
+    checkoutOpen.value = true;
+}
+
+async function submitOrder() {
+    submitting.value = true;
+    errorMessage.value = '';
+    try {
+        const { data } = await axios.post('/api/public/orders', {
+            customer_note: customerNote.value || null,
+        });
+        checkoutOpen.value = false;
+        customerNote.value = '';
+        router.visit(`/t/${props.table.public_token}/orders/${data.data.order_number}`);
+    } catch {
+        errorMessage.value = 'تعذر إرسال الطلب. تحقق من السلة وحاول مرة أخرى.';
+        checkoutOpen.value = false;
+        cartOpen.value = true;
+    } finally {
+        submitting.value = false;
     }
 }
 
@@ -59,7 +108,12 @@ function formatPrice(price: string) {
     return `${price} ${props.restaurant.currency}`;
 }
 
-refreshCartCount();
+onMounted(() => {
+    refreshCartSummary();
+    if (props.openCart) {
+        cartOpen.value = true;
+    }
+});
 </script>
 
 <template>
@@ -68,20 +122,13 @@ refreshCartCount();
             <h1 class="text-lg font-bold">{{ restaurant.name }}</h1>
             <p class="text-sm text-stone-500">{{ table.name }}</p>
         </template>
-        <template #actions>
-            <Link
-                :href="`/t/${table.public_token}/cart`"
-                class="relative rounded-full bg-amber-600 px-4 py-2 text-sm font-medium text-white"
-            >
-                السلة
-                <span
-                    v-if="cartCount > 0"
-                    class="absolute -left-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs"
-                >
-                    {{ cartCount }}
-                </span>
-            </Link>
-        </template>
+
+        <div
+            v-if="errorMessage"
+            class="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700"
+        >
+            {{ errorMessage }}
+        </div>
 
         <div class="mb-4 flex gap-2 overflow-x-auto pb-1">
             <button
@@ -115,13 +162,56 @@ refreshCartCount();
                 </div>
                 <button
                     type="button"
-                    class="rounded-xl bg-amber-600 px-4 py-3 text-sm font-medium text-white disabled:opacity-50"
-                    :disabled="adding === item.id"
-                    @click="addToCart(item)"
+                    class="rounded-xl bg-amber-600 px-4 py-3 text-sm font-medium text-white"
+                    @click="openAddModal(item)"
                 >
-                    {{ adding === item.id ? '...' : 'أضف' }}
+                    أضف
                 </button>
             </article>
         </div>
+
+        <!-- Bottom cart bar -->
+        <div
+            v-if="cartCount > 0"
+            class="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-lg px-4 pb-4"
+        >
+            <button
+                type="button"
+                class="flex w-full items-center justify-between rounded-2xl bg-stone-900 px-5 py-4 text-white shadow-lg"
+                @click="cartOpen = true"
+            >
+                <span class="flex h-8 w-8 items-center justify-center rounded-full bg-amber-600 text-sm font-bold">
+                    {{ cartCount }}
+                </span>
+                <span class="font-bold">عرض السلة</span>
+                <span class="font-bold">{{ cartSubtotal }} {{ restaurant.currency }}</span>
+            </button>
+        </div>
+
+        <AddItemModal
+            :item="selectedItem"
+            :currency="restaurant.currency"
+            :loading="adding"
+            @close="selectedItem = null"
+            @confirm="confirmAdd"
+        />
+
+        <CartDrawer
+            ref="cartDrawerRef"
+            v-model:open="cartOpen"
+            :currency="restaurant.currency"
+            @checkout="openCheckout"
+        />
+
+        <CheckoutModal
+            v-model:customer-note="customerNote"
+            :open="checkoutOpen"
+            :subtotal="cartSubtotal"
+            :currency="restaurant.currency"
+            :item-count="cartCount"
+            :loading="submitting"
+            @close="checkoutOpen = false"
+            @confirm="submitOrder"
+        />
     </CustomerLayout>
 </template>

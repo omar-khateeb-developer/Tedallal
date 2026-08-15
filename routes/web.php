@@ -27,6 +27,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
     Route::get('/tables', [AdminDashboardController::class, 'tables'])->name('tables');
     Route::get('/tables/print', TablePrintController::class)->name('tables.print');
     Route::get('/settings', [AdminDashboardController::class, 'settings'])->name('settings');
+    Route::get('/users', [AdminDashboardController::class, 'users'])->name('users');
     Route::get('/menu/categories', [AdminDashboardController::class, 'menuCategories'])->name('menu.categories');
     Route::get('/menu/items', [AdminDashboardController::class, 'menuItems'])->name('menu.items');
 });

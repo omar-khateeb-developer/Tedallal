@@ -1,36 +1,37 @@
 # Tedallal MVP — Development Tasks
 
-- [ ] **Phase 1: Environment Setup**
-  - [ ] Initialize new Laravel project in workspace
-  - [ ] Configure PostgreSQL database connection in `.env`
-  - [ ] Install Laravel Breeze with Vue, TypeScript, and Inertia
-  - [ ] Verify Tailwind CSS and build tooling config
-- [ ] **Phase 2: Database Schema & Domain Models**
-  - [ ] Create migrations for `restaurants`, `tables`, `table_sessions`, `menu_categories`, `menu_items`, `orders`, and `order_items`
-  - [ ] Define Eloquent Models, Relationships, and JSON translation attributes
-  - [ ] Set up Factories and Database Seeders with realistic Arabic restaurant data
-- [ ] **Phase 3: Auth, Table Resolution & Session Middleware**
-  - [ ] Install QR code library (`simplesoftwareio/simple-qrcode`)
-  - [ ] Create `QrCodeService` for generating SVGs
-  - [ ] Build Public QR Resolve controller (`GET /t/{public_token}`)
-  - [ ] Build `EnsureValidTableSession` middleware for customer ordering security
-- [ ] **Phase 4: Menu & Order APIs (Backend)**
-  - [ ] Create public menu and category endpoints
-  - [ ] Create `OrderService` to handle transactional order validation, price resolution, and item snapshots
-  - [ ] Build customer checkout order APIs (`POST /api/public/orders`)
-- [ ] **Phase 5: Customer Mobile-First UI (Frontend)**
-  - [ ] Build Cairo-font RTL base layout
-  - [ ] Implement mobile-first public menu screen with category filters
-  - [ ] Implement cart drawer, item note inputs, and checkout modal
-  - [ ] Implement real-time order status tracking screen
-- [ ] **Phase 6: Admin Operations Dashboard**
-  - [ ] Build Admin statistics panels (active tables, orders, revenue)
-  - [ ] Build real-time order queue panel with status transition triggers
-  - [ ] Build table builder with QR batch print and individual download
-  - [ ] Build menu category and item editor dashboards
-  - [ ] Build restaurant settings page
-- [ ] **Phase 7: Testing, Verification & README**
-  - [ ] Write feature tests for table resolution, checkout validation, price isolation, and authentication
-  - [ ] Write unit tests for order totals and status transitions
-  - [ ] Perform UI verification on mobile viewports
-  - [ ] Complete developer documentation (README)
+- [x] **Phase 1: Environment Setup**
+  - [x] Initialize new Laravel project in workspace
+  - [x] Configure PostgreSQL database connection in `.env`
+  - [x] Install Laravel Breeze with Vue, TypeScript, and Inertia
+  - [x] Verify Tailwind CSS and build tooling config
+- [x] **Phase 2: Database Schema & Domain Models**
+  - [x] Create migrations for `restaurants`, `tables`, `table_sessions`, `menu_categories`, `menu_items`, `orders`, and `order_items`
+  - [x] Define Eloquent Models, Relationships, and JSON translation attributes
+  - [x] Set up Factories and Database Seeders with realistic Arabic restaurant data
+- [x] **Phase 3: Auth, Table Resolution & Session Middleware**
+  - [x] Install QR code library (`endroid/qr-code`)
+  - [x] Create `QrCodeService` for generating PNGs
+  - [x] Build Public QR Resolve controller (`GET /t/{public_token}`)
+  - [x] Build `ValidateTableSession` middleware for customer ordering security
+- [x] **Phase 4: Menu & Order APIs (Backend)**
+  - [x] Create public menu and category endpoints
+  - [x] Create `OrderCreationService` to handle transactional order validation, price resolution, and item snapshots
+  - [x] Build customer checkout order APIs (`POST /api/public/orders`)
+- [x] **Phase 5: Customer Mobile-First UI (Frontend)**
+  - [x] Build Cairo-font RTL base layout
+  - [x] Implement mobile-first public menu screen with category filters
+  - [x] Implement cart drawer, item note inputs, and checkout modal
+  - [x] Implement real-time order status tracking screen
+- [x] **Phase 6: Admin Operations Dashboard**
+  - [x] Build Admin statistics panels (active tables, orders, revenue)
+  - [x] Build real-time order queue panel with status transition triggers
+  - [x] Build table builder with QR batch print and individual download
+  - [x] Build menu category and item editor dashboards
+  - [x] Build restaurant settings page
+  - [x] Build users management page
+- [x] **Phase 7: Testing, Verification & README**
+  - [x] Write feature tests for table resolution, checkout validation, price isolation, and authentication
+  - [x] Write unit tests for order totals and status transitions
+  - [ ] Perform UI verification on mobile viewports (manual QA)
+  - [x] Complete developer documentation (README + ARCHITECTURE.md)

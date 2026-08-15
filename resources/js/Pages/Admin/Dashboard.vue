@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AdminNav from '@/Components/Admin/AdminNav.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { onMounted, ref } from 'vue';
@@ -22,13 +23,7 @@ onMounted(async () => {
 
         <div class="py-8" dir="rtl">
             <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                <div class="mb-6 flex flex-wrap gap-3">
-                    <Link :href="route('admin.orders')" class="rounded-lg bg-amber-600 px-4 py-2 text-white">الطلبات</Link>
-                    <Link :href="route('admin.tables')" class="rounded-lg bg-stone-800 px-4 py-2 text-white">الطاولات</Link>
-                    <Link :href="route('admin.menu.categories')" class="rounded-lg bg-stone-800 px-4 py-2 text-white">التصنيفات</Link>
-                    <Link :href="route('admin.menu.items')" class="rounded-lg bg-stone-800 px-4 py-2 text-white">الأصناف</Link>
-                    <Link :href="route('admin.settings')" class="rounded-lg bg-stone-800 px-4 py-2 text-white">الإعدادات</Link>
-                </div>
+                <AdminNav />
 
                 <div v-if="stats" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <div v-for="(label, key) in {

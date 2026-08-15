@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Admin\RestaurantController;
+use App\Http\Controllers\Api\Admin\UserController;
 use App\Http\Controllers\Api\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Api\Admin\MenuCategoryController;
 use App\Http\Controllers\Api\Admin\MenuItemController;
@@ -59,5 +60,10 @@ Route::prefix('admin')->middleware(['auth:sanctum', EnsureUserHasRole::class.':a
 
         Route::get('restaurant', [RestaurantController::class, 'show']);
         Route::patch('restaurant', [RestaurantController::class, 'update']);
+
+        Route::get('users', [UserController::class, 'index']);
+        Route::post('users', [UserController::class, 'store']);
+        Route::patch('users/{user}', [UserController::class, 'update']);
+        Route::delete('users/{user}', [UserController::class, 'destroy']);
     });
 });

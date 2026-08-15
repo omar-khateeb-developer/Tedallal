@@ -56,4 +56,9 @@ class DashboardController extends Controller
     {
         return Inertia::render('Admin/Settings');
     }
+
+    public function users(): Response
+    {
+        return Inertia::render('Admin/Users');
+    }
 }

@@ -35,6 +35,8 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
             ],
             'restaurantId' => $request->user()?->restaurant_id,
+            'locale' => app()->getLocale(),
+            'translations' => __('app'),
         ];
     }
 }

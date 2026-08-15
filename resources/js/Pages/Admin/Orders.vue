@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AdminNav from '@/Components/Admin/AdminNav.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { useRestaurantOrders } from '@/composables/useRealtimeOrders';
 import { Head, usePage } from '@inertiajs/vue3';
@@ -47,6 +48,9 @@ useRestaurantOrders(restaurantId.value, loadOrders);
         </template>
 
         <div class="py-8" dir="rtl">
+            <div class="mx-auto max-w-5xl px-4">
+                <AdminNav />
+            </div>
             <div class="mx-auto max-w-5xl space-y-3 px-4">
                 <article
                     v-for="order in orders"

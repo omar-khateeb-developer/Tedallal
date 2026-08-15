@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import AdminNav from '@/Components/Admin/AdminNav.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import { onMounted, ref } from 'vue';
 import axios from 'axios';
 
@@ -58,9 +59,7 @@ onMounted(load);
         </template>
 
         <div class="mx-auto max-w-2xl p-6" dir="rtl">
-            <Link :href="route('admin.dashboard')" class="mb-6 inline-block text-sm text-amber-700">
-                ← العودة للوحة التحكم
-            </Link>
+            <AdminNav />
 
             <form v-if="restaurant" class="space-y-4 rounded-2xl bg-white p-6 shadow" @submit.prevent="save">
                 <div>

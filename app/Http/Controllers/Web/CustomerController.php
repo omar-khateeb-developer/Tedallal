@@ -7,6 +7,7 @@ use App\Models\MenuCategory;
 use App\Models\Order;
 use App\Models\RestaurantTable;
 use App\Services\TableSessionService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -17,7 +18,7 @@ class CustomerController extends Controller
         private readonly TableSessionService $tableSessionService,
     ) {}
 
-    public function table(string $token): Response
+    public function table(Request $request, string $token): Response
     {
         $table = RestaurantTable::query()
             ->with('restaurant')
@@ -51,21 +52,13 @@ class CustomerController extends Controller
             'table' => $table,
             'categories' => $categories,
             'sessionToken' => $session->session_token,
+            'openCart' => $request->boolean('cart'),
         ]);
     }
 
-    public function cart(string $token): Response
+    public function cart(string $token): RedirectResponse
     {
-        $table = RestaurantTable::query()
-            ->with('restaurant')
-            ->where('public_token', $token)
-            ->firstOrFail();
-
-        return Inertia::render('Customer/Cart', [
-            'restaurant' => $table->restaurant,
-            'table' => $table,
-            'publicToken' => $token,
-        ]);
+        return redirect()->route('customer.menu', ['token' => $token, 'cart' => 1]);
     }
 
     public function order(string $token, string $orderNumber): Response
