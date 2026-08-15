@@ -21,7 +21,7 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->timestamps();
 
-            $table->index(['restaurant_id', 'category_id', 'is_active', 'is_available']);
+            $table->index(['restaurant_id', 'category_id', 'is_active', 'is_available'], 'menu_items_res_cat_active_avail_idx');
         });
     }
 
