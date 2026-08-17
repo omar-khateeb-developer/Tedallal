@@ -5,7 +5,7 @@ import { onMounted, onUnmounted, ref } from 'vue';
 import axios from 'axios';
 
 const props = defineProps<{
-    restaurant: { currency: string };
+    restaurant: { currency: string; navbar_image?: string | null };
     table: { name: string };
     orderNumber: string;
     publicToken: string;
@@ -58,7 +58,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <CustomerLayout title="حالة الطلب">
+    <CustomerLayout title="حالة الطلب" :navbar-image="restaurant.navbar_image">
         <div v-if="!order" class="py-12 text-center text-stone-500">جاري التحميل...</div>
 
         <div v-else class="space-y-4">

@@ -18,6 +18,7 @@ class Restaurant extends Model
         'address',
         'currency',
         'status',
+        'navbar_image',
     ];
 
     protected function casts(): array

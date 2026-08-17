@@ -30,6 +30,15 @@ class DatabaseSeeder extends Seeder
         ]);
 
         User::query()->create([
+            'restaurant_id' => null,
+            'name' => 'مدير النظام (Super Admin)',
+            'email' => 'super@tedallal.test',
+            'password' => Hash::make('password'),
+            'role' => UserRole::SuperAdmin,
+            'status' => UserStatus::Active,
+        ]);
+
+        User::query()->create([
             'restaurant_id' => $restaurant->id,
             'name' => 'مدير النظام',
             'email' => 'admin@tedallal.test',

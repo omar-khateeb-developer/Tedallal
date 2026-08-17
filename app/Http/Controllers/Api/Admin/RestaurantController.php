@@ -27,7 +27,13 @@ class RestaurantController extends ApiController
             'phone' => ['nullable', 'string', 'max:30'],
             'address' => ['nullable', 'string', 'max:500'],
             'currency' => ['sometimes', 'string', 'size:3'],
+            'navbar_image' => ['nullable', 'image', 'max:2048'],
         ]);
+
+        if ($request->hasFile('navbar_image')) {
+            $path = $request->file('navbar_image')->store('restaurants', 'public');
+            $validated['navbar_image'] = '/storage/' . $path;
+        }
 
         $restaurant->update($validated);
         $this->restaurantContext->forget();

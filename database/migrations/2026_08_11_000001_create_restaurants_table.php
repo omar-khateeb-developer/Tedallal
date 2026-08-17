@@ -17,6 +17,7 @@ return new class extends Migration
             $table->text('address')->nullable();
             $table->char('currency', 3)->default('SAR');
             $table->string('status')->default('active');
+            $table->string('navbar_image')->nullable();
             $table->timestamps();
 
             $table->index('status');

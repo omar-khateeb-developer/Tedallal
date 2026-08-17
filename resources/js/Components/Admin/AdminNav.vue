@@ -1,15 +1,22 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
-const links = [
-    { href: 'admin.dashboard', label: 'لوحة التحكم' },
-    { href: 'admin.orders', label: 'الطلبات' },
-    { href: 'admin.tables', label: 'الطاولات' },
-    { href: 'admin.menu.categories', label: 'التصنيفات' },
-    { href: 'admin.menu.items', label: 'الأصناف' },
-    { href: 'admin.settings', label: 'الإعدادات' },
-    { href: 'admin.users', label: 'المستخدمون' },
+const page = usePage();
+const userRole = computed(() => (page.props.auth as any).user.role);
+
+const allLinks = [
+    { href: 'admin.dashboard', label: 'لوحة التحكم', roles: ['admin'] },
+    { href: 'staff.orders', label: 'الطلبات', roles: ['staff'] },
+    { href: 'admin.orders', label: 'الطلبات', roles: ['admin'] },
+    { href: 'admin.tables', label: 'الطاولات', roles: ['admin'] },
+    { href: 'admin.menu.categories', label: 'التصنيفات', roles: ['admin', 'staff'] },
+    { href: 'admin.menu.items', label: 'الأصناف', roles: ['admin', 'staff'] },
+    { href: 'admin.settings', label: 'الإعدادات', roles: ['admin'] },
+    { href: 'admin.users', label: 'المستخدمون', roles: ['admin'] },
 ];
+
+const links = computed(() => allLinks.filter(link => link.roles.includes(userRole.value)));
 </script>
 
 <template>

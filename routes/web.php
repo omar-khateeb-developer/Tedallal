@@ -28,12 +28,23 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
     Route::get('/tables/print', TablePrintController::class)->name('tables.print');
     Route::get('/settings', [AdminDashboardController::class, 'settings'])->name('settings');
     Route::get('/users', [AdminDashboardController::class, 'users'])->name('users');
+});
+
+Route::middleware(['auth', 'verified', 'role:admin,staff'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/menu/categories', [AdminDashboardController::class, 'menuCategories'])->name('menu.categories');
     Route::get('/menu/items', [AdminDashboardController::class, 'menuItems'])->name('menu.items');
 });
 
+Route::middleware(['auth', 'verified', 'role:super_admin'])->prefix('super-admin')->name('super_admin.')->group(function () {
+    Route::get('/dashboard', [\App\Http\Controllers\Web\SuperAdminController::class, 'index'])->name('dashboard');
+});
+
 Route::get('/dashboard', function () {
     $user = auth()->user();
+
+    if ($user?->isSuperAdmin()) {
+        return redirect()->route('super_admin.dashboard');
+    }
 
     if ($user?->isAdmin()) {
         return redirect()->route('admin.dashboard');

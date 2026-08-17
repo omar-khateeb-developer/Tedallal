@@ -48,16 +48,6 @@ Route::prefix('admin')->middleware(['auth:sanctum', EnsureUserHasRole::class.':a
         Route::post('tables/{table}/regenerate-token', [AdminTableController::class, 'regenerateToken']);
         Route::get('tables/{table}/qr', [AdminTableController::class, 'qr']);
 
-        Route::get('menu/categories', [MenuCategoryController::class, 'index']);
-        Route::post('menu/categories', [MenuCategoryController::class, 'store']);
-        Route::patch('menu/categories/{category}', [MenuCategoryController::class, 'update']);
-        Route::delete('menu/categories/{category}', [MenuCategoryController::class, 'destroy']);
-
-        Route::get('menu/items', [MenuItemController::class, 'index']);
-        Route::post('menu/items', [MenuItemController::class, 'store']);
-        Route::patch('menu/items/{item}', [MenuItemController::class, 'update']);
-        Route::delete('menu/items/{item}', [MenuItemController::class, 'destroy']);
-
         Route::get('restaurant', [RestaurantController::class, 'show']);
         Route::patch('restaurant', [RestaurantController::class, 'update']);
 
@@ -66,4 +56,21 @@ Route::prefix('admin')->middleware(['auth:sanctum', EnsureUserHasRole::class.':a
         Route::patch('users/{user}', [UserController::class, 'update']);
         Route::delete('users/{user}', [UserController::class, 'destroy']);
     });
+
+    Route::get('menu/categories', [MenuCategoryController::class, 'index']);
+    Route::post('menu/categories', [MenuCategoryController::class, 'store']);
+    Route::patch('menu/categories/{category}', [MenuCategoryController::class, 'update']);
+    Route::delete('menu/categories/{category}', [MenuCategoryController::class, 'destroy']);
+
+    Route::get('menu/items', [MenuItemController::class, 'index']);
+    Route::post('menu/items', [MenuItemController::class, 'store']);
+    Route::patch('menu/items/{item}', [MenuItemController::class, 'update']);
+    Route::delete('menu/items/{item}', [MenuItemController::class, 'destroy']);
 });
+
+Route::prefix('super-admin')->middleware(['auth:sanctum', EnsureUserHasRole::class.':super_admin'])->group(function () {
+    Route::get('restaurants', [\App\Http\Controllers\Api\SuperAdmin\RestaurantController::class, 'index']);
+    Route::post('restaurants', [\App\Http\Controllers\Api\SuperAdmin\RestaurantController::class, 'store']);
+    Route::patch('restaurants/{restaurant}', [\App\Http\Controllers\Api\SuperAdmin\RestaurantController::class, 'update']);
+});
+

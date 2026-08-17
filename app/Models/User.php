@@ -41,6 +41,11 @@ class User extends Authenticatable
         return $this->belongsTo(Restaurant::class);
     }
 
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === UserRole::SuperAdmin;
+    }
+
     public function isAdmin(): bool
     {
         return $this->role === UserRole::Admin;

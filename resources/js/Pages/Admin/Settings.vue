@@ -17,6 +17,7 @@ const form = ref({
     phone: '',
     address: '',
     currency: 'SAR',
+    navbar_image: null as File | null,
 });
 
 const saving = ref(false);
@@ -37,13 +38,32 @@ async function save() {
     saving.value = true;
     message.value = '';
     try {
-        const { data } = await axios.patch('/api/admin/restaurant', form.value);
+        const formData = new FormData();
+        formData.append('_method', 'PATCH');
+        formData.append('name', form.value.name);
+        formData.append('phone', form.value.phone);
+        formData.append('address', form.value.address);
+        formData.append('currency', form.value.currency);
+        if (form.value.navbar_image) {
+            formData.append('navbar_image', form.value.navbar_image);
+        }
+
+        const { data } = await axios.post('/api/admin/restaurant', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
         restaurant.value = data.data;
         message.value = 'تم حفظ الإعدادات بنجاح';
     } catch {
         message.value = 'تعذر حفظ الإعدادات';
     } finally {
         saving.value = false;
+    }
+}
+
+function handleFileUpload(event: Event) {
+    const target = event.target as HTMLInputElement;
+    if (target.files && target.files.length > 0) {
+        form.value.navbar_image = target.files[0];
     }
 }
 
@@ -77,6 +97,10 @@ onMounted(load);
                 <div>
                     <label class="mb-1 block text-sm text-stone-600">العملة (ISO 4217)</label>
                     <input v-model="form.currency" maxlength="3" required class="w-full rounded-lg border-stone-300 uppercase" dir="ltr" />
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm text-stone-600">صورة الـ NavBar المخصصة (اختياري)</label>
+                    <input type="file" @change="handleFileUpload" accept="image/*" class="w-full rounded-lg border-stone-300" />
                 </div>
 
                 <p v-if="message" class="text-sm" :class="message.includes('نجاح') ? 'text-green-600' : 'text-red-600'">
