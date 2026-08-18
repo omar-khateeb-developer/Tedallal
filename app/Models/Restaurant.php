@@ -19,12 +19,14 @@ class Restaurant extends Model
         'currency',
         'status',
         'navbar_image',
+        'features',
     ];
 
     protected function casts(): array
     {
         return [
             'status' => RestaurantStatus::class,
+            'features' => 'array',
         ];
     }
 

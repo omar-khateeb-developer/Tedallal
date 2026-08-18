@@ -4,19 +4,28 @@ import { computed } from 'vue';
 
 const page = usePage();
 const userRole = computed(() => (page.props.auth as any).user.role);
+const userPermissions = computed(() => (page.props.auth as any).user.permissions || []);
+const isSuperAdmin = computed(() => userRole.value === 'super_admin');
+const isAdmin = computed(() => userRole.value === 'admin');
 
 const allLinks = [
     { href: 'admin.dashboard', label: 'لوحة التحكم', roles: ['admin'] },
-    { href: 'staff.orders', label: 'الطلبات', roles: ['staff'] },
+    { href: 'admin.analytics', label: 'التحليلات (جديد)', roles: ['admin'] },
+    { href: 'staff.orders', label: 'الطلبات', roles: ['staff'], permission: 'manage_orders' },
     { href: 'admin.orders', label: 'الطلبات', roles: ['admin'] },
-    { href: 'admin.tables', label: 'الطاولات', roles: ['admin'] },
-    { href: 'admin.menu.categories', label: 'التصنيفات', roles: ['admin', 'staff'] },
-    { href: 'admin.menu.items', label: 'الأصناف', roles: ['admin', 'staff'] },
+    { href: 'admin.tables', label: 'الطاولات', roles: ['admin'], permission: 'manage_tables' },
+    { href: 'admin.menu.categories', label: 'التصنيفات', roles: ['admin'], permission: 'manage_menu' },
+    { href: 'admin.menu.items', label: 'الأصناف', roles: ['admin'], permission: 'manage_menu' },
     { href: 'admin.settings', label: 'الإعدادات', roles: ['admin'] },
     { href: 'admin.users', label: 'المستخدمون', roles: ['admin'] },
 ];
 
-const links = computed(() => allLinks.filter(link => link.roles.includes(userRole.value)));
+const links = computed(() => allLinks.filter(link => {
+    if (isAdmin.value || isSuperAdmin.value) return link.roles.includes(userRole.value);
+    if (link.roles.includes(userRole.value)) return true;
+    if (link.permission && userPermissions.value.includes(link.permission)) return true;
+    return false;
+}));
 </script>
 
 <template>

@@ -25,7 +25,7 @@ class UserController extends ApiController
         $users = User::query()
             ->where('restaurant_id', $restaurant->id)
             ->orderBy('name')
-            ->get(['id', 'name', 'email', 'role', 'status', 'created_at']);
+            ->get(['id', 'name', 'email', 'role', 'status', 'permissions', 'created_at']);
 
         return $this->success($users);
     }
@@ -39,16 +39,21 @@ class UserController extends ApiController
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', Password::defaults()],
             'role' => ['required', Rule::in([UserRole::Admin->value, UserRole::Staff->value])],
+            'permissions' => ['nullable', 'array'],
+            'permissions.*' => ['string'],
         ]);
 
         $user = User::query()->create([
-            ...$validated,
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'role' => $validated['role'],
+            'permissions' => $validated['permissions'] ?? [],
             'restaurant_id' => $restaurant->id,
             'password' => Hash::make($validated['password']),
             'status' => UserStatus::Active,
         ]);
 
-        return $this->success($user->only(['id', 'name', 'email', 'role', 'status']), 201);
+        return $this->success($user->only(['id', 'name', 'email', 'role', 'status', 'permissions']), 201);
     }
 
     public function update(Request $request, User $user)
@@ -61,6 +66,8 @@ class UserController extends ApiController
             'password' => ['nullable', Password::defaults()],
             'role' => ['sometimes', Rule::in([UserRole::Admin->value, UserRole::Staff->value])],
             'status' => ['sometimes', Rule::in([UserStatus::Active->value, UserStatus::Inactive->value])],
+            'permissions' => ['nullable', 'array'],
+            'permissions.*' => ['string'],
         ]);
 
         if (! empty($validated['password'])) {
@@ -71,7 +78,7 @@ class UserController extends ApiController
 
         $user->update($validated);
 
-        return $this->success($user->fresh()->only(['id', 'name', 'email', 'role', 'status']));
+        return $this->success($user->fresh()->only(['id', 'name', 'email', 'role', 'status', 'permissions']));
     }
 
     public function destroy(Request $request, User $user)
@@ -85,6 +92,20 @@ class UserController extends ApiController
         $user->delete();
 
         return response()->json(['success' => true, 'data' => null]);
+    }
+
+    public function logs(User $user)
+    {
+        $this->authorizeUser($user);
+
+        $logs = \App\Models\ActivityLog::query()
+            ->where('user_id', $user->id)
+            ->where('restaurant_id', $this->restaurantContext->current()->id)
+            ->latest()
+            ->take(50)
+            ->get();
+
+        return $this->success($logs);
     }
 
     private function authorizeUser(User $user): void
