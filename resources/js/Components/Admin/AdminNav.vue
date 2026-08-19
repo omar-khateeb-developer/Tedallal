@@ -11,6 +11,7 @@ const isAdmin = computed(() => userRole.value === 'admin');
 const allLinks = [
     { href: 'admin.dashboard', label: 'لوحة التحكم', roles: ['admin'] },
     { href: 'admin.analytics', label: 'التحليلات (جديد)', roles: ['admin'] },
+    { href: 'admin.offers', label: 'العروض والكوبونات (جديد)', roles: ['admin'] },
     { href: 'staff.orders', label: 'الطلبات', roles: ['staff'], permission: 'manage_orders' },
     { href: 'admin.orders', label: 'الطلبات', roles: ['admin'] },
     { href: 'admin.tables', label: 'الطاولات', roles: ['admin'], permission: 'manage_tables' },

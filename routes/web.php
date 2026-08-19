@@ -29,6 +29,9 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
     Route::get('/analytics', function () {
         return Inertia\Inertia::render('Admin/Analytics');
     })->name('analytics');
+    Route::get('/offers', function () {
+        return Inertia\Inertia::render('Admin/Offers');
+    })->name('offers');
 });
 
 Route::middleware(['auth', 'verified', 'permission:manage_tables'])->prefix('admin')->name('admin.')->group(function () {

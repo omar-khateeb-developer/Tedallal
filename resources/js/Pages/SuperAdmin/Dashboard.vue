@@ -52,15 +52,15 @@ const toggleStatus = async (restaurant: any) => {
     }
 };
 
-const toggleAnalytics = async (restaurant: any) => {
+const toggleFeature = async (restaurant: any, featureName: string) => {
     try {
-        const newAnalyticsStatus = !restaurant.features?.analytics;
+        const currentStatus = restaurant.features?.[featureName] || false;
         await axios.patch(`/api/super-admin/restaurants/${restaurant.id}`, {
-            features: { analytics: newAnalyticsStatus }
+            features: { [featureName]: !currentStatus }
         });
         await fetchRestaurants();
     } catch (e) {
-        console.error('Failed to toggle analytics');
+        console.error(`Failed to toggle ${featureName}`);
     }
 };
 
@@ -182,13 +182,18 @@ onMounted(() => {
                                         </span>
                                     </td>
                                     <td class="p-3 border">
-                                        <button 
-                                            @click="toggleAnalytics(restaurant)" 
-                                            class="px-3 py-1 rounded text-sm transition font-semibold"
-                                            :class="restaurant.features?.analytics ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'"
-                                        >
-                                            {{ restaurant.features?.analytics ? 'مفعلة' : 'مقفلة' }}
-                                        </button>
+                                        <div class="flex items-center gap-2">
+                                            <button @click="toggleFeature(restaurant, 'analytics')"
+                                                :class="restaurant.features?.analytics ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-stone-100 text-stone-500 border-stone-200'"
+                                                class="px-3 py-1.5 rounded-lg border text-xs font-bold transition-all hover:scale-105">
+                                                {{ restaurant.features?.analytics ? 'التحليلات ✓' : 'التحليلات ✗' }}
+                                            </button>
+                                            <button @click="toggleFeature(restaurant, 'offers')"
+                                                :class="restaurant.features?.offers ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-stone-100 text-stone-500 border-stone-200'"
+                                                class="px-3 py-1.5 rounded-lg border text-xs font-bold transition-all hover:scale-105">
+                                                {{ restaurant.features?.offers ? 'العروض ✓' : 'العروض ✗' }}
+                                            </button>
+                                        </div>
                                     </td>
                                     <td class="p-3 border" dir="ltr">{{ restaurant.phone }}</td>
                                     <td class="p-3 border text-center">

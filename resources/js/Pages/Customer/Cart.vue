@@ -22,6 +22,11 @@ const subtotal = ref('0.00');
 const loading = ref(true);
 const submitting = ref(false);
 const customerNote = ref('');
+const promoCode = ref('');
+const appliedPromoCode = ref('');
+const discountAmount = ref('0.00');
+const validatingPromo = ref(false);
+const promoError = ref('');
 
 async function loadCart() {
     loading.value = true;
@@ -29,8 +34,32 @@ async function loadCart() {
         const { data } = await axios.get('/api/public/cart');
         items.value = data.data.items ?? [];
         subtotal.value = data.data.subtotal ?? '0.00';
+        if (appliedPromoCode.value) {
+            await validatePromoCode(); // Re-validate if subtotal changes
+        }
     } finally {
         loading.value = false;
+    }
+}
+
+async function validatePromoCode() {
+    if (!promoCode.value) return;
+    validatingPromo.value = true;
+    promoError.value = '';
+    
+    try {
+        const { data } = await axios.post('/api/public/promo-codes/validate', {
+            code: promoCode.value
+        });
+        
+        appliedPromoCode.value = data.data.code;
+        discountAmount.value = data.data.discount_amount.toString();
+    } catch (e: any) {
+        promoError.value = e.response?.data?.message || 'الكوبون غير صالح';
+        appliedPromoCode.value = '';
+        discountAmount.value = '0.00';
+    } finally {
+        validatingPromo.value = false;
     }
 }
 
@@ -44,6 +73,7 @@ async function submitOrder() {
     try {
         const { data } = await axios.post('/api/public/orders', {
             customer_note: customerNote.value || null,
+            promo_code: appliedPromoCode.value || null,
         });
         const orderNumber = data.data.order_number;
         router.visit(`/t/${props.publicToken}/orders/${orderNumber}`);
@@ -123,10 +153,49 @@ onMounted(loadCart);
                 />
             </div>
 
-            <div class="rounded-2xl bg-amber-50 p-4">
-                <div class="flex justify-between text-lg font-bold">
-                    <span>المجموع</span>
+            <div class="rounded-2xl bg-white p-4">
+                <label class="mb-2 block text-sm font-semibold text-stone-700">كود الخصم</label>
+                <div class="flex gap-2">
+                    <input
+                        v-model="promoCode"
+                        type="text"
+                        placeholder="أدخل الكود هنا"
+                        class="w-full rounded-xl border-stone-200 text-sm uppercase text-left"
+                        dir="ltr"
+                        :disabled="!!appliedPromoCode"
+                    />
+                    <button
+                        v-if="!appliedPromoCode"
+                        @click="validatePromoCode"
+                        :disabled="!promoCode || validatingPromo"
+                        class="shrink-0 rounded-xl bg-stone-800 px-4 text-sm font-medium text-white hover:bg-stone-700 disabled:opacity-50"
+                    >
+                        {{ validatingPromo ? '...' : 'تطبيق' }}
+                    </button>
+                    <button
+                        v-else
+                        @click="appliedPromoCode = ''; discountAmount = '0.00'; promoCode = ''"
+                        class="shrink-0 rounded-xl bg-red-100 text-red-600 px-4 text-sm font-medium hover:bg-red-200"
+                    >
+                        إلغاء
+                    </button>
+                </div>
+                <p v-if="promoError" class="mt-2 text-xs text-red-600">{{ promoError }}</p>
+                <p v-if="appliedPromoCode" class="mt-2 text-xs text-green-600">تم تطبيق الخصم بنجاح!</p>
+            </div>
+
+            <div class="rounded-2xl bg-amber-50 p-4 space-y-2">
+                <div class="flex justify-between text-sm text-stone-600" v-if="appliedPromoCode">
+                    <span>المجموع الفرعي</span>
                     <span>{{ subtotal }} {{ restaurant.currency }}</span>
+                </div>
+                <div class="flex justify-between text-sm text-green-600" v-if="appliedPromoCode">
+                    <span>الخصم</span>
+                    <span>- {{ discountAmount }} {{ restaurant.currency }}</span>
+                </div>
+                <div class="flex justify-between text-lg font-bold border-t border-amber-200/50 pt-2" :class="{'mt-2': appliedPromoCode}">
+                    <span>الإجمالي</span>
+                    <span>{{ Math.max(0, parseFloat(subtotal) - parseFloat(discountAmount)).toFixed(2) }} {{ restaurant.currency }}</span>
                 </div>
             </div>
 

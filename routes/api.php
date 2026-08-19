@@ -15,6 +15,8 @@ use App\Http\Controllers\Api\Public\TableController;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\ValidateTableSession;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\Public\PromoCodeController;
+use App\Http\Controllers\Api\Admin\PromoCodeController as AdminPromoCodeController;
 
 Route::prefix('public')->middleware('throttle:60,1')->group(function () {
     Route::get('tables/{token}', [TableController::class, 'show']);
@@ -22,6 +24,7 @@ Route::prefix('public')->middleware('throttle:60,1')->group(function () {
     Route::get('sessions/{sessionToken}', [SessionController::class, 'show']);
     Route::get('menu', [MenuController::class, 'index']);
     Route::get('menu/categories', [MenuController::class, 'categories']);
+    Route::post('promo-codes/validate', [PromoCodeController::class, 'validateCode']);
 
     Route::middleware(ValidateTableSession::class)->group(function () {
         Route::get('cart', [CartController::class, 'index']);
@@ -45,6 +48,7 @@ Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
         Route::delete('users/{user}', [UserController::class, 'destroy']);
         Route::get('users/{user}/logs', [UserController::class, 'logs']);
         Route::get('analytics', [\App\Http\Controllers\Api\Admin\AnalyticsController::class, 'index']);
+        Route::apiResource('promo-codes', AdminPromoCodeController::class);
     });
 
     Route::middleware('permission:manage_orders')->group(function () {
