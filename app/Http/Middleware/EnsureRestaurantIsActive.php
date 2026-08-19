@@ -17,7 +17,7 @@ class EnsureRestaurantIsActive
      */
     public function handle(Request $request, Closure $next)
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
         if ($user && !$user->isSuperAdmin()) {
             if ($user->restaurant && !$user->restaurant->isActive()) {
