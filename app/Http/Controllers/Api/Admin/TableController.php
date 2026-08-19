@@ -49,6 +49,8 @@ class TableController extends ApiController
 
         $this->qrCodeService->generateForTable($table);
 
+        \App\Services\ActivityLogger::log('create_table', "قام بإضافة طاولة جديدة: {$table->name}");
+
         return $this->success(new RestaurantTableResource($table), 201);
     }
 
@@ -63,6 +65,8 @@ class TableController extends ApiController
 
         $table->update($validated);
 
+        \App\Services\ActivityLogger::log('update_table', "قام بتعديل بيانات الطاولة: {$table->name}");
+
         return $this->success(new RestaurantTableResource($table->fresh()));
     }
 
@@ -74,7 +78,10 @@ class TableController extends ApiController
             return $this->error('لا يمكن حذف طاولة لها طلبات.', 422);
         }
 
+        $tableName = $table->name;
         $table->delete();
+
+        \App\Services\ActivityLogger::log('delete_table', "قام بحذف الطاولة: {$tableName}");
 
         return response()->json(['success' => true, 'data' => null]);
     }
@@ -86,6 +93,8 @@ class TableController extends ApiController
         $newToken = $this->tokenGenerator->generatePublicToken();
         $table->update(['public_token' => $newToken]);
         $this->qrCodeService->regenerate($table, $newToken);
+
+        \App\Services\ActivityLogger::log('update_table', "قام بتوليد رمز QR جديد للطاولة: {$table->name}");
 
         return $this->success(new RestaurantTableResource($table->fresh()));
     }

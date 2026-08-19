@@ -31,6 +31,7 @@ async function load() {
         phone: data.data.phone ?? '',
         address: data.data.address ?? '',
         currency: data.data.currency,
+        navbar_image: null,
     };
 }
 

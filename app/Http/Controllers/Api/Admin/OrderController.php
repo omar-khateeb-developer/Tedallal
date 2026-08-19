@@ -63,6 +63,8 @@ class OrderController extends ApiController
             );
         }
 
+        \App\Services\ActivityLogger::log('update_order', "قام بتحديث حالة الطلب رقم {$order->order_number} إلى " . $order->status->label());
+
         return $this->success(new OrderResource($updated));
     }
 

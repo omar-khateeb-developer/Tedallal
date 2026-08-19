@@ -56,6 +56,8 @@ class MenuItemController extends ApiController
             'restaurant_id' => $restaurant->id,
         ]);
 
+        \App\Services\ActivityLogger::log('create_item', "قام بإضافة صنف جديد للمنيو: {$item->name}");
+
         return $this->success(new MenuItemResource($item), 201);
     }
 
@@ -75,13 +77,18 @@ class MenuItemController extends ApiController
 
         $item->update($validated);
 
+        \App\Services\ActivityLogger::log('update_item', "قام بتعديل بيانات الصنف: {$item->name}");
+
         return $this->success(new MenuItemResource($item->fresh()));
     }
 
     public function destroy(MenuItem $item)
     {
         $this->authorizeItem($item);
+        $itemName = $item->name;
         $item->delete();
+
+        \App\Services\ActivityLogger::log('delete_item', "قام بحذف الصنف: {$itemName}");
 
         return response()->json(['success' => true, 'data' => null]);
     }

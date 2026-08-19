@@ -21,12 +21,30 @@ class RestaurantController extends Controller
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:1000',
             'currency' => 'required|string|max:3',
+            'manager_name' => 'required|string|max:255',
+            'manager_email' => 'required|string|email|max:255|unique:users,email',
+            'manager_password' => 'nullable|string|min:6',
         ]);
 
-        $validated['slug'] = Str::slug($validated['name']) . '-' . rand(1000, 9999);
-        $validated['status'] = 'active';
+        $restaurantData = [
+            'name' => $validated['name'],
+            'phone' => $validated['phone'],
+            'address' => $validated['address'],
+            'currency' => $validated['currency'],
+            'slug' => Str::slug($validated['name']) . '-' . rand(1000, 9999),
+            'status' => 'active',
+        ];
 
-        $restaurant = Restaurant::create($validated);
+        $restaurant = Restaurant::create($restaurantData);
+
+        \App\Models\User::create([
+            'restaurant_id' => $restaurant->id,
+            'name' => $validated['manager_name'],
+            'email' => $validated['manager_email'],
+            'password' => \Illuminate\Support\Facades\Hash::make($validated['manager_password'] ?: 'password'),
+            'role' => \App\Enums\UserRole::Admin,
+            'status' => \App\Enums\UserStatus::Active,
+        ]);
 
         return response()->json($restaurant, 201);
     }
@@ -39,6 +57,7 @@ class RestaurantController extends Controller
             'address' => 'nullable|string|max:1000',
             'currency' => 'sometimes|required|string|max:3',
             'status' => 'sometimes|required|string|in:active,inactive',
+            'features' => 'sometimes|nullable|array',
         ]);
 
         $restaurant->update($validated);

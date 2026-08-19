@@ -42,6 +42,8 @@ class MenuCategoryController extends ApiController
             'restaurant_id' => $restaurant->id,
         ]);
 
+        \App\Services\ActivityLogger::log('create_category', "قام بإضافة تصنيف جديد: {$category->name}");
+
         return $this->success(new MenuCategoryResource($category), 201);
     }
 
@@ -58,6 +60,8 @@ class MenuCategoryController extends ApiController
 
         $category->update($validated);
 
+        \App\Services\ActivityLogger::log('update_category', "قام بتعديل تصنيف المنيو: {$category->name}");
+
         return $this->success(new MenuCategoryResource($category->fresh()));
     }
 
@@ -69,7 +73,10 @@ class MenuCategoryController extends ApiController
             return $this->error('لا يمكن حذف تصنيف يحتوي على أصناف.', 422);
         }
 
+        $categoryName = $category->name;
         $category->delete();
+
+        \App\Services\ActivityLogger::log('delete_category', "قام بحذف التصنيف: {$categoryName}");
 
         return response()->json(['success' => true, 'data' => null]);
     }

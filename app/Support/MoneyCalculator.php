@@ -29,6 +29,14 @@ final class MoneyCalculator
         return $total->toScale(self::SCALE, RoundingMode::HalfUp)->__toString();
     }
 
+    public static function subtract(string $minuend, string $subtrahend): string
+    {
+        return BigDecimal::of($minuend)
+            ->minus(BigDecimal::of($subtrahend))
+            ->toScale(self::SCALE, RoundingMode::HalfUp)
+            ->__toString();
+    }
+
     public static function assertNonNegative(string $amount): void
     {
         if (BigDecimal::of($amount)->isNegative()) {

@@ -17,7 +17,7 @@ final class OrderCreationService
         private readonly OrderNumberGenerator $orderNumberGenerator,
     ) {}
 
-    public function createFromCart(TableSession $session, ?string $customerNote = null): Order
+    public function createFromCart(TableSession $session, ?string $customerNote = null, ?string $promoCodeStr = null): Order
     {
         if (! $session->isActive()) {
             throw ValidationException::withMessages([
@@ -33,7 +33,7 @@ final class OrderCreationService
             ]);
         }
 
-        return DB::transaction(function () use ($session, $customerNote, $summary) {
+        return DB::transaction(function () use ($session, $customerNote, $summary, $promoCodeStr) {
             $table = $session->table()->lockForUpdate()->first();
             $restaurant = $table->restaurant;
 
@@ -71,6 +71,23 @@ final class OrderCreationService
                 ];
             }
 
+            $promoCode = null;
+            $discountAmount = '0.00';
+            
+            if ($promoCodeStr) {
+                if (empty($restaurant->features['offers'])) {
+                    throw ValidationException::withMessages(['promo_code' => ['نظام العروض غير مفعل في هذا المطعم.']]);
+                }
+                $promoCode = \App\Models\PromoCode::where('restaurant_id', $restaurant->id)->where('code', $promoCodeStr)->first();
+                if (!$promoCode || !$promoCode->isValid((float)$subtotal)) {
+                    throw ValidationException::withMessages(['promo_code' => ['الكوبون غير صالح أو لا يغطي الحد الأدنى للطلب.']]);
+                }
+                $discountAmount = (string) $promoCode->calculateDiscount((float)$subtotal);
+            }
+            
+            $total = MoneyCalculator::subtract($subtotal, $discountAmount);
+            if ((float)$total < 0) $total = '0.00';
+
             $order = Order::query()->create([
                 'restaurant_id' => $restaurant->id,
                 'table_id' => $table->id,
@@ -78,7 +95,9 @@ final class OrderCreationService
                 'order_number' => $this->orderNumberGenerator->generate($restaurant->id),
                 'status' => OrderStatus::Pending,
                 'subtotal' => $subtotal,
-                'total' => $subtotal,
+                'total' => $total,
+                'promo_code_id' => $promoCode?->id,
+                'discount_amount' => $discountAmount,
                 'customer_note' => $customerNote,
             ]);
 

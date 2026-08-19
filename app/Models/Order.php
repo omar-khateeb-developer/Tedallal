@@ -18,7 +18,14 @@ class Order extends Model
         'subtotal',
         'total',
         'customer_note',
+        'promo_code_id',
+        'discount_amount',
     ];
+
+    public function promoCode(): BelongsTo
+    {
+        return $this->belongsTo(PromoCode::class);
+    }
 
     protected function casts(): array
     {
