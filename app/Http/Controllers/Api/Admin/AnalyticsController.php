@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Api\ApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Order;
 use App\Models\MenuItem;
 
@@ -12,7 +13,7 @@ class AnalyticsController extends ApiController
 {
     public function index(Request $request)
     {
-        $restaurant = auth()->user()->restaurant;
+        $restaurant = Auth::user()->restaurant;
 
         if (!$restaurant->features || empty($restaurant->features['analytics'])) {
             return $this->error('Feature Locked', 403);
