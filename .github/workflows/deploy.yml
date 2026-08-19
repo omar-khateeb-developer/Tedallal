@@ -1,0 +1,57 @@
+name: Deploy to Hostinger
+
+on:
+  push:
+    branches:
+      - main # يتم التشغيل عند الدفع للفرع الرئيسي
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install NPM dependencies
+      run: npm ci
+
+    - name: Build frontend assets
+      run: npm run build
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2' # يمكنك تعديل الإصدار حسب استضافتك
+
+    - name: Install Composer dependencies
+      run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist --no-dev
+
+    - name: Sync files to Hostinger
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.HOSTINGER_HOST }}
+        username: ${{ secrets.HOSTINGER_USERNAME }}
+        port: ${{ secrets.HOSTINGER_PORT }}
+        key: ${{ secrets.HOSTINGER_SSH_KEY }}
+        source: "."
+        target: ${{ secrets.HOSTINGER_TARGET_DIR }}
+        strip_components: 0
+
+    - name: Run Artisan Commands on Hostinger
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.HOSTINGER_HOST }}
+        username: ${{ secrets.HOSTINGER_USERNAME }}
+        port: ${{ secrets.HOSTINGER_PORT }}
+        key: ${{ secrets.HOSTINGER_SSH_KEY }}
+        script: |
+          cd ${{ secrets.HOSTINGER_TARGET_DIR }}
+          php artisan optimize:clear
+          php artisan migrate --force
+          php artisan optimize
