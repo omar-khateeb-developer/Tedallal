@@ -37,7 +37,7 @@ class DatabaseSeeder extends Seeder
             'role' => UserRole::SuperAdmin,
             'status' => UserStatus::Active,
         ]);
-
+        //edited to test ci/cd
         User::query()->create([
             'restaurant_id' => $restaurant->id,
             'name' => 'مدير النظام',
