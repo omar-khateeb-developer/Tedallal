@@ -89,7 +89,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <Head title="إدارة المطاعم - مدير النظام" />
+    <Head title="إدارة المطاعم - مدييير النظام" />
 
     <AuthenticatedLayout>
         <template #header>
