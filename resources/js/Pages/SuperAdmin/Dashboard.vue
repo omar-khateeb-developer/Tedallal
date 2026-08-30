@@ -89,7 +89,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <Head title="إدارة المطاعم - مدييير النظام" />
+    <Head title="إدارة المطاعم - مدير النظام" />
 
     <AuthenticatedLayout>
         <template #header>
@@ -122,7 +122,7 @@ onMounted(() => {
                             </div>
                             <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100 flex items-center justify-between">
                                 <div>
-                                    <p class="text-sm text-blue-800 font-semibold mb-1">إجمالي المستخدمين</p>
+                                    <p class="text-sm text-blue-800 font-semibold mb-1">إجمااالي المستخدمين</p>
                                     <p class="text-3xl font-bold text-blue-600">{{ stats.total_users }}</p>
                                 </div>
                                 <div class="bg-blue-200 text-blue-700 p-3 rounded-full">
