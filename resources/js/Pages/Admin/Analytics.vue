@@ -2,8 +2,33 @@
 import AdminNav from '@/Components/Admin/AdminNav.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head } from '@inertiajs/vue3';
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import axios from 'axios';
+import {
+  Chart as ChartJS,
+  Title,
+  Tooltip,
+  Legend,
+  LineElement,
+  PointElement,
+  CategoryScale,
+  LinearScale,
+  ArcElement,
+  Filler,
+} from 'chart.js';
+import { Line, Doughnut } from 'vue-chartjs';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+  Filler
+);
 
 const stats = ref<any>(null);
 const insights = ref<any[]>([]);
@@ -57,6 +82,90 @@ const getMaxOrders = (hourlyData: any[]) => {
 
 const formatCurrency = (value: number) => {
     return Number(value).toFixed(2);
+};
+
+const hourlyChartData = computed(() => {
+    if (!stats.value?.hourly_distribution) return { labels: [], datasets: [] };
+    
+    return {
+        labels: stats.value.hourly_distribution.map((h: any) => `${h.hour}:00`),
+        datasets: [
+            {
+                label: 'عدد الطلبات',
+                data: stats.value.hourly_distribution.map((h: any) => h.total_orders),
+                borderColor: '#d97706',
+                backgroundColor: 'rgba(217, 119, 6, 0.2)',
+                borderWidth: 3,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: '#d97706',
+                pointRadius: 4,
+                fill: true,
+                tension: 0.4
+            }
+        ]
+    };
+});
+
+const hourlyChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: { display: false },
+        tooltip: {
+            titleFont: { family: 'Cairo' },
+            bodyFont: { family: 'Cairo' }
+        }
+    },
+    scales: {
+        y: {
+            beginAtZero: true,
+            ticks: { precision: 0, font: { family: 'Cairo' } },
+            grid: { color: '#f5f5f4' }
+        },
+        x: {
+            ticks: { font: { family: 'Cairo' } },
+            grid: { display: false }
+        }
+    }
+};
+
+const categoryChartData = computed(() => {
+    if (!stats.value?.category_breakdown) return { labels: [], datasets: [] };
+    
+    const colors = [
+        '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899',
+    ];
+
+    return {
+        labels: stats.value.category_breakdown.map((c: any) => c.name),
+        datasets: [
+            {
+                data: stats.value.category_breakdown.map((c: any) => c.total_revenue),
+                backgroundColor: colors,
+                borderWidth: 0,
+                hoverOffset: 4
+            }
+        ]
+    };
+});
+
+const categoryChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: { 
+            position: 'left' as const,
+            rtl: true,
+            labels: { font: { family: 'Cairo', size: 12 }, usePointStyle: true, padding: 20 }
+        },
+        tooltip: {
+            callbacks: {
+                label: (context: any) => ` ${formatCurrency(context.raw)} SR`
+            },
+            titleFont: { family: 'Cairo' },
+            bodyFont: { family: 'Cairo' }
+        }
+    }
 };
 </script>
 
@@ -130,6 +239,15 @@ const formatCurrency = (value: number) => {
                     <p class="text-stone-500">جاري تحليل البيانات...</p>
                 </div>
 
+                <div v-else-if="!loading && !stats" class="text-center py-20">
+                    <div class="bg-red-50 text-red-500 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">عذراً، حدث خطأ أثناء جلب البيانات</h3>
+                    <p class="text-stone-500 mb-4">قد تكون هناك مشكلة في الاتصال أو في الخادم. يرجى المحاولة مرة أخرى.</p>
+                    <button @click="fetchAnalytics" class="bg-red-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-red-700 transition">إعادة المحاولة</button>
+                </div>
+
                 <div v-else-if="stats">
                     <!-- KPI Cards -->
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -156,17 +274,18 @@ const formatCurrency = (value: number) => {
                     <!-- Hourly Heatmap -->
                     <div class="bg-white rounded-xl shadow-sm border border-stone-100 p-6 mb-6">
                         <h3 class="text-lg font-bold text-gray-800 mb-6">توزيع الطلبات حسب الساعة (أوقات الذروة)</h3>
-                        <div class="flex items-end gap-1 h-32 w-full overflow-x-auto pb-2">
-                            <div v-for="hour in stats.hourly_distribution" :key="hour.hour" class="flex-1 min-w-[20px] flex flex-col items-center justify-end group relative">
-                                <div class="absolute -top-10 bg-gray-800 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap z-10 pointer-events-none">
-                                    {{ hour.total_orders }} طلب
+                        <div class="h-64 w-full">
+                            <template v-if="stats.hourly_distribution?.length">
+                                <Line :data="hourlyChartData" :options="hourlyChartOptions" />
+                            </template>
+                            <template v-else>
+                                <div class="flex items-end gap-1 h-full w-full overflow-x-auto pb-2">
+                                    <div v-for="i in 12" :key="i" class="flex-1 min-w-[20px] flex flex-col items-center justify-end">
+                                        <div class="w-full bg-stone-100 rounded-t-sm animate-pulse" style="height: 5%"></div>
+                                        <div class="text-[10px] text-stone-300 mt-2 rotate-45 origin-top-left w-full text-center">{{ i * 2 }}:00</div>
+                                    </div>
                                 </div>
-                                <div class="w-full bg-amber-200 rounded-t-sm transition-all duration-500 hover:bg-amber-400"
-                                     :style="`height: ${Math.max((hour.total_orders / getMaxOrders(stats.hourly_distribution)) * 100, 2)}%`"></div>
-                                <div class="text-[10px] text-stone-400 mt-2 rotate-45 origin-top-left w-full text-center">
-                                    {{ hour.hour }}:00
-                                </div>
-                            </div>
+                            </template>
                         </div>
                     </div>
 
@@ -178,17 +297,30 @@ const formatCurrency = (value: number) => {
                                 أكثر الأصناف مبيعاً
                             </h3>
                             <div class="space-y-3">
-                                <div v-if="!stats.top_items.length" class="text-stone-400 text-sm py-4">لا توجد مبيعات كافية.</div>
-                                <div v-for="(item, idx) in stats.top_items" :key="idx" class="flex justify-between items-center bg-stone-50 p-3 rounded-lg">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-6 h-6 rounded-full bg-green-100 text-green-700 flex items-center justify-center text-xs font-bold">{{ idx + 1 }}</div>
-                                        <span class="font-medium text-gray-800">{{ item.name }}</span>
+                                <template v-if="stats.top_items?.length">
+                                    <div v-for="(item, idx) in stats.top_items" :key="idx" class="flex justify-between items-center bg-stone-50 p-3 rounded-lg hover:bg-stone-100 transition">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-6 h-6 rounded-full bg-green-100 text-green-700 flex items-center justify-center text-xs font-bold">{{ idx + 1 }}</div>
+                                            <span class="font-medium text-gray-800">{{ item.name }}</span>
+                                        </div>
+                                        <div class="text-left">
+                                            <div class="text-sm font-bold text-gray-800">{{ item.total_quantity }} طلب</div>
+                                            <div class="text-xs text-stone-500">{{ formatCurrency(item.total_revenue) }} SR</div>
+                                        </div>
                                     </div>
-                                    <div class="text-left">
-                                        <div class="text-sm font-bold text-gray-800">{{ item.total_quantity }} طلب</div>
-                                        <div class="text-xs text-stone-500">{{ formatCurrency(item.total_revenue) }} SR</div>
+                                </template>
+                                <template v-else>
+                                    <div v-for="i in 3" :key="i" class="flex justify-between items-center bg-stone-50/50 border border-stone-100 border-dashed p-3 rounded-lg opacity-60">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-6 h-6 rounded-full bg-stone-200 text-stone-400 flex items-center justify-center text-xs font-bold">{{ i }}</div>
+                                            <div class="h-4 w-24 bg-stone-200 rounded animate-pulse"></div>
+                                        </div>
+                                        <div class="text-left space-y-2">
+                                            <div class="h-3 w-12 bg-stone-200 rounded animate-pulse ml-auto"></div>
+                                            <div class="h-2 w-16 bg-stone-200 rounded animate-pulse ml-auto"></div>
+                                        </div>
                                     </div>
-                                </div>
+                                </template>
                             </div>
                         </div>
 
@@ -199,36 +331,43 @@ const formatCurrency = (value: number) => {
                                 الأصناف الأقل طلباً
                             </h3>
                             <div class="space-y-3">
-                                <div v-if="!stats.worst_items.length" class="text-stone-400 text-sm py-4">لا توجد بيانات كافية.</div>
-                                <div v-for="(item, idx) in stats.worst_items" :key="idx" class="flex justify-between items-center bg-stone-50 p-3 rounded-lg">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-6 h-6 rounded-full bg-red-100 text-red-700 flex items-center justify-center text-xs font-bold">{{ idx + 1 }}</div>
-                                        <span class="font-medium text-gray-800">{{ item.name }}</span>
+                                <template v-if="stats.worst_items?.length">
+                                    <div v-for="(item, idx) in stats.worst_items" :key="idx" class="flex justify-between items-center bg-stone-50 p-3 rounded-lg hover:bg-stone-100 transition">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-6 h-6 rounded-full bg-red-100 text-red-700 flex items-center justify-center text-xs font-bold">{{ idx + 1 }}</div>
+                                            <span class="font-medium text-gray-800">{{ item.name }}</span>
+                                        </div>
+                                        <div class="text-left">
+                                            <div class="text-sm font-bold text-gray-800">{{ item.total_quantity }} طلب</div>
+                                            <div class="text-xs text-stone-500">{{ formatCurrency(item.total_revenue) }} SR</div>
+                                        </div>
                                     </div>
-                                    <div class="text-left">
-                                        <div class="text-sm font-bold text-gray-800">{{ item.total_quantity }} طلب</div>
-                                        <div class="text-xs text-stone-500">{{ formatCurrency(item.total_revenue) }} SR</div>
+                                </template>
+                                <template v-else>
+                                    <div v-for="i in 3" :key="i" class="flex justify-between items-center bg-stone-50/50 border border-stone-100 border-dashed p-3 rounded-lg opacity-60">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-6 h-6 rounded-full bg-stone-200 text-stone-400 flex items-center justify-center text-xs font-bold">{{ i }}</div>
+                                            <div class="h-4 w-24 bg-stone-200 rounded animate-pulse"></div>
+                                        </div>
+                                        <div class="text-left space-y-2">
+                                            <div class="h-3 w-12 bg-stone-200 rounded animate-pulse ml-auto"></div>
+                                            <div class="h-2 w-16 bg-stone-200 rounded animate-pulse ml-auto"></div>
+                                        </div>
                                     </div>
-                                </div>
+                                </template>
                             </div>
                         </div>
 
                         <!-- Categories -->
                         <div class="bg-white rounded-xl shadow-sm border border-stone-100 p-6">
                             <h3 class="text-lg font-bold text-gray-800 mb-4">المبيعات حسب التصنيف</h3>
-                            <div class="space-y-4 mt-6">
-                                <div v-if="!stats.category_breakdown.length" class="text-stone-400 text-sm py-4">لا توجد بيانات كافية.</div>
-                                <div v-for="(cat, idx) in stats.category_breakdown" :key="idx" class="relative pt-1">
-                                    <div class="flex items-center justify-between mb-1">
-                                        <span class="text-sm font-medium text-gray-800">{{ cat.name }}</span>
-                                        <span class="text-xs font-semibold text-stone-500">{{ formatCurrency(cat.total_revenue) }} SR</span>
-                                    </div>
-                                    <div class="overflow-hidden h-2 mb-4 text-xs flex rounded-full bg-stone-100">
-                                        <div :style="`width: ${Math.min((cat.total_revenue / stats.total_revenue) * 100, 100)}%`" 
-                                             class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500 rounded-full">
-                                        </div>
-                                    </div>
-                                </div>
+                            <div class="h-64 w-full mt-6 flex items-center justify-center">
+                                <template v-if="stats.category_breakdown?.length">
+                                    <Doughnut :data="categoryChartData" :options="categoryChartOptions" />
+                                </template>
+                                <template v-else>
+                                    <div class="w-48 h-48 rounded-full border-8 border-stone-100 animate-pulse"></div>
+                                </template>
                             </div>
                         </div>
                     </div>
@@ -247,15 +386,22 @@ const formatCurrency = (value: number) => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-if="!stats.table_performance.length">
-                                        <td colspan="4" class="px-4 py-8 text-center text-stone-400">لا توجد بيانات للطاولات في هذه الفترة.</td>
-                                    </tr>
-                                    <tr v-for="(table, idx) in stats.table_performance" :key="idx" class="border-b border-stone-50 last:border-0">
-                                        <td class="px-4 py-3 font-bold text-stone-400">#{{ idx + 1 }}</td>
-                                        <td class="px-4 py-3 font-medium text-gray-800">{{ table.name }}</td>
-                                        <td class="px-4 py-3">{{ table.total_orders }}</td>
-                                        <td class="px-4 py-3 font-semibold text-green-600">{{ formatCurrency(table.total_revenue) }} SR</td>
-                                    </tr>
+                                    <template v-if="stats.table_performance?.length">
+                                        <tr v-for="(table, idx) in stats.table_performance" :key="idx" class="border-b border-stone-50 last:border-0 hover:bg-stone-50 transition">
+                                            <td class="px-4 py-3 font-bold text-stone-400">#{{ idx + 1 }}</td>
+                                            <td class="px-4 py-3 font-medium text-gray-800">{{ table.name }}</td>
+                                            <td class="px-4 py-3">{{ table.total_orders }}</td>
+                                            <td class="px-4 py-3 font-semibold text-green-600">{{ formatCurrency(table.total_revenue) }} SR</td>
+                                        </tr>
+                                    </template>
+                                    <template v-else>
+                                        <tr v-for="i in 3" :key="i" class="border-b border-stone-50 border-dashed last:border-0 opacity-60">
+                                            <td class="px-4 py-4"><div class="h-4 w-6 bg-stone-200 rounded animate-pulse ml-auto"></div></td>
+                                            <td class="px-4 py-4"><div class="h-4 w-20 bg-stone-200 rounded animate-pulse ml-auto"></div></td>
+                                            <td class="px-4 py-4"><div class="h-4 w-10 bg-stone-200 rounded animate-pulse ml-auto"></div></td>
+                                            <td class="px-4 py-4"><div class="h-4 w-16 bg-stone-200 rounded animate-pulse ml-auto"></div></td>
+                                        </tr>
+                                    </template>
                                 </tbody>
                             </table>
                         </div>

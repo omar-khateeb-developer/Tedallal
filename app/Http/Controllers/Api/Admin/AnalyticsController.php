@@ -59,7 +59,7 @@ class AnalyticsController extends ApiController
                 $join->on('order_items.order_id', '=', 'o.id');
             })
             ->join('menu_items', 'order_items.menu_item_id', '=', 'menu_items.id')
-            ->select('menu_items.name', DB::raw('SUM(order_items.quantity) as total_quantity'), DB::raw('SUM(order_items.total) as total_revenue'))
+            ->select('menu_items.name', DB::raw('SUM(order_items.quantity) as total_quantity'), DB::raw('SUM(order_items.subtotal) as total_revenue'))
             ->groupBy('menu_items.id', 'menu_items.name')
             ->orderByDesc('total_quantity')
             ->limit(5)
@@ -71,7 +71,7 @@ class AnalyticsController extends ApiController
                 $join->on('order_items.order_id', '=', 'o.id');
             })
             ->join('menu_items', 'order_items.menu_item_id', '=', 'menu_items.id')
-            ->select('menu_items.name', DB::raw('SUM(order_items.quantity) as total_quantity'), DB::raw('SUM(order_items.total) as total_revenue'))
+            ->select('menu_items.name', DB::raw('SUM(order_items.quantity) as total_quantity'), DB::raw('SUM(order_items.subtotal) as total_revenue'))
             ->groupBy('menu_items.id', 'menu_items.name')
             ->orderBy('total_quantity')
             ->limit(5)
@@ -84,7 +84,7 @@ class AnalyticsController extends ApiController
             })
             ->join('menu_items', 'order_items.menu_item_id', '=', 'menu_items.id')
             ->join('menu_categories', 'menu_items.category_id', '=', 'menu_categories.id')
-            ->select('menu_categories.name', DB::raw('SUM(order_items.total) as total_revenue'), DB::raw('SUM(order_items.quantity) as total_quantity'))
+            ->select('menu_categories.name', DB::raw('SUM(order_items.subtotal) as total_revenue'), DB::raw('SUM(order_items.quantity) as total_quantity'))
             ->groupBy('menu_categories.id', 'menu_categories.name')
             ->orderByDesc('total_revenue')
             ->get();

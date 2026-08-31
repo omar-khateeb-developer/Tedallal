@@ -374,7 +374,7 @@ onMounted(() => {
                                 <tr class="bg-gray-100">
                                     <th class="p-3 border">الاسم</th>
                                     <th class="p-3 border">الحالة</th>
-                                    <th class="p-3 border">ميزة التحليلات</th>
+                                    <th class="p-3 border">الميزات الإضافية</th>
                                     <th class="p-3 border">الهاتف</th>
                                     <th class="p-3 border text-center">إجراءات</th>
                                 </tr>
@@ -388,17 +388,24 @@ onMounted(() => {
                                         </span>
                                     </td>
                                     <td class="p-3 border">
-                                        <div class="flex items-center gap-2">
-                                            <button @click="toggleFeature(restaurant, 'analytics')"
-                                                :class="restaurant.features?.analytics ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-stone-100 text-stone-500 border-stone-200'"
-                                                class="px-3 py-1.5 rounded-lg border text-xs font-bold transition-all hover:scale-105">
-                                                {{ restaurant.features?.analytics ? 'التحليلات ✓' : 'التحليلات ✗' }}
-                                            </button>
-                                            <button @click="toggleFeature(restaurant, 'offers')"
-                                                :class="restaurant.features?.offers ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-stone-100 text-stone-500 border-stone-200'"
-                                                class="px-3 py-1.5 rounded-lg border text-xs font-bold transition-all hover:scale-105">
-                                                {{ restaurant.features?.offers ? 'العروض ✓' : 'العروض ✗' }}
-                                            </button>
+                                        <div class="flex flex-col gap-2">
+                                            <label class="inline-flex items-center gap-2 cursor-pointer">
+                                                <input type="checkbox"
+                                                    :checked="restaurant.features?.analytics"
+                                                    @change="toggleFeature(restaurant, 'analytics')"
+                                                    class="rounded border-gray-300 text-amber-600 shadow-sm focus:border-amber-300 focus:ring focus:ring-amber-200 focus:ring-opacity-50"
+                                                >
+                                                <span class="text-sm font-medium text-gray-700">التحليلات الذكية</span>
+                                            </label>
+                                            
+                                            <label class="inline-flex items-center gap-2 cursor-pointer">
+                                                <input type="checkbox"
+                                                    :checked="restaurant.features?.offers"
+                                                    @change="toggleFeature(restaurant, 'offers')"
+                                                    class="rounded border-gray-300 text-amber-600 shadow-sm focus:border-amber-300 focus:ring focus:ring-amber-200 focus:ring-opacity-50"
+                                                >
+                                                <span class="text-sm font-medium text-gray-700">نظام العروض</span>
+                                            </label>
                                         </div>
                                     </td>
                                     <td class="p-3 border" dir="ltr">{{ restaurant.phone }}</td>
