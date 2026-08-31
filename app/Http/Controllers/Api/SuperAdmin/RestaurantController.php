@@ -60,8 +60,14 @@ class RestaurantController extends Controller
             'features' => 'sometimes|nullable|array',
         ]);
 
+        // Merge features with existing ones instead of replacing
+        if (isset($validated['features'])) {
+            $existingFeatures = is_array($restaurant->features) ? $restaurant->features : [];
+            $validated['features'] = array_merge($existingFeatures, $validated['features']);
+        }
+
         $restaurant->update($validated);
 
-        return response()->json($restaurant);
+        return response()->json($restaurant->fresh());
     }
 }

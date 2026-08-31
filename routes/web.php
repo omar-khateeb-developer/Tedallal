@@ -27,10 +27,10 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
     Route::get('/settings', [AdminDashboardController::class, 'settings'])->name('settings');
     Route::get('/users', [AdminDashboardController::class, 'users'])->name('users');
     Route::get('/analytics', function () {
-        return Inertia\Inertia::render('Admin/Analytics');
+        return Inertia::render('Admin/Analytics');
     })->name('analytics');
     Route::get('/offers', function () {
-        return Inertia\Inertia::render('Admin/Offers');
+        return Inertia::render('Admin/Offers');
     })->name('offers');
 });
 
