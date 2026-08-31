@@ -12,4 +12,9 @@ class SuperAdminController extends Controller
     {
         return Inertia::render('SuperAdmin/Dashboard');
     }
+
+    public function createRestaurant(): Response
+    {
+        return Inertia::render('SuperAdmin/CreateRestaurant');
+    }
 }
