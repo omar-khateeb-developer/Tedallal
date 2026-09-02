@@ -121,7 +121,7 @@ const deleteOffer = async (id: number) => {
                 </div>
 
                 <!-- Offers List -->
-                <div class="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-hidden">
+                <div class="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-x-auto">
                     <table class="w-full text-right text-sm">
                         <thead class="bg-stone-50 text-stone-600 border-b border-stone-100">
                             <tr>

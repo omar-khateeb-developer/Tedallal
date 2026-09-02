@@ -138,7 +138,7 @@ const showingNavigationDropdown = ref(false);
                         block: showingNavigationDropdown,
                         hidden: !showingNavigationDropdown,
                     }"
-                    class="sm:hidden"
+                    class="sm:hidden relative z-20 bg-white shadow-lg border-t border-gray-100"
                 >
                     <div class="space-y-1 pb-3 pt-2">
                         <ResponsiveNavLink

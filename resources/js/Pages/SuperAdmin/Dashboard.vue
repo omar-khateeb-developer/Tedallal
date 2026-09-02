@@ -369,8 +369,9 @@ onMounted(() => {
                         </Transition>
 
                         <!-- Restaurants Table -->
-                        <table class="w-full text-right border-collapse">
-                            <thead>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-right border-collapse whitespace-nowrap">
+                                <thead>
                                 <tr class="bg-gray-100">
                                     <th class="p-3 border">الاسم</th>
                                     <th class="p-3 border">الحالة</th>
@@ -421,6 +422,7 @@ onMounted(() => {
                                 </tr>
                             </tbody>
                         </table>
+                        </div>
                     </div>
                 </div>
             </div>

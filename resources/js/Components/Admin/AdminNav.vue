@@ -30,17 +30,31 @@ const links = computed(() => allLinks.filter(link => {
 </script>
 
 <template>
-    <nav class="mb-8 flex flex-wrap gap-2 bg-white p-2 rounded-2xl shadow-sm border border-slate-100" dir="rtl">
-        <Link
-            v-for="link in links"
-            :key="link.href"
-            :href="route(link.href)"
-            class="rounded-xl px-5 py-2.5 text-sm font-semibold transition-all duration-300"
-            :class="route().current(link.href)
-                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/30 scale-105'
-                : 'text-slate-600 bg-transparent hover:bg-slate-50 hover:text-slate-900 hover:scale-105'"
-        >
-            {{ link.label }}
-        </Link>
-    </nav>
+    <div class="relative mb-8">
+        <!-- Add a subtle fade on the left side to indicate scrollability -->
+        <div class="pointer-events-none absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white to-transparent z-10 rounded-l-2xl"></div>
+        <nav class="flex gap-2 overflow-x-auto hide-scrollbar bg-white p-2 rounded-2xl shadow-sm border border-slate-100 items-center" dir="rtl">
+            <Link
+                v-for="link in links"
+                :key="link.href"
+                :href="route(link.href)"
+                class="shrink-0 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all duration-300"
+                :class="route().current(link.href)
+                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/30'
+                    : 'text-slate-600 bg-transparent hover:bg-slate-50 hover:text-slate-900'"
+            >
+                {{ link.label }}
+            </Link>
+        </nav>
+    </div>
 </template>
+
+<style scoped>
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+</style>

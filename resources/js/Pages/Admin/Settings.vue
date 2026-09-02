@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AdminNav from '@/Components/Admin/AdminNav.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { onMounted, ref } from 'vue';
 import axios from 'axios';
 
@@ -59,6 +59,9 @@ async function save() {
         });
         restaurant.value = data.data;
         message.value = 'تم حفظ الإعدادات بنجاح';
+        
+        // Reload inertia props to update the navbar logo immediately
+        router.reload({ only: ['auth'] });
     } catch {
         message.value = 'تعذر حفظ الإعدادات';
     } finally {
