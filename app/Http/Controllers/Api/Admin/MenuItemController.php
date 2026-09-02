@@ -8,6 +8,7 @@ use App\Models\MenuCategory;
 use App\Models\MenuItem;
 use App\Services\RestaurantContext;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class MenuItemController extends ApiController
 {
@@ -40,6 +41,7 @@ class MenuItemController extends ApiController
             'name' => ['required', 'string', 'max:150'],
             'description' => ['nullable', 'string'],
             'price' => ['required', 'numeric', 'min:0'],
+            'image' => ['nullable', 'image', 'max:10240'],
             'sort_order' => ['sometimes', 'integer', 'min:0'],
             'is_available' => ['sometimes', 'boolean'],
             'is_active' => ['sometimes', 'boolean'],
@@ -51,8 +53,14 @@ class MenuItemController extends ApiController
             abort(422);
         }
 
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            $imagePath = '/storage/' . $request->file('image')->store('menu', 'public');
+        }
+
         $item = MenuItem::query()->create([
             ...$validated,
+            'image' => $imagePath,
             'restaurant_id' => $restaurant->id,
         ]);
 
@@ -70,10 +78,20 @@ class MenuItemController extends ApiController
             'name' => ['sometimes', 'string', 'max:150'],
             'description' => ['nullable', 'string'],
             'price' => ['sometimes', 'numeric', 'min:0'],
+            'image' => ['nullable', 'image', 'max:10240'],
             'sort_order' => ['sometimes', 'integer', 'min:0'],
             'is_available' => ['sometimes', 'boolean'],
             'is_active' => ['sometimes', 'boolean'],
         ]);
+
+        if ($request->hasFile('image')) {
+            if ($item->image) {
+                // Safely remove the prefix without stripping characters inside the directory name
+                $oldPath = preg_replace('~^/storage/~', '', $item->image);
+                Storage::disk('public')->delete($oldPath);
+            }
+            $validated['image'] = '/storage/' . $request->file('image')->store('menu', 'public');
+        }
 
         $item->update($validated);
 
@@ -86,6 +104,12 @@ class MenuItemController extends ApiController
     {
         $this->authorizeItem($item);
         $itemName = $item->name;
+        
+        if ($item->image) {
+            $oldPath = ltrim($item->image, '/storage/');
+            Storage::disk('public')->delete($oldPath);
+        }
+
         $item->delete();
 
         \App\Services\ActivityLogger::log('delete_item', "قام بحذف الصنف: {$itemName}");

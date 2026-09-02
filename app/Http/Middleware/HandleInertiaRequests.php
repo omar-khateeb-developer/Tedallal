@@ -40,6 +40,12 @@ class HandleInertiaRequests extends Middleware
                     'status' => $request->user()->status,
                     'permissions' => $request->user()->permissions ?? [],
                 ] : null,
+                'restaurant' => $request->user() && $request->user()->restaurant ? [
+                    'id' => $request->user()->restaurant->id,
+                    'name' => $request->user()->restaurant->name,
+                    'logo' => $request->user()->restaurant->logo ? asset($request->user()->restaurant->logo) : null,
+                    'navbar_image' => $request->user()->restaurant->navbar_image ? asset($request->user()->restaurant->navbar_image) : null,
+                ] : null,
             ],
             'restaurantId' => $request->user()?->restaurant_id,
             'locale' => app()->getLocale(),

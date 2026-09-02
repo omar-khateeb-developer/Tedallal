@@ -30,15 +30,15 @@ const links = computed(() => allLinks.filter(link => {
 </script>
 
 <template>
-    <nav class="mb-6 flex flex-wrap gap-2" dir="rtl">
+    <nav class="mb-8 flex flex-wrap gap-2 bg-white p-2 rounded-2xl shadow-sm border border-slate-100" dir="rtl">
         <Link
             v-for="link in links"
             :key="link.href"
             :href="route(link.href)"
-            class="rounded-lg px-4 py-2 text-sm font-medium transition"
+            class="rounded-xl px-5 py-2.5 text-sm font-semibold transition-all duration-300"
             :class="route().current(link.href)
-                ? 'bg-amber-600 text-white'
-                : 'bg-stone-800 text-white hover:bg-stone-700'"
+                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/30 scale-105'
+                : 'text-slate-600 bg-transparent hover:bg-slate-50 hover:text-slate-900 hover:scale-105'"
         >
             {{ link.label }}
         </Link>

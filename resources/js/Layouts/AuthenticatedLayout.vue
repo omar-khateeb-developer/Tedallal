@@ -12,27 +12,28 @@ const showingNavigationDropdown = ref(false);
 
 <template>
     <div>
-        <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
+        <div class="min-h-screen bg-slate-50 dark:bg-slate-900">
             <nav
-                class="border-b border-gray-100 bg-white dark:border-gray-700 dark:bg-gray-800"
+                class="relative border-b border-white/10 bg-white/80 bg-cover bg-center shadow-sm dark:border-slate-800 dark:bg-slate-800"
+                :style="$page.props.auth.restaurant?.navbar_image ? `background-image: url('${$page.props.auth.restaurant.navbar_image}')` : ''"
             >
+                <!-- Gradient Overlay -->
+                <div v-if="$page.props.auth.restaurant?.navbar_image" class="absolute inset-0 bg-gradient-to-r from-slate-900/80 via-slate-800/40 to-slate-900/80 backdrop-blur-[2px]"></div>
+                
                 <!-- Primary Navigation Menu -->
-                <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div class="flex h-16 justify-between">
-                        <div class="flex">
+                <div class="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    <div class="flex h-24 justify-between items-center">
+                        <div class="flex items-center gap-6">
                             <!-- Logo -->
-                            <div class="flex shrink-0 items-center">
+                            <div class="flex shrink-0 items-center bg-white/90 backdrop-blur-md p-1.5 rounded-2xl shadow-sm border border-white/50 transition-all hover:scale-105 hover:shadow-md">
                                 <Link :href="route('dashboard')">
-                                    <ApplicationLogo
-                                        class="block h-9 w-auto fill-current text-gray-800 dark:text-gray-200"
-                                    />
+                                    <img v-if="$page.props.auth.restaurant?.logo" :src="$page.props.auth.restaurant.logo" class="h-16 w-auto max-w-[200px] object-contain rounded-xl" alt="Restaurant Logo" />
+                                    <ApplicationLogo v-else class="block h-12 w-auto fill-current text-gray-800 dark:text-gray-200" />
                                 </Link>
                             </div>
 
                             <!-- Navigation Links -->
-                            <div
-                                class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex"
-                            >
+                            <div class="hidden space-x-8 sm:-my-px sm:flex bg-white/90 backdrop-blur-md px-6 py-2 rounded-2xl shadow-sm border border-white/50">
                                 <NavLink
                                     :href="route('dashboard')"
                                     :active="route().current('dashboard')"
@@ -42,7 +43,7 @@ const showingNavigationDropdown = ref(false);
                             </div>
                         </div>
 
-                        <div class="hidden sm:ms-6 sm:flex sm:items-center">
+                        <div class="hidden sm:ms-6 sm:flex sm:items-center bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl shadow-sm border border-white/50 transition-all hover:shadow-md">
                             <!-- Settings Dropdown -->
                             <div class="relative ms-3">
                                 <Dropdown align="right" width="48">
@@ -50,7 +51,7 @@ const showingNavigationDropdown = ref(false);
                                         <span class="inline-flex rounded-md">
                                             <button
                                                 type="button"
-                                                class="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none dark:bg-gray-800 dark:text-gray-400 dark:hover:text-gray-300"
+                                                class="inline-flex items-center rounded-md border border-transparent bg-transparent px-3 py-2 text-sm font-semibold leading-4 text-slate-700 transition duration-150 ease-in-out hover:text-slate-900 focus:outline-none dark:text-gray-400 dark:hover:text-gray-300"
                                             >
                                                 {{ $page.props.auth.user.name }}
 
@@ -191,8 +192,27 @@ const showingNavigationDropdown = ref(false);
 
             <!-- Page Content -->
             <main>
-                <slot />
+                <Transition name="page" mode="out-in" appear>
+                    <div :key="$page.url">
+                        <slot />
+                    </div>
+                </Transition>
             </main>
         </div>
     </div>
 </template>
+
+<style>
+.page-enter-active,
+.page-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+</style>

@@ -10,6 +10,12 @@ export type PageProps<
 > = T & {
     auth: {
         user: User;
+        restaurant?: {
+            id: number;
+            name: string;
+            logo: string | null;
+            navbar_image: string | null;
+        };
     };
     restaurantId?: number;
 };

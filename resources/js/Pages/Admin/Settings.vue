@@ -18,6 +18,7 @@ const form = ref({
     address: '',
     currency: 'SAR',
     navbar_image: null as File | null,
+    logo: null as File | null,
 });
 
 const saving = ref(false);
@@ -32,6 +33,7 @@ async function load() {
         address: data.data.address ?? '',
         currency: data.data.currency,
         navbar_image: null,
+        logo: null,
     };
 }
 
@@ -47,6 +49,9 @@ async function save() {
         formData.append('currency', form.value.currency);
         if (form.value.navbar_image) {
             formData.append('navbar_image', form.value.navbar_image);
+        }
+        if (form.value.logo) {
+            formData.append('logo', form.value.logo);
         }
 
         const { data } = await axios.post('/api/admin/restaurant', formData, {
@@ -100,8 +105,12 @@ onMounted(load);
                     <input v-model="form.currency" maxlength="3" required class="w-full rounded-lg border-stone-300 uppercase" dir="ltr" />
                 </div>
                 <div>
+                    <label class="mb-1 block text-sm text-stone-600">لوغو المطعم (اختياري)</label>
+                    <input type="file" @change="e => form.logo = (e.target as HTMLInputElement).files?.[0] ?? null" accept="image/*" class="w-full rounded-lg border-stone-300 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" />
+                </div>
+                <div>
                     <label class="mb-1 block text-sm text-stone-600">صورة الـ NavBar المخصصة (اختياري)</label>
-                    <input type="file" @change="handleFileUpload" accept="image/*" class="w-full rounded-lg border-stone-300" />
+                    <input type="file" @change="handleFileUpload" accept="image/*" class="w-full rounded-lg border-stone-300 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" />
                 </div>
 
                 <p v-if="message" class="text-sm" :class="message.includes('نجاح') ? 'text-green-600' : 'text-red-600'">
@@ -110,9 +119,10 @@ onMounted(load);
 
                 <button
                     type="submit"
-                    class="rounded-xl bg-amber-600 px-6 py-3 font-medium text-white disabled:opacity-50"
+                    class="flex items-center justify-center gap-2 rounded-xl bg-amber-600 px-6 py-3 font-medium text-white disabled:opacity-50 transition-all hover:bg-amber-700"
                     :disabled="saving"
                 >
+                    <span v-if="saving" class="inline-block h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
                     {{ saving ? 'جاري الحفظ...' : 'حفظ الإعدادات' }}
                 </button>
             </form>

@@ -14,7 +14,7 @@ class RestaurantResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'slug' => $this->slug,
-            'logo' => $this->logo ? asset('storage/'.$this->logo) : null,
+            'logo' => $this->logo ? asset($this->logo) : null,
             'navbar_image' => $this->navbar_image ? asset($this->navbar_image) : null,
             'phone' => $this->phone,
             'address' => $this->address,

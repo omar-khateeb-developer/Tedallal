@@ -28,11 +28,17 @@ class RestaurantController extends ApiController
             'address' => ['nullable', 'string', 'max:500'],
             'currency' => ['sometimes', 'string', 'size:3'],
             'navbar_image' => ['nullable', 'image', 'max:2048'],
+            'logo' => ['nullable', 'image', 'max:2048'],
         ]);
 
         if ($request->hasFile('navbar_image')) {
             $path = $request->file('navbar_image')->store('restaurants', 'public');
             $validated['navbar_image'] = '/storage/' . $path;
+        }
+
+        if ($request->hasFile('logo')) {
+            $path = $request->file('logo')->store('restaurants', 'public');
+            $validated['logo'] = '/storage/' . $path;
         }
 
         $restaurant->update($validated);
