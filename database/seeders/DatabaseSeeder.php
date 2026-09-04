@@ -881,40 +881,39 @@ class DatabaseSeeder extends Seeder
             'name' => 'محمد الدوسري',
             'email' => 'admin@al-diwan.test',
             'password' => Hash::make('password'),
-            'role' => UserRole::Admin,
             'status' => UserStatus::Active,
-            'permissions' => null,
         ]);
+        $admin2->assignRole(UserRole::Admin->value);
 
         $staff2Cashier = User::query()->create([
             'restaurant_id' => $restaurant2->id,
             'name' => 'عبدالله القحطاني',
             'email' => 'cashier@al-diwan.test',
             'password' => Hash::make('password'),
-            'role' => UserRole::Staff,
             'status' => UserStatus::Active,
-            'permissions' => ['view_orders', 'update_order_status', 'view_menu'],
         ]);
+        $staff2Cashier->assignRole(UserRole::Staff->value);
+        $staff2Cashier->givePermissionTo(['view_orders', 'update_order_status', 'view_menu']);
 
         $staff2Waiter = User::query()->create([
             'restaurant_id' => $restaurant2->id,
             'name' => 'يوسف الغامدي',
             'email' => 'waiter@al-diwan.test',
             'password' => Hash::make('password'),
-            'role' => UserRole::Staff,
             'status' => UserStatus::Active,
-            'permissions' => ['view_orders', 'update_order_status'],
         ]);
+        $staff2Waiter->assignRole(UserRole::Staff->value);
+        $staff2Waiter->givePermissionTo(['view_orders', 'update_order_status']);
 
         $staff2Kitchen = User::query()->create([
             'restaurant_id' => $restaurant2->id,
             'name' => 'ناصر العتيبي',
             'email' => 'kitchen@al-diwan.test',
             'password' => Hash::make('password'),
-            'role' => UserRole::Staff,
             'status' => UserStatus::Active,
-            'permissions' => ['view_orders', 'update_order_status', 'view_menu'],
         ]);
+        $staff2Kitchen->assignRole(UserRole::Staff->value);
+        $staff2Kitchen->givePermissionTo(['view_orders', 'update_order_status', 'view_menu']);
 
         // =============================================
         // الطاولات - المطعم الثاني
@@ -1538,9 +1537,9 @@ class DatabaseSeeder extends Seeder
             'name' => 'صبحي الحلبي',
             'email' => 'admin@aleppo.test',
             'password' => Hash::make('password'),
-            'role' => UserRole::Admin,
             'status' => UserStatus::Active,
         ]);
+        $admin3->assignRole(UserRole::Admin->value);
 
         $categoriesData3 = [
             [
