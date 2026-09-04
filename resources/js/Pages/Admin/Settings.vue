@@ -62,8 +62,15 @@ async function save() {
         
         // Reload inertia props to update the navbar logo immediately
         router.reload({ only: ['auth'] });
-    } catch {
-        message.value = 'تعذر حفظ الإعدادات';
+    } catch (error: any) {
+        if (error.response?.data?.errors) {
+            const firstError = Object.values(error.response.data.errors)[0] as string[];
+            message.value = firstError[0];
+        } else if (error.response?.data?.message) {
+            message.value = error.response.data.message;
+        } else {
+            message.value = 'تعذر حفظ الإعدادات';
+        }
     } finally {
         saving.value = false;
     }

@@ -14,7 +14,7 @@ class MenuCategoryResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
-            'image' => $this->image ? asset('storage/'.$this->image) : null,
+            'image' => $this->image ? asset(ltrim($this->image, '/')) : null,
             'sort_order' => $this->sort_order,
             'is_active' => $this->is_active,
             'items' => MenuItemResource::collection($this->whenLoaded('activeItems')),
