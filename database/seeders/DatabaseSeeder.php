@@ -59,50 +59,48 @@ class DatabaseSeeder extends Seeder
             'name' => 'مدير النظام الرئيسي',
             'email' => 'super@tedallal.test',
             'password' => Hash::make('password'),
-            'role' => UserRole::SuperAdmin,
             'status' => UserStatus::Active,
-            'permissions' => null, // SuperAdmin لا يحتاج صلاحيات محددة
         ]);
+        $superAdmin->assignRole(UserRole::SuperAdmin->value);
 
         $admin = User::query()->create([
             'restaurant_id' => $restaurant->id,
             'name' => 'أحمد الشامي',
             'email' => 'admin@bait-alsham.test',
             'password' => Hash::make('password'),
-            'role' => UserRole::Admin,
             'status' => UserStatus::Active,
-            'permissions' => null, // Admin يملك جميع الصلاحيات
         ]);
+        $admin->assignRole(UserRole::Admin->value);
 
         $staffCashier = User::query()->create([
             'restaurant_id' => $restaurant->id,
             'name' => 'خالد العمري',
             'email' => 'cashier@bait-alsham.test',
             'password' => Hash::make('password'),
-            'role' => UserRole::Staff,
             'status' => UserStatus::Active,
-            'permissions' => ['view_orders', 'update_order_status', 'view_menu'],
         ]);
+        $staffCashier->assignRole(UserRole::Staff->value);
+        $staffCashier->givePermissionTo(['view_orders', 'update_order_status', 'view_menu']);
 
         $staffWaiter = User::query()->create([
             'restaurant_id' => $restaurant->id,
             'name' => 'سامي الحربي',
             'email' => 'waiter@bait-alsham.test',
             'password' => Hash::make('password'),
-            'role' => UserRole::Staff,
             'status' => UserStatus::Active,
-            'permissions' => ['view_orders', 'update_order_status'],
         ]);
+        $staffWaiter->assignRole(UserRole::Staff->value);
+        $staffWaiter->givePermissionTo(['view_orders', 'update_order_status']);
 
         $inactiveStaff = User::query()->create([
             'restaurant_id' => $restaurant->id,
             'name' => 'فهد السالم',
             'email' => 'inactive@bait-alsham.test',
             'password' => Hash::make('password'),
-            'role' => UserRole::Staff,
             'status' => UserStatus::Inactive,
-            'permissions' => ['view_orders'],
         ]);
+        $inactiveStaff->assignRole(UserRole::Staff->value);
+        $inactiveStaff->givePermissionTo(['view_orders']);
 
         // =============================================
         // 3. الطاولات - مع رموز QR
