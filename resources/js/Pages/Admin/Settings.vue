@@ -105,7 +105,18 @@ onMounted(load);
                 </div>
                 <div>
                     <label class="mb-1 block text-sm text-stone-600">العملة (ISO 4217)</label>
-                    <input v-model="form.currency" maxlength="3" required class="w-full rounded-lg border-stone-300 uppercase" dir="ltr" />
+                    <select v-model="form.currency" required class="w-full rounded-lg border-stone-300" dir="ltr">
+                        <option value="SAR">SAR - ريال سعودي</option>
+                        <option value="SYP">SYP - ليرة سورية</option>
+                        <option value="AED">AED - درهم إماراتي</option>
+                        <option value="KWD">KWD - دينار كويتي</option>
+                        <option value="QAR">QAR - ريال قطري</option>
+                        <option value="BHD">BHD - دينار بحريني</option>
+                        <option value="OMR">OMR - ريال عماني</option>
+                        <option value="EGP">EGP - جنيه مصري</option>
+                        <option value="JOD">JOD - دينار أردني</option>
+                        <option value="USD">USD - دولار أمريكي</option>
+                    </select>
                 </div>
                 <div>
                     <label class="mb-1 block text-sm text-stone-600">لوغو المطعم (اختياري)</label>

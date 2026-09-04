@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import { ref, onMounted, nextTick } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import axios from 'axios';
@@ -165,15 +165,15 @@ onMounted(() => {
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
                                 </div>
                             </div>
-                            <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100 flex items-center justify-between">
+                            <Link :href="route('super_admin.users')" class="bg-blue-50 p-6 rounded-2xl border border-blue-100 flex items-center justify-between hover:bg-blue-100 transition-colors">
                                 <div>
-                                    <p class="text-sm text-blue-800 font-semibold mb-1">إجمالي المستخدمين</p>
+                                    <p class="text-sm text-blue-800 font-semibold mb-1">إجمالي المستخدمين (إدارة)</p>
                                     <p class="text-3xl font-bold text-blue-600">{{ stats.total_users }}</p>
                                 </div>
                                 <div class="bg-blue-200 text-blue-700 p-3 rounded-full">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" /></svg>
                                 </div>
-                            </div>
+                            </Link>
                         </div>
 
                         <!-- Restaurant List Header + Add Button -->
@@ -242,6 +242,7 @@ onMounted(() => {
                                                     <select id="sa-restaurant-currency" v-model="form.currency" required
                                                         class="w-full rounded-xl border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 text-sm transition" dir="ltr">
                                                         <option value="SAR">SAR - ريال سعودي</option>
+                                                        <option value="SYP">SYP - ليرة سورية</option>
                                                         <option value="AED">AED - درهم إماراتي</option>
                                                         <option value="KWD">KWD - دينار كويتي</option>
                                                         <option value="QAR">QAR - ريال قطري</option>

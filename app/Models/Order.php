@@ -6,9 +6,12 @@ use App\Enums\OrderStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Traits\HasTenant;
 
 class Order extends Model
 {
+    use HasTenant;
+
     protected $fillable = [
         'restaurant_id',
         'table_id',

@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\ApiController;
 use App\Http\Resources\MenuCategoryResource;
 use App\Models\MenuCategory;
 use App\Services\RestaurantContext;
+use App\Http\Requests\StoreMenuCategoryRequest;
+use App\Http\Requests\UpdateMenuCategoryRequest;
 use Illuminate\Http\Request;
 
 class MenuCategoryController extends ApiController
@@ -19,23 +21,17 @@ class MenuCategoryController extends ApiController
         $restaurant = $this->restaurantContext->current();
 
         $categories = MenuCategory::query()
-            ->where('restaurant_id', $restaurant->id)
+            
             ->orderBy('sort_order')
             ->get();
 
         return $this->success(MenuCategoryResource::collection($categories));
     }
 
-    public function store(Request $request)
+    public function store(StoreMenuCategoryRequest $request)
     {
         $restaurant = $this->restaurantContext->current();
-
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:150'],
-            'description' => ['nullable', 'string'],
-            'sort_order' => ['sometimes', 'integer', 'min:0'],
-            'is_active' => ['sometimes', 'boolean'],
-        ]);
+        $validated = $request->validated();
 
         $category = MenuCategory::query()->create([
             ...$validated,
@@ -47,16 +43,10 @@ class MenuCategoryController extends ApiController
         return $this->success(new MenuCategoryResource($category), 201);
     }
 
-    public function update(Request $request, MenuCategory $category)
+    public function update(UpdateMenuCategoryRequest $request, MenuCategory $category)
     {
         $this->authorizeCategory($category);
-
-        $validated = $request->validate([
-            'name' => ['sometimes', 'string', 'max:150'],
-            'description' => ['nullable', 'string'],
-            'sort_order' => ['sometimes', 'integer', 'min:0'],
-            'is_active' => ['sometimes', 'boolean'],
-        ]);
+        $validated = $request->validated();
 
         $category->update($validated);
 

@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\HasTenant;
 
 class PromoCode extends Model
 {
+    use HasTenant;
     protected $fillable = [
         'restaurant_id',
         'code',

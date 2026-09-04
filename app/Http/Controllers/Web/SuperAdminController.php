@@ -17,4 +17,9 @@ class SuperAdminController extends Controller
     {
         return Inertia::render('SuperAdmin/CreateRestaurant');
     }
+
+    public function users(): Response
+    {
+        return Inertia::render('SuperAdmin/Users');
+    }
 }

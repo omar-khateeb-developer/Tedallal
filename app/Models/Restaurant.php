@@ -22,12 +22,31 @@ class Restaurant extends Model
         'features',
     ];
 
+    protected $appends = [
+        'logo',
+        'navbar_image',
+    ];
+
     protected function casts(): array
     {
         return [
             'status' => RestaurantStatus::class,
             'features' => 'array',
         ];
+    }
+
+    protected function logo(): \Illuminate\Database\Eloquent\Casts\Attribute
+    {
+        return \Illuminate\Database\Eloquent\Casts\Attribute::make(
+            get: fn (?string $value) => $value ? asset($value) : null,
+        );
+    }
+
+    protected function navbarImage(): \Illuminate\Database\Eloquent\Casts\Attribute
+    {
+        return \Illuminate\Database\Eloquent\Casts\Attribute::make(
+            get: fn (?string $value) => $value ? asset($value) : null,
+        );
     }
 
     public function users(): HasMany

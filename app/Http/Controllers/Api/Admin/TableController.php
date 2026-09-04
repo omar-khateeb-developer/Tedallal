@@ -8,6 +8,8 @@ use App\Models\RestaurantTable;
 use App\Services\QrCodeService;
 use App\Services\RestaurantContext;
 use App\Services\TokenGenerator;
+use App\Http\Requests\StoreTableRequest;
+use App\Http\Requests\UpdateTableRequest;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
@@ -24,21 +26,17 @@ class TableController extends ApiController
         $restaurant = $this->restaurantContext->current();
 
         $tables = RestaurantTable::query()
-            ->where('restaurant_id', $restaurant->id)
+            
             ->orderBy('name')
             ->get();
 
         return $this->success(RestaurantTableResource::collection($tables));
     }
 
-    public function store(Request $request)
+    public function store(StoreTableRequest $request)
     {
         $restaurant = $this->restaurantContext->current();
-
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:100'],
-            'status' => ['sometimes', 'in:active,inactive'],
-        ]);
+        $validated = $request->validated();
 
         $table = RestaurantTable::query()->create([
             'restaurant_id' => $restaurant->id,
@@ -54,14 +52,10 @@ class TableController extends ApiController
         return $this->success(new RestaurantTableResource($table), 201);
     }
 
-    public function update(Request $request, RestaurantTable $table)
+    public function update(UpdateTableRequest $request, RestaurantTable $table)
     {
         $this->authorizeTable($table);
-
-        $validated = $request->validate([
-            'name' => ['sometimes', 'string', 'max:100'],
-            'status' => ['sometimes', 'in:active,inactive'],
-        ]);
+        $validated = $request->validated();
 
         $table->update($validated);
 

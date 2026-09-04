@@ -253,7 +253,7 @@ const categoryChartOptions = {
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                         <div class="bg-white p-5 rounded-xl shadow-sm border border-stone-100">
                             <p class="text-sm text-stone-500 mb-1">إجمالي المبيعات</p>
-                            <p class="text-2xl font-bold text-green-600">{{ formatCurrency(stats.total_revenue) }} <span class="text-xs text-stone-400">SAR</span></p>
+                            <p class="text-2xl font-bold text-green-600">{{ formatCurrency(stats.total_revenue) }} <span class="text-xs text-stone-400">{{ $page.props.auth.restaurant?.currency }}</span></p>
                         </div>
                         <div class="bg-white p-5 rounded-xl shadow-sm border border-stone-100">
                             <p class="text-sm text-stone-500 mb-1">الطلبات المكتملة</p>
@@ -261,7 +261,7 @@ const categoryChartOptions = {
                         </div>
                         <div class="bg-white p-5 rounded-xl shadow-sm border border-stone-100">
                             <p class="text-sm text-stone-500 mb-1">متوسط قيمة الطلب (AOV)</p>
-                            <p class="text-2xl font-bold text-purple-600">{{ formatCurrency(stats.average_order_value) }} <span class="text-xs text-stone-400">SAR</span></p>
+                            <p class="text-2xl font-bold text-purple-600">{{ formatCurrency(stats.average_order_value) }} <span class="text-xs text-stone-400">{{ $page.props.auth.restaurant?.currency }}</span></p>
                         </div>
                         <div class="bg-white p-5 rounded-xl shadow-sm border border-stone-100">
                             <p class="text-sm text-stone-500 mb-1">معدل الإلغاء</p>

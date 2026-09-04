@@ -36,7 +36,23 @@ const nextStatus: Record<string, string> = {
     ready: 'served',
 };
 
-useRestaurantOrders(restaurantId.value, loadOrders);
+useRestaurantOrders(restaurantId.value, {
+    onInitialLoad: loadOrders,
+    onOrderCreated: (newOrder) => {
+        const exists = orders.value.find(o => o.id === newOrder.id);
+        if (!exists) {
+            orders.value.unshift(newOrder as Order);
+        }
+    },
+    onOrderUpdated: (updatedOrder) => {
+        const index = orders.value.findIndex(o => o.id === updatedOrder.id);
+        if (index !== -1) {
+            orders.value[index] = updatedOrder as Order;
+        } else {
+            orders.value.unshift(updatedOrder as Order);
+        }
+    }
+});
 </script>
 
 <template>
@@ -59,7 +75,7 @@ useRestaurantOrders(restaurantId.value, loadOrders);
                         <div>
                             <p class="font-bold">{{ order.order_number }}</p>
                             <p class="text-sm text-stone-500">
-                                {{ order.table?.name }} — {{ order.total }} ر.س
+                                {{ order.table?.name }} — {{ order.total }} {{ $page.props.auth.restaurant?.currency }}
                             </p>
                         </div>
                         <div class="flex items-center gap-2">

@@ -15,7 +15,7 @@ interface UserRow {
 }
 
 const users = ref<UserRow[]>([]);
-const form = ref({ id: null as number | null, name: '', email: '', password: '', role: 'staff', permissions: [] as string[] });
+const form = ref({ id: null as number | null, name: '', email: '', password: '', role: 'staff', status: 'active', permissions: [] as string[] });
 const message = ref('');
 const showPassword = ref(false);
 
@@ -41,13 +41,14 @@ function editUser(user: UserRow) {
         email: user.email,
         password: '',
         role: user.role,
+        status: user.status || 'active',
         permissions: user.permissions || [],
     };
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function cancelEdit() {
-    form.value = { id: null, name: '', email: '', password: '', role: 'staff', permissions: [] };
+    form.value = { id: null, name: '', email: '', password: '', role: 'staff', status: 'active', permissions: [] };
 }
 
 async function saveUser() {
@@ -125,6 +126,10 @@ onMounted(load);
                 <select v-model="form.role" class="rounded-lg border-stone-300">
                     <option value="staff">موظف</option>
                     <option value="admin">مدير</option>
+                </select>
+                <select v-model="form.status" class="rounded-lg border-stone-300">
+                    <option value="active">نشط</option>
+                    <option value="inactive">موقوف</option>
                 </select>
 
                 <div v-if="form.role === 'staff'" class="sm:col-span-2 mt-2 border-t pt-3">

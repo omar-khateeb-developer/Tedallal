@@ -13,6 +13,7 @@ export type PageProps<
         restaurant?: {
             id: number;
             name: string;
+            currency: string;
             logo: string | null;
             navbar_image: string | null;
         };

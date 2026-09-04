@@ -41,7 +41,7 @@ class CustomerController extends Controller
         ));
 
         $categories = MenuCategory::query()
-            ->where('restaurant_id', $table->restaurant_id)
+            
             ->active()
             ->orderBy('sort_order')
             ->with(['activeItems' => fn ($q) => $q->orderBy('sort_order')])

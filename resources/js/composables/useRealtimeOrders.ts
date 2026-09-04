@@ -13,18 +13,27 @@ type OrderEventHandler = (order: OrderPayload) => void;
 
 export function useRestaurantOrders(
     restaurantId: number | null | undefined,
-    onUpdate: () => void,
+    callbacks: {
+        onInitialLoad: () => void;
+        onOrderCreated: (order: OrderPayload) => void;
+        onOrderUpdated: (order: OrderPayload) => void;
+    },
 ) {
     let pollTimer: ReturnType<typeof setInterval> | null = null;
 
     onMounted(() => {
-        onUpdate();
-        pollTimer = setInterval(onUpdate, 10000);
+        callbacks.onInitialLoad();
+        // Fallback polling every 60 seconds
+        pollTimer = setInterval(callbacks.onInitialLoad, 60000);
 
         if (restaurantId && window.Echo) {
             window.Echo.private(`restaurant.${restaurantId}.orders`)
-                .listen('.order.created', () => onUpdate())
-                .listen('.order.status_changed', () => onUpdate());
+                .listen('.order.created', (payload: { order: OrderPayload }) => {
+                    callbacks.onOrderCreated(payload.order);
+                })
+                .listen('.order.status_changed', (payload: { order: OrderPayload }) => {
+                    callbacks.onOrderUpdated(payload.order);
+                });
         }
     });
 

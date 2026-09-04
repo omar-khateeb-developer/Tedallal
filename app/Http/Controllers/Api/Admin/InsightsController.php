@@ -41,7 +41,7 @@ class InsightsController extends ApiController
         }
 
         $servedOrdersQuery = DB::table('orders')
-            ->where('restaurant_id', $restaurant->id)
+            
             ->where('status', 'served')
             ->where('created_at', '>=', $thirtyDaysAgo);
             
@@ -74,7 +74,7 @@ class InsightsController extends ApiController
             
             // Peak hours insight
             $peakHours = DB::table('orders')
-                ->where('restaurant_id', $restaurant->id)
+                
                 ->where('status', 'served')
                 ->where('created_at', '>=', $thirtyDaysAgo)
                 ->select(DB::raw('HOUR(created_at) as hour'), DB::raw('COUNT(*) as total'))

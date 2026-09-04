@@ -42,7 +42,7 @@ class AnalyticsController extends ApiController
         $averageOrderValue = $servedCount > 0 ? $totalRevenue / $servedCount : 0;
 
         $servedQueryForJoin = DB::table('orders')
-            ->where('restaurant_id', $restaurant->id)
+            
             ->where('status', 'served');
 
         if ($period === 'today') {
@@ -91,7 +91,7 @@ class AnalyticsController extends ApiController
 
         // Hourly distribution
         $hourlyDistribution = DB::table('orders')
-            ->where('restaurant_id', $restaurant->id)
+            
             ->where('status', 'served')
             ->when($period === 'today', fn($q) => $q->whereDate('created_at', Carbon::today()))
             ->when($period === 'week', fn($q) => $q->where('created_at', '>=', Carbon::now()->startOfWeek()))

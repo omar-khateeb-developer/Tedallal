@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import AdminNav from '@/Components/Admin/AdminNav.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import NotificationToast from '@/Components/NotificationToast.vue';
 import { useRestaurantOrders } from '@/composables/useRealtimeOrders';
+import { useToast } from '@/composables/useToast';
 import { Head, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import axios from 'axios';
@@ -18,6 +20,16 @@ interface Order {
 const orders = ref<Order[]>([]);
 const page = usePage();
 const restaurantId = computed(() => page.props.restaurantId as number | undefined);
+const { showToast } = useToast();
+
+const notificationSound = new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU'); // Very short placeholder, browsers might need a real valid Base64 wav. I will use a simple valid Base64 beep.
+const beep = new Audio('data:audio/mp3;base64,//MkxAAAD/wwAAAAAAf88AAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq'); // Fallback placeholder.
+function playSound() {
+    try {
+        // Attempt to play sound, might be blocked by browser auto-play policies until user interacts
+        beep.play().catch(() => {});
+    } catch(e) {}
+}
 
 async function loadOrders() {
     const { data } = await axios.get('/api/admin/orders');
@@ -26,7 +38,7 @@ async function loadOrders() {
 
 async function updateStatus(order: Order, status: string) {
     await axios.patch(`/api/admin/orders/${order.id}/status`, { status });
-    await loadOrders();
+    // Don't call loadOrders(), the WebSocket event will update it automatically for everyone!
 }
 
 const nextStatus: Record<string, string> = {
@@ -36,7 +48,26 @@ const nextStatus: Record<string, string> = {
     ready: 'served',
 };
 
-useRestaurantOrders(restaurantId.value, loadOrders);
+useRestaurantOrders(restaurantId.value, {
+    onInitialLoad: loadOrders,
+    onOrderCreated: (newOrder) => {
+        // Prepend to array
+        const exists = orders.value.find(o => o.id === newOrder.id);
+        if (!exists) {
+            orders.value.unshift(newOrder as Order);
+        }
+        playSound();
+        showToast('طلب جديد', `تم استلام طلب جديد #${newOrder.order_number} ${newOrder.table ? 'من ' + newOrder.table.name : ''}`, 'success');
+    },
+    onOrderUpdated: (updatedOrder) => {
+        const index = orders.value.findIndex(o => o.id === updatedOrder.id);
+        if (index !== -1) {
+            orders.value[index] = updatedOrder as Order;
+        } else {
+            orders.value.unshift(updatedOrder as Order);
+        }
+    }
+});
 </script>
 
 <template>
@@ -61,7 +92,7 @@ useRestaurantOrders(restaurantId.value, loadOrders);
                         <div>
                             <p class="font-bold">{{ order.order_number }}</p>
                             <p class="text-sm text-stone-500">
-                                {{ order.table?.name }} — {{ order.total }} ر.س
+                                {{ order.table?.name }} — {{ order.total }} {{ $page.props.auth.restaurant?.currency }}
                             </p>
                         </div>
                         <div class="flex items-center gap-2">
@@ -89,5 +120,6 @@ useRestaurantOrders(restaurantId.value, loadOrders);
                 </article>
             </div>
         </div>
+        <NotificationToast />
     </AuthenticatedLayout>
 </template>

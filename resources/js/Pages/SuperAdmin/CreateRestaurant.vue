@@ -132,6 +132,7 @@ function fieldError(field: string): string | undefined {
                                         <select id="restaurant-currency" v-model="form.currency" required
                                             class="w-full rounded-xl border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 transition" dir="ltr">
                                             <option value="SAR">SAR - ريال سعودي</option>
+                                            <option value="SYP">SYP - ليرة سورية</option>
                                             <option value="AED">AED - درهم إماراتي</option>
                                             <option value="KWD">KWD - دينار كويتي</option>
                                             <option value="QAR">QAR - ريال قطري</option>

@@ -7,6 +7,8 @@ use App\Http\Resources\MenuItemResource;
 use App\Models\MenuCategory;
 use App\Models\MenuItem;
 use App\Services\RestaurantContext;
+use App\Http\Requests\StoreMenuItemRequest;
+use App\Http\Requests\UpdateMenuItemRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -21,7 +23,7 @@ class MenuItemController extends ApiController
         $restaurant = $this->restaurantContext->current();
 
         $query = MenuItem::query()
-            ->where('restaurant_id', $restaurant->id)
+            
             ->with('category')
             ->orderBy('sort_order');
 
@@ -32,20 +34,10 @@ class MenuItemController extends ApiController
         return $this->success(MenuItemResource::collection($query->get()));
     }
 
-    public function store(Request $request)
+    public function store(StoreMenuItemRequest $request)
     {
         $restaurant = $this->restaurantContext->current();
-
-        $validated = $request->validate([
-            'category_id' => ['required', 'exists:menu_categories,id'],
-            'name' => ['required', 'string', 'max:150'],
-            'description' => ['nullable', 'string'],
-            'price' => ['required', 'numeric', 'min:0'],
-            'image' => ['nullable', 'image', 'max:10240'],
-            'sort_order' => ['sometimes', 'integer', 'min:0'],
-            'is_available' => ['sometimes', 'boolean'],
-            'is_active' => ['sometimes', 'boolean'],
-        ]);
+        $validated = $request->validated();
 
         $category = MenuCategory::query()->findOrFail($validated['category_id']);
 
@@ -69,20 +61,10 @@ class MenuItemController extends ApiController
         return $this->success(new MenuItemResource($item), 201);
     }
 
-    public function update(Request $request, MenuItem $item)
+    public function update(UpdateMenuItemRequest $request, MenuItem $item)
     {
         $this->authorizeItem($item);
-
-        $validated = $request->validate([
-            'category_id' => ['sometimes', 'exists:menu_categories,id'],
-            'name' => ['sometimes', 'string', 'max:150'],
-            'description' => ['nullable', 'string'],
-            'price' => ['sometimes', 'numeric', 'min:0'],
-            'image' => ['nullable', 'image', 'max:10240'],
-            'sort_order' => ['sometimes', 'integer', 'min:0'],
-            'is_available' => ['sometimes', 'boolean'],
-            'is_active' => ['sometimes', 'boolean'],
-        ]);
+        $validated = $request->validated();
 
         if ($request->hasFile('image')) {
             if ($item->image) {

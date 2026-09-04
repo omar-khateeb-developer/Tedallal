@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Enums\OrderStatus;
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Resources\OrderResource;
+use App\Http\Requests\UpdateOrderRequest;
 use App\Models\Order;
 use App\Services\OrderStatusTransitionService;
 use App\Services\RestaurantContext;
@@ -23,7 +24,7 @@ class OrderController extends ApiController
 
         $query = Order::query()
             ->with(['items', 'table'])
-            ->where('restaurant_id', $restaurant->id)
+            
             ->latest();
 
         if ($request->filled('status')) {
@@ -41,13 +42,10 @@ class OrderController extends ApiController
         return $this->success(new OrderResource($order));
     }
 
-    public function updateStatus(Request $request, Order $order)
+    public function updateStatus(UpdateOrderRequest $request, Order $order)
     {
         $this->authorizeOrder($order);
-
-        $validated = $request->validate([
-            'status' => ['required', 'string', 'in:'.implode(',', array_column(OrderStatus::cases(), 'value'))],
-        ]);
+        $validated = $request->validated();
 
         try {
             $updated = $this->statusService->transition(

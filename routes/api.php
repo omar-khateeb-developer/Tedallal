@@ -85,4 +85,9 @@ Route::prefix('super-admin')->middleware(['auth:sanctum', EnsureUserHasRole::cla
     Route::get('restaurants', [\App\Http\Controllers\Api\SuperAdmin\RestaurantController::class, 'index']);
     Route::post('restaurants', [\App\Http\Controllers\Api\SuperAdmin\RestaurantController::class, 'store']);
     Route::patch('restaurants/{restaurant}', [\App\Http\Controllers\Api\SuperAdmin\RestaurantController::class, 'update']);
+    Route::get('users', [\App\Http\Controllers\Api\SuperAdmin\UserController::class, 'index']);
+    Route::post('users', [\App\Http\Controllers\Api\SuperAdmin\UserController::class, 'store']);
+    Route::patch('users/{user}', [\App\Http\Controllers\Api\SuperAdmin\UserController::class, 'update']);
+    Route::delete('users/{user}', [\App\Http\Controllers\Api\SuperAdmin\UserController::class, 'destroy']);
+    Route::get('users/{user}/logs', [\App\Http\Controllers\Api\SuperAdmin\UserController::class, 'logs']);
 });

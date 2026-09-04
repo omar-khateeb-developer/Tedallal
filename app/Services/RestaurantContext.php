@@ -15,6 +15,26 @@ final class RestaurantContext
             return $this->cached;
         }
 
+        // 1. If admin is logged in, use their restaurant
+        if (auth()->check() && auth()->user()->restaurant_id) {
+            return $this->cached = auth()->user()->restaurant;
+        }
+
+        // 2. If it's a public customer request, use the session token
+        $sessionToken = request()->cookie('tedallal_session') ?? request()->header('X-Session-Token');
+        if ($sessionToken) {
+            $tableSession = \App\Models\TableSession::query()
+                ->where('session_token', $sessionToken)
+                ->where('status', 'active')
+                ->with('table.restaurant')
+                ->first();
+                
+            if ($tableSession && $tableSession->table && $tableSession->table->restaurant) {
+                return $this->cached = $tableSession->table->restaurant;
+            }
+        }
+
+        // 3. Fallback (e.g. for superadmin or guest with no session)
         $restaurant = Restaurant::query()
             ->where('status', RestaurantStatus::Active)
             ->first();

@@ -14,12 +14,14 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['restaurant_id', 'name', 'email', 'password', 'role', 'status', 'permissions'])]
+use Spatie\Permission\Traits\HasRoles;
+
+#[Fillable(['restaurant_id', 'name', 'email', 'password', 'status'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
     /**
      * Get the attributes that should be cast.
@@ -31,9 +33,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'role' => UserRole::class,
             'status' => UserStatus::class,
-            'permissions' => 'array',
         ];
     }
 
@@ -44,17 +44,17 @@ class User extends Authenticatable
 
     public function isSuperAdmin(): bool
     {
-        return $this->role === UserRole::SuperAdmin;
+        return $this->hasRole('super_admin');
     }
 
     public function isAdmin(): bool
     {
-        return $this->role === UserRole::Admin;
+        return $this->hasRole('admin');
     }
 
     public function isStaff(): bool
     {
-        return $this->role === UserRole::Staff;
+        return $this->hasRole('staff');
     }
 
     public function isActive(): bool
@@ -67,7 +67,6 @@ class User extends Authenticatable
         if ($this->isSuperAdmin() || $this->isAdmin()) {
             return true;
         }
-
-        return in_array($permission, $this->permissions ?? []);
+        return $this->hasPermissionTo($permission);
     }
 }

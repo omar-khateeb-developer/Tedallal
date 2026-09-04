@@ -107,7 +107,7 @@ const deleteOffer = async (id: number) => {
                             <label class="block text-sm font-medium text-gray-700 mb-1">نوع الخصم</label>
                             <select v-model="form.discount_type" class="w-full border-gray-300 rounded-md shadow-sm focus:border-amber-500 focus:ring-amber-500">
                                 <option value="percentage">نسبة مئوية (%)</option>
-                                <option value="fixed">مبلغ ثابت (SAR)</option>
+                                <option value="fixed">مبلغ ثابت ({{ $page.props.auth.restaurant?.currency }})</option>
                             </select>
                         </div>
                         <div>
@@ -139,7 +139,7 @@ const deleteOffer = async (id: number) => {
                             <tr v-for="offer in offers" :key="offer.id" class="hover:bg-stone-50/50">
                                 <td class="py-3 px-4 font-bold text-gray-800">{{ offer.code }}</td>
                                 <td class="py-3 px-4 text-gray-600">
-                                    {{ offer.discount_value }} {{ offer.discount_type === 'percentage' ? '%' : 'SAR' }}
+                                    {{ offer.discount_value }} {{ offer.discount_type === 'percentage' ? '%' : $page.props.auth.restaurant?.currency }}
                                 </td>
                                 <td class="py-3 px-4 text-gray-600">{{ offer.expires_at ? new Date(offer.expires_at).toLocaleDateString() : 'مفتوح' }}</td>
                                 <td class="py-3 px-4">

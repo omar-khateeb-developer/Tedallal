@@ -2,6 +2,7 @@
 defineProps<{
     title?: string;
     navbarImage?: string | null;
+    logo?: string | null;
 }>();
 </script>
 
@@ -14,11 +15,14 @@ defineProps<{
                 :style="{ backgroundImage: `url(${navbarImage})` }"
             ></div>
             <div class="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
-                <div>
-                    <p class="text-xs text-stone-500">تدلّل</p>
-                    <slot name="title">
-                        <h1 class="text-lg font-bold">{{ title }}</h1>
-                    </slot>
+                <div class="flex items-center gap-3">
+                    <img v-if="logo" :src="logo" class="h-10 w-10 object-contain rounded-lg border border-stone-100" alt="Restaurant Logo" />
+                    <div>
+                        <p class="text-xs text-stone-500">تدلّل</p>
+                        <slot name="title">
+                            <h1 class="text-lg font-bold">{{ title }}</h1>
+                        </slot>
+                    </div>
                 </div>
                 <slot name="actions" />
             </div>

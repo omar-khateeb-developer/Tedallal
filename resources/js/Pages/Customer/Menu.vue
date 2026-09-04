@@ -22,7 +22,7 @@ interface Category {
 }
 
 const props = defineProps<{
-    restaurant: { name: string; currency: string; navbar_image?: string | null };
+    restaurant: { name: string; currency: string; navbar_image?: string | null; logo?: string | null };
     table: { name: string; public_token: string };
     categories: Category[];
     openCart?: boolean;
@@ -117,7 +117,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <CustomerLayout :navbar-image="restaurant.navbar_image">
+    <CustomerLayout :navbar-image="restaurant.navbar_image" :logo="restaurant.logo">
         <template #title>
             <h1 class="text-lg font-bold">{{ restaurant.name }}</h1>
             <p class="text-sm text-stone-500">{{ table.name }}</p>

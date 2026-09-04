@@ -23,13 +23,13 @@ class DashboardController extends ApiController
         $today = now()->startOfDay();
 
         $orderStats = Order::query()
-            ->where('restaurant_id', $restaurant->id)
+            
             ->selectRaw('status, COUNT(*) as count')
             ->groupBy('status')
             ->pluck('count', 'status');
 
         $todayRevenue = Order::query()
-            ->where('restaurant_id', $restaurant->id)
+            
             ->where('created_at', '>=', $today)
             ->whereNotIn('status', [OrderStatus::Cancelled])
             ->sum('total');
@@ -37,7 +37,7 @@ class DashboardController extends ApiController
         return response()->json([
             'success' => true,
             'data' => [
-                'total_orders' => Order::where('restaurant_id', $restaurant->id)->count(),
+                'total_orders' => Order::count(),
                 'pending_orders' => $orderStats[OrderStatus::Pending->value] ?? 0,
                 'preparing_orders' => ($orderStats[OrderStatus::Preparing->value] ?? 0)
                     + ($orderStats[OrderStatus::Accepted->value] ?? 0),
@@ -46,10 +46,10 @@ class DashboardController extends ApiController
                 'today_revenue' => number_format((float) $todayRevenue, 2, '.', ''),
                 'active_tables' => TableSession::query()
                     ->where('status', 'active')
-                    ->whereHas('table', fn ($q) => $q->where('restaurant_id', $restaurant->id))
+                    ->whereHas('table')
                     ->count(),
                 'unavailable_menu_items' => MenuItem::query()
-                    ->where('restaurant_id', $restaurant->id)
+                    
                     ->where(fn ($q) => $q->where('is_available', false)->orWhere('is_active', false))
                     ->count(),
             ],
