@@ -21,7 +21,7 @@ class EnsureUserHasRole
         }
 
         if (! $user->hasAnyRole($roles)) {
-            abort(403, 'غير مصرح.');
+            abort(403, 'غير مصرح.');//
         }
 
         return $next($request);
