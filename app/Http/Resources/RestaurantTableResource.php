@@ -16,6 +16,7 @@ class RestaurantTableResource extends JsonResource
             'public_token' => $this->public_token,
             'status' => $this->status,
             'public_url' => $this->publicUrl(),
+            'qr_url' => asset("storage/qr/{$this->restaurant_id}/{$this->public_token}.png"),
             'restaurant' => new RestaurantResource($this->whenLoaded('restaurant')),
         ];
     }

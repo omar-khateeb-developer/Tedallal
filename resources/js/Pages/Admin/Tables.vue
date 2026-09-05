@@ -9,6 +9,7 @@ interface TableRow {
     id: number;
     name: string;
     public_token: string;
+    qr_url: string;
     status: string;
 }
 
@@ -51,15 +52,25 @@ function startEdit(table: TableRow) {
 }
 
 async function saveEdit(table: TableRow) {
-    await axios.patch(`/api/admin/tables/${table.id}`, { name: editingName.value });
-    editingId.value = null;
-    await reload();
+    try {
+        await axios.patch(`/api/admin/tables/${table.id}`, { name: editingName.value });
+        editingId.value = null;
+        await reload();
+    } catch (e: any) {
+        alert(e.response?.data?.message || 'تعذر الحفظ');
+        console.error(e);
+    }
 }
 
 async function toggleStatus(table: TableRow) {
-    const status = table.status === 'active' ? 'inactive' : 'active';
-    await axios.patch(`/api/admin/tables/${table.id}`, { status });
-    await reload();
+    try {
+        const status = table.status === 'active' ? 'inactive' : 'active';
+        await axios.patch(`/api/admin/tables/${table.id}`, { status });
+        await reload();
+    } catch (e: any) {
+        alert(e.response?.data?.message || 'تعذر تغيير الحالة');
+        console.error(e);
+    }
 }
 
 async function deleteTable(table: TableRow) {
@@ -67,15 +78,21 @@ async function deleteTable(table: TableRow) {
     try {
         await axios.delete(`/api/admin/tables/${table.id}`);
         await reload();
-    } catch {
-        alert('لا يمكن حذف طاولة لها طلبات');
+    } catch (e: any) {
+        alert(e.response?.data?.message || 'لا يمكن حذف طاولة لها طلبات');
+        console.error(e);
     }
 }
 
 async function regenerateToken(table: TableRow) {
     if (!confirm('سيتم إبطال رمز QR الحالي. متابعة؟')) return;
-    await axios.post(`/api/admin/tables/${table.id}/regenerate-token`);
-    await reload();
+    try {
+        await axios.post(`/api/admin/tables/${table.id}/regenerate-token`);
+        await reload();
+    } catch (e: any) {
+        alert(e.response?.data?.message || 'تعذر توليد QR جديد');
+        console.error(e);
+    }
 }
 
 onMounted(() => {
@@ -131,7 +148,7 @@ onMounted(() => {
 
                     <p class="mt-1 text-sm text-stone-500">{{ restaurant.name }}</p>
                     <img
-                        :src="`/api/admin/tables/${table.id}/qr`"
+                        :src="table.qr_url"
                         :alt="`QR ${table.name}`"
                         class="mx-auto my-4 h-36 w-36"
                     />
@@ -141,7 +158,7 @@ onMounted(() => {
                             {{ table.status === 'active' ? 'تعطيل' : 'تفعيل' }}
                         </button>
                         <button class="rounded-lg bg-stone-100 px-3 py-1" @click="regenerateToken(table)">QR جديد</button>
-                        <a :href="`/api/admin/tables/${table.id}/qr`" download class="rounded-lg bg-amber-600 px-3 py-1 text-white">تحميل</a>
+                        <a :href="table.qr_url" download class="rounded-lg bg-amber-600 px-3 py-1 text-white">تحميل</a>
                         <button class="rounded-lg bg-red-100 px-3 py-1 text-red-700" @click="deleteTable(table)">حذف</button>
                     </div>
                 </article>

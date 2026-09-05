@@ -15,8 +15,14 @@ class ActivityLogger
             return;
         }
 
+        $restaurantId = $user->restaurant_id ?? app(\App\Services\RestaurantContext::class)->current()?->id;
+
+        if (! $restaurantId) {
+            return;
+        }
+
         ActivityLog::create([
-            'restaurant_id' => $user->restaurant_id,
+            'restaurant_id' => $restaurantId,
             'user_id' => $user->id,
             'action' => $action,
             'description' => $description,

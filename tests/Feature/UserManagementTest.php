@@ -20,7 +20,7 @@ class UserManagementTest extends TestCase
 
     public function test_admin_can_create_staff_user(): void
     {
-        $admin = User::query()->where('role', UserRole::Admin)->first();
+        $admin = User::role(UserRole::Admin->value)->first();
 
         $response = $this->actingAs($admin)->postJson('/api/admin/users', [
             'name' => 'موظف جديد',
@@ -35,7 +35,7 @@ class UserManagementTest extends TestCase
 
     public function test_staff_cannot_manage_users(): void
     {
-        $staff = User::query()->where('role', UserRole::Staff)->first();
+        $staff = User::role(UserRole::Staff->value)->first();
 
         $this->actingAs($staff)->getJson('/api/admin/users')->assertForbidden();
     }

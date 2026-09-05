@@ -63,11 +63,18 @@ async function save() {
         // Reload inertia props to update the navbar logo immediately
         router.reload({ only: ['auth'] });
     } catch (error: any) {
-        if (error.response?.data?.errors) {
+        console.error('Settings save error:', error);
+        if (error.response?.status === 413) {
+            message.value = 'حجم الملف كبير جداً. يرجى اختيار ملف أصغر.';
+        } else if (error.response?.data?.errors) {
             const firstError = Object.values(error.response.data.errors)[0] as string[];
             message.value = firstError[0];
         } else if (error.response?.data?.message) {
             message.value = error.response.data.message;
+        } else if (error.response?.statusText) {
+            message.value = `تعذر حفظ الإعدادات: ${error.response.status} - ${error.response.statusText}`;
+        } else if (error.message) {
+            message.value = `تعذر حفظ الإعدادات: ${error.message}`;
         } else {
             message.value = 'تعذر حفظ الإعدادات';
         }
@@ -76,10 +83,53 @@ async function save() {
     }
 }
 
-function handleFileUpload(event: Event) {
+async function compressImage(file: File, maxWidth = 1200): Promise<File> {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target?.result as string;
+            img.onload = () => {
+                let width = img.width;
+                let height = img.height;
+                
+                if (width > maxWidth) {
+                    height = Math.round((height * maxWidth) / width);
+                    width = maxWidth;
+                }
+                
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return resolve(file);
+                
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                canvas.toBlob((blob) => {
+                    if (blob) {
+                        resolve(new File([blob], file.name, { type: file.type, lastModified: Date.now() }));
+                    } else {
+                        resolve(file);
+                    }
+                }, file.type, 0.8);
+            };
+            img.onerror = () => resolve(file);
+        };
+        reader.onerror = () => resolve(file);
+    });
+}
+
+async function handleFileUpload(event: Event, field: 'logo' | 'navbar_image') {
     const target = event.target as HTMLInputElement;
     if (target.files && target.files.length > 0) {
-        form.value.navbar_image = target.files[0];
+        const file = target.files[0];
+        if (file.type.startsWith('image/')) {
+            form.value[field] = await compressImage(file);
+        } else {
+            form.value[field] = file;
+        }
     }
 }
 
@@ -127,11 +177,11 @@ onMounted(load);
                 </div>
                 <div>
                     <label class="mb-1 block text-sm text-stone-600">لوغو المطعم (اختياري)</label>
-                    <input type="file" @change="e => form.logo = (e.target as HTMLInputElement).files?.[0] ?? null" accept="image/*" class="w-full rounded-lg border-stone-300 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" />
+                    <input type="file" @change="e => handleFileUpload(e, 'logo')" accept="image/*" class="w-full rounded-lg border-stone-300 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" />
                 </div>
                 <div>
                     <label class="mb-1 block text-sm text-stone-600">صورة الـ NavBar المخصصة (اختياري)</label>
-                    <input type="file" @change="handleFileUpload" accept="image/*" class="w-full rounded-lg border-stone-300 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" />
+                    <input type="file" @change="e => handleFileUpload(e, 'navbar_image')" accept="image/*" class="w-full rounded-lg border-stone-300 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" />
                 </div>
 
                 <p v-if="message" class="text-sm" :class="message.includes('نجاح') ? 'text-green-600' : 'text-red-600'">

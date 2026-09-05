@@ -20,7 +20,7 @@ class AuthorizationTest extends TestCase
 
     public function test_staff_cannot_access_admin_table_management(): void
     {
-        $staff = User::query()->where('role', UserRole::Staff)->first();
+        $staff = User::role(UserRole::Staff->value)->first();
 
         $response = $this->actingAs($staff)->getJson('/api/admin/tables');
 

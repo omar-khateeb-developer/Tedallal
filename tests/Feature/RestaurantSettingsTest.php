@@ -20,7 +20,7 @@ class RestaurantSettingsTest extends TestCase
 
     public function test_admin_can_update_restaurant_settings(): void
     {
-        $admin = User::query()->where('role', UserRole::Admin)->first();
+        $admin = User::role(UserRole::Admin->value)->first();
 
         $response = $this->actingAs($admin)->patchJson('/api/admin/restaurant', [
             'name' => 'مطعم محدّث',
@@ -34,7 +34,7 @@ class RestaurantSettingsTest extends TestCase
 
     public function test_staff_cannot_update_restaurant_settings(): void
     {
-        $staff = User::query()->where('role', UserRole::Staff)->first();
+        $staff = User::role(UserRole::Staff->value)->first();
 
         $response = $this->actingAs($staff)->patchJson('/api/admin/restaurant', [
             'name' => 'محاولة تغيير',

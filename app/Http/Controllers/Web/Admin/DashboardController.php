@@ -37,7 +37,7 @@ class DashboardController extends Controller
             ->get();
 
         return Inertia::render('Admin/Tables', [
-            'tables' => $tables,
+            'tables' => \App\Http\Resources\RestaurantTableResource::collection($tables)->resolve(),
             'restaurant' => $restaurant,
         ]);
     }
