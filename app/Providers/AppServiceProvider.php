@@ -41,5 +41,12 @@ class AppServiceProvider extends ServiceProvider
         foreach ($this->policies as $model => $policy) {
             Gate::policy($model, $policy);
         }
+
+        Gate::before(function ($user, $ability) {
+            if ($user->isSuperAdmin() || $user->isAdmin()) {
+                return true;
+            }
+            return null;
+        });
     }
 }

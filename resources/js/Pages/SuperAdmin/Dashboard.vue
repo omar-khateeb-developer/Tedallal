@@ -57,7 +57,7 @@ function fieldError(field: string): string | undefined {
 const fetchRestaurants = async () => {
     try {
         const response = await axios.get('/api/super-admin/restaurants');
-        restaurants.value = response.data;
+        restaurants.value = response.data.data ?? response.data;
     } catch (e) {
         console.error(e);
     }

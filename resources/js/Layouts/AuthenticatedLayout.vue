@@ -25,10 +25,13 @@ const showingNavigationDropdown = ref(false);
                     <div class="flex h-24 justify-between items-center">
                         <div class="flex items-center gap-6">
                             <!-- Logo -->
-                            <div class="flex shrink-0 items-center bg-white/90 backdrop-blur-md p-1.5 rounded-2xl shadow-sm border border-white/50 transition-all hover:scale-105 hover:shadow-md">
-                                <Link :href="route('dashboard')">
-                                    <img v-if="$page.props.auth.restaurant?.logo" :src="$page.props.auth.restaurant.logo" class="h-16 w-auto max-w-[200px] object-contain rounded-xl" alt="Restaurant Logo" />
+                            <div class="flex shrink-0 items-center bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-2xl shadow-sm border border-white/50 transition-all hover:scale-105 hover:shadow-md">
+                                <Link :href="route('dashboard')" class="flex items-center gap-3">
+                                    <img v-if="$page.props.auth.restaurant?.logo" :src="$page.props.auth.restaurant.logo" class="h-16 w-auto max-w-[200px] object-contain rounded-xl shadow-sm" alt="Restaurant Logo" />
                                     <ApplicationLogo v-else class="block h-12 w-auto fill-current text-gray-800 dark:text-gray-200" />
+                                    <span v-if="$page.props.auth.restaurant" class="text-lg font-extrabold bg-gradient-to-l from-amber-600 to-orange-400 bg-clip-text text-transparent ml-2 drop-shadow-sm font-sans tracking-wide">
+                                        {{ $page.props.auth.restaurant.name }}
+                                    </span>
                                 </Link>
                             </div>
 

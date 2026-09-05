@@ -7,11 +7,12 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 abstract class ApiController
 {
-    protected function success(JsonResource|array $data, int $status = 200): JsonResponse
+    protected function success(JsonResource|array|\Illuminate\Support\Collection $data, int $status = 200): JsonResponse
     {
         $payload = $data instanceof JsonResource
             ? $data->response()->getData(true)
-            : $data;
+            : ($data instanceof \Illuminate\Support\Collection ? $data->toArray() : $data);
+
 
         return response()->json([
             'success' => true,

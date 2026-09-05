@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers\Api\SuperAdmin;
 
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\ApiController;
 use App\Models\Restaurant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
-class RestaurantController extends Controller
+class RestaurantController extends ApiController
 {
     public function index()
     {
-        return Restaurant::latest()->get();
+        return $this->success(Restaurant::latest()->get());
     }
 
     public function store(Request $request)
