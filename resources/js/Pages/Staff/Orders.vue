@@ -90,6 +90,9 @@ useRestaurantOrders(restaurantId.value, {
         <div class="py-8" dir="rtl">
             <div class="mx-auto max-w-5xl space-y-3 px-4">
                 <AdminNav />
+                <div v-if="orders.length === 0" class="rounded-2xl bg-white p-8 text-center text-gray-500 shadow border border-dashed border-gray-300 mt-4">
+                    لا يوجد طلبات حالياً
+                </div>
                 <article
                     v-for="order in orders"
                     :key="order.id"
