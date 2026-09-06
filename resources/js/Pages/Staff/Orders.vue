@@ -3,9 +3,92 @@ import AdminNav from '@/Components/Admin/AdminNav.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { useRestaurantOrders } from '@/composables/useRealtimeOrders';
 import { Head, usePage } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import axios from 'axios';
 import { useToast } from '@/composables/useToast';
+
+// ============================================================
+// 🔔 نظام التنبيهات الصوتية وإشعارات المتصفح
+// ============================================================
+
+const notificationPermission = ref<NotificationPermission>('default');
+
+// طلب صلاحية الإشعارات عند تحميل الصفحة
+onMounted(async () => {
+    if ('Notification' in window) {
+        notificationPermission.value = Notification.permission;
+    }
+});
+
+async function requestNotificationPermission() {
+    if (!('Notification' in window)) return;
+    const result = await Notification.requestPermission();
+    notificationPermission.value = result;
+}
+
+// توليد صوت تنبيه مزدوج باستخدام Web Audio API (لا يحتاج ملف صوتي)
+function playAlertSound() {
+    try {
+        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+
+        const playBeep = (startTime: number, freq: number, duration: number) => {
+            const oscillator = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(ctx.destination);
+
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(freq, startTime);
+
+            // fade in
+            gainNode.gain.setValueAtTime(0, startTime);
+            gainNode.gain.linearRampToValueAtTime(0.6, startTime + 0.02);
+            // fade out
+            gainNode.gain.linearRampToValueAtTime(0, startTime + duration - 0.02);
+
+            oscillator.start(startTime);
+            oscillator.stop(startTime + duration);
+        };
+
+        const now = ctx.currentTime;
+        playBeep(now, 880, 0.18);        // نغمة أولى
+        playBeep(now + 0.22, 1100, 0.18); // نغمة ثانية أعلى
+        playBeep(now + 0.44, 880, 0.25);  // نغمة ختامية
+
+        // إغلاق السياق بعد انتهاء الأصوات
+        setTimeout(() => ctx.close(), 1200);
+    } catch (e) {
+        console.warn('Audio alert failed:', e);
+    }
+}
+
+function showBrowserNotification(order: Order) {
+    if (Notification.permission !== 'granted') return;
+
+    const itemsSummary = order.items?.map(i => `${i.quantity}x ${i.item_name_snapshot}`).join('، ') ?? '';
+
+    const notification = new Notification('🔔 طلب جديد وصل المطبخ!', {
+        body: `${order.order_number} — ${order.table?.name ?? 'سفري'}\n${itemsSummary}`,
+        icon: '/favicon.ico',
+        badge: '/favicon.ico',
+        tag: `order-${order.id}`,        // يمنع تكرار نفس الإشعار
+        requireInteraction: false,       // يختفي تلقائياً
+    });
+
+    notification.onclick = () => {
+        window.focus();
+        notification.close();
+    };
+
+    // إغلاق الإشعار تلقائياً بعد 8 ثواني
+    setTimeout(() => notification.close(), 8000);
+}
+
+function alertNewOrder(order: Order) {
+    playAlertSound();
+    showBrowserNotification(order);
+}
 
 interface OrderItem {
     id: number;
@@ -137,6 +220,8 @@ useRestaurantOrders(restaurantId.value, {
         const exists = orders.value.find(o => o.id === newOrder.id);
         if (!exists) {
             orders.value.unshift(newOrder as Order);
+            // 🔔 إطلاق التنبيه الصوتي والمرئي
+            alertNewOrder(newOrder as Order);
         }
     },
     onOrderUpdated: (updatedOrder) => {
@@ -155,7 +240,29 @@ useRestaurantOrders(restaurantId.value, {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">شاشة المطبخ (KDS)</h2>
+            <div class="flex items-center justify-between w-full">
+                <h2 class="text-xl font-semibold leading-tight text-gray-800">شاشة المطبخ (KDS)</h2>
+
+                <!-- زر تفعيل إشعارات المتصفح -->
+                <button
+                    v-if="notificationPermission !== 'granted'"
+                    @click="requestNotificationPermission"
+                    class="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all"
+                    :class="notificationPermission === 'denied'
+                        ? 'bg-red-50 text-red-600 cursor-not-allowed'
+                        : 'bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200'"
+                    :disabled="notificationPermission === 'denied'"
+                    :title="notificationPermission === 'denied' ? 'تم رفض الإشعارات. يرجى السماح بها من إعدادات المتصفح' : ''"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                    <span v-if="notificationPermission === 'denied'">الإشعارات محجوبة</span>
+                    <span v-else>تفعيل الإشعارات</span>
+                </button>
+                <span v-else class="flex items-center gap-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    الإشعارات مفعّلة
+                </span>
+            </div>
         </template>
 
         <div class="py-6" dir="rtl">
