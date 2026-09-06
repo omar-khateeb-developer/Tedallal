@@ -102,7 +102,7 @@ onMounted(load);
                     </select>
                     <input v-model="form.name" class="rounded-lg border-stone-300" placeholder="الاسم" />
                     <input v-model="form.price" class="rounded-lg border-stone-300" placeholder="السعر" dir="ltr" />
-                    <input type="file" id="createImageInput" class="rounded-lg border-stone-300 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" @change="e => form.image = (e.target as HTMLInputElement).files?.[0] ?? null" />
+                    <input type="file" id="createImageInput" accept="image/*" class="rounded-lg border-stone-300 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" @change="e => form.image = (e.target as HTMLInputElement).files?.[0] ?? null" />
                     <button class="rounded-lg bg-amber-600 text-white flex items-center justify-center transition-all disabled:opacity-50" :disabled="creatingItem" @click="createItem">
                         <span v-if="creatingItem" class="inline-block h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin ml-2"></span>
                         إضافة
@@ -141,6 +141,7 @@ onMounted(load);
                             />
                             <input 
                                 type="file" 
+                                accept="image/*"
                                 class="w-48 text-xs file:mr-2 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-xs file:bg-stone-100 file:text-stone-700 hover:file:bg-stone-200"
                                 @change="e => { const f = (e.target as HTMLInputElement).files?.[0]; if(f) updateItem(item, 'image', f); }"
                             />
