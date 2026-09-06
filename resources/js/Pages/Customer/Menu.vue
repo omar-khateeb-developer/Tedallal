@@ -183,16 +183,19 @@ onMounted(() => {
                 :key="item.id"
                 class="flex items-center gap-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-stone-100"
             >
+                <div v-if="item.image" class="h-20 w-20 flex-shrink-0">
+                    <img :src="item.image" :alt="item.name" class="h-full w-full rounded-xl object-cover shadow-sm" />
+                </div>
                 <div class="flex-1">
                     <h3 class="font-semibold">{{ item.name }}</h3>
-                    <p v-if="item.description" class="mt-1 text-sm text-stone-500">
+                    <p v-if="item.description" class="mt-1 text-sm text-stone-500 line-clamp-2">
                         {{ item.description }}
                     </p>
                     <p class="mt-2 font-bold text-amber-700">{{ formatPrice(item.price) }}</p>
                 </div>
                 <button
                     type="button"
-                    class="rounded-xl bg-amber-600 px-4 py-3 text-sm font-medium text-white"
+                    class="rounded-xl bg-amber-600 px-4 py-3 text-sm font-medium text-white flex-shrink-0"
                     @click="openAddModal(item)"
                 >
                     أضف

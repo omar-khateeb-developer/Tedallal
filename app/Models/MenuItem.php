@@ -23,6 +23,8 @@ class MenuItem extends Model
         'is_active',
     ];
 
+    protected $appends = ['image'];
+
     protected function casts(): array
     {
         return [
@@ -31,6 +33,19 @@ class MenuItem extends Model
             'is_available' => 'boolean',
             'is_active' => 'boolean',
         ];
+    }
+
+    protected function image(): \Illuminate\Database\Eloquent\Casts\Attribute
+    {
+        return \Illuminate\Database\Eloquent\Casts\Attribute::make(
+            get: function (?string $value) {
+                if (! $value) return null;
+                if (str_starts_with($value, 'http')) {
+                    $value = parse_url($value, PHP_URL_PATH);
+                }
+                return asset($value);
+            },
+        );
     }
 
     public function restaurant(): BelongsTo

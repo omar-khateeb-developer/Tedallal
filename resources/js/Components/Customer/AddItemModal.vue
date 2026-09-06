@@ -35,6 +35,9 @@ watch(() => props.item, () => {
             @click.self="emit('close')"
         >
             <div class="w-full max-w-lg rounded-t-3xl bg-white p-6 shadow-xl sm:rounded-3xl" dir="rtl">
+                <div v-if="(item as any).image" class="mb-4 aspect-video w-full overflow-hidden rounded-2xl">
+                    <img :src="(item as any).image" :alt="item.name" class="h-full w-full object-cover" />
+                </div>
                 <h3 class="text-xl font-bold">{{ item.name }}</h3>
                 <p class="mt-1 text-amber-700">{{ item.price }} {{ currency }}</p>
 
