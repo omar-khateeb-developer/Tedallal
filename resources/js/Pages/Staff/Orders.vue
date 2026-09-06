@@ -5,6 +5,16 @@ import { useRestaurantOrders } from '@/composables/useRealtimeOrders';
 import { Head, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import axios from 'axios';
+import { useToast } from '@/composables/useToast';
+
+interface OrderItem {
+    id: number;
+    item_name_snapshot: string;
+    quantity: number;
+    unit_price: string;
+    subtotal: string;
+    note?: string;
+}
 
 interface Order {
     id: number;
@@ -13,6 +23,7 @@ interface Order {
     status_label: string;
     total: string;
     table?: { name: string };
+    items?: OrderItem[];
 }
 
 const orders = ref<Order[]>([]);
@@ -24,9 +35,22 @@ async function loadOrders() {
     orders.value = data.data?.data ?? data.data ?? [];
 }
 
+const processingOrderIds = ref<number[]>([]);
+const { showToast } = useToast();
+
 async function updateStatus(order: Order, status: string) {
-    await axios.patch(`/api/admin/orders/${order.id}/status`, { status });
-    await loadOrders();
+    if (processingOrderIds.value.includes(order.id)) return;
+    
+    processingOrderIds.value.push(order.id);
+    try {
+        await axios.patch(`/api/admin/orders/${order.id}/status`, { status });
+        showToast('نجاح', 'تم تحديث حالة الطلب بنجاح', 'success');
+        await loadOrders();
+    } catch (e: any) {
+        showToast('خطأ', e.response?.data?.message || 'حدث خطأ أثناء تحديث الحالة', 'error');
+    } finally {
+        processingOrderIds.value = processingOrderIds.value.filter(id => id !== order.id);
+    }
 }
 
 const nextStatus: Record<string, string> = {
@@ -75,20 +99,40 @@ useRestaurantOrders(restaurantId.value, {
                         <div>
                             <p class="font-bold">{{ order.order_number }}</p>
                             <p class="text-sm text-stone-500">
-                                {{ order.table?.name }} — {{ order.total }} {{ $page.props.auth.restaurant?.currency }}
+                                {{ order.table?.name || 'سفري' }} - الإجمالي: {{ order.total }} ل.س
                             </p>
                         </div>
-                        <div class="flex items-center gap-2">
+                        
+                        <!-- Order Items List -->
+                        <div class="w-full mt-2 bg-stone-50 rounded-lg p-3 border border-stone-100" v-if="order.items && order.items.length > 0">
+                            <h4 class="text-xs font-bold text-stone-500 mb-2 uppercase">محتويات الطلب:</h4>
+                            <ul class="space-y-1">
+                                <li v-for="item in order.items" :key="item.id" class="flex justify-between items-center text-sm border-b border-stone-200/50 pb-1 last:border-0 last:pb-0">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold text-amber-600">{{ item.quantity }}x</span>
+                                        <span class="font-medium text-stone-800">{{ item.item_name_snapshot }}</span>
+                                    </div>
+                                    <span class="text-stone-500 text-xs">{{ item.subtotal }} ل.س</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2 pt-4 w-full justify-between items-center border-t border-stone-100 mt-2">
                             <span class="rounded-full bg-amber-100 px-3 py-1 text-sm">
                                 {{ order.status_label }}
                             </span>
                             <button
                                 v-if="nextStatus[order.status]"
                                 type="button"
-                                class="rounded-lg bg-amber-600 px-3 py-2 text-sm text-white"
+                                :disabled="processingOrderIds.includes(order.id)"
+                                class="rounded-lg bg-amber-600 px-3 py-2 text-sm text-white disabled:opacity-50 transition-all active:scale-95"
                                 @click="updateStatus(order, nextStatus[order.status])"
                             >
-                                التالي
+                                <span v-if="processingOrderIds.includes(order.id)" class="flex items-center gap-2">
+                                    <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-dasharray="31.415, 31.415" opacity="0.3"></circle><path d="M12 2C6.477 2 2 6.477 2 12" stroke="currentColor" stroke-width="4" stroke-linecap="round"></path></svg>
+                                    جاري التحديث...
+                                </span>
+                                <span v-else>التالي</span>
                             </button>
                         </div>
                     </div>

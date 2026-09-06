@@ -73,7 +73,7 @@ class MenuCategoryController extends ApiController
 
     private function authorizeCategory(MenuCategory $category): void
     {
-        if ($category->restaurant_id !== $this->restaurantContext->current()->id) {
+        if ((int) $category->restaurant_id !== (int) $this->restaurantContext->current()->id) {
             abort(404);
         }
     }

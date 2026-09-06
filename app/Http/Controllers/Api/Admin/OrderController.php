@@ -70,7 +70,7 @@ class OrderController extends ApiController
     {
         $restaurant = $this->restaurantContext->current();
 
-        if ($order->restaurant_id !== $restaurant->id) {
+        if ((int) $order->restaurant_id !== (int) $restaurant->id) {
             abort(404);
         }
     }

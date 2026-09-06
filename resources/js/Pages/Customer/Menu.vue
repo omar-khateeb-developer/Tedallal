@@ -26,6 +26,12 @@ const props = defineProps<{
     table: { name: string; public_token: string };
     categories: Category[];
     openCart?: boolean;
+    activeOrders?: {
+        id: number;
+        order_number: string;
+        status: string;
+        total: string;
+    }[];
 }>();
 
 const activeCategory = ref(props.categories[0]?.id ?? 0);
@@ -128,6 +134,30 @@ onMounted(() => {
             class="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700"
         >
             {{ errorMessage }}
+        </div>
+
+        <div v-if="activeOrders && activeOrders.length > 0" class="mb-4">
+            <button
+                v-for="order in activeOrders"
+                :key="order.id"
+                class="w-full flex items-center justify-between rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 p-4 shadow-sm mb-2 text-white transition-all active:scale-95"
+                @click="router.visit(`/t/${props.table.public_token}/orders/${order.order_number}`)"
+            >
+                <div class="flex items-center gap-3">
+                    <div class="h-10 w-10 flex items-center justify-center rounded-full bg-white/20">
+                        <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-bold">متابعة الطلب {{ order.order_number }}</p>
+                        <p class="text-xs text-white/80">اضغط لمعرفة حالة طلبك</p>
+                    </div>
+                </div>
+                <svg class="h-5 w-5 text-white/70 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </button>
         </div>
 
         <div class="mb-4 flex gap-2 overflow-x-auto pb-1">

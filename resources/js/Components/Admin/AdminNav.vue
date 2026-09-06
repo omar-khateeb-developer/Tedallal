@@ -50,11 +50,39 @@ const links = computed(() => allLinks.filter(link => {
 </template>
 
 <style scoped>
-.hide-scrollbar::-webkit-scrollbar {
-    display: none;
+/* Mobile: hide scrollbar completely */
+@media (max-width: 768px) {
+    .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+    .hide-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
 }
-.hide-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+
+/* Desktop: styled subtle scrollbar */
+@media (min-width: 769px) {
+    .hide-scrollbar::-webkit-scrollbar {
+        height: 6px;
+    }
+    .hide-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+        margin: 0 10px;
+    }
+    .hide-scrollbar::-webkit-scrollbar-thumb {
+        background-color: #e2e8f0; /* slate-200 */
+        border-radius: 10px;
+    }
+    .hide-scrollbar:hover::-webkit-scrollbar-thumb {
+        background-color: #cbd5e1; /* slate-300 */
+    }
+    .hide-scrollbar::-webkit-scrollbar-thumb:hover {
+        background-color: #94a3b8; /* slate-400 */
+    }
+    .hide-scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 transparent;
+    }
 }
 </style>

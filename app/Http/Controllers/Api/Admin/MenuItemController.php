@@ -101,7 +101,7 @@ class MenuItemController extends ApiController
 
     private function authorizeItem(MenuItem $item): void
     {
-        if ($item->restaurant_id !== $this->restaurantContext->current()->id) {
+        if ((int) $item->restaurant_id !== (int) $this->restaurantContext->current()->id) {
             abort(404);
         }
     }

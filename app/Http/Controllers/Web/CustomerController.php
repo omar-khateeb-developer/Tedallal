@@ -47,12 +47,18 @@ class CustomerController extends Controller
             ->with(['activeItems' => fn ($q) => $q->orderBy('sort_order')])
             ->get();
 
+        $activeOrders = $session->orders()
+            ->whereNotIn('status', ['served', 'cancelled'])
+            ->select('id', 'order_number', 'status', 'total')
+            ->get();
+
         return Inertia::render('Customer/Menu', [
             'restaurant' => $table->restaurant,
             'table' => $table,
             'categories' => $categories,
             'sessionToken' => $session->session_token,
             'openCart' => $request->boolean('cart'),
+            'activeOrders' => $activeOrders,
         ]);
     }
 
