@@ -2,9 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Restaurant;
-use App\Enums\RestaurantStatus;
-
 final class RestaurantContext
 {
     private ?Restaurant $cached = null;
@@ -34,16 +31,8 @@ final class RestaurantContext
             }
         }
 
-        // 3. Fallback (e.g. for superadmin or guest with no session)
-        $restaurant = Restaurant::query()
-            ->where('status', RestaurantStatus::Active)
-            ->first();
-
-        if (! $restaurant) {
-            throw new \RuntimeException('No active restaurant configured.');
-        }
-
-        return $this->cached = $restaurant;
+        // 3. No valid context found - throw instead of leaking another tenant's data
+        throw new \RuntimeException('No restaurant context found. Cannot resolve tenant.');
     }
 
     public function forget(): void

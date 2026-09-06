@@ -18,8 +18,8 @@ class MenuController extends ApiController
     {
         $restaurant = $this->restaurantContext->current();
 
-        $categories = MenuCategory::query()
-            
+        $categories = MenuCategory::withoutGlobalScopes()
+            ->where('restaurant_id', $restaurant->id)
             ->active()
             ->orderBy('sort_order')
             ->with(['activeItems' => fn ($q) => $q->orderBy('sort_order')])
@@ -32,8 +32,8 @@ class MenuController extends ApiController
     {
         $restaurant = $this->restaurantContext->current();
 
-        $categories = MenuCategory::query()
-            
+        $categories = MenuCategory::withoutGlobalScopes()
+            ->where('restaurant_id', $restaurant->id)
             ->active()
             ->orderBy('sort_order')
             ->get();
@@ -45,8 +45,8 @@ class MenuController extends ApiController
     {
         $restaurant = $this->restaurantContext->current();
 
-        $items = MenuItem::query()
-            
+        $items = MenuItem::withoutGlobalScopes()
+            ->where('restaurant_id', $restaurant->id)
             ->orderable()
             ->orderBy('sort_order')
             ->get();

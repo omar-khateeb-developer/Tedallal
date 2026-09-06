@@ -40,8 +40,10 @@ class CustomerController extends Controller
             'Lax'
         ));
 
-        $categories = MenuCategory::query()
-            
+        // CRITICAL: scope directly by restaurant_id from the resolved table,
+        // bypassing TenantScope which cannot read the cookie yet on first visit.
+        $categories = MenuCategory::withoutGlobalScopes()
+            ->where('restaurant_id', $table->restaurant_id)
             ->active()
             ->orderBy('sort_order')
             ->with(['activeItems' => fn ($q) => $q->orderBy('sort_order')])
