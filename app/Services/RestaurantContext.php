@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\Restaurant;
+
 final class RestaurantContext
 {
     private ?Restaurant $cached = null;
