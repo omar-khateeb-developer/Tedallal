@@ -36,9 +36,24 @@ async function loadOrders() {
     orders.value = data.data?.data ?? data.data ?? [];
 }
 
+const updatingIds = ref<Set<number>>(new Set());
+
 async function updateStatus(order: Order, status: string) {
-    await axios.patch(`/api/admin/orders/${order.id}/status`, { status });
-    // Don't call loadOrders(), the WebSocket event will update it automatically for everyone!
+    if (updatingIds.value.has(order.id)) return;
+    updatingIds.value.add(order.id);
+
+    try {
+        const { data } = await axios.patch(`/api/admin/orders/${order.id}/status`, { status });
+        const index = orders.value.findIndex(o => o.id === order.id);
+        if (index !== -1) {
+            orders.value[index] = data.data ?? { ...order, status };
+        }
+    } catch (error: any) {
+        showToast('خطأ', error.response?.data?.message ?? 'تعذّر تحديث حالة الطلب', 'error');
+        await loadOrders();
+    } finally {
+        updatingIds.value.delete(order.id);
+    }
 }
 
 const nextStatus: Record<string, string> = {
@@ -102,7 +117,8 @@ useRestaurantOrders(restaurantId.value, {
                             <button
                                 v-if="nextStatus[order.status]"
                                 type="button"
-                                class="rounded-lg bg-amber-600 px-3 py-2 text-sm text-white"
+                                :disabled="updatingIds.has(order.id)"
+                                class="rounded-lg bg-amber-600 px-3 py-2 text-sm text-white disabled:opacity-50"
                                 @click="updateStatus(order, nextStatus[order.status])"
                             >
                                 التالي
@@ -110,7 +126,8 @@ useRestaurantOrders(restaurantId.value, {
                             <button
                                 v-if="['pending', 'accepted'].includes(order.status)"
                                 type="button"
-                                class="rounded-lg bg-red-100 px-3 py-2 text-sm text-red-700"
+                                :disabled="updatingIds.has(order.id)"
+                                class="rounded-lg bg-red-100 px-3 py-2 text-sm text-red-700 disabled:opacity-50"
                                 @click="updateStatus(order, 'cancelled')"
                             >
                                 إلغاء
