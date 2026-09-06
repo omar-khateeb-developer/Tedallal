@@ -38,14 +38,28 @@ class Restaurant extends Model
     protected function logo(): \Illuminate\Database\Eloquent\Casts\Attribute
     {
         return \Illuminate\Database\Eloquent\Casts\Attribute::make(
-            get: fn (?string $value) => $value ? asset($value) : null,
+            get: function (?string $value) {
+                if (! $value) return null;
+                // إذا كان المسار مخزّناً كـ URL كامل، نستخرج المسار النسبي فقط
+                if (str_starts_with($value, 'http')) {
+                    $value = parse_url($value, PHP_URL_PATH);
+                }
+                return asset($value);
+            },
         );
     }
 
     protected function navbarImage(): \Illuminate\Database\Eloquent\Casts\Attribute
     {
         return \Illuminate\Database\Eloquent\Casts\Attribute::make(
-            get: fn (?string $value) => $value ? asset($value) : null,
+            get: function (?string $value) {
+                if (! $value) return null;
+                // إذا كان المسار مخزّناً كـ URL كامل، نستخرج المسار النسبي فقط
+                if (str_starts_with($value, 'http')) {
+                    $value = parse_url($value, PHP_URL_PATH);
+                }
+                return asset($value);
+            },
         );
     }
 

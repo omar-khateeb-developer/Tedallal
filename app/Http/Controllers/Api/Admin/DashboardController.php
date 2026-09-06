@@ -20,16 +20,17 @@ class DashboardController extends ApiController
     public function stats()
     {
         $restaurant = $this->restaurantContext->current();
+        $restaurantId = $restaurant->id;
         $today = now()->startOfDay();
 
-        $orderStats = Order::query()
-            
+        $orderStats = Order::withoutGlobalScopes()
+            ->where('restaurant_id', $restaurantId)
             ->selectRaw('status, COUNT(*) as count')
             ->groupBy('status')
             ->pluck('count', 'status');
 
-        $todayRevenue = Order::query()
-            
+        $todayRevenue = Order::withoutGlobalScopes()
+            ->where('restaurant_id', $restaurantId)
             ->where('created_at', '>=', $today)
             ->whereNotIn('status', [OrderStatus::Cancelled])
             ->sum('total');
@@ -37,7 +38,7 @@ class DashboardController extends ApiController
         return response()->json([
             'success' => true,
             'data' => [
-                'total_orders' => Order::count(),
+                'total_orders' => Order::withoutGlobalScopes()->where('restaurant_id', $restaurantId)->count(),
                 'pending_orders' => $orderStats[OrderStatus::Pending->value] ?? 0,
                 'preparing_orders' => ($orderStats[OrderStatus::Preparing->value] ?? 0)
                     + ($orderStats[OrderStatus::Accepted->value] ?? 0),
@@ -46,10 +47,10 @@ class DashboardController extends ApiController
                 'today_revenue' => number_format((float) $todayRevenue, 2, '.', ''),
                 'active_tables' => TableSession::query()
                     ->where('status', 'active')
-                    ->whereHas('table')
+                    ->whereHas('table', fn($q) => $q->where('restaurant_id', $restaurantId))
                     ->count(),
-                'unavailable_menu_items' => MenuItem::query()
-                    
+                'unavailable_menu_items' => MenuItem::withoutGlobalScopes()
+                    ->where('restaurant_id', $restaurantId)
                     ->where(fn ($q) => $q->where('is_available', false)->orWhere('is_active', false))
                     ->count(),
             ],
