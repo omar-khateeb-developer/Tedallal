@@ -36,7 +36,57 @@ async function loadOrders() {
 }
 
 const processingOrderIds = ref<number[]>([]);
+const expandedOrderIds = ref<Set<number>>(new Set());
 const { showToast } = useToast();
+
+const toggleItems = (orderId: number) => {
+    if (expandedOrderIds.value.has(orderId)) {
+        expandedOrderIds.value.delete(orderId);
+    } else {
+        expandedOrderIds.value.add(orderId);
+    }
+};
+
+const nextStatus: Record<string, string> = {
+    pending: 'accepted',
+    accepted: 'preparing',
+    preparing: 'ready',
+    ready: 'served',
+};
+
+// Drag and drop setup
+const draggedOrderId = ref<number | null>(null);
+
+const onDragStart = (event: DragEvent, orderId: number) => {
+    draggedOrderId.value = orderId;
+    if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = 'move';
+        // For Firefox compatibility
+        event.dataTransfer.setData('text/plain', orderId.toString());
+    }
+};
+
+const onDragEnd = () => {
+    draggedOrderId.value = null;
+};
+
+const onDrop = async (newStatus: string) => {
+    if (!draggedOrderId.value) return;
+    
+    const orderId = draggedOrderId.value;
+    draggedOrderId.value = null; // reset
+
+    const order = orders.value.find(o => o.id === orderId);
+    if (!order || order.status === newStatus) return;
+
+    // Validate transition
+    if (nextStatus[order.status] !== newStatus) {
+        showToast('حركة غير صحيحة', 'لا يمكن تجاوز الترتيب المنطقي للطلبات', 'warning');
+        return;
+    }
+
+    await updateStatus(order, newStatus);
+};
 
 async function updateStatus(order: Order, status: string) {
     if (processingOrderIds.value.includes(order.id)) return;
@@ -44,20 +94,41 @@ async function updateStatus(order: Order, status: string) {
     processingOrderIds.value.push(order.id);
     try {
         await axios.patch(`/api/admin/orders/${order.id}/status`, { status });
-        showToast('نجاح', 'تم تحديث حالة الطلب بنجاح', 'success');
-        await loadOrders();
+        
+        // Optimistic update
+        const index = orders.value.findIndex(o => o.id === order.id);
+        if (index !== -1) {
+            orders.value[index].status = status;
+            // Best effort status label update locally
+            const statusLabels: Record<string, string> = {
+                'accepted': 'مقبول',
+                'preparing': 'قيد التحضير',
+                'ready': 'جاهز',
+                'served': 'تم التقديم'
+            };
+            if (statusLabels[status]) {
+                orders.value[index].status_label = statusLabels[status];
+            }
+        }
+        
     } catch (e: any) {
         showToast('خطأ', e.response?.data?.message || 'حدث خطأ أثناء تحديث الحالة', 'error');
+        await loadOrders(); // revert optimistic update
     } finally {
         processingOrderIds.value = processingOrderIds.value.filter(id => id !== order.id);
     }
 }
 
-const nextStatus: Record<string, string> = {
-    pending: 'accepted',
-    accepted: 'preparing',
-    preparing: 'ready',
-    ready: 'served',
+// Columns definition
+const columns = [
+    { id: 'pending', title: 'طلبات جديدة', bg: 'bg-orange-50/50', border: 'border-orange-200' },
+    { id: 'accepted', title: 'بانتظار التحضير', bg: 'bg-blue-50/50', border: 'border-blue-200' },
+    { id: 'preparing', title: 'قيد التحضير', bg: 'bg-purple-50/50', border: 'border-purple-200' },
+    { id: 'ready', title: 'جاهز للتقديم', bg: 'bg-emerald-50/50', border: 'border-emerald-200' },
+];
+
+const getColumnOrders = (status: string) => {
+    return orders.value.filter(o => o.status === status);
 };
 
 useRestaurantOrders(restaurantId.value, {
@@ -80,67 +151,130 @@ useRestaurantOrders(restaurantId.value, {
 </script>
 
 <template>
-    <Head title="الطلبات" />
+    <Head title="المطبخ - لوحة الكانبان" />
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">لوحة الطلبات</h2>
+            <h2 class="text-xl font-semibold leading-tight text-gray-800">شاشة المطبخ (KDS)</h2>
         </template>
 
-        <div class="py-8" dir="rtl">
-            <div class="mx-auto max-w-5xl space-y-3 px-4">
-                <AdminNav />
-                <div v-if="orders.length === 0" class="rounded-2xl bg-white p-8 text-center text-gray-500 shadow border border-dashed border-gray-300 mt-4">
-                    لا يوجد طلبات حالياً
+        <div class="py-6" dir="rtl">
+            <div class="mx-auto max-w-[1400px] px-4 h-full flex flex-col">
+                <AdminNav class="mb-4" />
+                
+                <div v-if="orders.length === 0" class="rounded-2xl bg-white p-12 text-center text-gray-500 shadow-sm border border-dashed border-gray-300 mt-4 flex flex-col items-center justify-center min-h-[300px]">
+                    <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    <p class="text-lg font-medium">لا يوجد طلبات نشطة حالياً</p>
+                    <p class="text-sm opacity-70">عند استلام طلب جديد سيظهر هنا تلقائياً.</p>
                 </div>
-                <article
-                    v-for="order in orders"
-                    :key="order.id"
-                    class="rounded-2xl bg-white p-4 shadow"
-                >
-                    <div class="flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                            <p class="font-bold">{{ order.order_number }}</p>
-                            <p class="text-sm text-stone-500">
-                                {{ order.table?.name || 'سفري' }} - الإجمالي: {{ order.total }} ل.س
-                            </p>
-                        </div>
-                        
-                        <!-- Order Items List -->
-                        <div class="w-full mt-2 bg-stone-50 rounded-lg p-3 border border-stone-100" v-if="order.items && order.items.length > 0">
-                            <h4 class="text-xs font-bold text-stone-500 mb-2 uppercase">محتويات الطلب:</h4>
-                            <ul class="space-y-1">
-                                <li v-for="item in order.items" :key="item.id" class="flex justify-between items-center text-sm border-b border-stone-200/50 pb-1 last:border-0 last:pb-0">
-                                    <div class="flex items-center gap-2">
-                                        <span class="font-bold text-amber-600">{{ item.quantity }}x</span>
-                                        <span class="font-medium text-stone-800">{{ item.item_name_snapshot }}</span>
-                                    </div>
-                                    <span class="text-stone-500 text-xs">{{ item.subtotal }} ل.س</span>
-                                </li>
-                            </ul>
+
+                <!-- Kanban Board Grid -->
+                <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-start h-full">
+                    
+                    <div 
+                        v-for="col in columns" 
+                        :key="col.id"
+                        class="flex flex-col h-full rounded-2xl border bg-white shadow-sm overflow-hidden"
+                        :class="[col.border]"
+                        @dragover.prevent
+                        @drop.prevent="onDrop(col.id)"
+                    >
+                        <!-- Column Header -->
+                        <div class="p-4 border-b border-stone-100 flex items-center justify-between" :class="col.bg">
+                            <h3 class="font-bold text-gray-800">{{ col.title }}</h3>
+                            <span class="bg-white rounded-full px-3 py-1 text-xs font-bold shadow-sm border border-stone-100">
+                                {{ getColumnOrders(col.id).length }}
+                            </span>
                         </div>
 
-                        <div class="flex flex-wrap gap-2 pt-4 w-full justify-between items-center border-t border-stone-100 mt-2">
-                            <span class="rounded-full bg-amber-100 px-3 py-1 text-sm">
-                                {{ order.status_label }}
-                            </span>
-                            <button
-                                v-if="nextStatus[order.status]"
-                                type="button"
-                                :disabled="processingOrderIds.includes(order.id)"
-                                class="rounded-lg bg-amber-600 px-3 py-2 text-sm text-white disabled:opacity-50 transition-all active:scale-95"
-                                @click="updateStatus(order, nextStatus[order.status])"
-                            >
-                                <span v-if="processingOrderIds.includes(order.id)" class="flex items-center gap-2">
-                                    <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-dasharray="31.415, 31.415" opacity="0.3"></circle><path d="M12 2C6.477 2 2 6.477 2 12" stroke="currentColor" stroke-width="4" stroke-linecap="round"></path></svg>
-                                    جاري التحديث...
-                                </span>
-                                <span v-else>التالي</span>
-                            </button>
+                        <!-- Column Body (Scrollable) -->
+                        <div class="p-3 flex-1 overflow-y-auto bg-stone-50/30 min-h-[500px]">
+                            
+                            <div v-if="getColumnOrders(col.id).length === 0" class="h-full flex items-center justify-center text-stone-400 text-sm italic">
+                                اسحب الطلب إلى هنا...
+                            </div>
+                            
+                            <TransitionGroup name="list" tag="div" class="space-y-3 relative">
+                                <article
+                                    v-for="order in getColumnOrders(col.id)"
+                                    :key="order.id"
+                                    :draggable="!processingOrderIds.includes(order.id)"
+                                    @dragstart="onDragStart($event, order.id)"
+                                    @dragend="onDragEnd"
+                                    class="rounded-xl bg-white p-3 shadow-sm border border-stone-100 cursor-grab active:cursor-grabbing hover:shadow-md transition-all duration-200"
+                                    :class="{'opacity-50 pointer-events-none': processingOrderIds.includes(order.id)}"
+                                >
+                                    <div class="flex items-center justify-between mb-2">
+                                        <div>
+                                            <p class="font-black text-gray-900 text-lg">{{ order.order_number }}</p>
+                                            <p class="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full inline-block mt-1">
+                                                {{ order.table?.name || 'سفري' }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Items Accordion -->
+                                    <div class="mt-3" v-if="order.items && order.items.length > 0">
+                                        <button 
+                                            @click="toggleItems(order.id)"
+                                            class="flex w-full items-center justify-between bg-stone-50 hover:bg-stone-100 px-3 py-2 rounded-lg text-sm font-medium text-stone-700 transition-colors"
+                                        >
+                                            <span>تفاصيل الأصناف ({{ order.items.length }})</span>
+                                            <svg class="w-4 h-4 transition-transform duration-200" :class="{'rotate-180': expandedOrderIds.has(order.id)}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                        </button>
+                                        
+                                        <div v-show="expandedOrderIds.has(order.id)" class="mt-2 space-y-1 px-1">
+                                            <div v-for="item in order.items" :key="item.id" class="flex justify-between items-center text-sm py-1 border-b border-dashed border-stone-200 last:border-0">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">{{ item.quantity }}x</span>
+                                                    <span class="font-medium text-stone-800">{{ item.item_name_snapshot }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Action Button (Fallback for touch screens) -->
+                                    <div class="mt-4 pt-3 border-t border-stone-50 flex justify-end" v-if="nextStatus[order.status]">
+                                        <button
+                                            type="button"
+                                            :disabled="processingOrderIds.includes(order.id)"
+                                            class="w-full rounded-lg bg-stone-900 px-3 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-stone-800 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                                            @click="updateStatus(order, nextStatus[order.status])"
+                                        >
+                                            <span v-if="processingOrderIds.includes(order.id)">
+                                                <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-dasharray="31.415, 31.415" opacity="0.3"></circle><path d="M12 2C6.477 2 2 6.477 2 12" stroke="currentColor" stroke-width="4" stroke-linecap="round"></path></svg>
+                                            </span>
+                                            <span v-else>
+                                                {{ 
+                                                    order.status === 'pending' ? 'البدء بالتجهيز' : 
+                                                    order.status === 'accepted' ? 'بدء التحضير' : 
+                                                    order.status === 'preparing' ? 'تم التجهيز' : 'التالي' 
+                                                }}
+                                            </span>
+                                        </button>
+                                    </div>
+                                </article>
+                            </TransitionGroup>
                         </div>
                     </div>
-                </article>
+                </div>
+
             </div>
         </div>
     </AuthenticatedLayout>
 </template>
+
+<style scoped>
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.3s ease;
+}
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateY(15px);
+}
+.list-move {
+  transition: transform 0.3s ease;
+}
+</style>
