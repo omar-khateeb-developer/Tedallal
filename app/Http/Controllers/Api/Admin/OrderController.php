@@ -24,7 +24,7 @@ class OrderController extends ApiController
 
         $query = Order::query()
             ->with(['items', 'table'])
-            
+            ->where('restaurant_id', $restaurant->id)
             ->latest();
 
         if ($request->filled('status')) {
@@ -71,7 +71,7 @@ class OrderController extends ApiController
         $restaurant = $this->restaurantContext->current();
 
         if ((int) $order->restaurant_id !== (int) $restaurant->id) {
-            abort(404);
+            abort(403, "Restaurant ID Mismatch. Order restaurant_id: {$order->restaurant_id}, Current restaurant_id: {$restaurant->id}");
         }
     }
 }

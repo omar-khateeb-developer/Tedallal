@@ -39,7 +39,14 @@ final class OrderStatusTransitionService
             'user_role' => $actor->role instanceof UserRole ? $actor->role->value : $actor->role,
         ]);
 
-        OrderStatusChanged::dispatch($order, $current, $target);
+        try {
+            OrderStatusChanged::dispatch($order, $current, $target);
+        } catch (\Throwable $e) {
+            Log::warning('Broadcast failed (Reverb may be offline): ' . $e->getMessage(), [
+                'order_id' => $order->id,
+                'order_number' => $order->order_number,
+            ]);
+        }
 
         return $order->fresh(['items', 'table']);
     }
