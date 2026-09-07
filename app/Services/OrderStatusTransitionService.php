@@ -28,7 +28,15 @@ final class OrderStatusTransitionService
             ]);
         }
 
-        $order->update(['status' => $target]);
+        $updateData = ['status' => $target];
+
+        // تسجيل وقت الحالة تلقائياً
+        $timestampColumn = \App\Models\Order::statusTimestampFor($target);
+        if ($timestampColumn) {
+            $updateData[$timestampColumn] = now();
+        }
+
+        $order->update($updateData);
 
         Log::info('Order status changed', [
             'order_id' => $order->id,

@@ -107,6 +107,19 @@ interface Order {
     total: string;
     table?: { name: string };
     items?: OrderItem[];
+    created_at?: string;
+    accepted_at?: string;
+    preparing_at?: string;
+    ready_at?: string;
+    served_at?: string;
+    cancelled_at?: string;
+}
+
+// تنسيق الوقت بشكل مختصر وجميل
+function formatTime(iso?: string): string {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return d.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit', hour12: true });
 }
 
 const orders = ref<Order[]>([]);
@@ -317,6 +330,35 @@ useRestaurantOrders(restaurantId.value, {
                                             <p class="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full inline-block mt-1">
                                                 {{ order.table?.name || 'سفري' }}
                                             </p>
+                                        </div>
+                                    </div>
+
+                                    <!-- مخطط زمني للحالات -->
+                                    <div class="space-y-1 mb-2">
+                                        <div v-if="order.created_at" class="flex items-center gap-2 text-xs text-stone-500">
+                                            <span class="w-2 h-2 rounded-full bg-orange-400 shrink-0"></span>
+                                            <span class="font-medium text-stone-600">وصل:</span>
+                                            <span dir="ltr">{{ formatTime(order.created_at) }}</span>
+                                        </div>
+                                        <div v-if="order.accepted_at" class="flex items-center gap-2 text-xs text-blue-600">
+                                            <span class="w-2 h-2 rounded-full bg-blue-400 shrink-0"></span>
+                                            <span class="font-medium">قُبل:</span>
+                                            <span dir="ltr">{{ formatTime(order.accepted_at) }}</span>
+                                        </div>
+                                        <div v-if="order.preparing_at" class="flex items-center gap-2 text-xs text-purple-600">
+                                            <span class="w-2 h-2 rounded-full bg-purple-400 shrink-0"></span>
+                                            <span class="font-medium">بدأ التحضير:</span>
+                                            <span dir="ltr">{{ formatTime(order.preparing_at) }}</span>
+                                        </div>
+                                        <div v-if="order.ready_at" class="flex items-center gap-2 text-xs text-emerald-600">
+                                            <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
+                                            <span class="font-medium">جاهز:</span>
+                                            <span dir="ltr">{{ formatTime(order.ready_at) }}</span>
+                                        </div>
+                                        <div v-if="order.cancelled_at" class="flex items-center gap-2 text-xs text-red-500">
+                                            <span class="w-2 h-2 rounded-full bg-red-400 shrink-0"></span>
+                                            <span class="font-medium">أُلغي:</span>
+                                            <span dir="ltr">{{ formatTime(order.cancelled_at) }}</span>
                                         </div>
                                     </div>
                                     

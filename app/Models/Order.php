@@ -23,6 +23,11 @@ class Order extends Model
         'customer_note',
         'promo_code_id',
         'discount_amount',
+        'accepted_at',
+        'preparing_at',
+        'ready_at',
+        'served_at',
+        'cancelled_at',
     ];
 
     public function promoCode(): BelongsTo
@@ -33,10 +38,28 @@ class Order extends Model
     protected function casts(): array
     {
         return [
-            'status' => OrderStatus::class,
-            'subtotal' => 'decimal:2',
-            'total' => 'decimal:2',
+            'status'       => OrderStatus::class,
+            'subtotal'     => 'decimal:2',
+            'total'        => 'decimal:2',
+            'accepted_at'  => 'datetime',
+            'preparing_at' => 'datetime',
+            'ready_at'     => 'datetime',
+            'served_at'    => 'datetime',
+            'cancelled_at' => 'datetime',
         ];
+    }
+
+    /** تسجيل وقت الحالة تلقائياً عند التغيير */
+    public static function statusTimestampFor(OrderStatus $status): ?string
+    {
+        return match ($status) {
+            OrderStatus::Accepted   => 'accepted_at',
+            OrderStatus::Preparing  => 'preparing_at',
+            OrderStatus::Ready      => 'ready_at',
+            OrderStatus::Served     => 'served_at',
+            OrderStatus::Cancelled  => 'cancelled_at',
+            default                 => null,
+        };
     }
 
     public function restaurant(): BelongsTo
