@@ -22,13 +22,21 @@ const page = usePage();
 const restaurantId = computed(() => page.props.restaurantId as number | undefined);
 const { showToast } = useToast();
 
-const notificationSound = new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU'); // Very short placeholder, browsers might need a real valid Base64 wav. I will use a simple valid Base64 beep.
-const beep = new Audio('data:audio/mp3;base64,//MkxAAAD/wwAAAAAAf88AAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq'); // Fallback placeholder.
 function playSound() {
     try {
-        // Attempt to play sound, might be blocked by browser auto-play policies until user interacts
-        beep.play().catch(() => {});
-    } catch(e) {}
+        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, ctx.currentTime);
+        gain.gain.setValueAtTime(0.4, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.5);
+        setTimeout(() => ctx.close(), 800);
+    } catch (e) {}
 }
 
 async function loadOrders() {
