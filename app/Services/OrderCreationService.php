@@ -109,7 +109,14 @@ final class OrderCreationService
 
             $order->load(['items', 'table']);
 
-            OrderCreated::dispatch($order);
+            try {
+                OrderCreated::dispatch($order);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Broadcast failed on order creation: ' . $e->getMessage(), [
+                    'order_id' => $order->id,
+                    'order_number' => $order->order_number,
+                ]);
+            }
 
             return $order;
         });
