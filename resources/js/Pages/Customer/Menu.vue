@@ -79,8 +79,8 @@ async function confirmAdd(payload: { quantity: number; note: string | null }) {
         selectedItem.value = null;
         await refreshCartSummary();
         cartOpen.value = true;
-    } catch {
-        errorMessage.value = 'تعذر إضافة الصنف. قد يكون غير متاح.';
+    } catch (e: any) {
+        errorMessage.value = e.response?.data?.message || 'تعذر إضافة الصنف. قد يكون غير متاح.';
     } finally {
         adding.value = false;
     }
@@ -101,8 +101,8 @@ async function submitOrder() {
         checkoutOpen.value = false;
         customerNote.value = '';
         router.visit(`/t/${props.table.public_token}/orders/${data.data.order_number}`);
-    } catch {
-        errorMessage.value = 'تعذر إرسال الطلب. تحقق من السلة وحاول مرة أخرى.';
+    } catch (e: any) {
+        errorMessage.value = e.response?.data?.message || 'تعذر إرسال الطلب. تحقق من السلة وحاول مرة أخرى.';
         checkoutOpen.value = false;
         cartOpen.value = true;
     } finally {
