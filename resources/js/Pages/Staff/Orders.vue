@@ -3,7 +3,7 @@ import AdminNav from '@/Components/Admin/AdminNav.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { useRestaurantOrders } from '@/composables/useRealtimeOrders';
 import { Head, usePage } from '@inertiajs/vue3';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import axios from 'axios';
 import { useToast } from '@/composables/useToast';
 
@@ -113,6 +113,50 @@ interface Order {
     ready_at?: string;
     served_at?: string;
     cancelled_at?: string;
+}
+
+// ============================================================
+// ⏱️ مؤقت الانتظار الحي - يتحدث كل 30 ثانية
+// ============================================================
+
+const nowTick = ref(Date.now());
+let tickInterval: ReturnType<typeof setInterval>;
+
+onMounted(() => {
+    tickInterval = setInterval(() => { nowTick.value = Date.now(); }, 30_000);
+});
+
+onUnmounted(() => clearInterval(tickInterval));
+
+function getElapsedMinutes(iso?: string): number {
+    if (!iso) return 0;
+    return Math.floor((nowTick.value - new Date(iso).getTime()) / 60_000);
+}
+
+function elapsedLabel(iso?: string): string {
+    const m = getElapsedMinutes(iso);
+    if (m < 1) return 'الآن';
+    if (m < 60) return `منذ ${m} د`;
+    const h = Math.floor(m / 60);
+    const rem = m % 60;
+    return rem > 0 ? `منذ ${h}س ${rem}د` : `منذ ${h} ساعة`;
+}
+
+// لون البطاقة حسب وقت الانتظار (فقط للطلبات غير المنتهية)
+function elapsedCardClass(order: Order): string {
+    if (['served', 'cancelled'].includes(order.status)) return 'border-stone-100';
+    const m = getElapsedMinutes(order.created_at);
+    if (m >= 20) return 'border-red-400 shadow-red-100';
+    if (m >= 10) return 'border-yellow-400 shadow-yellow-100';
+    return 'border-stone-100';
+}
+
+function elapsedBadgeClass(order: Order): string {
+    if (['served', 'cancelled'].includes(order.status)) return 'bg-stone-100 text-stone-500';
+    const m = getElapsedMinutes(order.created_at);
+    if (m >= 20) return 'bg-red-100 text-red-700 animate-pulse';
+    if (m >= 10) return 'bg-yellow-100 text-yellow-700';
+    return 'bg-green-100 text-green-700';
 }
 
 // تنسيق الوقت بشكل مختصر وجميل
@@ -321,8 +365,8 @@ useRestaurantOrders(restaurantId.value, {
                                     :draggable="!processingOrderIds.includes(order.id)"
                                     @dragstart="onDragStart($event, order.id)"
                                     @dragend="onDragEnd"
-                                    class="rounded-xl bg-white p-3 shadow-sm border border-stone-100 cursor-grab active:cursor-grabbing hover:shadow-md transition-all duration-200"
-                                    :class="{'opacity-50 pointer-events-none': processingOrderIds.includes(order.id)}"
+                                    class="rounded-xl bg-white p-3 shadow-sm border cursor-grab active:cursor-grabbing hover:shadow-md transition-all duration-200"
+                                    :class="[elapsedCardClass(order), {'opacity-50 pointer-events-none': processingOrderIds.includes(order.id)}]"
                                 >
                                     <div class="flex items-center justify-between mb-2">
                                         <div>
@@ -331,6 +375,13 @@ useRestaurantOrders(restaurantId.value, {
                                                 {{ order.table?.name || 'سفري' }}
                                             </p>
                                         </div>
+                                        <!-- شارة وقت الانتظار -->
+                                        <span
+                                            class="text-xs font-bold px-2 py-1 rounded-lg"
+                                            :class="elapsedBadgeClass(order)"
+                                        >
+                                            {{ elapsedLabel(order.created_at) }}
+                                        </span>
                                     </div>
 
                                     <!-- مخطط زمني للحالات -->
