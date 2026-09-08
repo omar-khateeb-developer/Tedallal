@@ -16,6 +16,7 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use App\Enums\UserStatus;
 
 class TestRestaurantSeeder extends Seeder
 {
@@ -31,6 +32,9 @@ class TestRestaurantSeeder extends Seeder
         User::query()->delete();
         Restaurant::query()->delete();
 
+        $this->command->info('إنشاء مدير النظام العام...');
+        $this->createSuperAdmin();
+
         $this->command->info('إنشاء المطعم الأول: مطعم الديوان الخليجي...');
         $this->createDiwanRestaurant();
 
@@ -38,6 +42,18 @@ class TestRestaurantSeeder extends Seeder
         $this->createBurgerStation();
 
         $this->command->info('تم إنشاء المطاعم بنجاح!');
+    }
+
+    private function createSuperAdmin(): void
+    {
+        $superAdmin = User::create([
+            'name'          => 'مدير النظام',
+            'email'         => 'admin@tedallal.test',
+            'password'      => 'password', // will be hashed automatically
+            'status'        => UserStatus::Active,
+        ]);
+        $superAdmin->assignRole('super_admin');
+        $this->command->info("تم إنشاء مدير النظام العام. الدخول: admin@tedallal.test / password");
     }
 
     private function createDiwanRestaurant(): void
@@ -53,8 +69,9 @@ class TestRestaurantSeeder extends Seeder
         $admin = User::create([
             'name'          => 'مدير الديوان',
             'email'         => $adminEmail,
-            'password'      => Hash::make('password'),
+            'password'      => 'password',
             'restaurant_id' => $restaurant->id,
+            'status'        => UserStatus::Active,
         ]);
         $admin->assignRole('admin');
 
@@ -62,10 +79,12 @@ class TestRestaurantSeeder extends Seeder
         $chef = User::create([
             'name'          => 'شيف الديوان',
             'email'         => $chefEmail,
-            'password'      => Hash::make('password'),
+            'password'      => 'password',
             'restaurant_id' => $restaurant->id,
+            'status'        => UserStatus::Active,
         ]);
         $chef->assignRole('staff');
+        $chef->givePermissionTo(['manage_orders']);
 
         $table1 = RestaurantTable::create(['restaurant_id' => $restaurant->id, 'name' => 'جلسة أرضية 1', 'public_token' => Str::random(32)]);
         $table2 = RestaurantTable::create(['restaurant_id' => $restaurant->id, 'name' => 'طاولة عوائل 1', 'public_token' => Str::random(32)]);
@@ -118,8 +137,9 @@ class TestRestaurantSeeder extends Seeder
         $admin = User::create([
             'name'          => 'مدير برغر ستيشن',
             'email'         => $adminEmail,
-            'password'      => Hash::make('password'),
+            'password'      => 'password',
             'restaurant_id' => $restaurant->id,
+            'status'        => UserStatus::Active,
         ]);
         $admin->assignRole('admin');
 
