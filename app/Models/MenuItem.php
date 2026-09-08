@@ -41,7 +41,7 @@ class MenuItem extends Model
             get: function (?string $value) {
                 if (! $value) return null;
                 if (str_starts_with($value, 'http')) {
-                    $value = parse_url($value, PHP_URL_PATH);
+                    return $value;
                 }
                 return asset($value);
             },
