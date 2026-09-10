@@ -85,8 +85,11 @@ class TableController extends ApiController
         $this->authorizeTable($table);
 
         $newToken = $this->tokenGenerator->generatePublicToken();
-        $table->update(['public_token' => $newToken]);
+        
+        // Generate new QR and delete old one FIRST before saving to DB
         $this->qrCodeService->regenerate($table, $newToken);
+        
+        $table->update(['public_token' => $newToken]);
 
         \App\Services\ActivityLogger::log('update_table', "قام بتوليد رمز QR جديد للطاولة: {$table->name}");
 

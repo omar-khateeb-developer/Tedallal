@@ -26,17 +26,50 @@ async function requestNotificationPermission() {
     notificationPermission.value = result;
 }
 
-// توليد صوت تنبيه مزدوج باستخدام Web Audio API (لا يحتاج ملف صوتي)
-function playAlertSound() {
+const audioUnlocked = ref(false);
+let globalAudioCtx: AudioContext | null = null;
+
+function unlockAudio() {
     try {
-        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        if (!globalAudioCtx) {
+            globalAudioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        }
+        
+        if (globalAudioCtx.state === 'suspended') {
+            globalAudioCtx.resume();
+        }
+        
+        // Play a silent short beep to fully unlock the context on iOS/Safari
+        const oscillator = globalAudioCtx.createOscillator();
+        const gainNode = globalAudioCtx.createGain();
+        gainNode.gain.value = 0;
+        oscillator.connect(gainNode);
+        gainNode.connect(globalAudioCtx.destination);
+        oscillator.start();
+        oscillator.stop(globalAudioCtx.currentTime + 0.01);
+        
+        audioUnlocked.value = true;
+    } catch (e) {
+        console.error('Failed to unlock audio:', e);
+    }
+}
+
+// توليد صوت تنبيه مزدوج باستخدام Web Audio API
+function playAlertSound() {
+    if (!audioUnlocked.value || !globalAudioCtx) return;
+
+    try {
+        if (globalAudioCtx.state === 'suspended') {
+            globalAudioCtx.resume();
+        }
 
         const playBeep = (startTime: number, freq: number, duration: number) => {
-            const oscillator = ctx.createOscillator();
-            const gainNode = ctx.createGain();
+            if (!globalAudioCtx) return;
+            const oscillator = globalAudioCtx.createOscillator();
+            const gainNode = globalAudioCtx.createGain();
 
             oscillator.connect(gainNode);
-            gainNode.connect(ctx.destination);
+            gainNode.connect(globalAudioCtx.destination);
 
             oscillator.type = 'sine';
             oscillator.frequency.setValueAtTime(freq, startTime);
@@ -51,13 +84,11 @@ function playAlertSound() {
             oscillator.stop(startTime + duration);
         };
 
-        const now = ctx.currentTime;
+        const now = globalAudioCtx.currentTime;
         playBeep(now, 880, 0.18);        // نغمة أولى
         playBeep(now + 0.22, 1100, 0.18); // نغمة ثانية أعلى
         playBeep(now + 0.44, 880, 0.25);  // نغمة ختامية
 
-        // إغلاق السياق بعد انتهاء الأصوات
-        setTimeout(() => ctx.close(), 1200);
     } catch (e) {
         console.warn('Audio alert failed:', e);
     }
@@ -300,25 +331,43 @@ useRestaurantOrders(restaurantId.value, {
             <div class="flex items-center justify-between w-full">
                 <h2 class="text-xl font-semibold leading-tight text-gray-800">شاشة المطبخ (KDS)</h2>
 
-                <!-- زر تفعيل إشعارات المتصفح -->
-                <button
-                    v-if="notificationPermission !== 'granted'"
-                    @click="requestNotificationPermission"
-                    class="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all"
-                    :class="notificationPermission === 'denied'
-                        ? 'bg-red-50 text-red-600 cursor-not-allowed'
-                        : 'bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200'"
-                    :disabled="notificationPermission === 'denied'"
-                    :title="notificationPermission === 'denied' ? 'تم رفض الإشعارات. يرجى السماح بها من إعدادات المتصفح' : ''"
-                >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-                    <span v-if="notificationPermission === 'denied'">الإشعارات محجوبة</span>
-                    <span v-else>تفعيل الإشعارات</span>
-                </button>
-                <span v-else class="flex items-center gap-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                    الإشعارات مفعّلة
-                </span>
+                <!-- أزرار الإشعارات والصوت -->
+                <div class="flex items-center gap-3">
+                    <!-- زر تفعيل الصوت -->
+                    <button
+                        v-if="!audioUnlocked"
+                        @click="unlockAudio"
+                        class="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 animate-pulse"
+                        title="المتصفح يمنع تشغيل الصوت التلقائي، انقر هنا للسماح بصوت التنبيهات"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path></svg>
+                        <span>تفعيل الصوت</span>
+                    </button>
+                    <span v-else class="flex items-center gap-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>
+                        الصوت مفعّل
+                    </span>
+
+                    <!-- زر تفعيل إشعارات المتصفح -->
+                    <button
+                        v-if="notificationPermission !== 'granted'"
+                        @click="requestNotificationPermission"
+                        class="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all"
+                        :class="notificationPermission === 'denied'
+                            ? 'bg-red-50 text-red-600 cursor-not-allowed'
+                            : 'bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200'"
+                        :disabled="notificationPermission === 'denied'"
+                        :title="notificationPermission === 'denied' ? 'تم رفض الإشعارات. يرجى السماح بها من إعدادات المتصفح' : ''"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                        <span v-if="notificationPermission === 'denied'">الإشعارات محجوبة</span>
+                        <span v-else>تفعيل الإشعارات</span>
+                    </button>
+                    <span v-else class="flex items-center gap-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        الإشعارات مفعّلة
+                    </span>
+                </div>
             </div>
         </template>
 
