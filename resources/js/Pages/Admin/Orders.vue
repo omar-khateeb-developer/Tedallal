@@ -129,11 +129,20 @@ useRestaurantOrders(restaurantId.value, {
                                 v-if="nextStatus[order.status]"
                                 type="button"
                                 :disabled="updatingIds.has(order.id)"
-                                class="rounded-lg bg-amber-600 px-3 py-2 text-sm text-white disabled:opacity-50"
+                                class="rounded-lg bg-amber-600 px-3 py-2 text-sm text-white disabled:opacity-50 hover:bg-amber-700 transition-colors"
                                 @click="updateStatus(order, nextStatus[order.status])"
                             >
                                 التالي
                             </button>
+                            <a
+                                :href="`/admin/orders/${order.id}/print`"
+                                target="_blank"
+                                class="rounded-lg bg-stone-100 px-3 py-2 text-sm text-stone-700 hover:bg-stone-200 transition-colors flex items-center gap-1 border border-stone-200"
+                                title="طباعة الفاتورة"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                                <span class="hidden sm:inline">طباعة</span>
+                            </a>
                             <button
                                 v-if="['pending', 'accepted'].includes(order.status)"
                                 type="button"
