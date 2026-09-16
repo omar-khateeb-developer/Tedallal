@@ -43,6 +43,12 @@ final class QrCodeService
         return Storage::disk('public')->get($path);
     }
 
+    public function deleteForTable(RestaurantTable $table): void
+    {
+        $path = $this->storagePath($table);
+        Storage::disk('public')->delete($path);
+    }
+
     public function regenerate(RestaurantTable $table, string $newToken): string
     {
         $oldPath = $this->storagePath($table);

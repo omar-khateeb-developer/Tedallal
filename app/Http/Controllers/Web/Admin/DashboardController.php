@@ -32,7 +32,7 @@ class DashboardController extends Controller
         $restaurant = $this->restaurantContext->current();
 
         $tables = RestaurantTable::query()
-            
+            ->where('restaurant_id', $restaurant->id)
             ->orderBy('name')
             ->get();
 

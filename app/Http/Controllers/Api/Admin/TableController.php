@@ -26,7 +26,7 @@ class TableController extends ApiController
         $restaurant = $this->restaurantContext->current();
 
         $tables = RestaurantTable::query()
-            
+            ->where('restaurant_id', $restaurant->id)
             ->orderBy('name')
             ->get();
 
@@ -73,6 +73,10 @@ class TableController extends ApiController
         }
 
         $tableName = $table->name;
+
+        // حذف ملف QR من storage قبل حذف السجل
+        $this->qrCodeService->deleteForTable($table);
+
         $table->delete();
 
         \App\Services\ActivityLogger::log('delete_table', "قام بحذف الطاولة: {$tableName}");
@@ -110,7 +114,7 @@ class TableController extends ApiController
         $restaurant = $this->restaurantContext->current();
 
         if ($table->restaurant_id !== $restaurant->id) {
-            abort(404);
+            abort(403, 'هذه الطاولة لا تنتمي لمطعمك.');
         }
     }
 }

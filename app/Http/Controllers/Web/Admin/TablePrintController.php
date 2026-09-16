@@ -20,7 +20,7 @@ class TablePrintController extends Controller
         $restaurant = $this->restaurantContext->current();
 
         $tables = RestaurantTable::query()
-            
+            ->where('restaurant_id', $restaurant->id)
             ->where('status', 'active')
             ->orderBy('name')
             ->get()

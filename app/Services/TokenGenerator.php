@@ -19,10 +19,16 @@ final class TokenGenerator
 
     private function generateUniqueToken(string $table, string $column): string
     {
-        do {
+        // في حالة نادرة جداً يتولّد نفس الـ token من طلبين متزامنين،
+        // نُعيد المحاولة بدلاً من رمي exception.
+        for ($i = 0; $i < 5; $i++) {
             $token = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
-        } while (DB::table($table)->where($column, $token)->exists());
+            if (! DB::table($table)->where($column, $token)->exists()) {
+                return $token;
+            }
+        }
 
-        return $token;
+        // احتمال ضئيل جداً — إذا فشلت 5 محاولات نرمي exception واضحة
+        throw new \RuntimeException('فشل توليد token فريد بعد 5 محاولات. يُرجى المحاولة مجدداً.');
     }
 }

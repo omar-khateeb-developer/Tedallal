@@ -24,9 +24,10 @@ class TenantScope implements Scope
             $restaurant = app(RestaurantContext::class)->current();
             $builder->where($model->getTable() . '.restaurant_id', $restaurant->id);
         } catch (\RuntimeException $e) {
-            // في حال عدم وجود مطعم افتراضي أو أي سبب آخر يمنع إيجاد المطعم،
-            // نتجاهل التطبيق لكي لا يتعطل النظام (مثلاً في صفحة المشرف العام)
-            // SuperAdmin controller queries will bypass this using withoutGlobalScope(TenantScope::class).
+            // في حال عدم وجود مطعم (مثلاً SuperAdmin بلا restaurant_id)
+            // نُرجع query لا تعود بأي نتيجة بدلاً من تسريب بيانات مطاعم أخرى.
+            // SuperAdmin controllers يجب أن يستخدموا withoutGlobalScope(TenantScope::class).
+            $builder->whereRaw('1 = 0');
         }
     }
 }

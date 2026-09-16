@@ -23,6 +23,9 @@ $user = Auth::user();
 
         if ($user && !$user->isSuperAdmin()) {
             if ($user->restaurant && !$user->restaurant->isActive()) {
+                // إلغاء كل الـ Sanctum API tokens
+                $user->tokens()->delete();
+
                 Auth::guard('web')->logout();
                 
                 if ($request->hasSession()) {
