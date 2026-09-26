@@ -17,12 +17,14 @@ use App\Models\OrderItem;
 use App\Models\PromoCode;
 use App\Models\Restaurant;
 use App\Models\RestaurantTable;
+use App\Models\Setting;
 use App\Models\TableSession;
 use App\Models\User;
 use App\Services\QrCodeService;
 use App\Services\TokenGenerator;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
@@ -52,16 +54,43 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // =============================================
-        // 2. المستخدمون - جميع الأدوار مع الصلاحيات
+        // 2. حساب مدير النظام الرئيسي (Super Admin)
+        //    البريد : super@tedallal.test
+        //    كلمة المرور: password
+        //    الصلاحية الحصرية: toggle_maintenance (إيقاف/تشغيل الموقع)
         // =============================================
         $superAdmin = User::query()->create([
             'restaurant_id' => null,
-            'name' => 'مدير النظام الرئيسي',
-            'email' => 'super@tedallal.test',
-            'password' => Hash::make('password'),
-            'status' => UserStatus::Active,
+            'name'          => 'مدير النظام الرئيسي',
+            'email'         => 'super@tedallal.test',
+            'password'      => Hash::make('password'),
+            'status'        => UserStatus::Active,
         ]);
+
+        // تعيين دور super_admin (يمنح كامل الوصول للـ super admin panel)
         $superAdmin->assignRole(UserRole::SuperAdmin->value);
+
+        // إنشاء permission "toggle_maintenance" إذا لم يكن موجوداً
+        // (يكون موجوداً إذا نُفِّذت migrations أولاً، هذا fallback للـ seeder المستقل)
+        $togglePermission = \Spatie\Permission\Models\Permission::firstOrCreate(
+            ['name' => 'toggle_maintenance', 'guard_name' => 'web']
+        );
+        \Spatie\Permission\Models\Permission::firstOrCreate(
+            ['name' => 'toggle_maintenance', 'guard_name' => 'sanctum']
+        );
+
+        // ربط الـ permission بـ super_admin role (ليس بالمستخدم مباشرة — ممارسة أفضل)
+        $superAdminRole = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
+        if ($superAdminRole && ! $superAdminRole->hasPermissionTo($togglePermission)) {
+            $superAdminRole->givePermissionTo($togglePermission);
+        }
+
+        // تفريغ cache الصلاحيات
+        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
+        // إعداد الصيانة الافتراضي: الموقع شغّال (0 = لا صيانة)
+        Setting::set('maintenance_mode', '0');
+
 
         $admin = User::query()->create([
             'restaurant_id' => $restaurant->id,

@@ -37,14 +37,14 @@ class RestaurantController extends ApiController
 
         $restaurant = Restaurant::create($restaurantData);
 
-        \App\Models\User::create([
+        $manager = \App\Models\User::create([
             'restaurant_id' => $restaurant->id,
             'name' => $validated['manager_name'],
             'email' => $validated['manager_email'],
             'password' => \Illuminate\Support\Facades\Hash::make($validated['manager_password'] ?: 'password'),
-            'role' => \App\Enums\UserRole::Admin,
             'status' => \App\Enums\UserStatus::Active,
         ]);
+        $manager->assignRole(\App\Enums\UserRole::Admin->value);
 
         return response()->json($restaurant, 201);
     }

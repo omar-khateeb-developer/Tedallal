@@ -90,4 +90,9 @@ Route::prefix('super-admin')->middleware(['auth:sanctum', EnsureUserHasRole::cla
     Route::patch('users/{user}', [\App\Http\Controllers\Api\SuperAdmin\UserController::class, 'update']);
     Route::delete('users/{user}', [\App\Http\Controllers\Api\SuperAdmin\UserController::class, 'destroy']);
     Route::get('users/{user}/logs', [\App\Http\Controllers\Api\SuperAdmin\UserController::class, 'logs']);
+
+    // وضع الصيانة
+    Route::get('maintenance', [\App\Http\Controllers\Api\SuperAdmin\MaintenanceController::class, 'status']);
+    Route::post('maintenance/toggle', [\App\Http\Controllers\Api\SuperAdmin\MaintenanceController::class, 'toggle']);
 });
+
