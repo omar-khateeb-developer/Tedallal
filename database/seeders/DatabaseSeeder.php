@@ -85,23 +85,21 @@ class DatabaseSeeder extends Seeder
         // تعيين دور super_admin (يمنح كامل الوصول للـ super admin panel)
         $superAdmin->assignRole(UserRole::SuperAdmin->value);
 
-        // إنشاء permission "toggle_maintenance" إذا لم يكن موجوداً
-        $togglePermissionWeb = \Spatie\Permission\Models\Permission::firstOrCreate(
+        // إنشاء permission "toggle_maintenance" بـ guard web حصراً
+        $togglePermission = \Spatie\Permission\Models\Permission::firstOrCreate(
             ['name' => 'toggle_maintenance', 'guard_name' => 'web']
-        );
-        $togglePermissionSanctum = \Spatie\Permission\Models\Permission::firstOrCreate(
-            ['name' => 'toggle_maintenance', 'guard_name' => 'sanctum']
         );
 
         // التأكد من سحب صلاحية إيقاف النظام من دور super_admin حتى لا ترثها كل حسابات المدراء
         $superAdminRole = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
-        if ($superAdminRole && $superAdminRole->hasPermissionTo($togglePermissionWeb)) {
-            $superAdminRole->revokePermissionTo($togglePermissionWeb);
+        if ($superAdminRole && $superAdminRole->hasPermissionTo($togglePermission)) {
+            $superAdminRole->revokePermissionTo($togglePermission);
         }
 
         // منح الصلاحية الحصرية لإيقاف/تشغيل النظام للمدير الرئيسي super@tedallal.test
-        $superAdmin->givePermissionTo($togglePermissionWeb);
-        $superAdmin->givePermissionTo($togglePermissionSanctum);
+        if (! $superAdmin->hasPermissionTo($togglePermission)) {
+            $superAdmin->givePermissionTo($togglePermission);
+        }
 
         // =============================================
         // 2.1 حساب مدير النظام (System Admin)
