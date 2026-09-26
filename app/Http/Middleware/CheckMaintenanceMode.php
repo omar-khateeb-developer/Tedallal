@@ -78,9 +78,14 @@ class CheckMaintenanceMode
             ], 503);
         }
 
-        // ⑤ طلب ويب عادي → صفحة الصيانة (Inertia 503)
-        return Inertia::render('Maintenance')
-            ->toResponse($request)
-            ->setStatusCode(503);
+        // ⑤ تنقل داخل تطبيق Inertia → إعادة توجيه كامل لصفحة الصيانة المستقلة
+        if ($request->header('X-Inertia')) {
+            return response('', 409)->header('X-Inertia-Location', $request->fullUrl());
+        }
+
+        // ⑥ تصفح ويب ومسح كود QR على الموبايل → صفحة صيانة مخصصة وسريعة تفتح على أي هاتف فوراً
+        return response()->view('maintenance', [
+            'isQrScan' => $request->is('t/*'),
+        ], 200);
     }
 }
