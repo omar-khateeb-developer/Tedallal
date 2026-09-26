@@ -69,7 +69,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // =============================================
-        // 2. حساب مدير النظام الرئيسي (Super Admin)
+        // 2. حساب مدير النظام الرئيسي (Super Admin Owner)
         //    البريد : super@tedallal.test
         //    كلمة المرور: password
         //    الصلاحية الحصرية: toggle_maintenance (إيقاف/تشغيل الموقع)
@@ -86,19 +86,37 @@ class DatabaseSeeder extends Seeder
         $superAdmin->assignRole(UserRole::SuperAdmin->value);
 
         // إنشاء permission "toggle_maintenance" إذا لم يكن موجوداً
-        // (يكون موجوداً إذا نُفِّذت migrations أولاً، هذا fallback للـ seeder المستقل)
-        $togglePermission = \Spatie\Permission\Models\Permission::firstOrCreate(
+        $togglePermissionWeb = \Spatie\Permission\Models\Permission::firstOrCreate(
             ['name' => 'toggle_maintenance', 'guard_name' => 'web']
         );
-        \Spatie\Permission\Models\Permission::firstOrCreate(
+        $togglePermissionSanctum = \Spatie\Permission\Models\Permission::firstOrCreate(
             ['name' => 'toggle_maintenance', 'guard_name' => 'sanctum']
         );
 
-        // ربط الـ permission بـ super_admin role (ليس بالمستخدم مباشرة — ممارسة أفضل)
+        // التأكد من سحب صلاحية إيقاف النظام من دور super_admin حتى لا ترثها كل حسابات المدراء
         $superAdminRole = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
-        if ($superAdminRole && ! $superAdminRole->hasPermissionTo($togglePermission)) {
-            $superAdminRole->givePermissionTo($togglePermission);
+        if ($superAdminRole && $superAdminRole->hasPermissionTo($togglePermissionWeb)) {
+            $superAdminRole->revokePermissionTo($togglePermissionWeb);
         }
+
+        // منح الصلاحية الحصرية لإيقاف/تشغيل النظام للمدير الرئيسي super@tedallal.test
+        $superAdmin->givePermissionTo($togglePermissionWeb);
+        $superAdmin->givePermissionTo($togglePermissionSanctum);
+
+        // =============================================
+        // 2.1 حساب مدير النظام (System Admin)
+        //    البريد : admin@tedallal.test
+        //    كلمة المرور: password
+        //    الدور : super_admin (إدارة النظام والمطاعم والمستخدمين بدون إمكانية إيقاف النظام)
+        // =============================================
+        $systemAdmin = User::query()->create([
+            'restaurant_id' => null,
+            'name'          => 'مدير النظام',
+            'email'         => 'admin@tedallal.test',
+            'password'      => Hash::make('password'),
+            'status'        => UserStatus::Active,
+        ]);
+        $systemAdmin->assignRole(UserRole::SuperAdmin->value);
 
         // تفريغ cache الصلاحيات
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();

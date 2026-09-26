@@ -64,9 +64,32 @@ class User extends Authenticatable
 
     public function hasPermission(string $permission): bool
     {
+        if ($permission === 'toggle_maintenance') {
+            return $this->canToggleMaintenance();
+        }
+
         if ($this->isSuperAdmin() || $this->isAdmin()) {
             return true;
         }
         return $this->hasPermissionTo($permission);
+    }
+
+    public function canToggleMaintenance(): bool
+    {
+        // admin@tedallal.test لا يستطيع إيقاف أو إدارة وضع الصيانة أبداً
+        if ($this->email === 'admin@tedallal.test') {
+            return false;
+        }
+
+        // الحساب الرئيسي للمالك super@tedallal.test يملك الصلاحية دائماً
+        if ($this->email === 'super@tedallal.test') {
+            return true;
+        }
+
+        try {
+            return $this->hasDirectPermission('toggle_maintenance');
+        } catch (\Throwable) {
+            return false;
+        }
     }
 }

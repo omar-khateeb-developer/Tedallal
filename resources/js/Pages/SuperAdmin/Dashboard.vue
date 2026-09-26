@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import { ref, onMounted, nextTick, computed } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import axios from 'axios';
+
+const page = usePage();
 
 const restaurants = ref<any[]>([]);
 const stats = ref({
@@ -34,6 +36,18 @@ const maintenanceLoading = ref(false);
 const maintenanceMessage = ref('');
 const maintenanceSuccess = ref(false);
 const maintenanceStatusLoaded = ref(false);
+
+// صلاحية إيقاف/تشغيل الصيانة (متاحة حصرياً للمالك super@tedallal.test ومحجوبة عن admin@tedallal.test)
+const canToggleMaintenance = computed(() => {
+    const user = (page.props.auth as any)?.user;
+    if (!user) return false;
+    if (user.email === 'admin@tedallal.test') return false;
+    if (user.can_toggle_maintenance !== undefined) {
+        return Boolean(user.can_toggle_maintenance);
+    }
+    if (user.email === 'super@tedallal.test') return true;
+    return Array.isArray(user.permissions) && user.permissions.includes('toggle_maintenance');
+});
 
 const maintenanceBtnClass = computed(() => {
     if (maintenanceMode.value) {
@@ -182,7 +196,9 @@ const toggleMaintenance = async () => {
 onMounted(() => {
     fetchStats();
     fetchRestaurants();
-    fetchMaintenanceStatus();
+    if (canToggleMaintenance.value) {
+        fetchMaintenanceStatus();
+    }
 });
 </script>
 
@@ -198,7 +214,7 @@ onMounted(() => {
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
                 <!-- ===== لوحة التحكم في وضع الصيانة ===== -->
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div v-if="canToggleMaintenance" class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6" dir="rtl">
                         <div class="flex items-center justify-between flex-wrap gap-4">
                             <div class="flex items-center gap-4">

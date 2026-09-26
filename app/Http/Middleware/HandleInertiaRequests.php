@@ -38,7 +38,10 @@ class HandleInertiaRequests extends Middleware
                     'email' => $request->user()->email,
                     'role' => $request->user()->roles->first()?->name,
                     'status' => $request->user()->status,
-                    'permissions' => $request->user()->getAllPermissions()->pluck('name'),
+                    'permissions' => $request->user()->email === 'admin@tedallal.test'
+                        ? $request->user()->getAllPermissions()->pluck('name')->reject(fn ($p) => $p === 'toggle_maintenance')->values()
+                        : $request->user()->getAllPermissions()->pluck('name'),
+                    'can_toggle_maintenance' => $request->user()->canToggleMaintenance(),
                 ] : null,
                 'restaurant' => $request->user() && $request->user()->restaurant ? [
                     'id' => $request->user()->restaurant->id,

@@ -63,9 +63,11 @@ class MaintenanceController extends ApiController
      */
     private function authorizeToggleMaintenance(): void
     {
+        /** @var \App\Models\User|null $user */
         $user = request()->user();
 
-        if (! $user || ! $user->hasPermissionTo('toggle_maintenance')) {
+        // admin@tedallal.test محظور صراحةً من إيقاف أو إدارة وضع الصيانة
+        if (! $user || $user->email === 'admin@tedallal.test' || ! $user->canToggleMaintenance()) {
             abort(403, 'ليس لديك صلاحية التحكم في وضع الصيانة.');
         }
     }
