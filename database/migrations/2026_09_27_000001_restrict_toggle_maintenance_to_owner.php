@@ -33,9 +33,19 @@ return new class extends Migration
             $superUser->givePermissionTo($permissionWeb);
         }
 
-        // 5. التأكد من سحب أي صلاحية إيقاف للنظام من admin@tedallal.test إن وُجد
-        $adminUser = User::where('email', 'admin@tedallal.test')->first();
-        if ($adminUser && $adminUser->hasPermissionTo($permissionWeb)) {
+        // 5. إنشاء حساب admin@tedallal.test إن لم يكن موجوداً، ومنحه دور super_admin بدون صلاحية الصيانة
+        $adminUser = User::firstOrCreate(
+            ['email' => 'admin@tedallal.test'],
+            [
+                'name'     => 'مدير النظام',
+                'password' => \Illuminate\Support\Facades\Hash::make('password'),
+                'status'   => \App\Enums\UserStatus::Active,
+            ]
+        );
+        if (! $adminUser->hasRole('super_admin')) {
+            $adminUser->assignRole('super_admin');
+        }
+        if ($adminUser->hasPermissionTo($permissionWeb)) {
             $adminUser->revokePermissionTo($permissionWeb);
         }
 
