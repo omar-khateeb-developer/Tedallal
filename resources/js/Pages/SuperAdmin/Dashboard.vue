@@ -37,16 +37,11 @@ const maintenanceMessage = ref('');
 const maintenanceSuccess = ref(false);
 const maintenanceStatusLoaded = ref(false);
 
-// صلاحية إيقاف/تشغيل الصيانة (متاحة حصرياً للمالك super@tedallal.test ومحجوبة عن admin@tedallal.test)
+// صلاحية إيقاف/تشغيل الصيانة (متاحة حصرياً للمالك super@tedallal.test ومحجوبة عن كل المستخدمين الآخرين)
 const canToggleMaintenance = computed(() => {
     const user = (page.props.auth as any)?.user;
     if (!user) return false;
-    if (user.email === 'admin@tedallal.test') return false;
-    if (user.can_toggle_maintenance !== undefined) {
-        return Boolean(user.can_toggle_maintenance);
-    }
-    if (user.email === 'super@tedallal.test') return true;
-    return Array.isArray(user.permissions) && user.permissions.includes('toggle_maintenance');
+    return user.email === 'super@tedallal.test';
 });
 
 const maintenanceBtnClass = computed(() => {

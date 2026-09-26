@@ -54,19 +54,11 @@ class CheckMaintenanceMode
             return $next($request);
         }
 
-        // ③ المستخدم يملك صلاحية إدارة الصيانة → يتجاوز
+        // ③ المستخدم super@tedallal.test حصراً هو المستثنى من وضع الصيانة
         /** @var \App\Models\User|null $user */
         $user = Auth::guard('sanctum')->user() ?? Auth::guard('web')->user() ?? Auth::user();
-        if ($user) {
-            try {
-                if ($user->isSuperAdmin() || $user->can('toggle_maintenance') || $user->hasPermissionTo('toggle_maintenance')) {
-                    return $next($request);
-                }
-            } catch (\Throwable) {
-                if ($user->isSuperAdmin()) {
-                    return $next($request);
-                }
-            }
+        if ($user && ($user->email === 'super@tedallal.test' || $user->canBypassMaintenance())) {
+            return $next($request);
         }
 
         // ④ طلب API → JSON 503

@@ -76,20 +76,13 @@ class User extends Authenticatable
 
     public function canToggleMaintenance(): bool
     {
-        // admin@tedallal.test لا يستطيع إيقاف أو إدارة وضع الصيانة أبداً
-        if ($this->email === 'admin@tedallal.test') {
-            return false;
-        }
+        // حساب المالك الرئيسي super@tedallal.test حصراً هو من يملك صلاحية إيقاف/تشغيل الصيانة
+        return $this->email === 'super@tedallal.test';
+    }
 
-        // الحساب الرئيسي للمالك super@tedallal.test يملك الصلاحية دائماً
-        if ($this->email === 'super@tedallal.test') {
-            return true;
-        }
-
-        try {
-            return $this->hasDirectPermission('toggle_maintenance');
-        } catch (\Throwable) {
-            return false;
-        }
+    public function canBypassMaintenance(): bool
+    {
+        // حساب المالك الرئيسي super@tedallal.test حصراً هو المستثنى من وضع الصيانة
+        return $this->email === 'super@tedallal.test';
     }
 }
