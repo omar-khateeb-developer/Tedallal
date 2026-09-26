@@ -19,7 +19,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->dropConstrainedForeignId('restaurant_id');
-            $table->dropColumn(['role', 'status']);
+            $table->dropColumn(['role','status']);
         });
     }
 };

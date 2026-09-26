@@ -79,9 +79,8 @@ class CheckMaintenanceMode
         }
 
         // ⑤ طلب ويب عادي → صفحة الصيانة (Inertia 503)
-        return response(
-            Inertia::render('Maintenance')->toResponse($request)->getContent(),
-            503
-        );
+        return Inertia::render('Maintenance')
+            ->toResponse($request)
+            ->setStatusCode(503);
     }
 }
