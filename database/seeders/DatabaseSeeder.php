@@ -74,16 +74,20 @@ class DatabaseSeeder extends Seeder
         //    كلمة المرور: password
         //    الصلاحية الحصرية: toggle_maintenance (إيقاف/تشغيل الموقع)
         // =============================================
-        $superAdmin = User::query()->create([
-            'restaurant_id' => null,
-            'name'          => 'مدير النظام الرئيسي',
-            'email'         => 'super@tedallal.test',
-            'password'      => Hash::make('password'),
-            'status'        => UserStatus::Active,
-        ]);
+        $superAdmin = User::firstOrCreate(
+            ['email' => 'super@tedallal.test'],
+            [
+                'restaurant_id' => null,
+                'name'          => 'مدير النظام الرئيسي',
+                'password'      => Hash::make('password'),
+                'status'        => UserStatus::Active,
+            ]
+        );
 
         // تعيين دور super_admin (يمنح كامل الوصول للـ super admin panel)
-        $superAdmin->assignRole(UserRole::SuperAdmin->value);
+        if (! $superAdmin->hasRole(UserRole::SuperAdmin->value)) {
+            $superAdmin->assignRole(UserRole::SuperAdmin->value);
+        }
 
         // إنشاء permission "toggle_maintenance" بـ guard web حصراً
         $togglePermission = \Spatie\Permission\Models\Permission::firstOrCreate(
@@ -107,14 +111,21 @@ class DatabaseSeeder extends Seeder
         //    كلمة المرور: password
         //    الدور : super_admin (إدارة النظام والمطاعم والمستخدمين بدون إمكانية إيقاف النظام)
         // =============================================
-        $systemAdmin = User::query()->create([
-            'restaurant_id' => null,
-            'name'          => 'مدير النظام',
-            'email'         => 'admin@tedallal.test',
-            'password'      => Hash::make('password'),
-            'status'        => UserStatus::Active,
-        ]);
-        $systemAdmin->assignRole(UserRole::SuperAdmin->value);
+        $systemAdmin = User::firstOrCreate(
+            ['email' => 'admin@tedallal.test'],
+            [
+                'restaurant_id' => null,
+                'name'          => 'مدير النظام',
+                'password'      => Hash::make('password'),
+                'status'        => UserStatus::Active,
+            ]
+        );
+        if (! $systemAdmin->hasRole(UserRole::SuperAdmin->value)) {
+            $systemAdmin->assignRole(UserRole::SuperAdmin->value);
+        }
+        if ($systemAdmin->hasPermissionTo($togglePermission)) {
+            $systemAdmin->revokePermissionTo($togglePermission);
+        }
 
         // تفريغ cache الصلاحيات
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
