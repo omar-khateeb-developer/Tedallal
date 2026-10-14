@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Restaurant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 
 class RestaurantController extends Controller
 {
@@ -23,7 +24,7 @@ class RestaurantController extends Controller
             'currency' => 'required|string|max:3',
             'manager_name' => 'required|string|max:255',
             'manager_email' => 'required|string|email|max:255|unique:users,email',
-            'manager_password' => 'nullable|string|min:6',
+            'manager_password' => ['required', Password::defaults()],
         ]);
 
         $restaurantData = [
@@ -31,7 +32,7 @@ class RestaurantController extends Controller
             'phone' => $validated['phone'],
             'address' => $validated['address'],
             'currency' => $validated['currency'],
-            'slug' => Str::slug($validated['name']) . '-' . rand(1000, 9999),
+            'slug' => Str::slug($validated['name']) . '-' . Str::lower(Str::random(8)),
             'status' => 'active',
         ];
 
@@ -41,7 +42,7 @@ class RestaurantController extends Controller
             'restaurant_id' => $restaurant->id,
             'name' => $validated['manager_name'],
             'email' => $validated['manager_email'],
-            'password' => \Illuminate\Support\Facades\Hash::make($validated['manager_password'] ?: 'password'),
+            'password' => \Illuminate\Support\Facades\Hash::make($validated['manager_password']),
             'role' => \App\Enums\UserRole::Admin,
             'status' => \App\Enums\UserStatus::Active,
         ]);

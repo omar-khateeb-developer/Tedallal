@@ -24,9 +24,9 @@ Route::prefix('public')->middleware('throttle:60,1')->group(function () {
     Route::get('sessions/{sessionToken}', [SessionController::class, 'show']);
     Route::get('menu', [MenuController::class, 'index']);
     Route::get('menu/categories', [MenuController::class, 'categories']);
-    Route::post('promo-codes/validate', [PromoCodeController::class, 'validateCode']);
 
     Route::middleware(ValidateTableSession::class)->group(function () {
+        Route::post('promo-codes/validate', [PromoCodeController::class, 'validateCode']);
         Route::get('cart', [CartController::class, 'index']);
         Route::post('cart/items', [CartController::class, 'store']);
         Route::patch('cart/items/{cartItem}', [CartController::class, 'update']);
@@ -37,7 +37,7 @@ Route::prefix('public')->middleware('throttle:60,1')->group(function () {
     });
 });
 
-Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
+Route::prefix('admin')->middleware(['auth:sanctum', 'throttle:120,1'])->group(function () {
     Route::middleware('role:admin')->group(function () {
         Route::get('dashboard/stats', [AdminDashboardController::class, 'stats']);
         Route::get('restaurant', [RestaurantController::class, 'show']);
@@ -80,7 +80,7 @@ Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
     });
 });
 
-Route::prefix('super-admin')->middleware(['auth:sanctum', EnsureUserHasRole::class.':super_admin'])->group(function () {
+Route::prefix('super-admin')->middleware(['auth:sanctum', 'throttle:60,1', EnsureUserHasRole::class.':super_admin'])->group(function () {
     Route::get('dashboard/stats', [\App\Http\Controllers\Api\SuperAdmin\DashboardController::class, 'stats']);
     Route::get('restaurants', [\App\Http\Controllers\Api\SuperAdmin\RestaurantController::class, 'index']);
     Route::post('restaurants', [\App\Http\Controllers\Api\SuperAdmin\RestaurantController::class, 'store']);

@@ -52,9 +52,11 @@ class PromoCode extends Model
         }
 
         if ($this->discount_type === 'fixed') {
-            return min($this->discount_value, $orderTotal);
+            return min((float) $this->discount_value, $orderTotal);
         }
 
-        return round($orderTotal * ($this->discount_value / 100), 2);
+        $calculated = round($orderTotal * ((float) $this->discount_value / 100), 2);
+
+        return min($calculated, $orderTotal);
     }
 }

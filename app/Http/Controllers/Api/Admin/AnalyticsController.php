@@ -90,13 +90,19 @@ class AnalyticsController extends ApiController
             ->get();
 
         // Hourly distribution
+        $hourExpression = match (DB::connection()->getDriverName()) {
+            'sqlite' => "CAST(strftime('%H', created_at) AS INTEGER)",
+            'pgsql' => "EXTRACT(HOUR FROM created_at)",
+            default => 'HOUR(created_at)',
+        };
+
         $hourlyDistribution = DB::table('orders')
             ->where('restaurant_id', $restaurant->id)
             ->where('status', 'served')
             ->when($period === 'today', fn($q) => $q->whereDate('created_at', Carbon::today()))
             ->when($period === 'week', fn($q) => $q->where('created_at', '>=', Carbon::now()->startOfWeek()))
             ->when($period === 'month', fn($q) => $q->where('created_at', '>=', Carbon::now()->startOfMonth()))
-            ->select(DB::raw('HOUR(created_at) as hour'), DB::raw('COUNT(*) as total_orders'))
+            ->select(DB::raw("{$hourExpression} as hour"), DB::raw('COUNT(*) as total_orders'))
             ->groupBy('hour')
             ->orderBy('hour')
             ->get();

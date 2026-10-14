@@ -15,12 +15,17 @@ final class RestaurantContext
             return $this->cached;
         }
 
-        $restaurant = Restaurant::query()
-            ->where('status', RestaurantStatus::Active)
-            ->first();
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
 
-        if (! $restaurant) {
-            throw new \RuntimeException('No active restaurant configured.');
+        if (! $user || ! $user->restaurant) {
+            throw new \RuntimeException('No restaurant associated with current user.');
+        }
+
+        $restaurant = $user->restaurant;
+
+        if (! $restaurant->isActive()) {
+            throw new \RuntimeException('Restaurant is not active.');
         }
 
         return $this->cached = $restaurant;

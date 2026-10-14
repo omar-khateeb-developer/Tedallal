@@ -21,6 +21,11 @@ class PromoCodeController extends ApiController
         ]);
 
         $session = ValidateTableSession::sessionFrom($request);
+
+        if (! $session || ! $session->table || ! $session->table->restaurant) {
+            return $this->error('جلسة الطاولة غير صالحة.', 401);
+        }
+
         $restaurant = $session->table->restaurant;
 
         if (empty($restaurant->features['offers'])) {

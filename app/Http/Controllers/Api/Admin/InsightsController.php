@@ -73,11 +73,17 @@ class InsightsController extends ApiController
             }
             
             // Peak hours insight
+            $hourExpression = match (DB::connection()->getDriverName()) {
+                'sqlite' => "CAST(strftime('%H', created_at) AS INTEGER)",
+                'pgsql' => "EXTRACT(HOUR FROM created_at)",
+                default => 'HOUR(created_at)',
+            };
+
             $peakHours = DB::table('orders')
                 ->where('restaurant_id', $restaurant->id)
                 ->where('status', 'served')
                 ->where('created_at', '>=', $thirtyDaysAgo)
-                ->select(DB::raw('HOUR(created_at) as hour'), DB::raw('COUNT(*) as total'))
+                ->select(DB::raw("{$hourExpression} as hour"), DB::raw('COUNT(*) as total'))
                 ->groupBy('hour')
                 ->orderByDesc('total')
                 ->limit(2)

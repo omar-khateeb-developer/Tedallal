@@ -31,7 +31,16 @@ class PromoCodeController extends ApiController
         $validated = $request->validate([
             'code' => 'required|string|max:50|unique:promo_codes,code,NULL,id,restaurant_id,' . $restaurant->id,
             'discount_type' => 'required|in:percentage,fixed',
-            'discount_value' => 'required|numeric|min:0',
+            'discount_value' => [
+                'required',
+                'numeric',
+                'min:0',
+                function ($attribute, $value, $fail) use ($request) {
+                    if ($request->input('discount_type') === 'percentage' && $value > 100) {
+                        $fail('نسبة الخصم لا يمكن أن تتجاوز 100%.');
+                    }
+                },
+            ],
             'min_order_value' => 'nullable|numeric|min:0',
             'is_active' => 'boolean',
             'expires_at' => 'nullable|date',
@@ -54,7 +63,16 @@ class PromoCodeController extends ApiController
         $validated = $request->validate([
             'code' => 'required|string|max:50|unique:promo_codes,code,' . $promoCode->id . ',id,restaurant_id,' . $restaurant->id,
             'discount_type' => 'required|in:percentage,fixed',
-            'discount_value' => 'required|numeric|min:0',
+            'discount_value' => [
+                'required',
+                'numeric',
+                'min:0',
+                function ($attribute, $value, $fail) use ($request) {
+                    if ($request->input('discount_type') === 'percentage' && $value > 100) {
+                        $fail('نسبة الخصم لا يمكن أن تتجاوز 100%.');
+                    }
+                },
+            ],
             'min_order_value' => 'nullable|numeric|min:0',
             'is_active' => 'boolean',
             'expires_at' => 'nullable|date',
