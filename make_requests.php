@@ -22,5 +22,6 @@ foreach ($controllers as $file => $requests) {
     if ($requests[1]) {
         exec("php artisan make:request {$requests[1]}");
     }
+    //for test connection vps with 
 }
 echo "Done.\n";

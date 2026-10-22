@@ -53,12 +53,15 @@ FILESYSTEM_DISK=public
 
 ## Demo credentials
 
-After seeding:
+After seeding (`php artisan migrate:fresh --seed`), default password for all demo accounts is `password`:
 
-| Role  | Email                 | Password  |
-|-------|-----------------------|-----------|
-| Admin | admin@tedallal.test   | password  |
-| Staff | staff@tedallal.test   | password  |
+| Role / Scope | Email | Password | Details |
+|---|---|---|---|
+| **Super Admin (Owner)** | `super@tedallal.test` | `password` | Platform Owner, exclusive `toggle_maintenance` permission |
+| **System Admin** | `admin@tedallal.test` | `password` | Platform Manager (restricted from maintenance toggle) |
+| **Restaurant Admin** | `admin@bait-alsham.test` | `password` | Bait Al-Sham Restaurant Admin (tables, menu, staff, settings) |
+| **Cashier (Staff)** | `cashier@bait-alsham.test` | `password` | Bait Al-Sham Staff (kitchen/orders board, view menu) |
+| **Waiter (Staff)** | `waiter@bait-alsham.test` | `password` | Bait Al-Sham Staff (orders board) |
 
 ## Running locally
 
