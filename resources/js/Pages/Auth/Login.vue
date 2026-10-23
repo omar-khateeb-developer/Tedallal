@@ -35,12 +35,6 @@ const submit = () => {
             {{ status }}
         </div>
 
-        <!-- CI/CD Deployment Test Indicator -->
-        <div class="mb-4 flex items-center justify-center gap-2 rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-center text-xs font-medium text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">
-            <span class="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>اختبار CI/CD: تم النشر التلقائي بنجاح (v1.0.1)</span>
-        </div>
-
         <form @submit.prevent="submit">
             <div>
                 <InputLabel for="email" value="Email" />

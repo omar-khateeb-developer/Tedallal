@@ -88,7 +88,8 @@ class MenuItemController extends ApiController
         $itemName = $item->name;
         
         if ($item->image) {
-            $oldPath = ltrim($item->image, '/storage/');
+            // Safely remove the prefix without stripping characters inside the directory name
+            $oldPath = preg_replace('~^/storage/~', '', $item->image);
             Storage::disk('public')->delete($oldPath);
         }
 
