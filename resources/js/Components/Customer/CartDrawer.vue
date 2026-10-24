@@ -17,6 +17,7 @@ const props = defineProps<{
 const emit = defineEmits<{
     'update:open': [value: boolean];
     checkout: [];
+    updated: [];
 }>();
 
 const items = ref<CartLine[]>([]);
@@ -42,6 +43,7 @@ async function updateQty(item: CartLine, quantity: number) {
         note: item.note,
     });
     await load();
+    emit('updated');
 }
 
 async function updateNote(item: CartLine, note: string) {
@@ -50,10 +52,12 @@ async function updateNote(item: CartLine, note: string) {
         note: note || null,
     });
     item.note = note || null;
+    emit('updated');
 }
 
 function close() {
     emit('update:open', false);
+    emit('updated');
 }
 
 watch(() => props.open, (isOpen) => {
