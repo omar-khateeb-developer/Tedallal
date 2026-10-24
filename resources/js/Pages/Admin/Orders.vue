@@ -8,6 +8,14 @@ import { Head, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import axios from 'axios';
 
+interface OrderItem {
+    id: number;
+    item_name_snapshot: string;
+    quantity: number;
+    subtotal: string;
+    note?: string;
+}
+
 interface Order {
     id: number;
     order_number: string;
@@ -15,6 +23,8 @@ interface Order {
     status_label: string;
     total: string;
     table?: { name: string };
+    customer_note?: string | null;
+    items?: OrderItem[];
 }
 
 const orders = ref<Order[]>([]);
@@ -152,6 +162,28 @@ useRestaurantOrders(restaurantId.value, {
                             >
                                 إلغاء
                             </button>
+                        </div>
+                    </div>
+
+                    <!-- ملاحظة الزبون على الطلب -->
+                    <div v-if="order.customer_note" class="mt-3 rounded-xl bg-amber-50 p-2.5 border border-amber-200 text-amber-900 text-xs shadow-sm">
+                        <div class="flex items-center gap-1 font-bold mb-1 text-amber-800">
+                            <span>📝 ملاحظة الزبون على الطلب:</span>
+                        </div>
+                        <p class="font-bold text-amber-950 pr-4 bg-amber-100/50 p-1.5 rounded-lg border border-amber-200/50">{{ order.customer_note }}</p>
+                    </div>
+
+                    <!-- أصناف الطلب مع الملاحظات -->
+                    <div v-if="order.items && order.items.length > 0" class="mt-3 pt-2.5 border-t border-stone-100 space-y-1.5">
+                        <div v-for="item in order.items" :key="item.id" class="text-xs text-stone-700 py-0.5">
+                            <div class="flex items-center gap-1.5">
+                                <span class="font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">{{ item.quantity }}x</span>
+                                <span class="font-medium text-stone-800">{{ item.item_name_snapshot }}</span>
+                            </div>
+                            <div v-if="item.note" class="mt-0.5 flex items-start gap-1 mr-6 text-[11px] text-amber-800 bg-amber-50 rounded px-2 py-0.5 border border-amber-200/60 inline-flex">
+                                <span class="font-bold shrink-0">↳ ملاحظة:</span>
+                                <span>{{ item.note }}</span>
+                            </div>
                         </div>
                     </div>
                 </article>

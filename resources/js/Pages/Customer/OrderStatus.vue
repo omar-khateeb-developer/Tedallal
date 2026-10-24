@@ -15,7 +15,8 @@ const order = ref<{
     status: string;
     status_label: string;
     total: string;
-    items: Array<{ item_name_snapshot: string; quantity: number; subtotal: string }>;
+    customer_note?: string;
+    items: Array<{ item_name_snapshot: string; quantity: number; subtotal: string; note?: string }>;
 } | null>(null);
 
 let pollTimer: ReturnType<typeof setInterval> | null = null;
@@ -40,6 +41,7 @@ function subscribeToRealtime() {
                     status: payload.order.status,
                     status_label: payload.order.status_label,
                     total: payload.order.total,
+                    customer_note: payload.order.customer_note ?? order.value?.customer_note,
                     items: payload.order.items ?? order.value?.items ?? [],
                 };
             }
@@ -149,14 +151,26 @@ const currentStepIndex = computed(() => {
             <div class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-stone-100">
                 <h3 class="mb-4 font-bold text-lg text-stone-800">تفاصيل الفاتورة</h3>
                 <ul class="space-y-3">
-                    <li v-for="(item, i) in order.items" :key="i" class="flex justify-between items-center text-sm border-b border-stone-100 pb-3 last:border-0 last:pb-0">
-                        <div class="flex items-center gap-3">
-                            <span class="flex h-6 w-6 items-center justify-center rounded-md bg-stone-100 font-bold text-stone-600">{{ item.quantity }}</span>
-                            <span class="font-medium text-stone-800">{{ item.item_name_snapshot }}</span>
+                    <li v-for="(item, i) in order.items" :key="i" class="border-b border-stone-100 pb-3 last:border-0 last:pb-0">
+                        <div class="flex justify-between items-center text-sm">
+                            <div class="flex items-center gap-3">
+                                <span class="flex h-6 w-6 items-center justify-center rounded-md bg-stone-100 font-bold text-stone-600">{{ item.quantity }}</span>
+                                <span class="font-medium text-stone-800">{{ item.item_name_snapshot }}</span>
+                            </div>
+                            <span class="font-semibold text-stone-600">{{ item.subtotal }} {{ restaurant.currency }}</span>
                         </div>
-                        <span class="font-semibold text-stone-600">{{ item.subtotal }} {{ restaurant.currency }}</span>
+                        <div v-if="item.note" class="mr-9 mt-1 text-xs text-amber-700 font-medium">
+                            ↳ ملاحظة: {{ item.note }}
+                        </div>
                     </li>
                 </ul>
+
+                <!-- ملاحظة الزبون -->
+                <div v-if="order.customer_note" class="mt-4 rounded-2xl bg-amber-50 p-3.5 text-xs text-amber-900 border border-amber-200/80">
+                    <span class="font-bold block mb-1 text-amber-800">ملاحظتك على الطلب:</span>
+                    <p class="font-medium text-stone-700 whitespace-pre-wrap">{{ order.customer_note }}</p>
+                </div>
+
                 <div class="mt-4 flex justify-between rounded-2xl bg-stone-50 p-4 font-bold">
                     <span class="text-stone-600">المبلغ الإجمالي</span>
                     <span class="text-amber-600 text-lg">{{ order.total }} {{ restaurant.currency }}</span>

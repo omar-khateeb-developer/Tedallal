@@ -98,9 +98,10 @@ function showBrowserNotification(order: Order) {
     if (Notification.permission !== 'granted') return;
 
     const itemsSummary = order.items?.map(i => `${i.quantity}x ${i.item_name_snapshot}`).join('، ') ?? '';
+    const noteText = order.customer_note ? `\n📝 ملاحظة الزبون: ${order.customer_note}` : '';
 
     const notification = new Notification('🔔 طلب جديد وصل المطبخ!', {
-        body: `${order.order_number} — ${order.table?.name ?? 'سفري'}\n${itemsSummary}`,
+        body: `${order.order_number} — ${order.table?.name ?? 'سفري'}\n${itemsSummary}${noteText}`,
         icon: '/favicon.ico',
         badge: '/favicon.ico',
         tag: `order-${order.id}`,        // يمنع تكرار نفس الإشعار
@@ -137,6 +138,7 @@ interface Order {
     status_label: string;
     total: string;
     table?: { name: string };
+    customer_note?: string | null;
     items?: OrderItem[];
     created_at?: string;
     accepted_at?: string;
@@ -203,11 +205,15 @@ const restaurantId = computed(() => page.props.restaurantId as number | undefine
 
 async function loadOrders() {
     const { data } = await axios.get('/api/admin/orders');
-    orders.value = data.data?.data ?? data.data ?? [];
+    const list = data.data?.data ?? data.data ?? [];
+    orders.value = list;
+    // Auto-expand orders so kitchen staff sees items and notes immediately
+    list.forEach((o: Order) => expandedOrderIds.value.add(o.id));
 }
 
 const processingOrderIds = ref<number[]>([]);
 const expandedOrderIds = ref<Set<number>>(new Set());
+
 const { showToast } = useToast();
 
 const toggleItems = (orderId: number) => {
@@ -308,6 +314,7 @@ useRestaurantOrders(restaurantId.value, {
         const exists = orders.value.find(o => o.id === newOrder.id);
         if (!exists) {
             orders.value.unshift(newOrder as Order);
+            expandedOrderIds.value.add(newOrder.id);
             // 🔔 إطلاق التنبيه الصوتي والمرئي
             alertNewOrder(newOrder as Order);
         }
@@ -462,21 +469,44 @@ useRestaurantOrders(restaurantId.value, {
                                         </div>
                                     </div>
                                     
+                                    <!-- ملاحظة الزبون العامة للطلب -->
+                                    <div v-if="order.customer_note" class="my-2.5 rounded-xl bg-amber-50 p-3 border border-amber-200 text-amber-900 text-xs shadow-sm">
+                                        <div class="flex items-center gap-1.5 font-bold mb-1 text-amber-800">
+                                            <svg class="w-4 h-4 shrink-0 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                            </svg>
+                                            <span>ملاحظة الزبون على الطلب:</span>
+                                        </div>
+                                        <p class="font-bold whitespace-pre-wrap leading-relaxed text-amber-950 pr-5 bg-amber-100/60 p-2 rounded-lg border border-amber-200/60">{{ order.customer_note }}</p>
+                                    </div>
+                                    
                                     <!-- Items Accordion -->
                                     <div class="mt-3" v-if="order.items && order.items.length > 0">
                                         <button 
                                             @click="toggleItems(order.id)"
                                             class="flex w-full items-center justify-between bg-stone-50 hover:bg-stone-100 px-3 py-2 rounded-lg text-sm font-medium text-stone-700 transition-colors"
                                         >
-                                            <span>تفاصيل الأصناف ({{ order.items.length }})</span>
+                                            <div class="flex items-center gap-2">
+                                                <span>تفاصيل الأصناف ({{ order.items.length }})</span>
+                                                <span v-if="order.items.some(i => i.note)" class="text-[10px] bg-amber-100 text-amber-800 font-bold px-1.5 py-0.5 rounded-md border border-amber-200">
+                                                    ملاحظات خاصة
+                                                </span>
+                                            </div>
                                             <svg class="w-4 h-4 transition-transform duration-200" :class="{'rotate-180': expandedOrderIds.has(order.id)}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                         </button>
                                         
-                                        <div v-show="expandedOrderIds.has(order.id)" class="mt-2 space-y-1 px-1">
-                                            <div v-for="item in order.items" :key="item.id" class="flex justify-between items-center text-sm py-1 border-b border-dashed border-stone-200 last:border-0">
-                                                <div class="flex items-center gap-2">
-                                                    <span class="font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">{{ item.quantity }}x</span>
-                                                    <span class="font-medium text-stone-800">{{ item.item_name_snapshot }}</span>
+                                        <div v-show="expandedOrderIds.has(order.id)" class="mt-2 space-y-1.5 px-1">
+                                            <div v-for="item in order.items" :key="item.id" class="text-sm py-1.5 border-b border-dashed border-stone-200 last:border-0">
+                                                <div class="flex justify-between items-center">
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">{{ item.quantity }}x</span>
+                                                        <span class="font-medium text-stone-800">{{ item.item_name_snapshot }}</span>
+                                                    </div>
+                                                </div>
+                                                <!-- ملاحظة خاصة بالصنف -->
+                                                <div v-if="item.note" class="mt-1 flex items-start gap-1 mr-6 text-xs text-amber-800 bg-amber-50 rounded-md px-2 py-1 border border-amber-200/80">
+                                                    <span class="font-bold shrink-0">↳ ملاحظة:</span>
+                                                    <span class="font-semibold">{{ item.note }}</span>
                                                 </div>
                                             </div>
                                         </div>

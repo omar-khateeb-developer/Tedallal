@@ -152,6 +152,13 @@
     </div>
     @endif
 
+    @if($order->customer_note)
+    <div class="info-row" style="flex-direction: column; align-items: flex-start; margin-top: 2mm; background: #fffbeb; padding: 2mm; border: 1px dashed #d97706; border-radius: 2mm;">
+        <span class="label" style="color: #b45309; font-size: 12px;">ملاحظات الزبون:</span>
+        <span style="font-weight: 700; margin-top: 1mm; font-size: 13px;">{{ $order->customer_note }}</span>
+    </div>
+    @endif
+
     <div class="divider"></div>
 
     <table>
