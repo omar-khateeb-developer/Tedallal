@@ -38,9 +38,9 @@ async function createTable() {
         await axios.post('/api/admin/tables', { name: newName.value.trim() });
         newName.value = '';
         await reload();
-        message.value = 'تم إنشاء الطاولة';
-    } catch {
-        message.value = 'تعذر إنشاء الطاولة';
+        message.value = 'تم إنشاء الطاولة وتوليد رمز QR بنجاح';
+    } catch (e: any) {
+        message.value = e.response?.data?.message || 'تعذر إنشاء الطاولة';
     } finally {
         loading.value = false;
     }
@@ -78,6 +78,7 @@ async function deleteTable(table: TableRow) {
     try {
         await axios.delete(`/api/admin/tables/${table.id}`);
         await reload();
+        message.value = 'تم حذف الطاولة';
     } catch (e: any) {
         alert(e.response?.data?.message || 'لا يمكن حذف طاولة لها طلبات');
         console.error(e);
@@ -85,13 +86,18 @@ async function deleteTable(table: TableRow) {
 }
 
 async function regenerateToken(table: TableRow) {
-    if (!confirm('سيتم إبطال رمز QR الحالي. متابعة؟')) return;
+    if (!confirm(`سيتم إبطال رمز QR الحالي للطاولة (${table.name}) وتوليد رمز جديد. متابعة؟`)) return;
+    loading.value = true;
+    message.value = '';
     try {
         await axios.post(`/api/admin/tables/${table.id}/regenerate-token`);
         await reload();
+        message.value = `تم توليد رمز QR جديد للطاولة: ${table.name}`;
     } catch (e: any) {
         alert(e.response?.data?.message || 'تعذر توليد QR جديد');
         console.error(e);
+    } finally {
+        loading.value = false;
     }
 }
 

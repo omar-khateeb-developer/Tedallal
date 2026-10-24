@@ -71,4 +71,21 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+// مسار أمان لتوليد وعرض رمز QR تلقائياً عند غياب الملف المادي من التخزين
+Route::get('/storage/qr/{restaurantId}/{filename}', function ($restaurantId, $filename) {
+    $token = pathinfo($filename, PATHINFO_FILENAME);
+    $table = \App\Models\RestaurantTable::withoutGlobalScopes()
+        ->where('restaurant_id', $restaurantId)
+        ->where('public_token', $token)
+        ->firstOrFail();
+
+    $content = app(\App\Services\QrCodeService::class)->getPngContents($table);
+
+    return response($content, 200, [
+        'Content-Type' => 'image/png',
+        'Cache-Control' => 'public, max-age=86400',
+    ]);
+})->where('filename', '[A-Za-z0-9_-]+\.png');
+
 require __DIR__.'/auth.php';
+

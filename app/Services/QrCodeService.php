@@ -14,10 +14,28 @@ final class QrCodeService
 {
     public function generateForTable(RestaurantTable $table): string
     {
-        $url = $table->publicUrl();
         $path = $this->storagePath($table);
+        $dir = dirname($path);
 
-        $result = (new Builder(
+        if (! Storage::disk('public')->exists($dir)) {
+            Storage::disk('public')->makeDirectory($dir);
+        }
+
+        $pngData = $this->buildRawPng($table);
+        $saved = Storage::disk('public')->put($path, $pngData);
+
+        if (! $saved) {
+            \Illuminate\Support\Facades\Log::warning("QrCodeService: failed to write QR to public disk at {$path}");
+        }
+
+        return Storage::disk('public')->url($path);
+    }
+
+    public function buildRawPng(RestaurantTable $table): string
+    {
+        $url = $table->publicUrl();
+
+        return (new Builder(
             writer: new PngWriter,
             data: $url,
             encoding: new Encoding('UTF-8'),
@@ -25,11 +43,7 @@ final class QrCodeService
             size: 300,
             margin: 10,
             roundBlockSizeMode: RoundBlockSizeMode::Margin,
-        ))->build();
-
-        Storage::disk('public')->put($path, $result->getString());
-
-        return Storage::disk('public')->url($path);
+        ))->build()->getString();
     }
 
     public function getPngContents(RestaurantTable $table): string
@@ -40,23 +54,36 @@ final class QrCodeService
             $this->generateForTable($table);
         }
 
-        return Storage::disk('public')->get($path);
+        if (Storage::disk('public')->exists($path)) {
+            return Storage::disk('public')->get($path);
+        }
+
+        // Fallback: generate and return raw PNG directly in-memory if disk write failed
+        return $this->buildRawPng($table);
     }
 
     public function deleteForTable(RestaurantTable $table): void
     {
         $path = $this->storagePath($table);
-        Storage::disk('public')->delete($path);
+        if (Storage::disk('public')->exists($path)) {
+            Storage::disk('public')->delete($path);
+        }
     }
 
     public function regenerate(RestaurantTable $table, string $newToken): string
     {
         $oldPath = $this->storagePath($table);
-        Storage::disk('public')->delete($oldPath);
+        $oldToken = $table->public_token;
 
         $table->public_token = $newToken;
+        $url = $this->generateForTable($table);
 
-        return $this->generateForTable($table);
+        // Delete old QR only AFTER the new QR has been generated and if tokens differ
+        if ($oldToken && $oldToken !== $newToken && Storage::disk('public')->exists($oldPath)) {
+            Storage::disk('public')->delete($oldPath);
+        }
+
+        return $url;
     }
 
     private function storagePath(RestaurantTable $table): string
@@ -64,3 +91,4 @@ final class QrCodeService
         return "qr/{$table->restaurant_id}/{$table->public_token}.png";
     }
 }
+
