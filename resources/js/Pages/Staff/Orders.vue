@@ -431,13 +431,24 @@ useRestaurantOrders(restaurantId.value, {
                                                 {{ order.table?.name || 'سفري' }}
                                             </p>
                                         </div>
-                                        <!-- شارة وقت الانتظار -->
-                                        <span
-                                            class="text-xs font-bold px-2 py-1 rounded-lg"
-                                            :class="elapsedBadgeClass(order)"
-                                        >
-                                            {{ elapsedLabel(order.created_at) }}
-                                        </span>
+                                        <div class="flex items-center gap-1.5">
+                                            <a
+                                                :href="`/admin/orders/${order.id}/print`"
+                                                target="_blank"
+                                                class="p-1 text-stone-400 hover:text-stone-700 hover:bg-stone-100 rounded-lg transition-colors"
+                                                title="طباعة الفاتورة"
+                                                @click.stop
+                                            >
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                                            </a>
+                                            <!-- شارة وقت الانتظار -->
+                                            <span
+                                                class="text-xs font-bold px-2 py-1 rounded-lg"
+                                                :class="elapsedBadgeClass(order)"
+                                            >
+                                                {{ elapsedLabel(order.created_at) }}
+                                            </span>
+                                        </div>
                                     </div>
 
                                     <!-- مخطط زمني للحالات -->

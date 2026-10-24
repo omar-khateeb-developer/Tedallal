@@ -137,7 +137,7 @@
     
     <div class="info-row">
         <span class="label">التاريخ:</span>
-        <span dir="ltr">{{ $order->created_at->format('Y-m-d h:i A') }}</span>
+        <span dir="ltr">{{ $order->created_at?->format('Y-m-d h:i A') ?? now()->format('Y-m-d h:i A') }}</span>
     </div>
 
     @if($order->table)

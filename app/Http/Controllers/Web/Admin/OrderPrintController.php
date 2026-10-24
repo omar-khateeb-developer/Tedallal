@@ -22,7 +22,7 @@ class OrderPrintController extends Controller
             abort(404);
         }
 
-        $order->load(['items', 'table', 'customer']);
+        $order->load(['items', 'table']);
 
         return view('admin.orders.print-invoice', [
             'restaurant' => $restaurant,
