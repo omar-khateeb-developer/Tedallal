@@ -15,7 +15,7 @@ class MenuItemResource extends JsonResource
             'category_id' => $this->category_id,
             'name' => $this->name,
             'description' => $this->description,
-            'image' => $this->image ? asset(ltrim($this->image, '/')) : null,
+            'image' => $this->image,
             'price' => $this->price,
             'is_available' => $this->is_available,
             'is_active' => $this->is_active,

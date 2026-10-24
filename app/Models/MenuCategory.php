@@ -28,6 +28,19 @@ class MenuCategory extends Model
         ];
     }
 
+    protected function image(): \Illuminate\Database\Eloquent\Casts\Attribute
+    {
+        return \Illuminate\Database\Eloquent\Casts\Attribute::make(
+            get: function (?string $value) {
+                if (! $value) return null;
+                if (str_starts_with($value, 'http')) {
+                    $value = parse_url($value, PHP_URL_PATH);
+                }
+                return '/' . ltrim($value, '/');
+            },
+        );
+    }
+
     public function restaurant(): BelongsTo
     {
         return $this->belongsTo(Restaurant::class);

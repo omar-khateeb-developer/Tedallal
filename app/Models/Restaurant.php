@@ -40,11 +40,10 @@ class Restaurant extends Model
         return \Illuminate\Database\Eloquent\Casts\Attribute::make(
             get: function (?string $value) {
                 if (! $value) return null;
-                // إذا كان المسار مخزّناً كـ URL كامل، نستخرج المسار النسبي فقط
                 if (str_starts_with($value, 'http')) {
                     $value = parse_url($value, PHP_URL_PATH);
                 }
-                return asset($value);
+                return '/' . ltrim($value, '/');
             },
         );
     }
@@ -54,11 +53,10 @@ class Restaurant extends Model
         return \Illuminate\Database\Eloquent\Casts\Attribute::make(
             get: function (?string $value) {
                 if (! $value) return null;
-                // إذا كان المسار مخزّناً كـ URL كامل، نستخرج المسار النسبي فقط
                 if (str_starts_with($value, 'http')) {
                     $value = parse_url($value, PHP_URL_PATH);
                 }
-                return asset($value);
+                return '/' . ltrim($value, '/');
             },
         );
     }
