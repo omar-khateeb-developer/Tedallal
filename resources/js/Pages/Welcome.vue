@@ -1088,9 +1088,10 @@ onUnmounted(() => {
 
                                 <div class="p-2 rounded-xl bg-slate-50 border border-slate-200">
                                     <img
-                                        src="/storage/qr/1/--eY9fjYlSGr57nA-bbecW8pHhr8f4JpT_nooTnncug.png"
+                                        src="/images/qr-sample.png"
                                         alt="رمز الـ QR للطاولة"
                                         class="w-44 h-44 mx-auto object-contain"
+                                        onerror="this.src='/storage/qr/1/0lsTHi0SljCfW86TOl9Cr9GpuoSrPPCU8bUYLH4Efiw.png'"
                                     />
                                 </div>
 
