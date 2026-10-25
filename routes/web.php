@@ -9,10 +9,21 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function () {
+Route::get('/', function (\Illuminate\Http\Request $request) {
+    $detectedCountry = $request->header('CF-IPCountry')
+        ?? $request->header('X-Country-Code')
+        ?? $request->server('HTTP_CF_IPCOUNTRY')
+        ?? $request->server('GEOIP_COUNTRY_CODE')
+        ?? null;
+
+    if ($detectedCountry && in_array(strtoupper($detectedCountry), ['XX', 'T1', 'UNKNOWN', ''])) {
+        $detectedCountry = null;
+    }
+
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
+        'detectedCountry' => $detectedCountry ? strtoupper(trim($detectedCountry)) : null,
     ]);
 })->name('welcome');
 
