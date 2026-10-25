@@ -48,13 +48,22 @@ export interface CountryCurrencyConfig {
 }
 
 const supportedArabCurrencies: Record<string, CountryCurrencyConfig> = {
+    SY: {
+        code: 'SY',
+        countryName: { ar: 'الجمهورية العربية السورية', en: 'Syria' },
+        currencyName: { ar: 'ليرة سورية', en: 'Syrian Pound' },
+        symbol: { ar: 'ل.س', en: 'SYP' },
+        flag: '🇸🇾',
+        rate: 1.0, // Primary Base Currency!
+        decimals: 0,
+    },
     SA: {
         code: 'SA',
         countryName: { ar: 'المملكة العربية السعودية', en: 'Saudi Arabia' },
         currencyName: { ar: 'ريال سعودي', en: 'Saudi Riyal' },
         symbol: { ar: 'ر.س', en: 'SAR' },
         flag: '🇸🇦',
-        rate: 1.0,
+        rate: 1 / 3800,
         decimals: 0,
     },
     AE: {
@@ -63,7 +72,7 @@ const supportedArabCurrencies: Record<string, CountryCurrencyConfig> = {
         currencyName: { ar: 'درهم إماراتي', en: 'UAE Dirham' },
         symbol: { ar: 'د.إ', en: 'AED' },
         flag: '🇦🇪',
-        rate: 0.98,
+        rate: 1 / 3800,
         decimals: 0,
     },
     KW: {
@@ -72,7 +81,7 @@ const supportedArabCurrencies: Record<string, CountryCurrencyConfig> = {
         currencyName: { ar: 'دينار كويتي', en: 'Kuwaiti Dinar' },
         symbol: { ar: 'د.ك', en: 'KWD' },
         flag: '🇰🇼',
-        rate: 0.082,
+        rate: 1 / 46000,
         decimals: 2,
     },
     QA: {
@@ -81,7 +90,7 @@ const supportedArabCurrencies: Record<string, CountryCurrencyConfig> = {
         currencyName: { ar: 'ريال قطري', en: 'Qatari Riyal' },
         symbol: { ar: 'ر.ق', en: 'QAR' },
         flag: '🇶🇦',
-        rate: 0.97,
+        rate: 1 / 3800,
         decimals: 0,
     },
     BH: {
@@ -90,7 +99,7 @@ const supportedArabCurrencies: Record<string, CountryCurrencyConfig> = {
         currencyName: { ar: 'دينار بحريني', en: 'Bahraini Dinar' },
         symbol: { ar: 'د.ب', en: 'BHD' },
         flag: '🇧🇭',
-        rate: 0.10,
+        rate: 1 / 38000,
         decimals: 2,
     },
     OM: {
@@ -99,7 +108,7 @@ const supportedArabCurrencies: Record<string, CountryCurrencyConfig> = {
         currencyName: { ar: 'ريال عماني', en: 'Omani Rial' },
         symbol: { ar: 'ر.ع', en: 'OMR' },
         flag: '🇴🇲',
-        rate: 0.10,
+        rate: 1 / 38000,
         decimals: 2,
     },
     JO: {
@@ -108,7 +117,7 @@ const supportedArabCurrencies: Record<string, CountryCurrencyConfig> = {
         currencyName: { ar: 'دينار أردني', en: 'Jordanian Dinar' },
         symbol: { ar: 'د.أ', en: 'JOD' },
         flag: '🇯🇴',
-        rate: 0.19,
+        rate: 1 / 20000,
         decimals: 1,
     },
     EG: {
@@ -117,7 +126,7 @@ const supportedArabCurrencies: Record<string, CountryCurrencyConfig> = {
         currencyName: { ar: 'جنيه مصري', en: 'Egyptian Pound' },
         symbol: { ar: 'ج.م', en: 'EGP' },
         flag: '🇪🇬',
-        rate: 13.0,
+        rate: 1 / 300,
         decimals: 0,
     },
     IQ: {
@@ -126,16 +135,16 @@ const supportedArabCurrencies: Record<string, CountryCurrencyConfig> = {
         currencyName: { ar: 'دينار عراقي', en: 'Iraqi Dinar' },
         symbol: { ar: 'د.ع', en: 'IQD' },
         flag: '🇮🇶',
-        rate: 350.0,
+        rate: 1 / 11,
         decimals: 0,
     },
 };
 
-const currentCountryCode = ref('SA');
+const currentCountryCode = ref('SY');
 const isCurrencyMenuOpen = ref(false);
 
 const currentCurrency = computed(() => {
-    return supportedArabCurrencies[currentCountryCode.value] || supportedArabCurrencies.SA;
+    return supportedArabCurrencies[currentCountryCode.value] || supportedArabCurrencies.SY;
 });
 
 const currentCurrencySymbol = computed(() => {
@@ -143,15 +152,16 @@ const currentCurrencySymbol = computed(() => {
 });
 
 function resolveArabCountryCode(code: string | null | undefined): string {
-    if (!code) return 'SA';
+    if (!code) return 'SY';
     const c = code.toUpperCase();
     if (supportedArabCurrencies[c]) return c;
-    return 'SA';
+    return 'SY';
 }
 
 function detectTimezoneCountry(): string | null {
     try {
         const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+        if (tz.includes('Damascus')) return 'SY';
         if (tz.includes('Riyadh')) return 'SA';
         if (tz.includes('Dubai')) return 'AE';
         if (tz.includes('Kuwait')) return 'KW';
@@ -173,7 +183,7 @@ const demoForm = ref({
     restaurantName: '',
     contactPerson: '',
     phone: '',
-    country: 'المملكة العربية السعودية',
+    country: 'الجمهورية العربية السورية',
     tablesCount: '15-35',
 });
 const isSubmitted = ref(false);
@@ -226,7 +236,7 @@ const menuItems = computed<MenuItemSim[]>(() => [
         id: 1,
         name: currentLocale.value === 'ar' ? 'كباب حلبي فاخر بالكرز' : 'Aleppo Cherry Kebab',
         category: 'grills',
-        price: 58,
+        price: 85000,
         description: currentLocale.value === 'ar'
             ? 'لحم بلدي طازج مفروم مع حبّات الكرز والبهارات الحلبية التراثية وصنوبر محمص'
             : 'Fresh minced lamb glazed with tart cherries, roasted pine nuts, and heritage Aleppo spices',
@@ -237,7 +247,7 @@ const menuItems = computed<MenuItemSim[]>(() => [
         id: 2,
         name: currentLocale.value === 'ar' ? 'أوصال لحم عجل مشوي' : 'Charcoal Grilled Veal Skewers',
         category: 'grills',
-        price: 52,
+        price: 75000,
         description: currentLocale.value === 'ar'
             ? 'قطع لحم طرية متبلة بزيت الزيتون وإكليل الجبل ومشوية على الفحم الطبيعي'
             : 'Tender veal cubes marinated in virgin olive oil & rosemary, grilled over natural charcoal',
@@ -247,7 +257,7 @@ const menuItems = computed<MenuItemSim[]>(() => [
         id: 3,
         name: currentLocale.value === 'ar' ? 'كبة مشوية حلبية بالجوز' : 'Grilled Aleppo Kibbeh with Walnuts',
         category: 'grills',
-        price: 44,
+        price: 55000,
         description: currentLocale.value === 'ar'
             ? 'أقراص الكبة المحشوة باللحم المفروم والدهن والرمان والجوز البلدي'
             : 'Bulgur shell stuffed with spiced minced meat, pomegranate molasses & toasted walnuts',
@@ -258,7 +268,7 @@ const menuItems = computed<MenuItemSim[]>(() => [
         id: 4,
         name: currentLocale.value === 'ar' ? 'مقبلات مشكلة شهباء' : 'Assorted Grand Mezza Platter',
         category: 'appetizers',
-        price: 32,
+        price: 42000,
         description: currentLocale.value === 'ar'
             ? 'متبل باذنجان، حمص بيروتي، يلنجي، ومحمرة بالجوز'
             : 'Smoked moutabal, Beirut hummus, stuffed vine leaves, and spicy walnut muhammara',
@@ -268,7 +278,7 @@ const menuItems = computed<MenuItemSim[]>(() => [
         id: 5,
         name: currentLocale.value === 'ar' ? 'كنافة نابلسية بالجبن الفاخر' : 'Hot Nabulsi Cheese Kunafa',
         category: 'desserts',
-        price: 28,
+        price: 38000,
         description: currentLocale.value === 'ar'
             ? 'كنافة ساخنة بجبنة عكاوية أصيلة وفستق حلبي مع القطر الخفيف'
             : 'Crisp golden spun pastry layered with Akkawi melted cheese, pistachio & fragrant syrup',
@@ -279,7 +289,7 @@ const menuItems = computed<MenuItemSim[]>(() => [
         id: 6,
         name: currentLocale.value === 'ar' ? 'عصير رمان طبيعي مثلج' : 'Fresh Iced Pomegranate Juice',
         category: 'drinks',
-        price: 18,
+        price: 22000,
         description: currentLocale.value === 'ar'
             ? 'عصير رمان طازج 100% مع حبات الرمان الطبيعية'
             : '100% freshly pressed ruby pomegranate with hand-picked seeds',
@@ -344,7 +354,7 @@ const kdsOrders = ref<KdsOrderSim[]>([
             { name: 'عصير رمان مثلج', qty: 2 },
         ],
         status: 'new',
-        total: 184,
+        total: 256000,
     },
     {
         id: 102,
@@ -355,7 +365,7 @@ const kdsOrders = ref<KdsOrderSim[]>([
             { name: 'كنافة نابلسية بالجبن', qty: 1, note: 'قطر خفيف جداً' },
         ],
         status: 'cooking',
-        total: 80,
+        total: 113000,
     },
     {
         id: 103,
@@ -366,7 +376,7 @@ const kdsOrders = ref<KdsOrderSim[]>([
             { name: 'عصير رمان طبيعي', qty: 2 },
         ],
         status: 'ready',
-        total: 124,
+        total: 154000,
     },
 ]);
 
@@ -383,14 +393,14 @@ function advanceKdsOrder(id: number) {
 const liveToasts = computed(() => {
     if (currentLocale.value === 'en') {
         return [
-            { table: 'Table 05', text: `Confirmed order (2x Aleppo Kebab, Mezza) for ${formatPrice(148)} ${currentCurrencySymbol.value}`, time: 'Just now' },
+            { table: 'Table 05', text: `Confirmed order (2x Aleppo Kebab, Mezza) for ${formatPrice(212000)} ${currentCurrencySymbol.value}`, time: 'Just now' },
             { table: 'Kitchen & Chef', text: 'Table 12 order prepared in record time: 7 minutes! ⚡', time: '1 min ago' },
             { table: 'Table 08', text: 'Applied promo TEDALLAL15 for instant 15% discount', time: '2 mins ago' },
             { table: 'Table 03', text: 'Added 3 items to cart without waiting for a server', time: '4 mins ago' },
         ];
     }
     return [
-        { table: 'طاولة 05', text: `أكدت طلب (2x كباب حلبي، مقبلات مشكلة) بقيمة ${formatPrice(148)} ${currentCurrencySymbol.value}`, time: 'الآن' },
+        { table: 'طاولة 05', text: `أكدت طلب (2x كباب حلبي، مقبلات مشكلة) بقيمة ${formatPrice(212000)} ${currentCurrencySymbol.value}`, time: 'الآن' },
         { table: 'المطبخ والشيف', text: 'تم تجهيز طلب طاولة 12 في زمن قياسي: 7 دقائق فقط! ⚡', time: 'قبل دقيقة' },
         { table: 'طاولة 08', text: 'فعلت كود خصم TEDALLAL15 وحصلت على خصم فوري 15%', time: 'قبل دقيقتين' },
         { table: 'طاولة 03', text: 'أضافت 3 أصناف جديدة إلى سلة الطاولة بدون استدعاء النادل', time: 'قبل 4 دقائق' },
@@ -452,9 +462,9 @@ const tableCount = ref(30);
 const dailyOrdersPerTable = ref(6);
 
 const monthlyOrders = computed(() => tableCount.value * dailyOrdersPerTable.value * 30);
-const yearlyPaperSavings = computed(() => tableCount.value * 160);
+const yearlyPaperSavings = computed(() => tableCount.value * 450000);
 const timeSavedHoursMonthly = computed(() => Math.round((monthlyOrders.value * 10) / 60));
-const estimatedRevenueBoost = computed(() => Math.round(monthlyOrders.value * 0.22 * 75));
+const estimatedRevenueBoost = computed(() => Math.round(monthlyOrders.value * 0.22 * 95000));
 
 function submitDemoRequest() {
     isSubmitted.value = true;
@@ -1312,30 +1322,30 @@ onUnmounted(() => {
                                 <div class="space-y-1.5 border-b border-dashed border-slate-400 pb-3 text-xs">
                                     <div class="flex justify-between font-bold">
                                         <span>2x كباب حلبي بالكرز</span>
-                                        <span>{{ formatPrice(116, 2) }}</span>
+                                        <span>{{ formatPrice(170000) }}</span>
                                     </div>
                                     <div class="flex justify-between font-bold">
                                         <span>1x مقبلات مشكلة</span>
-                                        <span>{{ formatPrice(32, 2) }}</span>
+                                        <span>{{ formatPrice(42000) }}</span>
                                     </div>
                                     <div class="flex justify-between font-bold">
                                         <span>2x عصير رمان مثلج</span>
-                                        <span>{{ formatPrice(36, 2) }}</span>
+                                        <span>{{ formatPrice(44000) }}</span>
                                     </div>
                                 </div>
 
                                 <div class="space-y-1 text-xs">
                                     <div class="flex justify-between">
                                         <span>{{ t.demo.receiptSubtotal }}</span>
-                                        <span>{{ formatPrice(184, 2) }} {{ currentCurrencySymbol }}</span>
+                                        <span>{{ formatPrice(256000) }} {{ currentCurrencySymbol }}</span>
                                     </div>
                                     <div class="flex justify-between text-emerald-700 font-bold">
                                         <span>{{ t.demo.receiptDiscount }}</span>
-                                        <span>-{{ formatPrice(27.60, 2) }} {{ currentCurrencySymbol }}</span>
+                                        <span>-{{ formatPrice(38400) }} {{ currentCurrencySymbol }}</span>
                                     </div>
                                     <div class="flex justify-between font-black text-sm border-t border-slate-400 pt-1">
                                         <span>{{ t.demo.receiptTotal }}</span>
-                                        <span>{{ formatPrice(156.40, 2) }} {{ currentCurrencySymbol }}</span>
+                                        <span>{{ formatPrice(217600) }} {{ currentCurrencySymbol }}</span>
                                     </div>
                                 </div>
 
@@ -1426,7 +1436,7 @@ onUnmounted(() => {
                             <div>
                                 <h5 class="text-sm font-bold text-amber-300">{{ t.demo.aiInsightTitle }}</h5>
                                 <p class="text-xs text-slate-300 mt-1">
-                                    {{ t.demo.aiInsightText }} {{ formatPrice(22) }} {{ currentCurrencySymbol }}.
+                                    {{ t.demo.aiInsightText }} {{ formatPrice(35000) }} {{ currentCurrencySymbol }}.
                                 </p>
                             </div>
                         </div>
