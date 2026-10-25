@@ -10,8 +10,11 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    return redirect('/login');
-});
+    return Inertia::render('Welcome', [
+        'canLogin' => Route::has('login'),
+        'canRegister' => Route::has('register'),
+    ]);
+})->name('welcome');
 
 Route::get('/t/{token}', [CustomerController::class, 'table'])->name('customer.menu');
 Route::get('/t/{token}/cart', [CustomerController::class, 'cart'])->name('customer.cart');
