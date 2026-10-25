@@ -205,11 +205,10 @@ function formatPrice(amountInSar: number, forceDecimals?: number): string {
     const rate = currentCurrency.value.rate;
     const dec = forceDecimals !== undefined ? forceDecimals : currentCurrency.value.decimals;
     const val = amountInSar * rate;
-    const numLocale = currentLocale.value === 'ar' ? 'ar-SA' : 'en-US';
     if (dec === 0) {
-        return Math.round(val).toLocaleString(numLocale);
+        return Math.round(val).toLocaleString('en-US');
     }
-    return val.toLocaleString(numLocale, { minimumFractionDigits: dec, maximumFractionDigits: dec });
+    return val.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec });
 }
 
 // Navigation state
@@ -1590,7 +1589,7 @@ onUnmounted(() => {
                             <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5 text-xs text-slate-400 space-y-1">
                                 <div class="flex justify-between">
                                     <span>{{ t.roi.monthlyOrdersEst }}</span>
-                                    <strong class="text-white font-mono">{{ monthlyOrders.toLocaleString() }} {{ t.roi.ordersCountUnit }}</strong>
+                                    <strong class="text-white font-mono">{{ monthlyOrders.toLocaleString('en-US') }} {{ t.roi.ordersCountUnit }}</strong>
                                 </div>
                                 <div class="flex justify-between">
                                     <span>{{ t.roi.avgTimeSavedLabel }}</span>
@@ -1613,7 +1612,7 @@ onUnmounted(() => {
                             <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
                                 <div class="text-xs text-emerald-300 font-medium">{{ t.roi.laborHoursTitle }}</div>
                                 <div class="text-2xl sm:text-3xl font-black text-emerald-400 font-mono mt-1">
-                                    {{ timeSavedHoursMonthly.toLocaleString() }} {{ t.roi.laborHoursUnit }}
+                                    {{ timeSavedHoursMonthly.toLocaleString('en-US') }} {{ t.roi.laborHoursUnit }}
                                 </div>
                                 <div class="text-[11px] text-slate-400 mt-1">{{ t.roi.laborHoursNote }}</div>
                             </div>
