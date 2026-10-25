@@ -61,13 +61,13 @@ onMounted(load);
     <Head title="تصنيفات القائمة" />
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold text-gray-800">تصنيفات القائمة</h2>
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-white">تصنيفات القائمة</h2>
         </template>
         <div class="mx-auto max-w-3xl p-6" dir="rtl">
             <AdminNav />
             <div class="mb-4 flex gap-2">
-                <input v-model="name" class="flex-1 rounded-lg border-stone-300" placeholder="اسم التصنيف" />
-                <button class="rounded-lg bg-amber-600 px-4 py-2 text-white" :disabled="loading" @click="createCategory">
+                <input v-model="name" class="flex-1 rounded-xl border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white px-4 py-2 focus:border-amber-500 focus:ring-amber-500" placeholder="اسم التصنيف" />
+                <button class="rounded-xl bg-amber-600 dark:bg-amber-500 px-5 py-2 text-white dark:text-slate-950 font-bold hover:bg-amber-700 dark:hover:bg-amber-400 transition-colors" :disabled="loading" @click="createCategory">
                     إضافة
                 </button>
             </div>
@@ -75,22 +75,22 @@ onMounted(load);
                 <li
                     v-for="cat in categories"
                     :key="cat.id"
-                    class="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white p-4 shadow"
+                    class="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white dark:bg-[#0a0f1d] p-4 shadow-xs border border-stone-100 dark:border-slate-800 transition-colors"
                 >
                     <input
                         :value="cat.name"
-                        class="flex-1 rounded-lg border-stone-200 text-sm font-medium"
+                        class="flex-1 rounded-lg border-stone-200 dark:border-slate-700 bg-stone-50 dark:bg-slate-900 text-stone-900 dark:text-white text-sm font-medium px-3 py-1.5 focus:border-amber-500 focus:ring-amber-500"
                         @change="updateName(cat, ($event.target as HTMLInputElement).value)"
                     />
                     <div class="flex gap-2">
                         <button
-                            class="rounded-lg px-3 py-1 text-sm"
-                            :class="cat.is_active ? 'bg-green-100 text-green-800' : 'bg-stone-100 text-stone-500'"
+                            class="rounded-lg px-3 py-1 text-sm font-semibold transition-colors"
+                            :class="cat.is_active ? 'bg-green-100 dark:bg-emerald-950/60 text-green-800 dark:text-emerald-300 border border-green-200/50 dark:border-emerald-800/40' : 'bg-stone-100 dark:bg-slate-800 text-stone-500 dark:text-stone-400'"
                             @click="toggleActive(cat)"
                         >
                             {{ cat.is_active ? 'نشط' : 'معطّل' }}
                         </button>
-                        <button class="rounded-lg bg-red-100 px-3 py-1 text-sm text-red-700" @click="deleteCategory(cat)">
+                        <button class="rounded-lg bg-red-100 dark:bg-red-950/60 px-3 py-1 text-sm text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors" @click="deleteCategory(cat)">
                             حذف
                         </button>
                     </div>

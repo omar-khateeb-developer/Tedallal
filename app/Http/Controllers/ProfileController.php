@@ -51,6 +51,10 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
+        if ($user->email === 'super@tedallal.test') {
+            return back()->withErrors(['user' => 'لا يمكن حذف حساب المالك الرئيسي للمنصة.']);
+        }
+
         Auth::logout();
 
         $user->delete();

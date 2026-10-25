@@ -50,6 +50,17 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        if (! $user->isActive()) {
+            Auth::logout();
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => 'حسابك معطل حالياً. يرجى مراجعة إدارة المطعم.',
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 

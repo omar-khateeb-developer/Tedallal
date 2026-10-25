@@ -32,8 +32,8 @@ const links = computed(() => allLinks.filter(link => {
 <template>
     <div class="relative mb-8">
         <!-- Add a subtle fade on the left side to indicate scrollability -->
-        <div class="pointer-events-none absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white to-transparent z-10 rounded-l-2xl"></div>
-        <nav class="flex gap-2 overflow-x-auto hide-scrollbar bg-white p-2 rounded-2xl shadow-sm border border-slate-100 items-center" dir="rtl">
+        <div class="pointer-events-none absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white dark:from-[#0a0f1d] to-transparent z-10 rounded-l-2xl"></div>
+        <nav class="flex gap-2 overflow-x-auto hide-scrollbar bg-white dark:bg-[#0a0f1d] p-2 rounded-2xl shadow-xs border border-slate-100 dark:border-slate-800/80 items-center transition-colors" dir="rtl">
             <Link
                 v-for="link in links"
                 :key="link.href"
@@ -41,7 +41,7 @@ const links = computed(() => allLinks.filter(link => {
                 class="shrink-0 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all duration-300"
                 :class="route().current(link.href)
                     ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/30'
-                    : 'text-slate-600 bg-transparent hover:bg-slate-50 hover:text-slate-900'"
+                    : 'text-slate-600 dark:text-slate-300 bg-transparent hover:bg-slate-50 hover:text-slate-900 dark:hover:bg-slate-800/70 dark:hover:text-white'"
             >
                 {{ link.label }}
             </Link>

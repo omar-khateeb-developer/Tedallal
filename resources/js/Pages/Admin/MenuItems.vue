@@ -91,30 +91,30 @@ onMounted(load);
     <Head title="أصناف القائمة" />
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold text-gray-800">أصناف القائمة</h2>
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-white">أصناف القائمة</h2>
         </template>
         <div class="mx-auto max-w-4xl p-6" dir="rtl">
             <AdminNav />
             <div class="mb-4 space-y-2">
                 <div class="grid gap-2 sm:grid-cols-5">
-                    <select v-model="form.category_id" class="rounded-lg border-stone-300">
+                    <select v-model="form.category_id" class="rounded-xl border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white text-sm focus:border-amber-500 focus:ring-amber-500">
                         <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
                     </select>
-                    <input v-model="form.name" class="rounded-lg border-stone-300" placeholder="الاسم" />
-                    <input v-model="form.price" class="rounded-lg border-stone-300" placeholder="السعر" dir="ltr" />
-                    <input type="file" id="createImageInput" accept="image/*" class="rounded-lg border-stone-300 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" @change="e => form.image = (e.target as HTMLInputElement).files?.[0] ?? null" />
-                    <button class="rounded-lg bg-amber-600 text-white flex items-center justify-center transition-all disabled:opacity-50" :disabled="creatingItem" @click="createItem">
-                        <span v-if="creatingItem" class="inline-block h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin ml-2"></span>
+                    <input v-model="form.name" class="rounded-xl border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white text-sm focus:border-amber-500 focus:ring-amber-500" placeholder="الاسم" />
+                    <input v-model="form.price" class="rounded-xl border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white text-sm focus:border-amber-500 focus:ring-amber-500" placeholder="السعر" dir="ltr" />
+                    <input type="file" id="createImageInput" accept="image/*" class="rounded-xl border border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-700 dark:text-stone-300 text-xs file:mr-2 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-amber-50 dark:file:bg-amber-950/60 file:text-amber-700 dark:file:text-amber-400 hover:file:bg-amber-100" @change="e => form.image = (e.target as HTMLInputElement).files?.[0] ?? null" />
+                    <button class="rounded-xl bg-amber-600 dark:bg-amber-500 text-white dark:text-slate-950 font-bold flex items-center justify-center transition-all disabled:opacity-50 hover:bg-amber-700 dark:hover:bg-amber-400" :disabled="creatingItem" @click="createItem">
+                        <span v-if="creatingItem" class="inline-block h-4 w-4 border-2 border-white dark:border-slate-950 border-t-transparent rounded-full animate-spin ml-2"></span>
                         إضافة
                     </button>
                 </div>
-                <textarea v-model="form.description" class="w-full rounded-lg border-stone-300 text-sm" rows="2" placeholder="مواصفات الصنف ومكوناته (اختياري)"></textarea>
+                <textarea v-model="form.description" class="w-full rounded-xl border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white text-sm focus:border-amber-500 focus:ring-amber-500" rows="2" placeholder="مواصفات الصنف ومكوناته (اختياري)"></textarea>
             </div>
             <ul class="space-y-2">
                 <li
                     v-for="(item, index) in items"
                     :key="item.id"
-                    class="rounded-xl bg-white p-4 shadow animate-stagger"
+                    class="rounded-xl bg-white dark:bg-[#0a0f1d] p-4 shadow-xs border border-stone-100 dark:border-slate-800 animate-stagger transition-colors"
                     :style="`animation-delay: ${index * 50}ms`"
                 >
                     <div class="flex flex-col gap-2">
@@ -122,51 +122,51 @@ onMounted(load);
                             <img 
                                 v-if="item.image" 
                                 :src="item.image" 
-                                class="h-12 w-12 object-cover rounded-lg border border-stone-200 cursor-pointer hover:opacity-80 transition" 
+                                class="h-12 w-12 object-cover rounded-lg border border-stone-200 dark:border-slate-700 cursor-pointer hover:opacity-80 transition" 
                                 alt="صورة الصنف" 
                                 @click="selectedImage = item.image"
                             />
-                            <div v-else class="h-12 w-12 rounded-lg border border-stone-200 bg-stone-50 flex items-center justify-center text-xs text-stone-400">بدون</div>
+                            <div v-else class="h-12 w-12 rounded-lg border border-stone-200 dark:border-slate-700 bg-stone-50 dark:bg-slate-800 flex items-center justify-center text-xs text-stone-400 dark:text-slate-500">بدون</div>
 
                             <input
                                 :value="item.name"
-                                class="min-w-[120px] flex-1 rounded-lg border-stone-200 text-sm"
+                                class="min-w-[120px] flex-1 rounded-lg border-stone-200 dark:border-slate-700 bg-stone-50 dark:bg-slate-900 text-stone-900 dark:text-white text-sm px-3 py-1.5 focus:border-amber-500 focus:ring-amber-500"
                                 @change="updateItem(item, 'name', ($event.target as HTMLInputElement).value)"
                             />
                             <input
                                 :value="item.price"
-                                class="w-24 rounded-lg border-stone-200 text-sm"
+                                class="w-24 rounded-lg border-stone-200 dark:border-slate-700 bg-stone-50 dark:bg-slate-900 text-stone-900 dark:text-white text-sm px-3 py-1.5 focus:border-amber-500 focus:ring-amber-500"
                                 dir="ltr"
                                 @change="updateItem(item, 'price', ($event.target as HTMLInputElement).value)"
                             />
                             <input 
                                 type="file" 
                                 accept="image/*"
-                                class="w-48 text-xs file:mr-2 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-xs file:bg-stone-100 file:text-stone-700 hover:file:bg-stone-200"
+                                class="w-48 text-xs file:mr-2 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-xs file:bg-stone-100 dark:file:bg-slate-800 file:text-stone-700 dark:file:text-stone-300 hover:file:bg-stone-200"
                                 @change="e => { const f = (e.target as HTMLInputElement).files?.[0]; if(f) updateItem(item, 'image', f); }"
                             />
                             <button
-                                class="rounded-lg px-2 py-1 text-xs"
-                                :class="item.is_available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-700'"
+                                class="rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors"
+                                :class="item.is_available ? 'bg-green-100 dark:bg-emerald-950/60 text-green-800 dark:text-emerald-300 border border-green-200/50 dark:border-emerald-800/40' : 'bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300 border border-red-200/50 dark:border-red-800/40'"
                                 @click="updateItem(item, 'is_available', !item.is_available)"
                             >
                                 {{ item.is_available ? 'متاح' : 'غير متاح' }}
                             </button>
                             <button
-                                class="rounded-lg px-2 py-1 text-xs"
-                                :class="item.is_active ? 'bg-blue-100 text-blue-800' : 'bg-stone-100'"
+                                class="rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors"
+                                :class="item.is_active ? 'bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border border-blue-200/50 dark:border-blue-800/40' : 'bg-stone-100 dark:bg-slate-800 text-stone-500 dark:text-stone-400'"
                                 @click="updateItem(item, 'is_active', !item.is_active)"
                             >
                                 {{ item.is_active ? 'ظاهر' : 'مخفي' }}
                             </button>
-                            <button class="rounded-lg bg-red-100 px-2 py-1 text-xs text-red-700" @click="deleteItem(item)">
+                            <button class="rounded-lg bg-red-100 dark:bg-red-950/60 px-2.5 py-1 text-xs font-semibold text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors" @click="deleteItem(item)">
                                 حذف
                             </button>
                         </div>
                         <div class="pl-[60px]">
                             <textarea
                                 :value="item.description"
-                                class="w-full rounded-lg border-stone-200 text-sm focus:border-amber-500 focus:ring-amber-500"
+                                class="w-full rounded-lg border-stone-200 dark:border-slate-700 bg-stone-50 dark:bg-slate-900 text-stone-900 dark:text-white text-sm focus:border-amber-500 focus:ring-amber-500"
                                 rows="2"
                                 placeholder="مواصفات الصنف ومكوناته (اختياري)"
                                 @change="updateItem(item, 'description', ($event.target as HTMLTextAreaElement).value)"

@@ -20,11 +20,10 @@ use App\Http\Controllers\Api\Admin\PromoCodeController as AdminPromoCodeControll
 
 Route::prefix('public')->middleware('throttle:60,1')->group(function () {
     Route::get('tables/{token}', [TableController::class, 'show']);
-    Route::post('sessions', [SessionController::class, 'store']);
+    Route::post('sessions', [SessionController::class, 'store'])->middleware('throttle:30,1');
     Route::get('sessions/{sessionToken}', [SessionController::class, 'show']);
     Route::get('menu', [MenuController::class, 'index']);
     Route::get('menu/categories', [MenuController::class, 'categories']);
-    Route::post('promo-codes/validate', [PromoCodeController::class, 'validateCode']);
 
     Route::middleware(ValidateTableSession::class)->group(function () {
         Route::get('cart', [CartController::class, 'index']);
@@ -32,7 +31,8 @@ Route::prefix('public')->middleware('throttle:60,1')->group(function () {
         Route::patch('cart/items/{cartItem}', [CartController::class, 'update']);
         Route::delete('cart/items/{cartItem}', [CartController::class, 'destroy']);
         Route::delete('cart', [CartController::class, 'clear']);
-        Route::post('orders', [OrderController::class, 'store']);
+        Route::post('promo-codes/validate', [PromoCodeController::class, 'validateCode'])->middleware('throttle:15,1');
+        Route::post('orders', [OrderController::class, 'store'])->middleware('throttle:15,1');
         Route::get('orders/{orderNumber}', [OrderController::class, 'show']);
     });
 });

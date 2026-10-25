@@ -141,28 +141,28 @@ onMounted(load);
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold text-gray-800">إعدادات المطعم</h2>
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-white">إعدادات المطعم</h2>
         </template>
 
         <div class="mx-auto max-w-2xl p-6" dir="rtl">
             <AdminNav />
 
-            <form v-if="restaurant" class="space-y-4 rounded-2xl bg-white p-6 shadow" @submit.prevent="save">
+            <form v-if="restaurant" class="space-y-4 rounded-2xl bg-white dark:bg-[#0a0f1d] p-6 shadow-xs border border-slate-100 dark:border-slate-800" @submit.prevent="save">
                 <div>
-                    <label class="mb-1 block text-sm text-stone-600">اسم المطعم</label>
-                    <input v-model="form.name" required class="w-full rounded-lg border-stone-300" />
+                    <label class="mb-1 block text-sm font-medium text-stone-600 dark:text-stone-300">اسم المطعم</label>
+                    <input v-model="form.name" required class="w-full rounded-lg border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white focus:border-amber-500 focus:ring-amber-500" />
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm text-stone-600">الهاتف</label>
-                    <input v-model="form.phone" class="w-full rounded-lg border-stone-300" dir="ltr" />
+                    <label class="mb-1 block text-sm font-medium text-stone-600 dark:text-stone-300">الهاتف</label>
+                    <input v-model="form.phone" class="w-full rounded-lg border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white focus:border-amber-500 focus:ring-amber-500" dir="ltr" />
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm text-stone-600">العنوان</label>
-                    <textarea v-model="form.address" rows="3" class="w-full rounded-lg border-stone-300" />
+                    <label class="mb-1 block text-sm font-medium text-stone-600 dark:text-stone-300">العنوان</label>
+                    <textarea v-model="form.address" rows="3" class="w-full rounded-lg border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white focus:border-amber-500 focus:ring-amber-500" />
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm text-stone-600">العملة (ISO 4217)</label>
-                    <select v-model="form.currency" required class="w-full rounded-lg border-stone-300" dir="ltr">
+                    <label class="mb-1 block text-sm font-medium text-stone-600 dark:text-stone-300">العملة (ISO 4217)</label>
+                    <select v-model="form.currency" required class="w-full rounded-lg border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white focus:border-amber-500 focus:ring-amber-500" dir="ltr">
                         <option value="SAR">SAR - ريال سعودي</option>
                         <option value="SYP">SYP - ليرة سورية</option>
                         <option value="AED">AED - درهم إماراتي</option>
@@ -176,24 +176,24 @@ onMounted(load);
                     </select>
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm text-stone-600">لوغو المطعم (اختياري)</label>
-                    <input type="file" @change="e => handleFileUpload(e, 'logo')" accept="image/*" class="w-full rounded-lg border-stone-300 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" />
+                    <label class="mb-1 block text-sm font-medium text-stone-600 dark:text-stone-300">لوغو المطعم (اختياري)</label>
+                    <input type="file" @change="e => handleFileUpload(e, 'logo')" accept="image/*" class="w-full rounded-lg border border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-700 dark:text-stone-300 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 dark:file:bg-amber-950/60 file:text-amber-700 dark:file:text-amber-400 hover:file:bg-amber-100 dark:hover:file:bg-amber-900/60" />
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm text-stone-600">صورة الـ NavBar المخصصة (اختياري)</label>
-                    <input type="file" @change="e => handleFileUpload(e, 'navbar_image')" accept="image/*" class="w-full rounded-lg border-stone-300 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" />
+                    <label class="mb-1 block text-sm font-medium text-stone-600 dark:text-stone-300">صورة الـ NavBar المخصصة (اختياري)</label>
+                    <input type="file" @change="e => handleFileUpload(e, 'navbar_image')" accept="image/*" class="w-full rounded-lg border border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-700 dark:text-stone-300 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 dark:file:bg-amber-950/60 file:text-amber-700 dark:file:text-amber-400 hover:file:bg-amber-100 dark:hover:file:bg-amber-900/60" />
                 </div>
 
-                <p v-if="message" class="text-sm" :class="message.includes('نجاح') ? 'text-green-600' : 'text-red-600'">
+                <p v-if="message" class="text-sm font-medium" :class="message.includes('نجاح') ? 'text-green-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'">
                     {{ message }}
                 </p>
 
                 <button
                     type="submit"
-                    class="flex items-center justify-center gap-2 rounded-xl bg-amber-600 px-6 py-3 font-medium text-white disabled:opacity-50 transition-all hover:bg-amber-700"
+                    class="flex items-center justify-center gap-2 rounded-xl bg-amber-600 dark:bg-gradient-to-r dark:from-amber-500 dark:to-orange-500 px-6 py-3 font-medium text-white dark:text-slate-950 disabled:opacity-50 transition-all hover:bg-amber-700 dark:hover:from-amber-600 dark:hover:to-orange-600"
                     :disabled="saving"
                 >
-                    <span v-if="saving" class="inline-block h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    <span v-if="saving" class="inline-block h-5 w-5 border-2 border-white dark:border-slate-950 border-t-transparent rounded-full animate-spin"></span>
                     {{ saving ? 'جاري الحفظ...' : 'حفظ الإعدادات' }}
                 </button>
             </form>

@@ -70,22 +70,22 @@ const deleteOffer = async (id: number) => {
     <Head title="العروض والخصومات" />
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold text-gray-800">العروض والكوبونات (نظام الولاء)</h2>
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-white">العروض والكوبونات (نظام الولاء)</h2>
         </template>
         <div class="mx-auto max-w-5xl p-6" dir="rtl">
             <AdminNav />
             
             <div v-if="loading" class="text-center py-10">
-                <p class="text-stone-500">جاري تحميل البيانات...</p>
+                <p class="text-stone-500 dark:text-stone-400">جاري تحميل البيانات...</p>
             </div>
 
             <!-- Locked State -->
-            <div v-else-if="isLocked" class="bg-white rounded-2xl p-10 text-center shadow-sm border border-stone-100 max-w-2xl mx-auto mt-10">
-                <div class="bg-blue-100 text-blue-600 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div v-else-if="isLocked" class="bg-white dark:bg-[#0a0f1d] rounded-2xl p-10 text-center shadow-xs border border-stone-100 dark:border-slate-800 max-w-2xl mx-auto mt-10">
+                <div class="bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-10"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" /></svg>
                 </div>
-                <h3 class="text-2xl font-bold text-gray-800 mb-2">ميزة الكوبونات غير مفعلة لمطعمك</h3>
-                <p class="text-stone-500 mb-6 leading-relaxed">
+                <h3 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">ميزة الكوبونات غير مفعلة لمطعمك</h3>
+                <p class="text-stone-500 dark:text-stone-400 mb-6 leading-relaxed">
                     نظام العروض والكوبونات يتيح لك إنشاء أكواد خصم ذكية لزيادة ولاء الزبائن ورفع المبيعات (خصم نسبة مئوية، خصم ثابت، تحديد حد أدنى للطلب).
                 </p>
                 <button class="bg-blue-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-blue-700 transition shadow-lg shadow-blue-600/20">
@@ -96,22 +96,22 @@ const deleteOffer = async (id: number) => {
             <!-- Active State -->
             <div v-else class="space-y-8">
                 <!-- Add New Offer -->
-                <div class="bg-white rounded-2xl shadow-sm border border-stone-100 p-6">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4">إنشاء كوبون جديد</h3>
+                <div class="bg-white dark:bg-[#0a0f1d] rounded-2xl shadow-xs border border-stone-100 dark:border-slate-800 p-6">
+                    <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-4">إنشاء كوبون جديد</h3>
                     <form @submit.prevent="createOffer" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">كود الخصم (مثال: SAVE20)</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">كود الخصم (مثال: SAVE20)</label>
                             <TextInput v-model="form.code" type="text" class="w-full" required />
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">نوع الخصم</label>
-                            <select v-model="form.discount_type" class="w-full border-gray-300 rounded-md shadow-sm focus:border-amber-500 focus:ring-amber-500">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">نوع الخصم</label>
+                            <select v-model="form.discount_type" class="w-full border-gray-300 dark:border-slate-700 rounded-md shadow-xs bg-white dark:bg-slate-900 text-stone-900 dark:text-white focus:border-amber-500 focus:ring-amber-500">
                                 <option value="percentage">نسبة مئوية (%)</option>
                                 <option value="fixed">مبلغ ثابت ({{ $page.props.auth.restaurant?.currency }})</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">قيمة الخصم</label>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">قيمة الخصم</label>
                             <TextInput v-model="form.discount_value" type="number" step="0.01" class="w-full" required />
                         </div>
                         <div>
@@ -121,9 +121,9 @@ const deleteOffer = async (id: number) => {
                 </div>
 
                 <!-- Offers List -->
-                <div class="bg-white rounded-2xl shadow-sm border border-stone-100 overflow-x-auto">
+                <div class="bg-white dark:bg-[#0a0f1d] rounded-2xl shadow-xs border border-stone-100 dark:border-slate-800 overflow-x-auto">
                     <table class="w-full text-right text-sm">
-                        <thead class="bg-stone-50 text-stone-600 border-b border-stone-100">
+                        <thead class="bg-stone-50 dark:bg-slate-800/80 text-stone-600 dark:text-slate-400 border-b border-stone-100 dark:border-slate-800">
                             <tr>
                                 <th class="py-3 px-4 font-semibold">الكود</th>
                                 <th class="py-3 px-4 font-semibold">القيمة</th>
@@ -132,23 +132,23 @@ const deleteOffer = async (id: number) => {
                                 <th class="py-3 px-4 font-semibold">إجراءات</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-stone-100">
+                        <tbody class="divide-y divide-stone-100 dark:divide-slate-800">
                             <tr v-if="offers.length === 0">
-                                <td colspan="5" class="py-6 text-center text-stone-400">لا توجد كوبونات مسجلة.</td>
+                                <td colspan="5" class="py-6 text-center text-stone-400 dark:text-slate-500">لا توجد كوبونات مسجلة.</td>
                             </tr>
-                            <tr v-for="offer in offers" :key="offer.id" class="hover:bg-stone-50/50">
-                                <td class="py-3 px-4 font-bold text-gray-800">{{ offer.code }}</td>
-                                <td class="py-3 px-4 text-gray-600">
+                            <tr v-for="offer in offers" :key="offer.id" class="hover:bg-stone-50/50 dark:hover:bg-slate-800/40 transition-colors">
+                                <td class="py-3 px-4 font-bold text-gray-800 dark:text-white">{{ offer.code }}</td>
+                                <td class="py-3 px-4 text-gray-600 dark:text-slate-300">
                                     {{ offer.discount_value }} {{ offer.discount_type === 'percentage' ? '%' : $page.props.auth.restaurant?.currency }}
                                 </td>
-                                <td class="py-3 px-4 text-gray-600">{{ offer.expires_at ? new Date(offer.expires_at).toLocaleDateString() : 'مفتوح' }}</td>
+                                <td class="py-3 px-4 text-gray-600 dark:text-slate-300">{{ offer.expires_at ? new Date(offer.expires_at).toLocaleDateString() : 'مفتوح' }}</td>
                                 <td class="py-3 px-4">
-                                    <button @click="toggleActive(offer)" :class="offer.is_active ? 'bg-green-100 text-green-700' : 'bg-stone-100 text-stone-600'" class="px-2 py-1 rounded text-xs font-medium hover:opacity-80">
+                                    <button @click="toggleActive(offer)" :class="offer.is_active ? 'bg-green-100 dark:bg-emerald-950/60 text-green-700 dark:text-emerald-300' : 'bg-stone-100 dark:bg-slate-800 text-stone-600 dark:text-stone-400'" class="px-2.5 py-1 rounded-md text-xs font-semibold hover:opacity-80 transition-colors">
                                         {{ offer.is_active ? 'نشط' : 'معطل' }}
                                     </button>
                                 </td>
                                 <td class="py-3 px-4">
-                                    <button @click="deleteOffer(offer.id)" class="text-red-500 hover:text-red-700 text-sm">حذف</button>
+                                    <button @click="deleteOffer(offer.id)" class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-sm">حذف</button>
                                 </td>
                             </tr>
                         </tbody>

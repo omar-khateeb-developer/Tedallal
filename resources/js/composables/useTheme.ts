@@ -23,6 +23,7 @@ export function useTheme() {
         currentTheme.value = theme;
         applyThemeToDom(theme);
         if (typeof window !== 'undefined') {
+            localStorage.setItem('tedallal_theme', theme);
             localStorage.setItem('tedallal_customer_theme', theme);
         }
     }
@@ -33,7 +34,7 @@ export function useTheme() {
 
     function initTheme(defaultTheme: ThemeMode = 'dark') {
         if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem('tedallal_customer_theme') as ThemeMode | null;
+            const saved = (localStorage.getItem('tedallal_theme') || localStorage.getItem('tedallal_customer_theme')) as ThemeMode | null;
             if (saved === 'dark' || saved === 'light') {
                 currentTheme.value = saved;
             } else {

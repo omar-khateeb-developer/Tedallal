@@ -177,19 +177,19 @@ function elapsedLabel(iso?: string): string {
 
 // لون البطاقة حسب وقت الانتظار (فقط للطلبات غير المنتهية)
 function elapsedCardClass(order: Order): string {
-    if (['served', 'cancelled'].includes(order.status)) return 'border-stone-100';
+    if (['served', 'cancelled'].includes(order.status)) return 'border-stone-100 dark:border-slate-800';
     const m = getElapsedMinutes(order.created_at);
-    if (m >= 20) return 'border-red-400 shadow-red-100';
-    if (m >= 10) return 'border-yellow-400 shadow-yellow-100';
-    return 'border-stone-100';
+    if (m >= 20) return 'border-red-400 dark:border-red-500 shadow-red-100 dark:shadow-red-950/30';
+    if (m >= 10) return 'border-yellow-400 dark:border-yellow-500 shadow-yellow-100 dark:shadow-yellow-950/30';
+    return 'border-stone-100 dark:border-slate-800';
 }
 
 function elapsedBadgeClass(order: Order): string {
-    if (['served', 'cancelled'].includes(order.status)) return 'bg-stone-100 text-stone-500';
+    if (['served', 'cancelled'].includes(order.status)) return 'bg-stone-100 dark:bg-slate-800 text-stone-500 dark:text-stone-400';
     const m = getElapsedMinutes(order.created_at);
-    if (m >= 20) return 'bg-red-100 text-red-700 animate-pulse';
-    if (m >= 10) return 'bg-yellow-100 text-yellow-700';
-    return 'bg-green-100 text-green-700';
+    if (m >= 20) return 'bg-red-100 dark:bg-red-950/80 text-red-700 dark:text-red-300 animate-pulse border border-red-200 dark:border-red-800/50';
+    if (m >= 10) return 'bg-yellow-100 dark:bg-yellow-950/80 text-yellow-700 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800/50';
+    return 'bg-green-100 dark:bg-green-950/80 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800/50';
 }
 
 // تنسيق الوقت بشكل مختصر وجميل
@@ -298,10 +298,10 @@ async function updateStatus(order: Order, status: string) {
 
 // Columns definition
 const columns = [
-    { id: 'pending', title: 'طلبات جديدة', bg: 'bg-orange-50/50', border: 'border-orange-200' },
-    { id: 'accepted', title: 'بانتظار التحضير', bg: 'bg-blue-50/50', border: 'border-blue-200' },
-    { id: 'preparing', title: 'قيد التحضير', bg: 'bg-purple-50/50', border: 'border-purple-200' },
-    { id: 'ready', title: 'جاهز للتقديم', bg: 'bg-emerald-50/50', border: 'border-emerald-200' },
+    { id: 'pending', title: 'طلبات جديدة', bg: 'bg-orange-50/50 dark:bg-orange-950/25', border: 'border-orange-200 dark:border-orange-900/40' },
+    { id: 'accepted', title: 'بانتظار التحضير', bg: 'bg-blue-50/50 dark:bg-blue-950/25', border: 'border-blue-200 dark:border-blue-900/40' },
+    { id: 'preparing', title: 'قيد التحضير', bg: 'bg-purple-50/50 dark:bg-purple-950/25', border: 'border-purple-200 dark:border-purple-900/40' },
+    { id: 'ready', title: 'جاهز للتقديم', bg: 'bg-emerald-50/50 dark:bg-emerald-950/25', border: 'border-emerald-200 dark:border-emerald-900/40' },
 ];
 
 const getColumnOrders = (status: string) => {
@@ -336,7 +336,7 @@ useRestaurantOrders(restaurantId.value, {
     <AuthenticatedLayout>
         <template #header>
             <div class="flex items-center justify-between w-full">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800">شاشة المطبخ (KDS)</h2>
+                <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-white">شاشة المطبخ (KDS)</h2>
 
                 <!-- أزرار الإشعارات والصوت -->
                 <div class="flex items-center gap-3">
@@ -344,13 +344,13 @@ useRestaurantOrders(restaurantId.value, {
                     <button
                         v-if="!audioUnlocked"
                         @click="unlockAudio"
-                        class="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 animate-pulse"
+                        class="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all bg-red-50 dark:bg-red-950/50 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 border border-red-200 dark:border-red-800/60 animate-pulse"
                         title="المتصفح يمنع تشغيل الصوت التلقائي، انقر هنا للسماح بصوت التنبيهات"
                     >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path></svg>
                         <span>تفعيل الصوت</span>
                     </button>
-                    <span v-else class="flex items-center gap-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
+                    <span v-else class="flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-3 py-1.5 rounded-lg border border-emerald-200 dark:border-emerald-800/50">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>
                         الصوت مفعّل
                     </span>
@@ -361,8 +361,8 @@ useRestaurantOrders(restaurantId.value, {
                         @click="requestNotificationPermission"
                         class="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all"
                         :class="notificationPermission === 'denied'
-                            ? 'bg-red-50 text-red-600 cursor-not-allowed'
-                            : 'bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200'"
+                            ? 'bg-red-50 dark:bg-red-950/50 text-red-600 dark:text-red-400 cursor-not-allowed'
+                            : 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-amber-200 dark:border-amber-800/50'"
                         :disabled="notificationPermission === 'denied'"
                         :title="notificationPermission === 'denied' ? 'تم رفض الإشعارات. يرجى السماح بها من إعدادات المتصفح' : ''"
                     >
@@ -370,7 +370,7 @@ useRestaurantOrders(restaurantId.value, {
                         <span v-if="notificationPermission === 'denied'">الإشعارات محجوبة</span>
                         <span v-else>تفعيل الإشعارات</span>
                     </button>
-                    <span v-else class="flex items-center gap-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
+                    <span v-else class="flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-3 py-1.5 rounded-lg border border-emerald-200 dark:border-emerald-800/50">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                         الإشعارات مفعّلة
                     </span>
@@ -382,9 +382,9 @@ useRestaurantOrders(restaurantId.value, {
             <div class="mx-auto max-w-[1400px] px-4 h-full flex flex-col">
                 <AdminNav class="mb-4" />
                 
-                <div v-if="orders.length === 0" class="rounded-2xl bg-white p-12 text-center text-gray-500 shadow-sm border border-dashed border-gray-300 mt-4 flex flex-col items-center justify-center min-h-[300px]">
-                    <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                    <p class="text-lg font-medium">لا يوجد طلبات نشطة حالياً</p>
+                <div v-if="orders.length === 0" class="rounded-2xl bg-white dark:bg-[#0a0f1d] p-12 text-center text-gray-500 dark:text-gray-400 shadow-xs border border-dashed border-gray-300 dark:border-slate-800 mt-4 flex flex-col items-center justify-center min-h-[300px]">
+                    <svg class="w-16 h-16 text-gray-300 dark:text-slate-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    <p class="text-lg font-medium text-stone-700 dark:text-stone-300">لا يوجد طلبات نشطة حالياً</p>
                     <p class="text-sm opacity-70">عند استلام طلب جديد سيظهر هنا تلقائياً.</p>
                 </div>
 
@@ -394,23 +394,23 @@ useRestaurantOrders(restaurantId.value, {
                     <div 
                         v-for="col in columns" 
                         :key="col.id"
-                        class="flex flex-col h-full rounded-2xl border bg-white shadow-sm overflow-hidden"
+                        class="flex flex-col h-full rounded-2xl border bg-white dark:bg-[#0a0f1d] shadow-xs overflow-hidden transition-colors"
                         :class="[col.border]"
                         @dragover.prevent
                         @drop.prevent="onDrop(col.id)"
                     >
                         <!-- Column Header -->
-                        <div class="p-4 border-b border-stone-100 flex items-center justify-between" :class="col.bg">
-                            <h3 class="font-bold text-gray-800">{{ col.title }}</h3>
-                            <span class="bg-white rounded-full px-3 py-1 text-xs font-bold shadow-sm border border-stone-100">
+                        <div class="p-4 border-b border-stone-100 dark:border-slate-800 flex items-center justify-between" :class="col.bg">
+                            <h3 class="font-bold text-gray-800 dark:text-white">{{ col.title }}</h3>
+                            <span class="bg-white dark:bg-slate-800 text-stone-800 dark:text-stone-200 rounded-full px-3 py-1 text-xs font-bold shadow-xs border border-stone-100 dark:border-slate-700">
                                 {{ getColumnOrders(col.id).length }}
                             </span>
                         </div>
 
                         <!-- Column Body (Scrollable) -->
-                        <div class="p-3 flex-1 overflow-y-auto bg-stone-50/30 min-h-[500px]">
+                        <div class="p-3 flex-1 overflow-y-auto bg-stone-50/30 dark:bg-slate-950/30 min-h-[500px]">
                             
-                            <div v-if="getColumnOrders(col.id).length === 0" class="h-full flex items-center justify-center text-stone-400 text-sm italic">
+                            <div v-if="getColumnOrders(col.id).length === 0" class="h-full flex items-center justify-center text-stone-400 dark:text-slate-500 text-sm italic">
                                 اسحب الطلب إلى هنا...
                             </div>
                             
@@ -421,13 +421,13 @@ useRestaurantOrders(restaurantId.value, {
                                     :draggable="!processingOrderIds.includes(order.id)"
                                     @dragstart="onDragStart($event, order.id)"
                                     @dragend="onDragEnd"
-                                    class="rounded-xl bg-white p-3 shadow-sm border cursor-grab active:cursor-grabbing hover:shadow-md transition-all duration-200"
+                                    class="rounded-xl bg-white dark:bg-slate-900 p-3 shadow-xs border cursor-grab active:cursor-grabbing hover:shadow-md transition-all duration-200"
                                     :class="[elapsedCardClass(order), {'opacity-50 pointer-events-none': processingOrderIds.includes(order.id)}]"
                                 >
                                     <div class="flex items-center justify-between mb-2">
                                         <div>
-                                            <p class="font-black text-gray-900 text-lg">{{ order.order_number }}</p>
-                                            <p class="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full inline-block mt-1">
+                                            <p class="font-black text-gray-900 dark:text-white text-lg">{{ order.order_number }}</p>
+                                            <p class="text-xs font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded-full inline-block mt-1 border border-amber-200/50 dark:border-amber-800/40">
                                                 {{ order.table?.name || 'سفري' }}
                                             </p>
                                         </div>
@@ -435,7 +435,7 @@ useRestaurantOrders(restaurantId.value, {
                                             <a
                                                 :href="`/admin/orders/${order.id}/print`"
                                                 target="_blank"
-                                                class="p-1 text-stone-400 hover:text-stone-700 hover:bg-stone-100 rounded-lg transition-colors"
+                                                class="p-1 text-stone-400 dark:text-slate-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
                                                 title="طباعة الفاتورة"
                                                 @click.stop
                                             >
@@ -453,27 +453,27 @@ useRestaurantOrders(restaurantId.value, {
 
                                     <!-- مخطط زمني للحالات -->
                                     <div class="space-y-1 mb-2">
-                                        <div v-if="order.created_at" class="flex items-center gap-2 text-xs text-stone-500">
+                                        <div v-if="order.created_at" class="flex items-center gap-2 text-xs text-stone-500 dark:text-slate-400">
                                             <span class="w-2 h-2 rounded-full bg-orange-400 shrink-0"></span>
-                                            <span class="font-medium text-stone-600">وصل:</span>
+                                            <span class="font-medium text-stone-600 dark:text-slate-300">وصل:</span>
                                             <span dir="ltr">{{ formatTime(order.created_at) }}</span>
                                         </div>
-                                        <div v-if="order.accepted_at" class="flex items-center gap-2 text-xs text-blue-600">
+                                        <div v-if="order.accepted_at" class="flex items-center gap-2 text-xs text-blue-600 dark:text-blue-400">
                                             <span class="w-2 h-2 rounded-full bg-blue-400 shrink-0"></span>
                                             <span class="font-medium">قُبل:</span>
                                             <span dir="ltr">{{ formatTime(order.accepted_at) }}</span>
                                         </div>
-                                        <div v-if="order.preparing_at" class="flex items-center gap-2 text-xs text-purple-600">
+                                        <div v-if="order.preparing_at" class="flex items-center gap-2 text-xs text-purple-600 dark:text-purple-400">
                                             <span class="w-2 h-2 rounded-full bg-purple-400 shrink-0"></span>
                                             <span class="font-medium">بدأ التحضير:</span>
                                             <span dir="ltr">{{ formatTime(order.preparing_at) }}</span>
                                         </div>
-                                        <div v-if="order.ready_at" class="flex items-center gap-2 text-xs text-emerald-600">
+                                        <div v-if="order.ready_at" class="flex items-center gap-2 text-xs text-emerald-600 dark:text-emerald-400">
                                             <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
                                             <span class="font-medium">جاهز:</span>
                                             <span dir="ltr">{{ formatTime(order.ready_at) }}</span>
                                         </div>
-                                        <div v-if="order.cancelled_at" class="flex items-center gap-2 text-xs text-red-500">
+                                        <div v-if="order.cancelled_at" class="flex items-center gap-2 text-xs text-red-500 dark:text-red-400">
                                             <span class="w-2 h-2 rounded-full bg-red-400 shrink-0"></span>
                                             <span class="font-medium">أُلغي:</span>
                                             <span dir="ltr">{{ formatTime(order.cancelled_at) }}</span>
@@ -481,25 +481,25 @@ useRestaurantOrders(restaurantId.value, {
                                     </div>
                                     
                                     <!-- ملاحظة الزبون العامة للطلب -->
-                                    <div v-if="order.customer_note" class="my-2.5 rounded-xl bg-amber-50 p-3 border border-amber-200 text-amber-900 text-xs shadow-sm">
-                                        <div class="flex items-center gap-1.5 font-bold mb-1 text-amber-800">
-                                            <svg class="w-4 h-4 shrink-0 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <div v-if="order.customer_note" class="my-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 p-3 border border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-200 text-xs shadow-xs">
+                                        <div class="flex items-center gap-1.5 font-bold mb-1 text-amber-800 dark:text-amber-300">
+                                            <svg class="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" fill="currentColor" viewBox="0 0 20 20">
                                                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
                                             </svg>
                                             <span>ملاحظة الزبون على الطلب:</span>
                                         </div>
-                                        <p class="font-bold whitespace-pre-wrap leading-relaxed text-amber-950 pr-5 bg-amber-100/60 p-2 rounded-lg border border-amber-200/60">{{ order.customer_note }}</p>
+                                        <p class="font-bold whitespace-pre-wrap leading-relaxed text-amber-950 dark:text-amber-100 pr-5 bg-amber-100/60 dark:bg-amber-900/40 p-2 rounded-lg border border-amber-200/60 dark:border-amber-800/40">{{ order.customer_note }}</p>
                                     </div>
                                     
                                     <!-- Items Accordion -->
                                     <div class="mt-3" v-if="order.items && order.items.length > 0">
                                         <button 
                                             @click="toggleItems(order.id)"
-                                            class="flex w-full items-center justify-between bg-stone-50 hover:bg-stone-100 px-3 py-2 rounded-lg text-sm font-medium text-stone-700 transition-colors"
+                                            class="flex w-full items-center justify-between bg-stone-50 dark:bg-slate-800 hover:bg-stone-100 dark:hover:bg-slate-700/80 px-3 py-2 rounded-lg text-sm font-medium text-stone-700 dark:text-stone-200 transition-colors"
                                         >
                                             <div class="flex items-center gap-2">
                                                 <span>تفاصيل الأصناف ({{ order.items.length }})</span>
-                                                <span v-if="order.items.some(i => i.note)" class="text-[10px] bg-amber-100 text-amber-800 font-bold px-1.5 py-0.5 rounded-md border border-amber-200">
+                                                <span v-if="order.items.some(i => i.note)" class="text-[10px] bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-bold px-1.5 py-0.5 rounded-md border border-amber-200 dark:border-amber-800/50">
                                                     ملاحظات خاصة
                                                 </span>
                                             </div>
@@ -507,15 +507,15 @@ useRestaurantOrders(restaurantId.value, {
                                         </button>
                                         
                                         <div v-show="expandedOrderIds.has(order.id)" class="mt-2 space-y-1.5 px-1">
-                                            <div v-for="item in order.items" :key="item.id" class="text-sm py-1.5 border-b border-dashed border-stone-200 last:border-0">
+                                            <div v-for="item in order.items" :key="item.id" class="text-sm py-1.5 border-b border-dashed border-stone-200 dark:border-slate-800 last:border-0">
                                                 <div class="flex justify-between items-center">
                                                     <div class="flex items-center gap-2">
-                                                        <span class="font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">{{ item.quantity }}x</span>
-                                                        <span class="font-medium text-stone-800">{{ item.item_name_snapshot }}</span>
+                                                        <span class="font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200/40 dark:border-emerald-800/40">{{ item.quantity }}x</span>
+                                                        <span class="font-medium text-stone-800 dark:text-stone-200">{{ item.item_name_snapshot }}</span>
                                                     </div>
                                                 </div>
                                                 <!-- ملاحظة خاصة بالصنف -->
-                                                <div v-if="item.note" class="mt-1 flex items-start gap-1 mr-6 text-xs text-amber-800 bg-amber-50 rounded-md px-2 py-1 border border-amber-200/80">
+                                                <div v-if="item.note" class="mt-1 flex items-start gap-1 mr-6 text-xs text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 rounded-md px-2 py-1 border border-amber-200/80 dark:border-amber-800/60">
                                                     <span class="font-bold shrink-0">↳ ملاحظة:</span>
                                                     <span class="font-semibold">{{ item.note }}</span>
                                                 </div>
@@ -524,11 +524,11 @@ useRestaurantOrders(restaurantId.value, {
                                     </div>
 
                                     <!-- Action Button (Fallback for touch screens) -->
-                                    <div class="mt-4 pt-3 border-t border-stone-50 flex justify-end" v-if="nextStatus[order.status]">
+                                    <div class="mt-4 pt-3 border-t border-stone-100 dark:border-slate-800 flex justify-end" v-if="nextStatus[order.status]">
                                         <button
                                             type="button"
                                             :disabled="processingOrderIds.includes(order.id)"
-                                            class="w-full rounded-lg bg-stone-900 px-3 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-stone-800 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                                            class="w-full rounded-lg bg-stone-900 dark:bg-gradient-to-r dark:from-amber-500 dark:to-orange-500 px-3 py-2.5 text-sm font-bold text-white dark:text-slate-950 shadow-xs hover:bg-stone-800 dark:hover:from-amber-600 dark:hover:to-orange-600 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
                                             @click="updateStatus(order, nextStatus[order.status])"
                                         >
                                             <span v-if="processingOrderIds.includes(order.id)">

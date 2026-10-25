@@ -66,6 +66,13 @@ class MenuItemController extends ApiController
         $this->authorizeItem($item);
         $validated = $request->validated();
 
+        if (isset($validated['category_id'])) {
+            $category = MenuCategory::query()->findOrFail($validated['category_id']);
+            if ((int) $category->restaurant_id !== (int) $this->restaurantContext->current()->id) {
+                abort(422, 'التصنيف المحدد لا ينتمي لهذا المطعم.');
+            }
+        }
+
         if ($request->hasFile('image')) {
             if ($item->image) {
                 // Safely remove the prefix without stripping characters inside the directory name

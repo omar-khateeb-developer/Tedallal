@@ -139,6 +139,10 @@ class UserController extends ApiController
 
     public function destroy(Request $request, User $user)
     {
+        if ($user->email === 'super@tedallal.test') {
+            return $this->error('لا يمكن حذف حساب المالك الرئيسي للمنصة.', 403);
+        }
+
         if ($user->id === $request->user()->id) {
             return $this->error('لا يمكنك حذف حسابك.', 422);
         }

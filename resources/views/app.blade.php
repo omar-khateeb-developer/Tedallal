@@ -18,6 +18,21 @@
         <link rel="manifest" href="/site.webmanifest">
         <meta name="theme-color" content="#060913">
 
+        <script>
+            (function() {
+                try {
+                    var theme = localStorage.getItem('tedallal_theme') || localStorage.getItem('tedallal_customer_theme');
+                    if (theme === 'light') {
+                        document.documentElement.classList.remove('dark');
+                        document.documentElement.style.colorScheme = 'light';
+                    } else {
+                        document.documentElement.classList.add('dark');
+                        document.documentElement.style.colorScheme = 'dark';
+                    }
+                } catch (e) {}
+            })();
+        </script>
+
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=cairo:400,500,600,700,800|inter:400,500,600,700,800&display=swap" rel="stylesheet" />

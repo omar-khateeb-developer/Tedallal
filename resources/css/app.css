@@ -1,3 +1,38 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+html.dark {
+    color-scheme: dark;
+}
+
+html.dark body {
+    background-color: #060913;
+    color: #f8fafc;
+}
+
+/* Custom smooth dark scrollbars */
+html.dark ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+html.dark ::-webkit-scrollbar-track {
+    background: #060913;
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+    background: #1e293b;
+    border-radius: 9999px;
+    border: 2px solid #060913;
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+    background: #334155;
+}
+
+/* Selection highlight in amber tone */
+::selection {
+    background-color: rgba(245, 158, 11, 0.35);
+    color: inherit;
+}

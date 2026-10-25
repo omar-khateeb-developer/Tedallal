@@ -76,6 +76,13 @@ class CustomerController extends Controller
             ->where('public_token', $token)
             ->firstOrFail();
 
+        // Ensure the order exists and belongs to this table and restaurant
+        Order::withoutGlobalScopes()
+            ->where('restaurant_id', $table->restaurant_id)
+            ->where('table_id', $table->id)
+            ->where('order_number', $orderNumber)
+            ->firstOrFail();
+
         return Inertia::render('Customer/OrderStatus', [
             'restaurant' => $table->restaurant,
             'table' => $table,

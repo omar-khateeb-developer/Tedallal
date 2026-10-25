@@ -21,7 +21,7 @@ onMounted(async () => {
         <template #header>
             <div class="flex items-center">
                 <div class="h-8 w-2 bg-gradient-to-b from-amber-400 to-orange-500 rounded-full ml-3"></div>
-                <h2 class="text-2xl font-bold leading-tight text-slate-800 tracking-tight">
+                <h2 class="text-2xl font-bold leading-tight text-slate-800 dark:text-white tracking-tight">
                     لوحة التحكم
                 </h2>
             </div>
@@ -33,9 +33,9 @@ onMounted(async () => {
 
                 <!-- Loading Skeleton -->
                 <div v-if="!stats" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                    <div v-for="i in 8" :key="i" class="relative overflow-hidden rounded-2xl bg-white p-6 shadow-sm border border-slate-100 animate-pulse">
-                        <div class="h-4 w-24 bg-slate-200 rounded mb-4"></div>
-                        <div class="h-8 w-16 bg-slate-200 rounded"></div>
+                    <div v-for="i in 8" :key="i" class="relative overflow-hidden rounded-2xl bg-white dark:bg-[#0a0f1d] p-6 shadow-xs border border-slate-100 dark:border-slate-800 animate-pulse">
+                        <div class="h-4 w-24 bg-slate-200 dark:bg-slate-800 rounded mb-4"></div>
+                        <div class="h-8 w-16 bg-slate-200 dark:bg-slate-800 rounded"></div>
                     </div>
                 </div>
 
@@ -50,17 +50,17 @@ onMounted(async () => {
                         today_revenue: 'إيراد اليوم',
                         active_tables: 'طاولات نشطة',
                         unavailable_menu_items: 'أصناف غير متاحة',
-                    }" :key="key" class="relative overflow-hidden rounded-2xl bg-white p-6 shadow-sm border border-slate-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-amber-200 group cursor-pointer">
+                    }" :key="key" class="relative overflow-hidden rounded-2xl bg-white dark:bg-[#0a0f1d] p-6 shadow-xs border border-slate-100 dark:border-slate-800 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-amber-500/40 group cursor-pointer">
                         
                         <div class="relative z-10">
-                            <p class="text-sm font-medium text-slate-500 mb-1 group-hover:text-amber-600 transition-colors">{{ label }}</p>
-                            <p class="text-3xl font-bold text-slate-800 tracking-tight">
+                            <p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1 group-hover:text-amber-500 transition-colors">{{ label }}</p>
+                            <p class="text-3xl font-bold text-slate-800 dark:text-white tracking-tight">
                                 <CountUp :to="stats[key]" />
                             </p>
                         </div>
                         
                         <!-- Decorative blob -->
-                        <div class="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-gradient-to-br from-amber-100/60 to-orange-50/60 group-hover:scale-[2] transition-transform duration-700 ease-out"></div>
+                        <div class="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-gradient-to-br from-amber-100/60 to-orange-50/60 dark:from-amber-500/10 dark:to-orange-500/5 group-hover:scale-[2] transition-transform duration-700 ease-out"></div>
                     </div>
                 </div>
             </div>

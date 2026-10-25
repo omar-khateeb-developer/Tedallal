@@ -15,7 +15,13 @@ class EnsureUserHasPermission
      */
     public function handle(Request $request, Closure $next, string $permission): Response
     {
-        if (! $request->user() || ! $request->user()->hasPermission($permission)) {
+        $user = $request->user();
+
+        if (! $user || ! $user->isActive()) {
+            abort(403, 'حسابك معطل أو غير نشط.');
+        }
+
+        if (! $user->hasPermission($permission)) {
             abort(403, 'ليس لديك الصلاحية للوصول إلى هذا المورد.');
         }
 
