@@ -240,8 +240,8 @@ onMounted(() => {
 <template>
     <CustomerLayout :navbar-image="restaurant.navbar_image" :logo="restaurant.logo">
         <template #title>
-            <h1 class="text-lg font-bold">{{ restaurant.name }}</h1>
-            <p class="text-sm text-stone-500">{{ table.name }}</p>
+            <h1 class="text-lg font-bold text-stone-900 dark:text-white">{{ restaurant.name }}</h1>
+            <p class="text-sm text-stone-500 dark:text-slate-400">{{ table.name }}</p>
         </template>
 
         <!-- زر السلة العلوي في شريط التنقل -->
@@ -249,7 +249,7 @@ onMounted(() => {
             <button
                 v-if="cartCount > 0"
                 type="button"
-                class="relative flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors border border-amber-200/80 active:scale-95"
+                class="relative flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-300 dark:hover:bg-amber-900/60 transition-colors border border-amber-200/80 dark:border-amber-700/60 active:scale-95 shadow-2xs"
                 title="عرض السلة"
                 @click="cartOpen = true"
             >
@@ -263,7 +263,7 @@ onMounted(() => {
         </template>
 
         <!-- خطأ -->
-        <div v-if="errorMessage" class="mb-4 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700 flex items-center gap-2 shadow-xs">
+        <div v-if="errorMessage" class="mb-4 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/60 px-4 py-3 text-sm text-red-700 dark:text-red-300 flex items-center gap-2 shadow-2xs">
             <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
             {{ errorMessage }}
         </div>
@@ -273,7 +273,7 @@ onMounted(() => {
             <button
                 v-for="order in activeOrders"
                 :key="order.id"
-                class="w-full flex items-center justify-between rounded-2xl bg-gradient-to-l from-amber-500 to-orange-500 p-4 shadow-lg shadow-amber-200 text-white transition-all active:scale-95"
+                class="w-full flex items-center justify-between rounded-2xl bg-gradient-to-l from-amber-500 to-orange-500 dark:from-amber-600 dark:to-amber-700 p-4 shadow-lg shadow-amber-200 dark:shadow-amber-950/40 text-white transition-all active:scale-95"
                 @click="router.visit(`/t/${props.table.public_token}/orders/${order.order_number}`)"
             >
                 <div class="flex items-center gap-3">
@@ -294,7 +294,7 @@ onMounted(() => {
         </div>
 
         <!-- تبويبات الأصناف - تثبت عند التمرير -->
-        <div class="sticky top-0 z-10 -mx-4 bg-stone-50/95 backdrop-blur-sm px-4 pt-2 pb-3 mb-4 border-b border-stone-100">
+        <div class="sticky top-0 z-10 -mx-4 bg-stone-50/95 dark:bg-[#060913]/95 backdrop-blur-md px-4 pt-2 pb-3 mb-4 border-b border-stone-200/60 dark:border-slate-800/80 transition-colors">
             <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
                 <button
                     v-for="category in categories"
@@ -302,8 +302,8 @@ onMounted(() => {
                     type="button"
                     class="whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 shrink-0"
                     :class="activeCategory === category.id
-                        ? 'bg-amber-600 text-white shadow-md shadow-amber-200'
-                        : 'bg-white text-stone-600 ring-1 ring-stone-200'"
+                        ? 'bg-amber-600 text-white shadow-md shadow-amber-200 dark:shadow-amber-900/50'
+                        : 'bg-white text-stone-600 ring-1 ring-stone-200 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-800 hover:dark:bg-slate-800'"
                     @click="activeCategory = category.id"
                 >
                     {{ category.name }}
@@ -316,20 +316,20 @@ onMounted(() => {
             <article
                 v-for="item in visibleItems"
                 :key="item.id"
-                class="group flex gap-4 rounded-2xl bg-white p-3.5 shadow-sm ring-1 ring-stone-100/90 hover:shadow-md transition-all duration-200 cursor-pointer"
+                class="group flex gap-4 rounded-2xl bg-white dark:bg-[#0a0f1d] p-3.5 shadow-2xs ring-1 ring-stone-100/90 dark:ring-slate-800/80 hover:shadow-md hover:dark:ring-amber-500/40 transition-all duration-200 cursor-pointer"
                 @click="openAddModal(item)"
             >
                 <!-- صورة الصنف -->
                 <div class="shrink-0 relative">
-                    <div v-if="item.image" class="h-24 w-24 rounded-xl overflow-hidden shadow-sm">
+                    <div v-if="item.image" class="h-24 w-24 rounded-xl overflow-hidden shadow-2xs border border-stone-100 dark:border-slate-800">
                         <img
                             :src="item.image"
                             :alt="item.name"
                             class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                     </div>
-                    <div v-else class="h-24 w-24 rounded-xl bg-gradient-to-br from-amber-50 to-stone-100 flex items-center justify-center">
-                        <svg class="w-10 h-10 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div v-else class="h-24 w-24 rounded-xl bg-gradient-to-br from-amber-50 to-stone-100 dark:from-slate-900 dark:to-slate-800 border border-stone-100 dark:border-slate-800 flex items-center justify-center">
+                        <svg class="w-10 h-10 text-amber-300 dark:text-amber-500/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                         </svg>
                     </div>
@@ -337,7 +337,7 @@ onMounted(() => {
                     <!-- شارة الكمية في زاوية الصورة إن كانت مضافة -->
                     <span
                         v-if="cartItemsByMenuItemId[item.id]"
-                        class="absolute -top-1.5 -right-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-amber-500 px-1 text-[11px] font-black text-stone-950 shadow-md ring-2 ring-white"
+                        class="absolute -top-1.5 -right-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-amber-500 px-1 text-[11px] font-black text-stone-950 shadow-md ring-2 ring-white dark:ring-slate-900"
                     >
                         {{ cartItemsByMenuItemId[item.id].quantity }}
                     </span>
@@ -346,37 +346,37 @@ onMounted(() => {
                 <!-- تفاصيل الصنف -->
                 <div class="flex-1 flex flex-col justify-between min-w-0">
                     <div>
-                        <h3 class="font-bold text-gray-900 text-base leading-tight group-hover:text-amber-700 transition-colors">{{ item.name }}</h3>
-                        <p v-if="item.description" class="mt-1 text-xs text-stone-500 line-clamp-2 leading-relaxed">
+                        <h3 class="font-bold text-gray-900 dark:text-white text-base leading-tight group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">{{ item.name }}</h3>
+                        <p v-if="item.description" class="mt-1 text-xs text-stone-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
                             {{ item.description }}
                         </p>
                     </div>
 
-                    <div class="flex items-center justify-between mt-2 pt-1 border-t border-stone-50">
-                        <p class="font-black text-amber-600 text-sm sm:text-base">{{ formatPrice(item.price) }}</p>
+                    <div class="flex items-center justify-between mt-2 pt-1 border-t border-stone-50 dark:border-slate-800/60">
+                        <p class="font-black text-amber-600 dark:text-amber-400 text-sm sm:text-base">{{ formatPrice(item.price) }}</p>
 
                         <!-- أزرار الإضافة السريعة أو العداد المباشر في البطاقة -->
                         <div @click.stop>
                             <!-- إذا كان الصنف مضافاً في السلة: يظهر عداد فوري [ - ] [ quantity ] [ + ] -->
                             <div
                                 v-if="cartItemsByMenuItemId[item.id]"
-                                class="flex items-center gap-1.5 bg-amber-50 border border-amber-200/90 rounded-full p-0.5 shadow-xs"
+                                class="flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200/90 dark:border-amber-700/60 rounded-full p-0.5 shadow-2xs"
                             >
                                 <button
                                     type="button"
-                                    class="h-7 w-7 rounded-full bg-white text-amber-800 font-bold flex items-center justify-center hover:bg-amber-100 active:scale-90 transition-all shadow-xs disabled:opacity-50"
+                                    class="h-7 w-7 rounded-full bg-white dark:bg-slate-800 text-amber-800 dark:text-amber-300 font-bold flex items-center justify-center hover:bg-amber-100 dark:hover:bg-slate-700 active:scale-90 transition-all shadow-2xs disabled:opacity-50"
                                     :disabled="updatingItemIds.has(item.id)"
                                     title="تقليل"
                                     @click="quickDecrement(item)"
                                 >
                                     −
                                 </button>
-                                <span class="text-xs font-black text-amber-900 min-w-[16px] text-center">
+                                <span class="text-xs font-black text-amber-900 dark:text-amber-200 min-w-[16px] text-center">
                                     {{ cartItemsByMenuItemId[item.id].quantity }}
                                 </span>
                                 <button
                                     type="button"
-                                    class="h-7 w-7 rounded-full bg-amber-600 text-white font-bold flex items-center justify-center hover:bg-amber-700 active:scale-90 transition-all shadow-xs disabled:opacity-50"
+                                    class="h-7 w-7 rounded-full bg-amber-600 dark:bg-amber-500 text-white font-bold flex items-center justify-center hover:bg-amber-700 dark:hover:bg-amber-400 active:scale-90 transition-all shadow-2xs disabled:opacity-50"
                                     :disabled="updatingItemIds.has(item.id)"
                                     title="زيادة"
                                     @click="quickIncrement(item)"
@@ -389,7 +389,7 @@ onMounted(() => {
                             <button
                                 v-else
                                 type="button"
-                                class="h-8 w-8 rounded-full bg-amber-600 text-white flex items-center justify-center shadow-md shadow-amber-200 hover:bg-amber-700 active:scale-90 transition-transform disabled:opacity-50"
+                                class="h-8 w-8 rounded-full bg-amber-600 dark:bg-amber-500 text-white flex items-center justify-center shadow-md shadow-amber-200 dark:shadow-amber-950/50 hover:bg-amber-700 dark:hover:bg-amber-400 active:scale-90 transition-transform disabled:opacity-50"
                                 :disabled="updatingItemIds.has(item.id)"
                                 title="إضافة سريعة للطلب"
                                 @click="quickAdd(item)"
@@ -404,8 +404,8 @@ onMounted(() => {
             </article>
 
             <!-- حالة فارغة -->
-            <div v-if="visibleItems.length === 0" class="col-span-full py-16 text-center text-stone-400">
-                <svg class="w-16 h-16 mx-auto mb-3 text-stone-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div v-if="visibleItems.length === 0" class="col-span-full py-16 text-center text-stone-400 dark:text-slate-500">
+                <svg class="w-16 h-16 mx-auto mb-3 text-stone-200 dark:text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
                 <p class="font-medium">لا توجد أصناف في هذا القسم حالياً</p>
