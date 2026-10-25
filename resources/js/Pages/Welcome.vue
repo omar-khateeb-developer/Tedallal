@@ -272,8 +272,8 @@ const demoForm = ref({
     restaurantName: '',
     contactPerson: '',
     phone: '',
-    city: 'الرياض',
-    tablesCount: '20-40',
+    country: 'المملكة العربية السعودية',
+    tablesCount: '15-35',
 });
 const isSubmitted = ref(false);
 
@@ -286,8 +286,8 @@ function submitDemoRequest() {
             restaurantName: '',
             contactPerson: '',
             phone: '',
-            city: 'الرياض',
-            tablesCount: '20-40',
+            country: 'المملكة العربية السعودية',
+            tablesCount: '15-35',
         };
     }, 2500);
 }
@@ -1884,18 +1884,20 @@ onUnmounted(() => {
                                 />
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-300 mb-1">المدينة</label>
+                                <label class="block text-xs font-semibold text-slate-300 mb-1">الدولة</label>
                                 <select
-                                    v-model="demoForm.city"
+                                    v-model="demoForm.country"
                                     class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-500 focus:outline-none"
                                 >
-                                    <option value="الرياض">الرياض</option>
-                                    <option value="جدة">جدة</option>
-                                    <option value="الدمام">الدمام</option>
-                                    <option value="مكة المكرمة">مكة المكرمة</option>
-                                    <option value="المدينة المنورة">المدينة المنورة</option>
-                                    <option value="دبي">دبي</option>
-                                    <option value="أخرى">مدينة أخرى</option>
+                                    <option value="المملكة العربية السعودية">المملكة العربية السعودية 🇸🇦</option>
+                                    <option value="الإمارات العربية المتحدة">الإمارات العربية المتحدة 🇦🇪</option>
+                                    <option value="الكويت">الكويت 🇰🇼</option>
+                                    <option value="قطر">قطر 🇶🇦</option>
+                                    <option value="البحرين">البحرين 🇧🇭</option>
+                                    <option value="سلطنة عمان">سلطنة عمان 🇴🇲</option>
+                                    <option value="الأردن">الأردن 🇯🇴</option>
+                                    <option value="مصر">مصر 🇪🇬</option>
+                                    <option value="دولة أخرى">دولة أخرى 🌍</option>
                                 </select>
                             </div>
                         </div>
