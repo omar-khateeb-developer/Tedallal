@@ -202,6 +202,52 @@ const currentToastIndex = ref(0);
 const showToast = ref(true);
 let toastInterval: ReturnType<typeof setInterval> | null = null;
 
+// Interactive Analytics State & Live Traffic Simulation
+const selectedAnalyticsFilter = ref<'weekend' | 'weekday'>('weekend');
+const dynamicTrafficTick = ref(0);
+let trafficInterval: ReturnType<typeof setInterval> | null = null;
+
+const peakHoursData = computed(() => {
+    const tick = dynamicTrafficTick.value;
+    if (selectedAnalyticsFilter.value === 'weekend') {
+        return [
+            { time: '1 م', height: 35 + ((tick % 2 === 0) ? 3 : -1), orders: 24, volume: 'خفيف' },
+            { time: '3 م', height: 55 + ((tick % 3 === 0) ? 4 : -2), orders: 48, volume: 'متوسط' },
+            { time: '5 م', height: 45 + ((tick % 2 === 1) ? 3 : 0), orders: 36, volume: 'متوسط' },
+            { time: '7 م', height: 78 + ((tick % 3 === 1) ? 4 : -1), orders: 74, volume: 'مرتفع 🔥' },
+            { time: '9 م', height: 96 + ((tick % 2 === 0) ? 2 : -2), orders: 98, isPeak: true, volume: 'قمة الذروة 🔥🔥' },
+            { time: '11 م', height: 82 + ((tick % 2 === 1) ? 3 : -1), orders: 79, volume: 'مرتفع' },
+            { time: '1 ص', height: 40 + ((tick % 3 === 2) ? 3 : 0), orders: 32, volume: 'هادئ' },
+        ];
+    }
+    return [
+        { time: '1 م', height: 25 + ((tick % 2 === 0) ? 2 : 0), orders: 18, volume: 'هادئ' },
+        { time: '3 م', height: 38 + ((tick % 3 === 0) ? 3 : -1), orders: 28, volume: 'خفيف' },
+        { time: '5 م', height: 32 + ((tick % 2 === 1) ? 2 : 0), orders: 22, volume: 'خفيف' },
+        { time: '7 م', height: 62 + ((tick % 3 === 1) ? 3 : 0), orders: 46, volume: 'متوسط' },
+        { time: '9 م', height: 84 + ((tick % 2 === 0) ? 2 : -2), orders: 68, isPeak: true, volume: 'ذروة منتصف الأسبوع 🔥' },
+        { time: '11 م', height: 58 + ((tick % 2 === 1) ? 3 : 0), orders: 42, volume: 'متوسط' },
+        { time: '1 ص', height: 22 + ((tick % 3 === 2) ? 2 : 0), orders: 14, volume: 'هادئ' },
+    ];
+});
+
+const topDishesData = computed(() => {
+    if (selectedAnalyticsFilter.value === 'weekend') {
+        return [
+            { name: 'كباب حلبي بالكرز', percent: 42, color: 'bg-amber-500', orders: 142 },
+            { name: 'أوصال لحم مشوي', percent: 28, color: 'bg-orange-500', orders: 98 },
+            { name: 'كبة مشوية بالجوز', percent: 18, color: 'bg-emerald-500', orders: 65 },
+            { name: 'كنافة نابلسية بالجبن', percent: 12, color: 'bg-amber-300', orders: 45 },
+        ];
+    }
+    return [
+        { name: 'كباب حلبي بالكرز', percent: 36, color: 'bg-amber-500', orders: 95 },
+        { name: 'أوصال لحم مشوي', percent: 32, color: 'bg-orange-500', orders: 84 },
+        { name: 'كبة مشوية بالجوز', percent: 20, color: 'bg-emerald-500', orders: 52 },
+        { name: 'كنافة نابلسية بالجبن', percent: 12, color: 'bg-amber-300', orders: 31 },
+    ];
+});
+
 // ROI Calculator State
 const tableCount = ref(30);
 const dailyOrdersPerTable = ref(6);
@@ -287,10 +333,15 @@ onMounted(() => {
             showToast.value = true;
         }, 400);
     }, 7000);
+
+    trafficInterval = setInterval(() => {
+        dynamicTrafficTick.value++;
+    }, 2800);
 });
 
 onUnmounted(() => {
     if (toastInterval) clearInterval(toastInterval);
+    if (trafficInterval) clearInterval(trafficInterval);
 });
 </script>
 
@@ -1185,85 +1236,95 @@ onUnmounted(() => {
 
                             <!-- Peak Hours Simulated Chart -->
                             <div class="md:col-span-2 p-5 rounded-2xl bg-slate-900/80 border border-white/5 space-y-4">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-sm font-bold text-white">مخطط أوقات الذروة وتوزيع الطلبات (Peak Hours)</span>
-                                    <span class="text-xs text-amber-400 font-mono">الذروة: 8:00 - 10:00 م</span>
+                                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-white/5 pb-3">
+                                    <div>
+                                        <span class="text-sm font-bold text-white flex items-center gap-2">
+                                            <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
+                                            مخطط أوقات الذروة وتوزيع الطلبات (Peak Hours)
+                                        </span>
+                                        <span class="text-xs text-amber-400 font-mono mt-1 block">
+                                            {{ selectedAnalyticsFilter === 'weekend' ? 'ساعات الذروة: 8:00 - 10:30 م (98 طلب/ساعة)' : 'ساعات الذروة: 8:30 - 10:00 م (68 طلب/ساعة)' }}
+                                        </span>
+                                    </div>
+
+                                    <!-- Filter switcher buttons -->
+                                    <div class="flex items-center gap-1.5 p-1 rounded-xl bg-slate-950 border border-white/10 text-xs">
+                                        <button
+                                            @click="selectedAnalyticsFilter = 'weekend'"
+                                            :class="selectedAnalyticsFilter === 'weekend' ? 'bg-amber-500 text-slate-950 font-bold shadow' : 'text-slate-400 hover:text-white'"
+                                            class="px-2.5 py-1 rounded-lg transition-all"
+                                        >
+                                            عطلة نهاية الأسبوع 🔥
+                                        </button>
+                                        <button
+                                            @click="selectedAnalyticsFilter = 'weekday'"
+                                            :class="selectedAnalyticsFilter === 'weekday' ? 'bg-amber-500 text-slate-950 font-bold shadow' : 'text-slate-400 hover:text-white'"
+                                            class="px-2.5 py-1 rounded-lg transition-all"
+                                        >
+                                            أيام الأسبوع
+                                        </button>
+                                    </div>
                                 </div>
 
-                                <!-- Animated SVG Bar Chart Representation -->
-                                <div class="h-44 flex items-end justify-between gap-2 pt-6 px-2">
-                                    <div class="flex-1 flex flex-col items-center gap-2 group">
-                                        <div class="w-full bg-slate-800 rounded-t-lg group-hover:bg-amber-500 transition-all" style="height: 25%;"></div>
-                                        <span class="text-[10px] text-slate-500 font-mono">1 م</span>
-                                    </div>
-                                    <div class="flex-1 flex flex-col items-center gap-2 group">
-                                        <div class="w-full bg-slate-800 rounded-t-lg group-hover:bg-amber-500 transition-all" style="height: 40%;"></div>
-                                        <span class="text-[10px] text-slate-500 font-mono">3 م</span>
-                                    </div>
-                                    <div class="flex-1 flex flex-col items-center gap-2 group">
-                                        <div class="w-full bg-slate-800 rounded-t-lg group-hover:bg-amber-500 transition-all" style="height: 30%;"></div>
-                                        <span class="text-[10px] text-slate-500 font-mono">5 م</span>
-                                    </div>
-                                    <div class="flex-1 flex flex-col items-center gap-2 group">
-                                        <div class="w-full bg-amber-500/50 rounded-t-lg group-hover:bg-amber-500 transition-all" style="height: 65%;"></div>
-                                        <span class="text-[10px] text-slate-500 font-mono">7 م</span>
-                                    </div>
-                                    <div class="flex-1 flex flex-col items-center gap-2 group">
-                                        <div class="w-full bg-gradient-to-t from-amber-500 to-orange-500 rounded-t-lg group-hover:brightness-125 transition-all shadow-lg shadow-amber-500/20" style="height: 98%;"></div>
-                                        <span class="text-[10px] text-amber-400 font-bold font-mono">9 م</span>
-                                    </div>
-                                    <div class="flex-1 flex flex-col items-center gap-2 group">
-                                        <div class="w-full bg-amber-500/70 rounded-t-lg group-hover:bg-amber-500 transition-all" style="height: 80%;"></div>
-                                        <span class="text-[10px] text-slate-500 font-mono">11 م</span>
-                                    </div>
-                                    <div class="flex-1 flex flex-col items-center gap-2 group">
-                                        <div class="w-full bg-slate-800 rounded-t-lg group-hover:bg-amber-500 transition-all" style="height: 35%;"></div>
-                                        <span class="text-[10px] text-slate-500 font-mono">1 ص</span>
+                                <!-- Live Animated Bar Chart Representation -->
+                                <div class="h-52 flex items-end justify-between gap-2.5 pt-6 pb-2 px-2">
+                                    <div
+                                        v-for="(bar, bIdx) in peakHoursData"
+                                        :key="bIdx"
+                                        class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-pointer"
+                                    >
+                                        <!-- Floating Tooltip on Hover -->
+                                        <div class="absolute -top-9 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none bg-slate-800 text-white border border-amber-500/40 text-[10px] px-2 py-0.5 rounded-lg shadow-xl whitespace-nowrap z-20 font-mono">
+                                            {{ bar.orders }} طلب • {{ bar.volume }}
+                                        </div>
+
+                                        <!-- Full-height bar column track with explicit pixel height -->
+                                        <div class="w-full h-36 rounded-t-xl bg-slate-800/30 flex items-end p-1 relative overflow-hidden group-hover:bg-slate-800/50 transition-colors">
+                                            <!-- Animated dynamic bar -->
+                                            <div
+                                                class="w-full rounded-t-lg transition-all duration-700 ease-out relative group-hover:brightness-125 shadow-md"
+                                                :class="bar.isPeak 
+                                                    ? 'bg-gradient-to-t from-amber-600 via-orange-500 to-amber-300 shadow-amber-500/30 animate-pulse' 
+                                                    : 'bg-gradient-to-t from-slate-700 to-slate-600 hover:from-amber-500/70 hover:to-orange-500/70'"
+                                                :style="{ height: `${bar.height}%` }"
+                                            >
+                                                <!-- Top glowing cap -->
+                                                <div class="absolute inset-x-0 top-0 h-1 bg-white/50 rounded-t-lg"></div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Hour Label below bar -->
+                                        <span
+                                            class="text-[11px] font-mono mt-2 transition-colors"
+                                            :class="bar.isPeak ? 'text-amber-400 font-bold scale-110' : 'text-slate-400 group-hover:text-slate-200'"
+                                        >
+                                            {{ bar.time }}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Top Dishes Breakdown -->
                             <div class="p-5 rounded-2xl bg-slate-900/80 border border-white/5 space-y-4">
-                                <span class="text-sm font-bold text-white block">الأصناف الأكثر ربحية ومبيعاً</span>
-                                <div class="space-y-3">
-                                    <div>
-                                        <div class="flex justify-between text-xs mb-1">
-                                            <span class="text-slate-300">كباب حلبي بالكرز</span>
-                                            <span class="text-amber-400 font-bold font-mono">42%</span>
+                                <div class="flex items-center justify-between border-b border-white/5 pb-2">
+                                    <span class="text-sm font-bold text-white block">الأصناف الأكثر ربحية ومبيعاً</span>
+                                    <span class="text-[10px] text-emerald-400 font-mono font-bold">معدل الإقبال</span>
+                                </div>
+                                <div class="space-y-3.5">
+                                    <div v-for="(dish, dIdx) in topDishesData" :key="dIdx" class="group">
+                                        <div class="flex justify-between items-center text-xs mb-1.5">
+                                            <span class="text-slate-200 font-medium group-hover:text-amber-400 transition-colors">{{ dish.name }}</span>
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-[10px] text-slate-400 font-mono">({{ dish.orders }} طلب)</span>
+                                                <span class="text-amber-400 font-bold font-mono">{{ dish.percent }}%</span>
+                                            </div>
                                         </div>
-                                        <div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
-                                            <div class="h-full bg-amber-500 rounded-full" style="width: 42%;"></div>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <div class="flex justify-between text-xs mb-1">
-                                            <span class="text-slate-300">أوصال لحم مشوي</span>
-                                            <span class="text-amber-400 font-bold font-mono">28%</span>
-                                        </div>
-                                        <div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
-                                            <div class="h-full bg-orange-500 rounded-full" style="width: 28%;"></div>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <div class="flex justify-between text-xs mb-1">
-                                            <span class="text-slate-300">كبة مشوية بالجوز</span>
-                                            <span class="text-amber-400 font-bold font-mono">18%</span>
-                                        </div>
-                                        <div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
-                                            <div class="h-full bg-emerald-500 rounded-full" style="width: 18%;"></div>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <div class="flex justify-between text-xs mb-1">
-                                            <span class="text-slate-300">كنافة نابلسية بالجبن</span>
-                                            <span class="text-amber-400 font-bold font-mono">12%</span>
-                                        </div>
-                                        <div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
-                                            <div class="h-full bg-amber-300 rounded-full" style="width: 12%;"></div>
+                                        <div class="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden p-[1px]">
+                                            <div
+                                                class="h-full rounded-full transition-all duration-700 ease-out shadow-sm"
+                                                :class="dish.color"
+                                                :style="{ width: `${dish.percent}%` }"
+                                            ></div>
                                         </div>
                                     </div>
                                 </div>
