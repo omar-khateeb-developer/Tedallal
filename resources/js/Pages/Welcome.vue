@@ -518,7 +518,7 @@ onUnmounted(() => {
                         <span class="bg-gradient-to-r from-amber-400 via-orange-400 to-amber-300 bg-clip-text text-transparent block mt-2">
                             سرعة رقمية فائقة
                         </span>
-                        من مسحة الـ QR حتى المطبخ والحراري!
+                        من مسحة الـ QR حتى المطبخ والطبع الحراري!
                     </h1>
 
                     <!-- Compelling Sub-Headline -->
