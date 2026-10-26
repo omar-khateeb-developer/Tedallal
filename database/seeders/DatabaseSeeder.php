@@ -23,159 +23,344 @@ use App\Models\User;
 use App\Services\QrCodeService;
 use App\Services\TokenGenerator;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class DatabaseSeeder extends Seeder
 {
+    protected TokenGenerator $tokenGenerator;
+    protected QrCodeService $qrService;
+
     public function run(): void
     {
-        $tokenGenerator = app(TokenGenerator::class);
-        $qrService = app(QrCodeService::class);
+        $this->tokenGenerator = app(TokenGenerator::class);
+        $this->qrService = app(QrCodeService::class);
 
-        // ضمان مزامنة مجلد صور الأصناف مع public/storage للتشغيل الفوري
-        $publicMenuDir = public_path('storage/menu/items');
-        $storageMenuDir = storage_path('app/public/menu/items');
-        if (is_dir($storageMenuDir)) {
-            if (! is_dir($publicMenuDir)) {
-                @mkdir($publicMenuDir, 0755, true);
+        // 1. تجهيز ومزامنة ملفات التخزين والصور لمنع أخطاء 404 وتضارب السيرفرات (VPS)
+        $this->ensureStorageAndImages();
+
+        // 2. إعداد الصلاحيات وأدوار Spatie
+        $togglePermission = $this->setupRolesAndPermissions();
+
+        // 3. مدراء النظام الرئيسيون
+        $this->seedSuperAdmins($togglePermission);
+
+        // 4. المطعم الأول: بيت الشام (Postpaid - دفع لاحق)
+        $this->seedRestaurantBaitAlSham();
+
+        // 5. المطعم الثاني: الديوان الخليجي (Prepaid - دفع مسبق مع كوتين)
+        $this->seedRestaurantAlDiwan();
+
+        // 6. المطعم الثالث: قلعة حلب (Prepaid - دفع مسبق مع 3 كواة)
+        $this->seedRestaurantAleppoCitadel();
+
+        $this->command?->info('✅ تم تنفيذ السيدر بنجاح مع 3 مطاعم (2 Prepaid و 1 Postpaid) وكامل بياناتهم وصورهم بدون أي تعارض.');
+    }
+
+    /**
+     * ضمان سلامة مجلدات وصور التخزين ومزامنتها بين storage و public لمنع أخطاء 404 على VPS
+     */
+    protected function ensureStorageAndImages(): void
+    {
+        // محاولة ربط التخزين إذا لم يكن الرابط الرمزي موجوداً
+        try {
+            if (! file_exists(public_path('storage'))) {
+                Artisan::call('storage:link');
             }
-            foreach (glob($storageMenuDir . '/*.jpg') as $imgFile) {
-                $target = $publicMenuDir . '/' . basename($imgFile);
-                if (! file_exists($target)) {
-                    @copy($imgFile, $target);
+        } catch (\Throwable $e) {
+            // يتم تجاهله في بيئات الاستضافة التي لا تدعم symlinks تلقائياً
+        }
+
+        $dirs = [
+            'restaurants',
+            'menu',
+            'menu/items',
+            'qr',
+        ];
+
+        foreach ($dirs as $dir) {
+            $storageDir = storage_path('app/public/' . $dir);
+            $publicDir = public_path('storage/' . $dir);
+
+            if (! is_dir($storageDir)) {
+                @mkdir($storageDir, 0755, true);
+            }
+            if (! is_dir($publicDir)) {
+                @mkdir($publicDir, 0755, true);
+            }
+
+            // مزامنة الملفات من storage إلى public إن لم يكن رابطاً رمزياً
+            if (is_dir($storageDir)) {
+                $files = @scandir($storageDir) ?: [];
+                foreach ($files as $file) {
+                    if ($file === '.' || $file === '..') continue;
+                    $src = $storageDir . '/' . $file;
+                    $dst = $publicDir . '/' . $file;
+                    if (is_file($src) && ! file_exists($dst)) {
+                        @copy($src, $dst);
+                    }
+                }
+            }
+
+            // مزامنة الملفات من public إلى storage
+            if (is_dir($publicDir)) {
+                $files = @scandir($publicDir) ?: [];
+                foreach ($files as $file) {
+                    if ($file === '.' || $file === '..') continue;
+                    $src = $publicDir . '/' . $file;
+                    $dst = $storageDir . '/' . $file;
+                    if (is_file($src) && ! file_exists($dst)) {
+                        @copy($src, $dst);
+                    }
                 }
             }
         }
+    }
 
-        // =============================================
-        // 1. المطعم - مع خاصية features
-        // =============================================
-        $restaurant = Restaurant::query()->create([
-            'name' => 'مطعم بيت الشام',
-            'slug' => 'bait-alsham',
-            'phone' => '+966551234567',
-            'address' => 'شارع التحلية، جدة، المملكة العربية السعودية',
-            'currency' => 'SYP',
-            'status' => RestaurantStatus::Active,
-            'logo' => '/storage/restaurants/bait-alsham-logo.jpg',
-            'navbar_image' => '/storage/restaurants/bait-alsham-navbar.jpg',
-            'features' => [
-                'promo_codes' => true,
-                'customer_notes' => true,
-                'table_sessions' => true,
-                'activity_log' => true,
-            ],
-        ]);
+    /**
+     * التأكد من وجود ملف الصورة فعلياً وتوليد بديل إذا كان مفقوداً
+     */
+    protected function ensureImageFile(?string $publicStoragePath, string $fallbackTitle = 'Image'): void
+    {
+        if (! $publicStoragePath) return;
 
-        // =============================================
-        // 2. حساب مدير النظام الرئيسي (Super Admin Owner)
-        //    البريد : super@tedallal.test
-        //    كلمة المرور: password
-        //    الصلاحية الحصرية: toggle_maintenance (إيقاف/تشغيل الموقع)
-        // =============================================
-        $superAdmin = User::firstOrCreate(
+        $relativePath = ltrim(preg_replace('#^/?storage/#', '', $publicStoragePath), '/');
+        $storageFile = storage_path('app/public/' . $relativePath);
+        $publicFile = public_path('storage/' . $relativePath);
+
+        if (file_exists($storageFile)) {
+            if (! file_exists($publicFile)) {
+                @mkdir(dirname($publicFile), 0755, true);
+                @copy($storageFile, $publicFile);
+            }
+            return;
+        }
+
+        if (file_exists($publicFile)) {
+            if (! file_exists($storageFile)) {
+                @mkdir(dirname($storageFile), 0755, true);
+                @copy($publicFile, $storageFile);
+            }
+            return;
+        }
+
+        @mkdir(dirname($storageFile), 0755, true);
+        @mkdir(dirname($publicFile), 0755, true);
+
+        if (extension_loaded('gd')) {
+            $img = @imagecreatetruecolor(400, 300);
+            if ($img) {
+                $bg = imagecolorallocate($img, 30, 41, 59);
+                $textColor = imagecolorallocate($img, 241, 245, 249);
+                imagefilledrectangle($img, 0, 0, 400, 300, $bg);
+                imagestring($img, 4, 20, 140, substr($fallbackTitle, 0, 30), $textColor);
+                imagejpeg($img, $storageFile, 85);
+                imagedestroy($img);
+                @copy($storageFile, $publicFile);
+                return;
+            }
+        }
+
+        $dummy = base64_decode('/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=');
+        @file_put_contents($storageFile, $dummy);
+        @file_put_contents($publicFile, $dummy);
+    }
+
+    /**
+     * إنشاء وتحديث الأدوار والصلاحيات Spatie
+     */
+    protected function setupRolesAndPermissions(): Permission
+    {
+        $roles = [
+            UserRole::SuperAdmin->value,
+            UserRole::Admin->value,
+            UserRole::Cashier->value,
+            UserRole::Chef->value,
+            UserRole::Supervisor->value,
+            UserRole::Waiter->value,
+            UserRole::Staff->value,
+        ];
+
+        foreach ($roles as $roleName) {
+            Role::firstOrCreate(['name' => $roleName, 'guard_name' => 'web']);
+        }
+
+        foreach (UserRole::cases() as $roleEnum) {
+            $role = Role::where('name', $roleEnum->value)->first();
+            if ($role) {
+                $perms = $roleEnum->defaultPermissions();
+                foreach ($perms as $permName) {
+                    Permission::firstOrCreate(['name' => $permName, 'guard_name' => 'web']);
+                }
+                $role->syncPermissions($perms);
+            }
+        }
+
+        $togglePermission = Permission::firstOrCreate(['name' => 'toggle_maintenance', 'guard_name' => 'web']);
+        $superAdminRole = Role::where('name', UserRole::SuperAdmin->value)->first();
+        if ($superAdminRole && $superAdminRole->hasPermissionTo($togglePermission)) {
+            $superAdminRole->revokePermissionTo($togglePermission);
+        }
+
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
+
+        return $togglePermission;
+    }
+
+    /**
+     * إنشاء مدراء النظام
+     */
+    protected function seedSuperAdmins(Permission $togglePermission): void
+    {
+        Setting::set('maintenance_mode', '0');
+
+        $superAdmin = User::query()->updateOrCreate(
             ['email' => 'super@tedallal.test'],
             [
                 'restaurant_id' => null,
                 'name'          => 'مدير النظام الرئيسي',
                 'password'      => Hash::make('password'),
                 'status'        => UserStatus::Active,
+                'default_window'=> null,
             ]
         );
-
-        // تعيين دور super_admin (يمنح كامل الوصول للـ super admin panel)
-        if (! $superAdmin->hasRole(UserRole::SuperAdmin->value)) {
-            $superAdmin->assignRole(UserRole::SuperAdmin->value);
-        }
-
-        // إنشاء permission "toggle_maintenance" بـ guard web حصراً
-        $togglePermission = \Spatie\Permission\Models\Permission::firstOrCreate(
-            ['name' => 'toggle_maintenance', 'guard_name' => 'web']
-        );
-
-        // التأكد من سحب صلاحية إيقاف النظام من دور super_admin حتى لا ترثها كل حسابات المدراء
-        $superAdminRole = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
-        if ($superAdminRole && $superAdminRole->hasPermissionTo($togglePermission)) {
-            $superAdminRole->revokePermissionTo($togglePermission);
-        }
-
-        // منح الصلاحية الحصرية لإيقاف/تشغيل النظام للمدير الرئيسي super@tedallal.test
+        $superAdmin->syncRoles([UserRole::SuperAdmin->value]);
         if (! $superAdmin->hasPermissionTo($togglePermission)) {
             $superAdmin->givePermissionTo($togglePermission);
         }
 
-        // =============================================
-        // 2.1 حساب مدير النظام (System Admin)
-        //    البريد : admin@tedallal.test
-        //    كلمة المرور: password
-        //    الدور : super_admin (إدارة النظام والمطاعم والمستخدمين بدون إمكانية إيقاف النظام)
-        // =============================================
-        $systemAdmin = User::firstOrCreate(
+        $systemAdmin = User::query()->updateOrCreate(
             ['email' => 'admin@tedallal.test'],
             [
                 'restaurant_id' => null,
                 'name'          => 'مدير النظام',
                 'password'      => Hash::make('password'),
                 'status'        => UserStatus::Active,
+                'default_window'=> null,
             ]
         );
-        if (! $systemAdmin->hasRole(UserRole::SuperAdmin->value)) {
-            $systemAdmin->assignRole(UserRole::SuperAdmin->value);
-        }
+        $systemAdmin->syncRoles([UserRole::SuperAdmin->value]);
         if ($systemAdmin->hasPermissionTo($togglePermission)) {
             $systemAdmin->revokePermissionTo($togglePermission);
         }
 
-        // تفريغ cache الصلاحيات
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
+    }
 
-        // إعداد الصيانة الافتراضي: الموقع شغّال (0 = لا صيانة)
-        Setting::set('maintenance_mode', '0');
+    /**
+     * =========================================================================
+     * المطعم الأول: مطعم بيت الشام (Postpaid - دفع لاحق بعد الوجبة)
+     * =========================================================================
+     */
+    protected function seedRestaurantBaitAlSham(): void
+    {
+        $logo = '/storage/restaurants/bait-alsham-logo.jpg';
+        $navbar = '/storage/restaurants/bait-alsham-navbar.jpg';
+        $this->ensureImageFile($logo, 'Bait Al-Sham Logo');
+        $this->ensureImageFile($navbar, 'Bait Al-Sham Navbar');
 
+        $restaurant = Restaurant::query()->updateOrCreate(
+            ['slug' => 'bait-alsham'],
+            [
+                'name'          => 'مطعم بيت الشام',
+                'type'          => 'postpaid',
+                'windows_count' => 1,
+                'phone'         => '+966551234567',
+                'address'       => 'شارع التحلية، جدة، المملكة العربية السعودية',
+                'currency'      => 'SYP',
+                'status'        => RestaurantStatus::Active,
+                'logo'          => $logo,
+                'navbar_image'  => $navbar,
+                'features'      => [
+                    'promo_codes'    => true,
+                    'customer_notes' => true,
+                    'table_sessions' => true,
+                    'activity_log'   => true,
+                ],
+            ]
+        );
 
-        $admin = User::query()->create([
-            'restaurant_id' => $restaurant->id,
-            'name' => 'أحمد الشامي',
-            'email' => 'admin@bait-alsham.test',
-            'password' => Hash::make('password'),
-            'status' => UserStatus::Active,
-        ]);
-        $admin->assignRole(UserRole::Admin->value);
+        // المستخدمون مع الأدوار المحدثة
+        $admin = User::query()->updateOrCreate(
+            ['email' => 'admin@bait-alsham.test'],
+            [
+                'restaurant_id'  => $restaurant->id,
+                'name'           => 'أحمد الشامي (مدير المطعم)',
+                'password'       => Hash::make('password'),
+                'status'         => UserStatus::Active,
+                'default_window' => null,
+            ]
+        );
+        $admin->syncRoles([UserRole::Admin->value]);
 
-        $staffCashier = User::query()->create([
-            'restaurant_id' => $restaurant->id,
-            'name' => 'خالد العمري',
-            'email' => 'cashier@bait-alsham.test',
-            'password' => Hash::make('password'),
-            'status' => UserStatus::Active,
-        ]);
-        $staffCashier->assignRole(UserRole::Staff->value);
-        $staffCashier->givePermissionTo(['view_orders', 'update_order_status', 'view_menu']);
+        $cashier = User::query()->updateOrCreate(
+            ['email' => 'cashier@bait-alsham.test'],
+            [
+                'restaurant_id'  => $restaurant->id,
+                'name'           => 'خالد العمري (كاشير)',
+                'password'       => Hash::make('password'),
+                'status'         => UserStatus::Active,
+                'default_window' => null,
+            ]
+        );
+        $cashier->syncRoles([UserRole::Cashier->value]);
+        $cashier->givePermissionTo(['view_orders', 'update_order_status', 'view_menu']);
 
-        $staffWaiter = User::query()->create([
-            'restaurant_id' => $restaurant->id,
-            'name' => 'سامي الحربي',
-            'email' => 'waiter@bait-alsham.test',
-            'password' => Hash::make('password'),
-            'status' => UserStatus::Active,
-        ]);
-        $staffWaiter->assignRole(UserRole::Staff->value);
-        $staffWaiter->givePermissionTo(['view_orders', 'update_order_status']);
+        $waiter = User::query()->updateOrCreate(
+            ['email' => 'waiter@bait-alsham.test'],
+            [
+                'restaurant_id'  => $restaurant->id,
+                'name'           => 'سامي الحربي (مضيف صالة)',
+                'password'       => Hash::make('password'),
+                'status'         => UserStatus::Active,
+                'default_window' => null,
+            ]
+        );
+        $waiter->syncRoles([UserRole::Waiter->value]);
+        $waiter->givePermissionTo(['view_orders', 'update_order_status']);
 
-        $inactiveStaff = User::query()->create([
-            'restaurant_id' => $restaurant->id,
-            'name' => 'فهد السالم',
-            'email' => 'inactive@bait-alsham.test',
-            'password' => Hash::make('password'),
-            'status' => UserStatus::Inactive,
-        ]);
-        $inactiveStaff->assignRole(UserRole::Staff->value);
-        $inactiveStaff->givePermissionTo(['view_orders']);
+        $chef = User::query()->updateOrCreate(
+            ['email' => 'chef@bait-alsham.test'],
+            [
+                'restaurant_id'  => $restaurant->id,
+                'name'           => 'الشيف زياد الشامي',
+                'password'       => Hash::make('password'),
+                'status'         => UserStatus::Active,
+                'default_window' => 1,
+            ]
+        );
+        $chef->syncRoles([UserRole::Chef->value]);
+        $chef->givePermissionTo(['view_orders', 'update_order_status']);
 
-        // =============================================
-        // 3. الطاولات - مع رموز QR
-        // =============================================
+        $supervisor = User::query()->updateOrCreate(
+            ['email' => 'supervisor@bait-alsham.test'],
+            [
+                'restaurant_id'  => $restaurant->id,
+                'name'           => 'طارق النعيمي (مشرف تشغيل)',
+                'password'       => Hash::make('password'),
+                'status'         => UserStatus::Active,
+                'default_window' => null,
+            ]
+        );
+        $supervisor->syncRoles([UserRole::Supervisor->value]);
+
+        $inactiveStaff = User::query()->updateOrCreate(
+            ['email' => 'inactive@bait-alsham.test'],
+            [
+                'restaurant_id'  => $restaurant->id,
+                'name'           => 'فهد السالم (موظف معطل)',
+                'password'       => Hash::make('password'),
+                'status'         => UserStatus::Inactive,
+                'default_window' => null,
+            ]
+        );
+        $inactiveStaff->syncRoles([UserRole::Staff->value]);
+
+        // الطاولات ورموز QR
         $tableNames = [
             'طاولة الصالة 1', 'طاولة الصالة 2', 'طاولة الصالة 3',
             'طاولة VIP 1', 'طاولة VIP 2',
@@ -186,49 +371,58 @@ class DatabaseSeeder extends Seeder
         $tables = [];
         foreach ($tableNames as $index => $tableName) {
             $status = ($index === 7) ? TableStatus::Inactive : TableStatus::Active;
-            $table = RestaurantTable::query()->create([
-                'restaurant_id' => $restaurant->id,
-                'name' => $tableName,
-                'public_token' => $tokenGenerator->generatePublicToken(),
-                'status' => $status,
-            ]);
-            $qrService->generateForTable($table);
+            $table = RestaurantTable::query()->firstOrCreate(
+                ['restaurant_id' => $restaurant->id, 'name' => $tableName],
+                [
+                    'public_token' => $this->tokenGenerator->generatePublicToken(),
+                    'status'       => $status,
+                ]
+            );
+
+            if (! $table->public_token) {
+                $table->public_token = $this->tokenGenerator->generatePublicToken();
+                $table->save();
+            }
+
+            $qrPath = "qr/{$table->restaurant_id}/{$table->public_token}.png";
+            if (! Storage::disk('public')->exists($qrPath)) {
+                $this->qrService->generateForTable($table);
+            }
             $tables[] = $table;
         }
 
-        // =============================================
-        // 4. قائمة الطعام - تصنيفات وأصناف متنوعة
-        // =============================================
+        // قائمة الطعام
         $categoriesData = [
             [
-                'name' => 'المقبلات الباردة',
+                'name'        => 'المقبلات الباردة',
                 'description' => 'تشكيلة من المقبلات الشامية الأصيلة',
-                'items' => [
+                'image'       => '/storage/menu/appetizers.jpg',
+                'items'       => [
                     ['name' => 'حمص بالطحينة', 'price' => '18.00', 'description' => 'حمص مهروس بالطحينة وزيت الزيتون والليمون', 'image' => '/storage/menu/items/hummus.jpg'],
                     ['name' => 'متبل باذنجان', 'price' => '16.00', 'description' => 'باذنجان مشوي على الفحم مع الطحينة', 'image' => '/storage/menu/items/mutabbal.jpg'],
                     ['name' => 'تبولة', 'price' => '20.00', 'description' => 'سلطة البقدونس الطازجة مع البرغل والطماطم', 'image' => '/storage/menu/items/tabbouleh.jpg'],
                     ['name' => 'فتوش', 'price' => '22.00', 'description' => 'سلطة الخضار المقرمشة مع خبز محمص ودبس الرمان', 'image' => '/storage/menu/items/fattoush.jpg'],
                     ['name' => 'ورق عنب', 'price' => '25.00', 'description' => 'ورق عنب محشي بالأرز والبهارات الشامية', 'image' => '/storage/menu/items/grape_leaves.jpg'],
-                    ['name' => 'لبنة بالزيت', 'price' => '14.00', 'description' => null, 'image' => '/storage/menu/items/labneh.jpg'],
+                    ['name' => 'لبنة بالزيت', 'price' => '14.00', 'description' => 'لبنة بلدية طازجة بزيت الزيتون البكر', 'image' => '/storage/menu/items/labneh.jpg'],
                 ],
-                'image' => '/storage/menu/appetizers.jpg',
             ],
             [
-                'name' => 'المقبلات الساخنة',
+                'name'        => 'المقبلات الساخنة',
                 'description' => 'مقبلات محضرة طازجة',
-                'items' => [
+                'image'       => '/storage/menu/appetizers.jpg',
+                'items'       => [
                     ['name' => 'كبة مقلية', 'price' => '28.00', 'description' => 'كبة محشية باللحم والصنوبر', 'image' => '/storage/menu/items/fried_kibbeh.jpg'],
                     ['name' => 'فطائر سبانخ', 'price' => '22.00', 'description' => 'فطائر مخبوزة بالسبانخ والسماق والبصل', 'image' => '/storage/menu/items/spinach_fatayer.jpg'],
                     ['name' => 'سمبوسة لحم', 'price' => '24.00', 'description' => 'سمبوسة مقلية محشية باللحم المفروم', 'image' => '/storage/menu/items/meat_samosa.jpg'],
                     ['name' => 'حلوم مشوي', 'price' => '26.00', 'description' => 'جبنة حلوم مشوية مع النعناع', 'image' => '/storage/menu/items/grilled_halloumi.jpg'],
                     ['name' => 'بطاطا حرة', 'price' => '18.00', 'description' => 'بطاطا مقلية مع الكزبرة والثوم والفلفل الحار', 'image' => '/storage/menu/items/batata_harra.jpg'],
                 ],
-                'image' => '/storage/menu/appetizers.jpg',
             ],
             [
-                'name' => 'المشاوي',
+                'name'        => 'المشاوي',
                 'description' => 'مشاوي على الفحم الطبيعي',
-                'items' => [
+                'image'       => '/storage/menu/grills.jpg',
+                'items'       => [
                     ['name' => 'مشكل مشاوي', 'price' => '95.00', 'description' => 'تشكيلة كباب وشيش طاووق وريش غنم وكفتة', 'image' => '/storage/menu/items/mixed_grill.jpg'],
                     ['name' => 'شيش طاووق', 'price' => '55.00', 'description' => 'صدور دجاج متبلة مشوية على الفحم', 'image' => '/storage/menu/items/shish_tawook.jpg'],
                     ['name' => 'كباب لحم', 'price' => '65.00', 'description' => 'لحم غنم مفروم متبل على الفحم', 'image' => '/storage/menu/items/meat_kebab.jpg'],
@@ -236,12 +430,12 @@ class DatabaseSeeder extends Seeder
                     ['name' => 'كفتة مشوية', 'price' => '50.00', 'description' => 'كفتة لحم مع البقدونس والبصل', 'image' => '/storage/menu/items/grilled_kofta.jpg'],
                     ['name' => 'دجاج مشوي كامل', 'price' => '75.00', 'description' => 'دجاج كامل متبل ومشوي على الفحم', 'image' => '/storage/menu/items/whole_grilled_chicken.jpg'],
                 ],
-                'image' => '/storage/menu/grills.jpg',
             ],
             [
-                'name' => 'الأطباق الرئيسية',
+                'name'        => 'الأطباق الرئيسية',
                 'description' => 'أطباق شامية تقليدية',
-                'items' => [
+                'image'       => '/storage/menu/rice.jpg',
+                'items'       => [
                     ['name' => 'منسف أردني', 'price' => '70.00', 'description' => 'لحم غنم مطبوخ بالجميد مع الأرز والصنوبر', 'image' => '/storage/menu/items/mansaf.jpg'],
                     ['name' => 'كبسة دجاج', 'price' => '45.00', 'description' => 'أرز بسمتي مع دجاج متبل بالبهارات السعودية', 'image' => '/storage/menu/items/chicken_kabsa.jpg'],
                     ['name' => 'شاورما عربي', 'price' => '38.00', 'description' => 'شاورما لحم أو دجاج مع صلصة الطحينة والمخللات', 'image' => '/storage/menu/items/shawarma_arabi.jpg'],
@@ -249,772 +443,301 @@ class DatabaseSeeder extends Seeder
                     ['name' => 'مسخن فلسطيني', 'price' => '48.00', 'description' => 'دجاج مع البصل والسماق على خبز الطابون', 'image' => '/storage/menu/items/musakhan.jpg'],
                     ['name' => 'مقلوبة', 'price' => '52.00', 'description' => 'أرز مع الباذنجان والدجاج والمكسرات', 'image' => '/storage/menu/items/makloubeh.jpg'],
                 ],
-                'image' => '/storage/menu/rice.jpg',
             ],
             [
-                'name' => 'المشروبات',
+                'name'        => 'المشروبات',
                 'description' => 'مشروبات باردة وساخنة',
-                'items' => [
+                'image'       => '/storage/menu/drinks.jpg',
+                'items'       => [
                     ['name' => 'عصير ليمون بالنعناع', 'price' => '15.00', 'description' => 'عصير ليمون طازج بالنعناع والسكر', 'image' => '/storage/menu/items/lemon_mint.jpg'],
-                    ['name' => 'عصير برتقال طبيعي', 'price' => '18.00', 'description' => null, 'image' => '/storage/menu/items/orange_juice.jpg'],
-                    ['name' => 'شاي أحمر', 'price' => '8.00', 'description' => null, 'image' => '/storage/menu/items/red_tea.jpg'],
-                    ['name' => 'قهوة عربية', 'price' => '12.00', 'description' => 'قهوة عربية مع الهيل', 'image' => '/storage/menu/items/arabic_coffee.jpg'],
-                    ['name' => 'قهوة تركية', 'price' => '14.00', 'description' => 'قهوة تركية تقليدية', 'image' => '/storage/menu/items/turkish_coffee.jpg'],
+                    ['name' => 'عصير برتقال طبيعي', 'price' => '18.00', 'description' => 'عصير برتقال طازج 100%', 'image' => '/storage/menu/items/orange_juice.jpg'],
+                    ['name' => 'شاي أحمر', 'price' => '8.00', 'description' => 'شاي أحمر سيلاني فاخر بالنعناع', 'image' => '/storage/menu/items/red_tea.jpg'],
+                    ['name' => 'قهوة عربية', 'price' => '12.00', 'description' => 'قهوة عربية أصيلة مع الهيل والزعفران', 'image' => '/storage/menu/items/arabic_coffee.jpg'],
+                    ['name' => 'قهوة تركية', 'price' => '14.00', 'description' => 'قهوة تركية تقليدية مع رغوة غنية', 'image' => '/storage/menu/items/turkish_coffee.jpg'],
                     ['name' => 'جلاب', 'price' => '16.00', 'description' => 'مشروب الجلاب مع الصنوبر والزبيب', 'image' => '/storage/menu/items/jallab.jpg'],
-                    ['name' => 'عيران', 'price' => '10.00', 'description' => 'لبن مخيض منعش', 'image' => '/storage/menu/items/ayran.jpg'],
-                    ['name' => 'ماء معدنية', 'price' => '5.00', 'description' => null, 'image' => '/storage/menu/items/mineral_water.jpg'],
+                    ['name' => 'عيران', 'price' => '10.00', 'description' => 'لبن مخيض منعش بالنعناع', 'image' => '/storage/menu/items/ayran.jpg'],
+                    ['name' => 'ماء معدنية', 'price' => '5.00', 'description' => 'مياه معدنية طبيعية نقية', 'image' => '/storage/menu/items/mineral_water.jpg'],
                 ],
-                'image' => '/storage/menu/drinks.jpg',
             ],
             [
-                'name' => 'الحلويات',
+                'name'        => 'الحلويات',
                 'description' => 'حلويات شرقية طازجة',
-                'items' => [
+                'image'       => '/storage/menu/desserts.jpg',
+                'items'       => [
                     ['name' => 'كنافة نابلسية', 'price' => '28.00', 'description' => 'كنافة بالجبنة النابلسية مع القطر', 'image' => '/storage/menu/items/knafeh.jpg'],
                     ['name' => 'بقلاوة مشكلة', 'price' => '24.00', 'description' => 'تشكيلة بقلاوة بالفستق والجوز والكاجو', 'image' => '/storage/menu/items/baklava.jpg'],
-                    ['name' => 'هريسة', 'price' => '18.00', 'description' => 'حلوى السميد مع ماء الزهر', 'image' => '/storage/menu/items/harissa.jpg'],
+                    ['name' => 'هريسة', 'price' => '18.00', 'description' => 'حلوى السميد مع اللوز وماء الزهر', 'image' => '/storage/menu/items/harissa.jpg'],
                     ['name' => 'مهلبية', 'price' => '16.00', 'description' => 'حلوى الحليب بالنشاء وماء الورد والفستق', 'image' => '/storage/menu/items/mahalabia.jpg'],
-                    ['name' => 'عوامة', 'price' => '20.00', 'description' => 'كرات مقلية مغطاة بالقطر الساخن', 'image' => '/storage/menu/items/awameh.jpg'],
+                    ['name' => 'عوامة', 'price' => '20.00', 'description' => 'كرات مقلية مقرمشة مغطاة بالقطر الساخن', 'image' => '/storage/menu/items/awameh.jpg'],
                 ],
-                'image' => '/storage/menu/desserts.jpg',
             ],
         ];
 
-        // إنشاء التصنيفات والأصناف
-        $menuItems = []; // لاستخدامها لاحقاً في الطلبات
+        $menuItems = [];
         foreach ($categoriesData as $catIndex => $categoryData) {
-            $category = MenuCategory::query()->create([
-                'restaurant_id' => $restaurant->id,
-                'name' => $categoryData['name'],
-                'description' => $categoryData['description'] ?? null,
-                'image' => $categoryData['image'] ?? null,
-                'sort_order' => $catIndex + 1,
-                'is_active' => true,
-            ]);
+            $this->ensureImageFile($categoryData['image'], $categoryData['name']);
+
+            $category = MenuCategory::query()->updateOrCreate(
+                ['restaurant_id' => $restaurant->id, 'name' => $categoryData['name']],
+                [
+                    'description' => $categoryData['description'] ?? null,
+                    'image'       => $categoryData['image'] ?? null,
+                    'sort_order'  => $catIndex + 1,
+                    'is_active'   => true,
+                ]
+            );
 
             foreach ($categoryData['items'] as $itemIndex => $itemData) {
-                // آخر عنصر في كل تصنيف يكون غير متاح (لاختبار is_available)
+                $this->ensureImageFile($itemData['image'], $itemData['name']);
                 $isAvailable = ($itemIndex !== count($categoryData['items']) - 1);
 
-                $item = MenuItem::query()->create([
-                    'restaurant_id' => $restaurant->id,
-                    'category_id' => $category->id,
-                    'name' => $itemData['name'],
-                    'description' => $itemData['description'],
-                    'price' => $itemData['price'],
-                    'image' => $itemData['image'] ?? $categoryData['image'] ?? null,
-                    'sort_order' => $itemIndex + 1,
-                    'is_available' => $isAvailable,
-                    'is_active' => true,
-                ]);
+                $item = MenuItem::query()->updateOrCreate(
+                    ['restaurant_id' => $restaurant->id, 'name' => $itemData['name']],
+                    [
+                        'category_id'  => $category->id,
+                        'description'  => $itemData['description'],
+                        'price'        => $itemData['price'],
+                        'image'        => $itemData['image'] ?? $categoryData['image'] ?? null,
+                        'sort_order'   => $itemIndex + 1,
+                        'is_available' => $isAvailable,
+                        'is_active'    => true,
+                    ]
+                );
                 $menuItems[] = $item;
             }
         }
 
-        // =============================================
-        // 5. أكواد الخصم (Promo Codes) - أنواع مختلفة
-        // =============================================
-        $promoPercentage = PromoCode::query()->create([
-            'restaurant_id' => $restaurant->id,
-            'code' => 'WELCOME20',
-            'discount_type' => 'percentage',
-            'discount_value' => '20.00',
-            'min_order_value' => '50.00',
-            'is_active' => true,
-            'expires_at' => now()->addMonths(3),
-        ]);
+        // أكواد الخصم
+        $promoWelcome = PromoCode::query()->updateOrCreate(
+            ['restaurant_id' => $restaurant->id, 'code' => 'WELCOME20'],
+            [
+                'discount_type'   => 'percentage',
+                'discount_value'  => '20.00',
+                'min_order_value' => '50.00',
+                'is_active'       => true,
+                'expires_at'      => now()->addMonths(3),
+            ]
+        );
 
-        $promoFixed = PromoCode::query()->create([
-            'restaurant_id' => $restaurant->id,
-            'code' => 'SAVE30',
-            'discount_type' => 'fixed',
-            'discount_value' => '30.00',
-            'min_order_value' => '100.00',
-            'is_active' => true,
-            'expires_at' => now()->addMonth(),
-        ]);
+        $promoFixed = PromoCode::query()->updateOrCreate(
+            ['restaurant_id' => $restaurant->id, 'code' => 'SAVE30'],
+            [
+                'discount_type'   => 'fixed',
+                'discount_value'  => '30.00',
+                'min_order_value' => '100.00',
+                'is_active'       => true,
+                'expires_at'      => now()->addMonth(),
+            ]
+        );
 
-        $promoExpired = PromoCode::query()->create([
-            'restaurant_id' => $restaurant->id,
-            'code' => 'EID2026',
-            'discount_type' => 'percentage',
-            'discount_value' => '15.00',
-            'min_order_value' => '0.00',
-            'is_active' => true,
-            'expires_at' => now()->subWeek(), // منتهي الصلاحية
-        ]);
+        // جلسات وطلبات (نظام الدفع اللاحق Postpaid)
+        $session1 = TableSession::query()->firstOrCreate(
+            ['table_id' => $tables[0]->id, 'status' => SessionStatus::Closed],
+            [
+                'session_token' => $this->tokenGenerator->generateSessionToken(),
+                'started_at'    => now()->subDays(2)->setHour(12)->setMinute(0),
+                'closed_at'     => now()->subDays(2)->setHour(14)->setMinute(30),
+            ]
+        );
 
-        $promoInactive = PromoCode::query()->create([
-            'restaurant_id' => $restaurant->id,
-            'code' => 'OLD50',
-            'discount_type' => 'fixed',
-            'discount_value' => '50.00',
-            'min_order_value' => '200.00',
-            'is_active' => false,
-            'expires_at' => null,
-        ]);
+        $order1 = Order::query()->updateOrCreate(
+            ['order_number' => 'ORD-' . now()->subDays(2)->format('Ymd') . '-0001'],
+            [
+                'restaurant_id'    => $restaurant->id,
+                'table_id'         => $tables[0]->id,
+                'table_session_id' => $session1->id,
+                'status'           => OrderStatus::Served,
+                'service_type'     => 'dine_in',
+                'pickup_window'    => null,
+                'subtotal'         => '131.00',
+                'discount_amount'  => '0.00',
+                'total'            => '131.00',
+                'customer_note'    => 'بدون بصل في الفتوش من فضلكم',
+                'paid_at'          => now()->subDays(2)->setHour(14)->setMinute(25),
+                'paid_by'          => $cashier->id,
+                'served_at'        => now()->subDays(2)->setHour(13)->setMinute(15),
+            ]
+        );
 
-        $promoNoMin = PromoCode::query()->create([
-            'restaurant_id' => $restaurant->id,
-            'code' => 'FREE10',
-            'discount_type' => 'fixed',
-            'discount_value' => '10.00',
-            'min_order_value' => '0.00',
-            'is_active' => true,
-            'expires_at' => null, // بدون انتهاء
-        ]);
+        OrderItem::query()->firstOrCreate(
+            ['order_id' => $order1->id, 'menu_item_id' => $menuItems[0]->id],
+            ['item_name_snapshot' => 'حمص بالطحينة', 'unit_price' => '18.00', 'quantity' => 2, 'subtotal' => '36.00']
+        );
+        OrderItem::query()->firstOrCreate(
+            ['order_id' => $order1->id, 'menu_item_id' => $menuItems[3]->id],
+            ['item_name_snapshot' => 'فتوش', 'unit_price' => '22.00', 'quantity' => 1, 'subtotal' => '22.00']
+        );
+        OrderItem::query()->firstOrCreate(
+            ['order_id' => $order1->id, 'menu_item_id' => $menuItems[12]->id],
+            ['item_name_snapshot' => 'شيش طاووق', 'unit_price' => '55.00', 'quantity' => 1, 'subtotal' => '55.00']
+        );
 
-        // =============================================
-        // 6. جلسات الطاولات + عناصر السلة + الطلبات
-        // =============================================
+        ActivityLog::query()->firstOrCreate(
+            ['restaurant_id' => $restaurant->id, 'action' => 'create_restaurant'],
+            ['user_id' => $admin->id, 'description' => 'قام بإنشاء وتفعيل مطعم بيت الشام (Postpaid)']
+        );
+    }
 
-        // --- جلسة مغلقة سابقة (طاولة 1) - قبل يومين ---
-        $closedSession1 = TableSession::query()->create([
-            'table_id' => $tables[0]->id,
-            'session_token' => $tokenGenerator->generateSessionToken(),
-            'status' => SessionStatus::Closed,
-            'started_at' => now()->subDays(2)->setHour(12)->setMinute(0),
-            'closed_at' => now()->subDays(2)->setHour(14)->setMinute(30),
-        ]);
+    /**
+     * =========================================================================
+     * المطعم الثاني: مطعم الديوان الخليجي (Prepaid - دفع مسبق مع كوتين استلام)
+     * =========================================================================
+     */
+    protected function seedRestaurantAlDiwan(): void
+    {
+        $logo = '/storage/restaurants/al-diwan-logo.jpg';
+        $navbar = '/storage/restaurants/al-diwan-navbar.jpg';
+        $this->ensureImageFile($logo, 'Al-Diwan Logo');
+        $this->ensureImageFile($navbar, 'Al-Diwan Navbar');
 
-        // طلب 1: تم تقديمه (served) - بدون خصم
-        $order1 = Order::query()->create([
-            'restaurant_id' => $restaurant->id,
-            'table_id' => $tables[0]->id,
-            'table_session_id' => $closedSession1->id,
-            'order_number' => 'ORD-' . now()->subDays(2)->format('Ymd') . '-0001',
-            'status' => OrderStatus::Served,
-            'subtotal' => '131.00',
-            'discount_amount' => '0.00',
-            'total' => '131.00',
-            'customer_note' => 'بدون بصل في الفتوش من فضلكم',
-        ]);
+        $restaurant = Restaurant::query()->updateOrCreate(
+            ['slug' => 'al-diwan'],
+            [
+                'name'          => 'مطعم الديوان الخليجي',
+                'type'          => 'prepaid', // <--- PREPAID
+                'windows_count' => 2,        // <--- كوتين استلام/تحضير
+                'phone'         => '+966559876543',
+                'address'       => 'طريق الملك فهد، الرياض، المملكة العربية السعودية',
+                'currency'      => 'SYP',
+                'status'        => RestaurantStatus::Active,
+                'logo'          => $logo,
+                'navbar_image'  => $navbar,
+                'features'      => [
+                    'promo_codes'    => true,
+                    'customer_notes' => true,
+                    'table_sessions' => true,
+                    'activity_log'   => true,
+                ],
+            ]
+        );
 
-        // حمص + فتوش + شيش طاووق + عصير ليمون
-        OrderItem::query()->create([
-            'order_id' => $order1->id,
-            'menu_item_id' => $menuItems[0]->id, // حمص
-            'item_name_snapshot' => 'حمص بالطحينة',
-            'unit_price' => '18.00',
-            'quantity' => 2,
-            'subtotal' => '36.00',
-            'note' => 'زيت زيتون إضافي',
-        ]);
-        OrderItem::query()->create([
-            'order_id' => $order1->id,
-            'menu_item_id' => $menuItems[3]->id, // فتوش
-            'item_name_snapshot' => 'فتوش',
-            'unit_price' => '22.00',
-            'quantity' => 1,
-            'subtotal' => '22.00',
-            'note' => 'بدون بصل',
-        ]);
-        OrderItem::query()->create([
-            'order_id' => $order1->id,
-            'menu_item_id' => $menuItems[12]->id, // شيش طاووق
-            'item_name_snapshot' => 'شيش طاووق',
-            'unit_price' => '55.00',
-            'quantity' => 1,
-            'subtotal' => '55.00',
-            'note' => null,
-        ]);
-        OrderItem::query()->create([
-            'order_id' => $order1->id,
-            'menu_item_id' => $menuItems[24]->id, // عصير ليمون
-            'item_name_snapshot' => 'عصير ليمون بالنعناع',
-            'unit_price' => '15.00',
-            'quantity' => 1,
-            'subtotal' => '15.00',
-            'note' => 'سكر قليل',
-        ]);
-        OrderItem::query()->create([
-            'order_id' => $order1->id,
-            'menu_item_id' => $menuItems[26]->id, // شاي
-            'item_name_snapshot' => 'شاي أحمر',
-            'unit_price' => '8.00',
-            'quantity' => 3, // 3 × 8 = 24 (actually should be...) -- let me fix: recalculate: total was 131 so far
-            'subtotal' => '3.00', // well let me just keep consistent
-            'note' => null,
-        ]);
+        // المستخدمون المحدثون مع Spatie ونوافذ الشيفات
+        $admin = User::query()->updateOrCreate(
+            ['email' => 'admin@al-diwan.test'],
+            [
+                'restaurant_id'  => $restaurant->id,
+                'name'           => 'محمد الدوسري (مدير المطعم)',
+                'password'       => Hash::make('password'),
+                'status'         => UserStatus::Active,
+                'default_window' => null,
+            ]
+        );
+        $admin->syncRoles([UserRole::Admin->value]);
 
-        // طلب 2: ملغي (cancelled) - نفس الجلسة
-        $order2 = Order::query()->create([
-            'restaurant_id' => $restaurant->id,
-            'table_id' => $tables[0]->id,
-            'table_session_id' => $closedSession1->id,
-            'order_number' => 'ORD-' . now()->subDays(2)->format('Ymd') . '-0002',
-            'status' => OrderStatus::Cancelled,
-            'subtotal' => '95.00',
-            'discount_amount' => '0.00',
-            'total' => '95.00',
-            'customer_note' => null,
-        ]);
+        $cashier = User::query()->updateOrCreate(
+            ['email' => 'cashier@al-diwan.test'],
+            [
+                'restaurant_id'  => $restaurant->id,
+                'name'           => 'عبدالله القحطاني (كاشير الدفع المسبق)',
+                'password'       => Hash::make('password'),
+                'status'         => UserStatus::Active,
+                'default_window' => null,
+            ]
+        );
+        $cashier->syncRoles([UserRole::Cashier->value]);
+        $cashier->givePermissionTo(['manage_orders', 'view_orders', 'update_order_status']);
 
-        OrderItem::query()->create([
-            'order_id' => $order2->id,
-            'menu_item_id' => $menuItems[11]->id, // مشكل مشاوي
-            'item_name_snapshot' => 'مشكل مشاوي',
-            'unit_price' => '95.00',
-            'quantity' => 1,
-            'subtotal' => '95.00',
-            'note' => null,
-        ]);
+        // شيف كوة 1 (الأرز والأطباق الرئيسية)
+        $chef1 = User::query()->updateOrCreate(
+            ['email' => 'chef1@al-diwan.test'],
+            [
+                'restaurant_id'  => $restaurant->id,
+                'name'           => 'الشيف سلطان (كوة 1 - الأرز والكبسات)',
+                'password'       => Hash::make('password'),
+                'status'         => UserStatus::Active,
+                'default_window' => 1,
+            ]
+        );
+        $chef1->syncRoles([UserRole::Chef->value]);
+        $chef1->givePermissionTo(['manage_orders', 'view_orders', 'update_order_status']);
 
-        // --- جلسة مغلقة سابقة (طاولة VIP 1) - أمس - مع خصم ---
-        $closedSession2 = TableSession::query()->create([
-            'table_id' => $tables[3]->id,
-            'session_token' => $tokenGenerator->generateSessionToken(),
-            'status' => SessionStatus::Closed,
-            'started_at' => now()->subDay()->setHour(19)->setMinute(0),
-            'closed_at' => now()->subDay()->setHour(22)->setMinute(0),
-        ]);
+        // شيف كوة 2 (المشويات والمشروبات)
+        $chef2 = User::query()->updateOrCreate(
+            ['email' => 'chef2@al-diwan.test'],
+            [
+                'restaurant_id'  => $restaurant->id,
+                'name'           => 'الشيف بدر (كوة 2 - المشويات والسناك)',
+                'password'       => Hash::make('password'),
+                'status'         => UserStatus::Active,
+                'default_window' => 2,
+            ]
+        );
+        $chef2->syncRoles([UserRole::Chef->value]);
+        $chef2->givePermissionTo(['manage_orders', 'view_orders', 'update_order_status']);
 
-        // طلب 3: تم تقديمه (served) - مع كود خصم نسبة مئوية
-        $subtotal3 = 251.00; // منسف + كبسة + مقبلات + مشروبات
-        $discount3 = round($subtotal3 * 0.20, 2); // 20% = 50.20
-        $order3 = Order::query()->create([
-            'restaurant_id' => $restaurant->id,
-            'table_id' => $tables[3]->id,
-            'table_session_id' => $closedSession2->id,
-            'order_number' => 'ORD-' . now()->subDay()->format('Ymd') . '-0001',
-            'status' => OrderStatus::Served,
-            'subtotal' => number_format($subtotal3, 2, '.', ''),
-            'discount_amount' => number_format($discount3, 2, '.', ''),
-            'total' => number_format($subtotal3 - $discount3, 2, '.', ''),
-            'customer_note' => 'عشاء خاص - الرجاء الاهتمام بالتقديم',
-            'promo_code_id' => $promoPercentage->id,
-        ]);
+        // حساب الشيف القديم للتوافق
+        $kitchen = User::query()->updateOrCreate(
+            ['email' => 'kitchen@al-diwan.test'],
+            [
+                'restaurant_id'  => $restaurant->id,
+                'name'           => 'ناصر العتيبي (شيف مساعد)',
+                'password'       => Hash::make('password'),
+                'status'         => UserStatus::Active,
+                'default_window' => 1,
+            ]
+        );
+        $kitchen->syncRoles([UserRole::Chef->value]);
 
-        OrderItem::query()->create([
-            'order_id' => $order3->id,
-            'menu_item_id' => $menuItems[17]->id, // منسف
-            'item_name_snapshot' => 'منسف أردني',
-            'unit_price' => '70.00',
-            'quantity' => 2,
-            'subtotal' => '140.00',
-            'note' => 'صنوبر إضافي',
-        ]);
-        OrderItem::query()->create([
-            'order_id' => $order3->id,
-            'menu_item_id' => $menuItems[18]->id, // كبسة
-            'item_name_snapshot' => 'كبسة دجاج',
-            'unit_price' => '45.00',
-            'quantity' => 1,
-            'subtotal' => '45.00',
-            'note' => null,
-        ]);
-        OrderItem::query()->create([
-            'order_id' => $order3->id,
-            'menu_item_id' => $menuItems[6]->id, // كبة
-            'item_name_snapshot' => 'كبة مقلية',
-            'unit_price' => '28.00',
-            'quantity' => 1,
-            'subtotal' => '28.00',
-            'note' => null,
-        ]);
-        OrderItem::query()->create([
-            'order_id' => $order3->id,
-            'menu_item_id' => $menuItems[29]->id, // جلاب
-            'item_name_snapshot' => 'جلاب',
-            'unit_price' => '16.00',
-            'quantity' => 2,
-            'subtotal' => '32.00',
-            'note' => null,
-        ]);
-        OrderItem::query()->create([
-            'order_id' => $order3->id,
-            'menu_item_id' => $menuItems[27]->id, // قهوة عربية
-            'item_name_snapshot' => 'قهوة عربية',
-            'unit_price' => '12.00',
-            'quantity' => 3, // 36 -> but I need to adjust: 140+45+28+32 = 245, not 251. Let me fix: quantity 3 → 36
-            'subtotal' => '6.00', // placeholder
-            'note' => 'بدون سكر',
-        ]);
+        $supervisor = User::query()->updateOrCreate(
+            ['email' => 'supervisor@al-diwan.test'],
+            [
+                'restaurant_id'  => $restaurant->id,
+                'name'           => 'سعود التميمي (مشرف تشغيل)',
+                'password'       => Hash::make('password'),
+                'status'         => UserStatus::Active,
+                'default_window' => null,
+            ]
+        );
+        $supervisor->syncRoles([UserRole::Supervisor->value]);
 
-        // --- جلسة نشطة حالياً (طاولة الصالة 2) ---
-        $activeSession1 = TableSession::query()->create([
-            'table_id' => $tables[1]->id,
-            'session_token' => $tokenGenerator->generateSessionToken(),
-            'status' => SessionStatus::Active,
-            'started_at' => now()->subHour(),
-            'closed_at' => null,
-        ]);
+        $waiter = User::query()->updateOrCreate(
+            ['email' => 'waiter@al-diwan.test'],
+            [
+                'restaurant_id'  => $restaurant->id,
+                'name'           => 'يوسف الغامدي (مضيف صالة)',
+                'password'       => Hash::make('password'),
+                'status'         => UserStatus::Active,
+                'default_window' => null,
+            ]
+        );
+        $waiter->syncRoles([UserRole::Waiter->value]);
 
-        // طلب 4: قيد الانتظار (pending) - مع خصم ثابت
-        $subtotal4 = 148.00;
-        $discount4 = 30.00; // SAVE30
-        $order4 = Order::query()->create([
-            'restaurant_id' => $restaurant->id,
-            'table_id' => $tables[1]->id,
-            'table_session_id' => $activeSession1->id,
-            'order_number' => 'ORD-' . now()->format('Ymd') . '-0001',
-            'status' => OrderStatus::Pending,
-            'subtotal' => '148.00',
-            'discount_amount' => '30.00',
-            'total' => '118.00',
-            'customer_note' => 'حساسية من المكسرات',
-            'promo_code_id' => $promoFixed->id,
-        ]);
-
-        OrderItem::query()->create([
-            'order_id' => $order4->id,
-            'menu_item_id' => $menuItems[14]->id, // كباب
-            'item_name_snapshot' => 'كباب لحم',
-            'unit_price' => '65.00',
-            'quantity' => 1,
-            'subtotal' => '65.00',
-            'note' => null,
-        ]);
-        OrderItem::query()->create([
-            'order_id' => $order4->id,
-            'menu_item_id' => $menuItems[0]->id, // حمص
-            'item_name_snapshot' => 'حمص بالطحينة',
-            'unit_price' => '18.00',
-            'quantity' => 1,
-            'subtotal' => '18.00',
-            'note' => null,
-        ]);
-        OrderItem::query()->create([
-            'order_id' => $order4->id,
-            'menu_item_id' => $menuItems[12]->id, // شيش طاووق
-            'item_name_snapshot' => 'شيش طاووق',
-            'unit_price' => '55.00',
-            'quantity' => 1,
-            'subtotal' => '55.00',
-            'note' => 'بدون صلصة حارة',
-        ]);
-        OrderItem::query()->create([
-            'order_id' => $order4->id,
-            'menu_item_id' => $menuItems[30]->id, // عيران
-            'item_name_snapshot' => 'عيران',
-            'unit_price' => '10.00',
-            'quantity' => 1,
-            'subtotal' => '10.00',
-            'note' => null,
-        ]);
-
-        // عناصر في السلة لم يتم طلبها بعد (نفس الجلسة النشطة)
-        CartItem::query()->create([
-            'table_session_id' => $activeSession1->id,
-            'menu_item_id' => $menuItems[32]->id, // كنافة
-            'quantity' => 2,
-            'note' => null,
-        ]);
-        CartItem::query()->create([
-            'table_session_id' => $activeSession1->id,
-            'menu_item_id' => $menuItems[28]->id, // قهوة تركية
-            'quantity' => 3,
-            'note' => 'واحدة بدون سكر',
-        ]);
-
-        // --- جلسة نشطة (طاولة VIP 2) ---
-        $activeSession2 = TableSession::query()->create([
-            'table_id' => $tables[4]->id,
-            'session_token' => $tokenGenerator->generateSessionToken(),
-            'status' => SessionStatus::Active,
-            'started_at' => now()->subMinutes(30),
-            'closed_at' => null,
-        ]);
-
-        // طلب 5: مقبول (accepted) - بدون خصم
-        $order5 = Order::query()->create([
-            'restaurant_id' => $restaurant->id,
-            'table_id' => $tables[4]->id,
-            'table_session_id' => $activeSession2->id,
-            'order_number' => 'ORD-' . now()->format('Ymd') . '-0002',
-            'status' => OrderStatus::Accepted,
-            'subtotal' => '198.00',
-            'discount_amount' => '0.00',
-            'total' => '198.00',
-            'customer_note' => null,
-        ]);
-
-        OrderItem::query()->create([
-            'order_id' => $order5->id,
-            'menu_item_id' => $menuItems[11]->id, // مشكل مشاوي
-            'item_name_snapshot' => 'مشكل مشاوي',
-            'unit_price' => '95.00',
-            'quantity' => 2,
-            'subtotal' => '190.00',
-            'note' => 'حار قليلاً',
-        ]);
-        OrderItem::query()->create([
-            'order_id' => $order5->id,
-            'menu_item_id' => $menuItems[26]->id, // شاي
-            'item_name_snapshot' => 'شاي أحمر',
-            'unit_price' => '8.00',
-            'quantity' => 1,
-            'subtotal' => '8.00',
-            'note' => null,
-        ]);
-
-        // --- جلسة نشطة (طاولة الشرفة 1) ---
-        $activeSession3 = TableSession::query()->create([
-            'table_id' => $tables[5]->id,
-            'session_token' => $tokenGenerator->generateSessionToken(),
-            'status' => SessionStatus::Active,
-            'started_at' => now()->subMinutes(45),
-            'closed_at' => null,
-        ]);
-
-        // طلب 6: قيد التحضير (preparing)
-        $order6 = Order::query()->create([
-            'restaurant_id' => $restaurant->id,
-            'table_id' => $tables[5]->id,
-            'table_session_id' => $activeSession3->id,
-            'order_number' => 'ORD-' . now()->format('Ymd') . '-0003',
-            'status' => OrderStatus::Preparing,
-            'subtotal' => '172.00',
-            'discount_amount' => '10.00',
-            'total' => '162.00',
-            'customer_note' => null,
-            'promo_code_id' => $promoNoMin->id,
-        ]);
-
-        OrderItem::query()->create([
-            'order_id' => $order6->id,
-            'menu_item_id' => $menuItems[15]->id, // ريش غنم
-            'item_name_snapshot' => 'ريش غنم',
-            'unit_price' => '85.00',
-            'quantity' => 1,
-            'subtotal' => '85.00',
-            'note' => null,
-        ]);
-        OrderItem::query()->create([
-            'order_id' => $order6->id,
-            'menu_item_id' => $menuItems[2]->id, // تبولة
-            'item_name_snapshot' => 'تبولة',
-            'unit_price' => '20.00',
-            'quantity' => 1,
-            'subtotal' => '20.00',
-            'note' => null,
-        ]);
-        OrderItem::query()->create([
-            'order_id' => $order6->id,
-            'menu_item_id' => $menuItems[1]->id, // متبل
-            'item_name_snapshot' => 'متبل باذنجان',
-            'unit_price' => '16.00',
-            'quantity' => 1,
-            'subtotal' => '16.00',
-            'note' => null,
-        ]);
-        OrderItem::query()->create([
-            'order_id' => $order6->id,
-            'menu_item_id' => $menuItems[19]->id, // شاورما
-            'item_name_snapshot' => 'شاورما عربي',
-            'unit_price' => '38.00',
-            'quantity' => 1,
-            'subtotal' => '38.00',
-            'note' => 'لحم فقط',
-        ]);
-        OrderItem::query()->create([
-            'order_id' => $order6->id,
-            'menu_item_id' => $menuItems[24]->id, // عصير ليمون
-            'item_name_snapshot' => 'عصير ليمون بالنعناع',
-            'unit_price' => '15.00',
-            'quantity' => 1, // actually need to match: 85+20+16+38+15 = 174... slightly off from 172, acceptable for demo
-            'subtotal' => '13.00', // adjusted to balance
-            'note' => null,
-        ]);
-
-        // --- جلسة نشطة (طاولة الشرفة 2) ---
-        $activeSession4 = TableSession::query()->create([
-            'table_id' => $tables[6]->id,
-            'session_token' => $tokenGenerator->generateSessionToken(),
-            'status' => SessionStatus::Active,
-            'started_at' => now()->subMinutes(15),
-            'closed_at' => null,
-        ]);
-
-        // طلب 7: جاهز (ready)
-        $order7 = Order::query()->create([
-            'restaurant_id' => $restaurant->id,
-            'table_id' => $tables[6]->id,
-            'table_session_id' => $activeSession4->id,
-            'order_number' => 'ORD-' . now()->format('Ymd') . '-0004',
-            'status' => OrderStatus::Ready,
-            'subtotal' => '86.00',
-            'discount_amount' => '0.00',
-            'total' => '86.00',
-            'customer_note' => 'الطلب للأطفال - أحجام صغيرة إن أمكن',
-        ]);
-
-        OrderItem::query()->create([
-            'order_id' => $order7->id,
-            'menu_item_id' => $menuItems[18]->id, // كبسة
-            'item_name_snapshot' => 'كبسة دجاج',
-            'unit_price' => '45.00',
-            'quantity' => 1,
-            'subtotal' => '45.00',
-            'note' => 'بدون بهارات حارة',
-        ]);
-        OrderItem::query()->create([
-            'order_id' => $order7->id,
-            'menu_item_id' => $menuItems[25]->id, // عصير برتقال
-            'item_name_snapshot' => 'عصير برتقال طبيعي',
-            'unit_price' => '18.00',
-            'quantity' => 1,
-            'subtotal' => '18.00',
-            'note' => null,
-        ]);
-        OrderItem::query()->create([
-            'order_id' => $order7->id,
-            'menu_item_id' => $menuItems[35]->id, // مهلبية
-            'item_name_snapshot' => 'مهلبية',
-            'unit_price' => '16.00',
-            'quantity' => 1,
-            'subtotal' => '16.00',
-            'note' => null,
-        ]);
-        OrderItem::query()->create([
-            'order_id' => $order7->id,
-            'menu_item_id' => $menuItems[30]->id, // عيران
-            'item_name_snapshot' => 'عيران',
-            'unit_price' => '10.00',
-            'quantity' => 1, // 45+18+16+10 = 89, adjusted:
-            'subtotal' => '7.00',
-            'note' => null,
-        ]);
-
-        // عناصر في سلة الجلسة الرابعة (لم تُطلب بعد)
-        CartItem::query()->create([
-            'table_session_id' => $activeSession4->id,
-            'menu_item_id' => $menuItems[32]->id, // كنافة
-            'quantity' => 1,
-            'note' => 'ساخنة من فضلكم',
-        ]);
-
-        // --- جلسة مغلقة سابقة (طاولة الصالة 3) - قبل 3 أيام ---
-        $closedSession3 = TableSession::query()->create([
-            'table_id' => $tables[2]->id,
-            'session_token' => $tokenGenerator->generateSessionToken(),
-            'status' => SessionStatus::Closed,
-            'started_at' => now()->subDays(3)->setHour(13)->setMinute(0),
-            'closed_at' => now()->subDays(3)->setHour(15)->setMinute(0),
-        ]);
-
-        // طلب 8: تم تقديمه (served) - قديم
-        $order8 = Order::query()->create([
-            'restaurant_id' => $restaurant->id,
-            'table_id' => $tables[2]->id,
-            'table_session_id' => $closedSession3->id,
-            'order_number' => 'ORD-' . now()->subDays(3)->format('Ymd') . '-0001',
-            'status' => OrderStatus::Served,
-            'subtotal' => '63.00',
-            'discount_amount' => '0.00',
-            'total' => '63.00',
-            'customer_note' => null,
-        ]);
-
-        OrderItem::query()->create([
-            'order_id' => $order8->id,
-            'menu_item_id' => $menuItems[19]->id, // شاورما
-            'item_name_snapshot' => 'شاورما عربي',
-            'unit_price' => '38.00',
-            'quantity' => 1,
-            'subtotal' => '38.00',
-            'note' => 'دجاج',
-        ]);
-        OrderItem::query()->create([
-            'order_id' => $order8->id,
-            'menu_item_id' => $menuItems[24]->id, // عصير ليمون
-            'item_name_snapshot' => 'عصير ليمون بالنعناع',
-            'unit_price' => '15.00',
-            'quantity' => 1,
-            'subtotal' => '15.00',
-            'note' => null,
-        ]);
-        OrderItem::query()->create([
-            'order_id' => $order8->id,
-            'menu_item_id' => $menuItems[30]->id, // عيران
-            'item_name_snapshot' => 'عيران',
-            'unit_price' => '10.00',
-            'quantity' => 1,
-            'subtotal' => '10.00',
-            'note' => null,
-        ]);
-
-        // =============================================
-        // 7. سجل النشاطات (Activity Logs)
-        // =============================================
-        ActivityLog::query()->create([
-            'restaurant_id' => $restaurant->id,
-            'user_id' => $admin->id,
-            'action' => 'create_restaurant',
-            'description' => 'قام بإنشاء مطعم بيت الشام',
-        ]);
-
-        ActivityLog::query()->create([
-            'restaurant_id' => $restaurant->id,
-            'user_id' => $admin->id,
-            'action' => 'create_menu',
-            'description' => 'قام بإضافة قائمة الطعام كاملة (6 تصنيفات، 36 صنف)',
-        ]);
-
-        ActivityLog::query()->create([
-            'restaurant_id' => $restaurant->id,
-            'user_id' => $admin->id,
-            'action' => 'create_promo',
-            'description' => 'قام بإنشاء كود خصم WELCOME20 (خصم 20%)',
-        ]);
-
-        ActivityLog::query()->create([
-            'restaurant_id' => $restaurant->id,
-            'user_id' => $admin->id,
-            'action' => 'create_promo',
-            'description' => 'قام بإنشاء كود خصم SAVE30 (خصم 30 ريال)',
-        ]);
-
-        ActivityLog::query()->create([
-            'restaurant_id' => $restaurant->id,
-            'user_id' => $staffCashier->id,
-            'action' => 'update_order',
-            'description' => 'قام بتحديث حالة الطلب #' . $order1->order_number . ' إلى "تم التقديم"',
-        ]);
-
-        ActivityLog::query()->create([
-            'restaurant_id' => $restaurant->id,
-            'user_id' => $staffWaiter->id,
-            'action' => 'cancel_order',
-            'description' => 'قام بإلغاء الطلب #' . $order2->order_number . ' بطلب من العميل',
-        ]);
-
-        ActivityLog::query()->create([
-            'restaurant_id' => $restaurant->id,
-            'user_id' => $staffCashier->id,
-            'action' => 'update_order',
-            'description' => 'قام بقبول الطلب #' . $order5->order_number,
-        ]);
-
-        ActivityLog::query()->create([
-            'restaurant_id' => $restaurant->id,
-            'user_id' => $staffWaiter->id,
-            'action' => 'update_order',
-            'description' => 'قام بتحديث حالة الطلب #' . $order6->order_number . ' إلى "قيد التحضير"',
-        ]);
-
-        ActivityLog::query()->create([
-            'restaurant_id' => $restaurant->id,
-            'user_id' => $admin->id,
-            'action' => 'create_table',
-            'description' => 'قام بإضافة 8 طاولات جديدة للمطعم',
-        ]);
-
-        ActivityLog::query()->create([
-            'restaurant_id' => $restaurant->id,
-            'user_id' => $admin->id,
-            'action' => 'disable_staff',
-            'description' => 'قام بتعطيل حساب الموظف فهد السالم',
-        ]);
-
-        ActivityLog::query()->create([
-            'restaurant_id' => $restaurant->id,
-            'user_id' => $admin->id,
-            'action' => 'update_menu_item',
-            'description' => 'قام بتحديث سعر المشكل مشاوي من 90 إلى 95 ريال',
-        ]);
-
-        ActivityLog::query()->create([
-            'restaurant_id' => $restaurant->id,
-            'user_id' => $admin->id,
-            'action' => 'disable_promo',
-            'description' => 'قام بتعطيل كود الخصم OLD50',
-        ]);
-
-        // =============================================================
-        // ==================== المطعم الثاني ==========================
-        // =============================================================
-        // مطعم الديوان الخليجي - مطعم خليجي متخصص بالأكلات التقليدية
-        // =============================================================
-
-        $restaurant2 = Restaurant::query()->create([
-            'name' => 'مطعم الديوان الخليجي',
-            'slug' => 'al-diwan',
-            'phone' => '+966559876543',
-            'address' => 'طريق الملك فهد، الرياض، المملكة العربية السعودية',
-            'currency' => 'SYP',
-            'status' => RestaurantStatus::Active,
-            'logo' => '/storage/restaurants/al-diwan-logo.jpg',
-            'navbar_image' => '/storage/restaurants/al-diwan-navbar.jpg',
-            'features' => [
-                'promo_codes' => true,
-                'customer_notes' => true,
-                'table_sessions' => true,
-                'activity_log' => true,
-            ],
-        ]);
-
-        // =============================================
-        // المستخدمون - المطعم الثاني
-        // =============================================
-        $admin2 = User::query()->create([
-            'restaurant_id' => $restaurant2->id,
-            'name' => 'محمد الدوسري',
-            'email' => 'admin@al-diwan.test',
-            'password' => Hash::make('password'),
-            'status' => UserStatus::Active,
-        ]);
-        $admin2->assignRole(UserRole::Admin->value);
-
-        $staff2Cashier = User::query()->create([
-            'restaurant_id' => $restaurant2->id,
-            'name' => 'عبدالله القحطاني',
-            'email' => 'cashier@al-diwan.test',
-            'password' => Hash::make('password'),
-            'status' => UserStatus::Active,
-        ]);
-        $staff2Cashier->assignRole(UserRole::Staff->value);
-        $staff2Cashier->givePermissionTo(['view_orders', 'update_order_status', 'view_menu']);
-
-        $staff2Waiter = User::query()->create([
-            'restaurant_id' => $restaurant2->id,
-            'name' => 'يوسف الغامدي',
-            'email' => 'waiter@al-diwan.test',
-            'password' => Hash::make('password'),
-            'status' => UserStatus::Active,
-        ]);
-        $staff2Waiter->assignRole(UserRole::Staff->value);
-        $staff2Waiter->givePermissionTo(['view_orders', 'update_order_status']);
-
-        $staff2Kitchen = User::query()->create([
-            'restaurant_id' => $restaurant2->id,
-            'name' => 'ناصر العتيبي',
-            'email' => 'kitchen@al-diwan.test',
-            'password' => Hash::make('password'),
-            'status' => UserStatus::Active,
-        ]);
-        $staff2Kitchen->assignRole(UserRole::Staff->value);
-        $staff2Kitchen->givePermissionTo(['view_orders', 'update_order_status', 'view_menu']);
-
-        // =============================================
-        // الطاولات - المطعم الثاني
-        // =============================================
-        $table2Names = [
+        // الطاولات
+        $tableNames = [
             'صالة رئيسية 1', 'صالة رئيسية 2', 'صالة رئيسية 3',
             'جلسة خارجية 1', 'جلسة خارجية 2',
             'غرفة خاصة 1',
         ];
 
-        $tables2 = [];
-        foreach ($table2Names as $idx => $tName) {
-            $t = RestaurantTable::query()->create([
-                'restaurant_id' => $restaurant2->id,
-                'name' => $tName,
-                'public_token' => $tokenGenerator->generatePublicToken(),
-                'status' => TableStatus::Active,
-            ]);
-            $qrService->generateForTable($t);
-            $tables2[] = $t;
+        $tables = [];
+        foreach ($tableNames as $tName) {
+            $t = RestaurantTable::query()->firstOrCreate(
+                ['restaurant_id' => $restaurant->id, 'name' => $tName],
+                [
+                    'public_token' => $this->tokenGenerator->generatePublicToken(),
+                    'status'       => TableStatus::Active,
+                ]
+            );
+
+            if (! $t->public_token) {
+                $t->public_token = $this->tokenGenerator->generatePublicToken();
+                $t->save();
+            }
+
+            $qrPath = "qr/{$t->restaurant_id}/{$t->public_token}.png";
+            if (! Storage::disk('public')->exists($qrPath)) {
+                $this->qrService->generateForTable($t);
+            }
+            $tables[] = $t;
         }
 
-        // =============================================
-        // قائمة الطعام - المطعم الثاني (أكلات خليجية)
-        // =============================================
-        $cat2Data = [
+        // قائمة الطعام الخليجية
+        $catData = [
             [
-                'name' => 'الأرز والأطباق الرئيسية',
+                'name'        => 'الأرز والأطباق الرئيسية',
                 'description' => 'أطباق خليجية تقليدية على الطريقة السعودية',
-                'items' => [
+                'image'       => '/storage/menu/rice.jpg',
+                'items'       => [
                     ['name' => 'كبسة لحم', 'price' => '65.00', 'description' => 'أرز كبسة مع لحم غنم طازج ومكسرات', 'image' => '/storage/menu/items/lamb_kabsa.jpg'],
                     ['name' => 'كبسة دجاج', 'price' => '45.00', 'description' => 'أرز كبسة مع دجاج كامل متبل', 'image' => '/storage/menu/items/chicken_kabsa.jpg'],
                     ['name' => 'مندي لحم', 'price' => '70.00', 'description' => 'لحم غنم مدخن على الطريقة اليمنية', 'image' => '/storage/menu/items/lamb_mandi.jpg'],
@@ -1022,662 +745,626 @@ class DatabaseSeeder extends Seeder
                     ['name' => 'مظبي دجاج', 'price' => '52.00', 'description' => 'دجاج مشوي على الحجر مع أرز مبهر', 'image' => '/storage/menu/items/chicken_madhbi.jpg'],
                     ['name' => 'مفطح لحم', 'price' => '85.00', 'description' => 'خروف كامل مع الأرز - يكفي 4 أشخاص', 'image' => '/storage/menu/items/mufattah.jpg'],
                 ],
-                'image' => '/storage/menu/rice.jpg',
             ],
             [
-                'name' => 'المقبلات والسلطات',
+                'name'        => 'المقبلات والسلطات',
                 'description' => 'مقبلات طازجة يومياً',
-                'items' => [
+                'image'       => '/storage/menu/appetizers.jpg',
+                'items'       => [
                     ['name' => 'سلطة خضراء', 'price' => '15.00', 'description' => 'سلطة طازجة مع صوص الليمون', 'image' => '/storage/menu/items/green_salad.jpg'],
                     ['name' => 'سلطة زبادي', 'price' => '12.00', 'description' => 'خيار مع زبادي ونعناع', 'image' => '/storage/menu/items/yogurt_salad.jpg'],
                     ['name' => 'شوربة حب', 'price' => '18.00', 'description' => 'شوربة حب القمح مع اللحم', 'image' => '/storage/menu/items/wheat_soup.jpg'],
                     ['name' => 'سمبوسة جبنة', 'price' => '20.00', 'description' => 'سمبوسة مقلية بحشوة الجبنة', 'image' => '/storage/menu/items/cheese_samosa.jpg'],
                     ['name' => 'متبل حار', 'price' => '16.00', 'description' => 'باذنجان مشوي مع فلفل حار', 'image' => '/storage/menu/items/mutabbal.jpg'],
-                    ['name' => 'فول بالسمن', 'price' => '14.00', 'description' => null, 'image' => '/storage/menu/items/foul.jpg'],
+                    ['name' => 'فول بالسمن', 'price' => '14.00', 'description' => 'فول مدمس بالسمن البري', 'image' => '/storage/menu/items/foul.jpg'],
                 ],
-                'image' => '/storage/menu/appetizers.jpg',
             ],
             [
-                'name' => 'المشويات',
+                'name'        => 'المشويات',
                 'description' => 'مشويات على الفحم الطبيعي',
-                'items' => [
+                'image'       => '/storage/menu/grills.jpg',
+                'items'       => [
                     ['name' => 'لحم تكة', 'price' => '58.00', 'description' => 'قطع لحم متبلة مشوية على الفحم', 'image' => '/storage/menu/items/meat_tikka.jpg'],
                     ['name' => 'دجاج تكة', 'price' => '42.00', 'description' => 'صدور دجاج متبلة بالبهارات والزبادي', 'image' => '/storage/menu/items/chicken_tikka.jpg'],
-                    ['name' => 'كباب هندي', 'price' => '48.00', 'description' => 'كباب لحم مفروم بالبهارات الهندية', 'image' => '/storage/menu/items/meat_kebab.jpg'],
+                    ['name' => 'كباب لحم', 'price' => '48.00', 'description' => 'كباب لحم مفروم بالبهارات الخليجية', 'image' => '/storage/menu/items/meat_kebab.jpg'],
                     ['name' => 'ربيان مشوي', 'price' => '75.00', 'description' => 'ربيان جامبو مشوي بالثوم والليمون', 'image' => '/storage/menu/items/grilled_shrimp.jpg'],
-                    ['name' => 'سمك حامور مشوي', 'price' => '90.00', 'description' => 'سمك حامور طازج مشوي بالأعشاب', 'image' => '/storage/menu/items/grilled_fish.jpg'],
+                    ['name' => 'سمك هامور مشوي', 'price' => '90.00', 'description' => 'سمك هامور طازج مشوي بالأعشاب', 'image' => '/storage/menu/items/grilled_fish.jpg'],
                     ['name' => 'مشكل مشويات ديوان', 'price' => '110.00', 'description' => 'تشكيلة لحم ودجاج وربيان - يكفي شخصين', 'image' => '/storage/menu/items/mixed_grill.jpg'],
                 ],
-                'image' => '/storage/menu/grills.jpg',
             ],
             [
-                'name' => 'المشروبات',
+                'name'        => 'المشروبات',
                 'description' => 'مشروبات ساخنة وباردة',
-                'items' => [
+                'image'       => '/storage/menu/drinks.jpg',
+                'items'       => [
                     ['name' => 'شاي كرك', 'price' => '10.00', 'description' => 'شاي كرك بالهيل والزعفران', 'image' => '/storage/menu/items/karak_tea.jpg'],
                     ['name' => 'قهوة سعودية', 'price' => '8.00', 'description' => 'قهوة عربية بالهيل والزعفران', 'image' => '/storage/menu/items/arabic_coffee.jpg'],
-                    ['name' => 'لبن رائب', 'price' => '10.00', 'description' => null, 'image' => '/storage/menu/items/ayran.jpg'],
+                    ['name' => 'لبن رائب', 'price' => '10.00', 'description' => 'لبن رائب طازج مبرد', 'image' => '/storage/menu/items/ayran.jpg'],
                     ['name' => 'عصير مانجو', 'price' => '16.00', 'description' => 'مانجو طازج مع الحليب', 'image' => '/storage/menu/items/mango_juice.jpg'],
-                    ['name' => 'عصير رمان', 'price' => '18.00', 'description' => null, 'image' => '/storage/menu/items/pomegranate_juice.jpg'],
-                    ['name' => 'ماء', 'price' => '3.00', 'description' => null, 'image' => '/storage/menu/items/mineral_water.jpg'],
+                    ['name' => 'عصير رمان', 'price' => '18.00', 'description' => 'عصير رمان طازج طبيعي', 'image' => '/storage/menu/items/pomegranate_juice.jpg'],
+                    ['name' => 'مياه معدنية', 'price' => '3.00', 'description' => 'مياه شرب نقية', 'image' => '/storage/menu/items/mineral_water.jpg'],
                 ],
-                'image' => '/storage/menu/drinks.jpg',
             ],
             [
-                'name' => 'الحلويات والتحلية',
+                'name'        => 'الحلويات والتحلية',
                 'description' => 'حلويات عربية وخليجية',
-                'items' => [
-                    ['name' => 'لقيمات', 'price' => '18.00', 'description' => 'كرات مقلية مغطاة بالدبس أو القطر', 'image' => '/storage/menu/items/awameh.jpg'],
-                    ['name' => 'عصيدة', 'price' => '22.00', 'description' => 'عصيدة تمر مع السمن البلدي', 'image' => '/storage/menu/items/harissa.jpg'],
-                    ['name' => 'بسبوسة', 'price' => '16.00', 'description' => 'بسبوسة بالقشطة وماء الورد', 'image' => '/storage/menu/items/harissa.jpg'],
+                'image'       => '/storage/menu/desserts.jpg',
+                'items'       => [
+                    ['name' => 'لقيمات', 'price' => '18.00', 'description' => 'كرات مقلية مغطاة بالدبس أو القطر والسمسم', 'image' => '/storage/menu/items/awameh.jpg'],
+                    ['name' => 'عصيدة تمر', 'price' => '22.00', 'description' => 'عصيدة تمر مع السمن البلدي', 'image' => '/storage/menu/items/harissa.jpg'],
+                    ['name' => 'بسبوسة بالقشطة', 'price' => '16.00', 'description' => 'بسبوسة بالقشطة وماء الورد', 'image' => '/storage/menu/items/harissa.jpg'],
                     ['name' => 'تمر محشي', 'price' => '25.00', 'description' => 'تمر سكري محشي بالمكسرات والقشطة', 'image' => '/storage/menu/items/stuffed_dates.jpg'],
                     ['name' => 'آيس كريم عربي', 'price' => '20.00', 'description' => 'آيس كريم بالمستكة والفستق', 'image' => '/storage/menu/items/arabic_icecream.jpg'],
                     ['name' => 'قشطة بالعسل', 'price' => '24.00', 'description' => 'قشطة طازجة مع عسل السدر', 'image' => '/storage/menu/items/cream_honey.jpg'],
                 ],
-                'image' => '/storage/menu/desserts.jpg',
             ],
         ];
 
-        $menuItems2 = [];
-        foreach ($cat2Data as $ci => $cd) {
-            $cat2 = MenuCategory::query()->create([
-                'restaurant_id' => $restaurant2->id,
-                'name' => $cd['name'],
-                'description' => $cd['description'] ?? null,
-                'image' => $cd['image'] ?? null,
-                'sort_order' => $ci + 1,
-                'is_active' => true,
-            ]);
+        $menuItems = [];
+        foreach ($catData as $ci => $cd) {
+            $this->ensureImageFile($cd['image'], $cd['name']);
 
-            foreach ($cd['items'] as $ii => $id2) {
+            $cat = MenuCategory::query()->updateOrCreate(
+                ['restaurant_id' => $restaurant->id, 'name' => $cd['name']],
+                [
+                    'description' => $cd['description'] ?? null,
+                    'image'       => $cd['image'] ?? null,
+                    'sort_order'  => $ci + 1,
+                    'is_active'   => true,
+                ]
+            );
+
+            foreach ($cd['items'] as $ii => $id) {
+                $this->ensureImageFile($id['image'], $id['name']);
                 $isAvail = ($ii !== count($cd['items']) - 1);
-                $mi = MenuItem::query()->create([
-                    'restaurant_id' => $restaurant2->id,
-                    'category_id' => $cat2->id,
-                    'name' => $id2['name'],
-                    'description' => $id2['description'],
-                    'price' => $id2['price'],
-                    'image' => $id2['image'] ?? $cd['image'] ?? null,
-                    'sort_order' => $ii + 1,
-                    'is_available' => $isAvail,
-                    'is_active' => true,
-                ]);
-                $menuItems2[] = $mi;
+
+                $item = MenuItem::query()->updateOrCreate(
+                    ['restaurant_id' => $restaurant->id, 'name' => $id['name']],
+                    [
+                        'category_id'  => $cat->id,
+                        'description'  => $id['description'],
+                        'price'        => $id['price'],
+                        'image'        => $id['image'] ?? $cd['image'] ?? null,
+                        'sort_order'   => $ii + 1,
+                        'is_available' => $isAvail,
+                        'is_active'    => true,
+                    ]
+                );
+                $menuItems[] = $item;
             }
         }
 
-        // =============================================
-        // أكواد الخصم - المطعم الثاني
-        // =============================================
-        $promo2Welcome = PromoCode::query()->create([
-            'restaurant_id' => $restaurant2->id,
-            'code' => 'DIWAN10',
-            'discount_type' => 'percentage',
-            'discount_value' => '10.00',
-            'min_order_value' => '80.00',
-            'is_active' => true,
-            'expires_at' => now()->addMonths(6),
-        ]);
+        // أكواد الخصم
+        PromoCode::query()->updateOrCreate(
+            ['restaurant_id' => $restaurant->id, 'code' => 'DIWAN10'],
+            [
+                'discount_type'   => 'percentage',
+                'discount_value'  => '10.00',
+                'min_order_value' => '80.00',
+                'is_active'       => true,
+                'expires_at'      => now()->addMonths(6),
+            ]
+        );
 
-        $promo2Fixed = PromoCode::query()->create([
-            'restaurant_id' => $restaurant2->id,
-            'code' => 'RIYADH25',
-            'discount_type' => 'fixed',
-            'discount_value' => '25.00',
-            'min_order_value' => '120.00',
-            'is_active' => true,
-            'expires_at' => now()->addMonths(2),
-        ]);
+        PromoCode::query()->updateOrCreate(
+            ['restaurant_id' => $restaurant->id, 'code' => 'RIYADH25'],
+            [
+                'discount_type'   => 'fixed',
+                'discount_value'  => '25.00',
+                'min_order_value' => '120.00',
+                'is_active'       => true,
+                'expires_at'      => now()->addMonths(2),
+            ]
+        );
 
-        $promo2Expired = PromoCode::query()->create([
-            'restaurant_id' => $restaurant2->id,
-            'code' => 'SUMMER50',
-            'discount_type' => 'percentage',
-            'discount_value' => '50.00',
-            'min_order_value' => '0.00',
-            'is_active' => true,
-            'expires_at' => now()->subMonth(),
-        ]);
+        // جلسات وطلبات (نظام الدفع المسبق Prepaid مع كواة الاستلام)
+        $session = TableSession::query()->firstOrCreate(
+            ['table_id' => $tables[0]->id, 'status' => SessionStatus::Closed],
+            [
+                'session_token' => $this->tokenGenerator->generateSessionToken(),
+                'started_at'    => now()->subDay()->setHour(13)->setMinute(0),
+                'closed_at'     => now()->subDay()->setHour(15)->setMinute(0),
+            ]
+        );
 
-        // =============================================
-        // جلسات + طلبات - المطعم الثاني
-        // =============================================
+        // طلب مدفوع مسبقاً ومكتمل من كوة 1
+        $order1 = Order::query()->updateOrCreate(
+            ['order_number' => 'ORD-' . now()->subDay()->format('Ymd') . '-0003'],
+            [
+                'restaurant_id'    => $restaurant->id,
+                'table_id'         => $tables[0]->id,
+                'table_session_id' => $session->id,
+                'status'           => OrderStatus::Served,
+                'service_type'     => 'dine_in',
+                'pickup_window'    => 1, // تم تسليمه من كوة 1
+                'paid_at'          => now()->subDay()->setHour(13)->setMinute(5),
+                'paid_by'          => $cashier->id,
+                'subtotal'         => '144.90',
+                'discount_amount'  => '16.10',
+                'total'            => '128.80',
+                'customer_note'    => 'تم الدفع مسبقاً عند الكاشير',
+                'accepted_at'      => now()->subDay()->setHour(13)->setMinute(5),
+                'preparing_at'     => now()->subDay()->setHour(13)->setMinute(10),
+                'ready_at'         => now()->subDay()->setHour(13)->setMinute(25),
+                'served_at'        => now()->subDay()->setHour(13)->setMinute(30),
+            ]
+        );
 
-        // --- جلسة مغلقة (صالة 1) - أمس ---
-        $r2ClosedSession1 = TableSession::query()->create([
-            'table_id' => $tables2[0]->id,
-            'session_token' => $tokenGenerator->generateSessionToken(),
-            'status' => SessionStatus::Closed,
-            'started_at' => now()->subDay()->setHour(13)->setMinute(0),
-            'closed_at' => now()->subDay()->setHour(15)->setMinute(30),
-        ]);
+        OrderItem::query()->firstOrCreate(
+            ['order_id' => $order1->id, 'menu_item_id' => $menuItems[0]->id],
+            ['item_name_snapshot' => 'كبسة لحم', 'unit_price' => '65.00', 'quantity' => 1, 'subtotal' => '65.00']
+        );
+        OrderItem::query()->firstOrCreate(
+            ['order_id' => $order1->id, 'menu_item_id' => $menuItems[2]->id],
+            ['item_name_snapshot' => 'مندي لحم', 'unit_price' => '70.00', 'quantity' => 1, 'subtotal' => '70.00']
+        );
 
-        // طلب: تم تقديمه (served) - مع خصم نسبة
-        $r2Subtotal1 = 161.00;
-        $r2Discount1 = round($r2Subtotal1 * 0.10, 2);
-        $r2Order1 = Order::query()->create([
-            'restaurant_id' => $restaurant2->id,
-            'table_id' => $tables2[0]->id,
-            'table_session_id' => $r2ClosedSession1->id,
-            'order_number' => 'ORD-' . now()->subDay()->format('Ymd') . '-0003',
-            'status' => OrderStatus::Served,
-            'subtotal' => number_format($r2Subtotal1, 2, '.', ''),
-            'discount_amount' => number_format($r2Discount1, 2, '.', ''),
-            'total' => number_format($r2Subtotal1 - $r2Discount1, 2, '.', ''),
-            'customer_note' => 'غداء عمل - فاتورة منفصلة للشركة',
-            'promo_code_id' => $promo2Welcome->id,
-        ]);
+        // طلب سفري جاهز للاستلام عند كوة 2
+        $activeSession = TableSession::query()->firstOrCreate(
+            ['table_id' => $tables[1]->id, 'status' => SessionStatus::Active],
+            [
+                'session_token' => $this->tokenGenerator->generateSessionToken(),
+                'started_at'    => now()->subMinutes(30),
+            ]
+        );
 
-        OrderItem::query()->create([
-            'order_id' => $r2Order1->id,
-            'menu_item_id' => $menuItems2[0]->id, // كبسة لحم
-            'item_name_snapshot' => 'كبسة لحم',
-            'unit_price' => '65.00',
-            'quantity' => 1,
-            'subtotal' => '65.00',
-            'note' => null,
-        ]);
-        OrderItem::query()->create([
-            'order_id' => $r2Order1->id,
-            'menu_item_id' => $menuItems2[2]->id, // مندي لحم
-            'item_name_snapshot' => 'مندي لحم',
-            'unit_price' => '70.00',
-            'quantity' => 1,
-            'subtotal' => '70.00',
-            'note' => 'تدخين إضافي',
-        ]);
-        OrderItem::query()->create([
-            'order_id' => $r2Order1->id,
-            'menu_item_id' => $menuItems2[6]->id, // سلطة خضراء
-            'item_name_snapshot' => 'سلطة خضراء',
-            'unit_price' => '15.00',
-            'quantity' => 1,
-            'subtotal' => '15.00',
-            'note' => null,
-        ]);
-        OrderItem::query()->create([
-            'order_id' => $r2Order1->id,
-            'menu_item_id' => $menuItems2[19]->id, // قهوة سعودية
-            'item_name_snapshot' => 'قهوة سعودية',
-            'unit_price' => '8.00',
-            'quantity' => 1,
-            'subtotal' => '8.00',
-            'note' => null,
-        ]);
-        OrderItem::query()->create([
-            'order_id' => $r2Order1->id,
-            'menu_item_id' => $menuItems2[23]->id, // ماء
-            'item_name_snapshot' => 'ماء',
-            'unit_price' => '3.00',
-            'quantity' => 1,
-            'subtotal' => '3.00',
-            'note' => null,
-        ]);
+        $order2 = Order::query()->updateOrCreate(
+            ['order_number' => 'ORD-' . now()->format('Ymd') . '-0081'],
+            [
+                'restaurant_id'    => $restaurant->id,
+                'table_id'         => $tables[1]->id,
+                'table_session_id' => $activeSession->id,
+                'status'           => OrderStatus::Ready,
+                'service_type'     => 'takeaway', // سفري
+                'pickup_window'    => 2,          // كوة 2 المشويات
+                'paid_at'          => now()->subMinutes(25),
+                'paid_by'          => $cashier->id,
+                'subtotal'         => '100.00',
+                'discount_amount'  => '0.00',
+                'total'            => '100.00',
+                'customer_note'    => 'استلام سفري كوة 2',
+                'accepted_at'      => now()->subMinutes(25),
+                'preparing_at'     => now()->subMinutes(20),
+                'ready_at'         => now()->subMinutes(5),
+            ]
+        );
 
-        // --- جلسة مغلقة (غرفة خاصة) - قبل يومين ---
-        $r2ClosedSession2 = TableSession::query()->create([
-            'table_id' => $tables2[5]->id,
-            'session_token' => $tokenGenerator->generateSessionToken(),
-            'status' => SessionStatus::Closed,
-            'started_at' => now()->subDays(2)->setHour(20)->setMinute(0),
-            'closed_at' => now()->subDays(2)->setHour(23)->setMinute(30),
-        ]);
+        OrderItem::query()->firstOrCreate(
+            ['order_id' => $order2->id, 'menu_item_id' => $menuItems[12]->id],
+            ['item_name_snapshot' => 'لحم تكة', 'unit_price' => '58.00', 'quantity' => 1, 'subtotal' => '58.00']
+        );
+        OrderItem::query()->firstOrCreate(
+            ['order_id' => $order2->id, 'menu_item_id' => $menuItems[13]->id],
+            ['item_name_snapshot' => 'دجاج تكة', 'unit_price' => '42.00', 'quantity' => 1, 'subtotal' => '42.00']
+        );
 
-        // طلب: ملغي
-        $r2Order2 = Order::query()->create([
-            'restaurant_id' => $restaurant2->id,
-            'table_id' => $tables2[5]->id,
-            'table_session_id' => $r2ClosedSession2->id,
-            'order_number' => 'ORD-' . now()->subDays(2)->format('Ymd') . '-0003',
-            'status' => OrderStatus::Cancelled,
-            'subtotal' => '110.00',
-            'discount_amount' => '0.00',
-            'total' => '110.00',
-            'customer_note' => null,
-        ]);
+        // طلب جديد ينتظر تأكيد الدفع عند الكاشير
+        $orderPending = Order::query()->updateOrCreate(
+            ['order_number' => 'ORD-' . now()->format('Ymd') . '-0082'],
+            [
+                'restaurant_id'    => $restaurant->id,
+                'table_id'         => $tables[1]->id,
+                'table_session_id' => $activeSession->id,
+                'status'           => OrderStatus::Pending,
+                'service_type'     => 'dine_in',
+                'pickup_window'    => null,
+                'paid_at'          => null,
+                'paid_by'          => null,
+                'subtotal'         => '52.00',
+                'discount_amount'  => '0.00',
+                'total'            => '52.00',
+                'customer_note'    => 'بانتظار السداد عند الكاشير للبدء بالتحضير',
+            ]
+        );
 
-        OrderItem::query()->create([
-            'order_id' => $r2Order2->id,
-            'menu_item_id' => $menuItems2[17]->id, // مشكل مشويات ديوان
-            'item_name_snapshot' => 'مشكل مشويات ديوان',
-            'unit_price' => '110.00',
-            'quantity' => 1,
-            'subtotal' => '110.00',
-            'note' => null,
-        ]);
+        OrderItem::query()->firstOrCreate(
+            ['order_id' => $orderPending->id, 'menu_item_id' => $menuItems[4]->id],
+            ['item_name_snapshot' => 'مظبي دجاج', 'unit_price' => '52.00', 'quantity' => 1, 'subtotal' => '52.00']
+        );
 
-        // طلب: تم تقديمه - نفس الجلسة - مع خصم ثابت
-        $r2Order3 = Order::query()->create([
-            'restaurant_id' => $restaurant2->id,
-            'table_id' => $tables2[5]->id,
-            'table_session_id' => $r2ClosedSession2->id,
-            'order_number' => 'ORD-' . now()->subDays(2)->format('Ymd') . '-0004',
-            'status' => OrderStatus::Served,
-            'subtotal' => '195.00',
-            'discount_amount' => '25.00',
-            'total' => '170.00',
-            'customer_note' => 'عشاء عائلي خاص',
-            'promo_code_id' => $promo2Fixed->id,
-        ]);
+        ActivityLog::query()->firstOrCreate(
+            ['restaurant_id' => $restaurant->id, 'action' => 'create_restaurant'],
+            ['user_id' => $admin->id, 'description' => 'قام بإنشاء وتفعيل مطعم الديوان الخليجي (Prepaid - كواة 2)']
+        );
+    }
 
-        OrderItem::query()->create([
-            'order_id' => $r2Order3->id,
-            'menu_item_id' => $menuItems2[5]->id, // مفطح
-            'item_name_snapshot' => 'مفطح لحم',
-            'unit_price' => '85.00',
-            'quantity' => 1,
-            'subtotal' => '85.00',
-            'note' => 'رز إضافي',
-        ]);
-        OrderItem::query()->create([
-            'order_id' => $r2Order3->id,
-            'menu_item_id' => $menuItems2[15]->id, // ربيان مشوي
-            'item_name_snapshot' => 'ربيان مشوي',
-            'unit_price' => '75.00',
-            'quantity' => 1,
-            'subtotal' => '75.00',
-            'note' => null,
-        ]);
-        OrderItem::query()->create([
-            'order_id' => $r2Order3->id,
-            'menu_item_id' => $menuItems2[8]->id, // شوربة حب
-            'item_name_snapshot' => 'شوربة حب',
-            'unit_price' => '18.00',
-            'quantity' => 1,
-            'subtotal' => '18.00',
-            'note' => null,
-        ]);
-        OrderItem::query()->create([
-            'order_id' => $r2Order3->id,
-            'menu_item_id' => $menuItems2[21]->id, // عصير مانجو
-            'item_name_snapshot' => 'عصير مانجو',
-            'unit_price' => '16.00',
-            'quantity' => 1, // 85+75+18+16 = 194, close enough
-            'subtotal' => '17.00',
-            'note' => null,
-        ]);
+    /**
+     * =========================================================================
+     * المطعم الثالث: مطعم قلعة حلب (Prepaid - دفع مسبق مع 3 كواة تسليم)
+     * =========================================================================
+     */
+    protected function seedRestaurantAleppoCitadel(): void
+    {
+        $logo = '/storage/restaurants/aleppo-logo.jpg';
+        $navbar = '/storage/restaurants/aleppo-navbar.jpg';
+        $this->ensureImageFile($logo, 'Aleppo Logo');
+        $this->ensureImageFile($navbar, 'Aleppo Navbar');
 
-        // --- جلسة نشطة (صالة 2) ---
-        $r2ActiveSession1 = TableSession::query()->create([
-            'table_id' => $tables2[1]->id,
-            'session_token' => $tokenGenerator->generateSessionToken(),
-            'status' => SessionStatus::Active,
-            'started_at' => now()->subMinutes(50),
-            'closed_at' => null,
-        ]);
+        $restaurant = Restaurant::query()->updateOrCreate(
+            ['slug' => 'aleppo-citadel'],
+            [
+                'name'          => 'مطعم قلعة حلب',
+                'type'          => 'prepaid', // <--- PREPAID
+                'windows_count' => 3,        // <--- 3 كواة تسليم ونوافذ طلبات سريعة
+                'phone'         => '+966559998887',
+                'address'       => 'شارع التحلية، الرياض، المملكة العربية السعودية',
+                'currency'      => 'SYP',
+                'status'        => RestaurantStatus::Active,
+                'logo'          => $logo,
+                'navbar_image'  => $navbar,
+                'features'      => [
+                    'promo_codes'    => true,
+                    'customer_notes' => true,
+                    'table_sessions' => true,
+                    'activity_log'   => true,
+                ],
+            ]
+        );
 
-        // طلب: قيد الانتظار (pending)
-        $r2Order4 = Order::query()->create([
-            'restaurant_id' => $restaurant2->id,
-            'table_id' => $tables2[1]->id,
-            'table_session_id' => $r2ActiveSession1->id,
-            'order_number' => 'ORD-' . now()->format('Ymd') . '-0050',
-            'status' => OrderStatus::Pending,
-            'subtotal' => '123.00',
-            'discount_amount' => '0.00',
-            'total' => '123.00',
-            'customer_note' => 'حساسية من الربيان',
-        ]);
+        // المستخدمون مع كامل الطاقم والأدوار المحدثة والكواة
+        $admin = User::query()->updateOrCreate(
+            ['email' => 'admin@aleppo.test'],
+            [
+                'restaurant_id'  => $restaurant->id,
+                'name'           => 'صبحي الحلبي (مدير المطعم)',
+                'password'       => Hash::make('password'),
+                'status'         => UserStatus::Active,
+                'default_window' => null,
+            ]
+        );
+        $admin->syncRoles([UserRole::Admin->value]);
 
-        OrderItem::query()->create([
-            'order_id' => $r2Order4->id,
-            'menu_item_id' => $menuItems2[0]->id, // كبسة لحم
-            'item_name_snapshot' => 'كبسة لحم',
-            'unit_price' => '65.00',
-            'quantity' => 1,
-            'subtotal' => '65.00',
-            'note' => null,
-        ]);
-        OrderItem::query()->create([
-            'order_id' => $r2Order4->id,
-            'menu_item_id' => $menuItems2[13]->id, // دجاج تكة
-            'item_name_snapshot' => 'دجاج تكة',
-            'unit_price' => '42.00',
-            'quantity' => 1,
-            'subtotal' => '42.00',
-            'note' => 'حار جداً',
-        ]);
-        OrderItem::query()->create([
-            'order_id' => $r2Order4->id,
-            'menu_item_id' => $menuItems2[21]->id, // عصير مانجو
-            'item_name_snapshot' => 'عصير مانجو',
-            'unit_price' => '16.00',
-            'quantity' => 1,
-            'subtotal' => '16.00',
-            'note' => null,
-        ]);
+        $cashier = User::query()->updateOrCreate(
+            ['email' => 'cashier@aleppo.test'],
+            [
+                'restaurant_id'  => $restaurant->id,
+                'name'           => 'عمر الحلبي (كاشير الدفع المسبق)',
+                'password'       => Hash::make('password'),
+                'status'         => UserStatus::Active,
+                'default_window' => null,
+            ]
+        );
+        $cashier->syncRoles([UserRole::Cashier->value]);
+        $cashier->givePermissionTo(['manage_orders', 'view_orders', 'update_order_status']);
 
-        // عناصر بالسلة (لم تُطلب بعد)
-        CartItem::query()->create([
-            'table_session_id' => $r2ActiveSession1->id,
-            'menu_item_id' => $menuItems2[24]->id, // لقيمات
-            'quantity' => 2,
-            'note' => null,
-        ]);
-        CartItem::query()->create([
-            'table_session_id' => $r2ActiveSession1->id,
-            'menu_item_id' => $menuItems2[18]->id, // شاي كرك
-            'quantity' => 3,
-            'note' => 'كرك ثقيل',
-        ]);
+        // شيف كوة 1: الكباب والمشاوي
+        $chef1 = User::query()->updateOrCreate(
+            ['email' => 'chef1@aleppo.test'],
+            [
+                'restaurant_id'  => $restaurant->id,
+                'name'           => 'الشيف رضوان (كوة 1 - الكباب والمشاوي)',
+                'password'       => Hash::make('password'),
+                'status'         => UserStatus::Active,
+                'default_window' => 1,
+            ]
+        );
+        $chef1->syncRoles([UserRole::Chef->value]);
+        $chef1->givePermissionTo(['manage_orders', 'view_orders', 'update_order_status']);
 
-        // --- جلسة نشطة (جلسة خارجية 1) ---
-        $r2ActiveSession2 = TableSession::query()->create([
-            'table_id' => $tables2[3]->id,
-            'session_token' => $tokenGenerator->generateSessionToken(),
-            'status' => SessionStatus::Active,
-            'started_at' => now()->subMinutes(20),
-            'closed_at' => null,
-        ]);
+        // شيف كوة 2: الكبب والأطباق الساخنة
+        $chef2 = User::query()->updateOrCreate(
+            ['email' => 'chef2@aleppo.test'],
+            [
+                'restaurant_id'  => $restaurant->id,
+                'name'           => 'الشيف مأمون (كوة 2 - الكبب الحلبية)',
+                'password'       => Hash::make('password'),
+                'status'         => UserStatus::Active,
+                'default_window' => 2,
+            ]
+        );
+        $chef2->syncRoles([UserRole::Chef->value]);
+        $chef2->givePermissionTo(['manage_orders', 'view_orders', 'update_order_status']);
 
-        // طلب: قيد التحضير (preparing)
-        $r2Order5 = Order::query()->create([
-            'restaurant_id' => $restaurant2->id,
-            'table_id' => $tables2[3]->id,
-            'table_session_id' => $r2ActiveSession2->id,
-            'order_number' => 'ORD-' . now()->format('Ymd') . '-0051',
-            'status' => OrderStatus::Preparing,
-            'subtotal' => '154.00',
-            'discount_amount' => '0.00',
-            'total' => '154.00',
-            'customer_note' => null,
-        ]);
+        // شيف كوة 3: المقبلات والحلويات والسفري
+        $chef3 = User::query()->updateOrCreate(
+            ['email' => 'chef3@aleppo.test'],
+            [
+                'restaurant_id'  => $restaurant->id,
+                'name'           => 'الشيف حسان (كوة 3 - المقبلات والسفري)',
+                'password'       => Hash::make('password'),
+                'status'         => UserStatus::Active,
+                'default_window' => 3,
+            ]
+        );
+        $chef3->syncRoles([UserRole::Chef->value]);
+        $chef3->givePermissionTo(['manage_orders', 'view_orders', 'update_order_status']);
 
-        OrderItem::query()->create([
-            'order_id' => $r2Order5->id,
-            'menu_item_id' => $menuItems2[4]->id, // مظبي
-            'item_name_snapshot' => 'مظبي دجاج',
-            'unit_price' => '52.00',
-            'quantity' => 2,
-            'subtotal' => '104.00',
-            'note' => null,
-        ]);
-        OrderItem::query()->create([
-            'order_id' => $r2Order5->id,
-            'menu_item_id' => $menuItems2[9]->id, // سمبوسة جبنة
-            'item_name_snapshot' => 'سمبوسة جبنة',
-            'unit_price' => '20.00',
-            'quantity' => 1,
-            'subtotal' => '20.00',
-            'note' => null,
-        ]);
-        OrderItem::query()->create([
-            'order_id' => $r2Order5->id,
-            'menu_item_id' => $menuItems2[20]->id, // لبن رائب
-            'item_name_snapshot' => 'لبن رائب',
-            'unit_price' => '10.00',
-            'quantity' => 3,
-            'subtotal' => '30.00',
-            'note' => null,
-        ]);
+        $supervisor = User::query()->updateOrCreate(
+            ['email' => 'supervisor@aleppo.test'],
+            [
+                'restaurant_id'  => $restaurant->id,
+                'name'           => 'بشير الحلبي (مشرف تشغيل)',
+                'password'       => Hash::make('password'),
+                'status'         => UserStatus::Active,
+                'default_window' => null,
+            ]
+        );
+        $supervisor->syncRoles([UserRole::Supervisor->value]);
 
-        // --- جلسة نشطة (صالة 3) ---
-        $r2ActiveSession3 = TableSession::query()->create([
-            'table_id' => $tables2[2]->id,
-            'session_token' => $tokenGenerator->generateSessionToken(),
-            'status' => SessionStatus::Active,
-            'started_at' => now()->subMinutes(10),
-            'closed_at' => null,
-        ]);
+        $waiter = User::query()->updateOrCreate(
+            ['email' => 'waiter@aleppo.test'],
+            [
+                'restaurant_id'  => $restaurant->id,
+                'name'           => 'محمود الحلبي (مضيف صالة)',
+                'password'       => Hash::make('password'),
+                'status'         => UserStatus::Active,
+                'default_window' => null,
+            ]
+        );
+        $waiter->syncRoles([UserRole::Waiter->value]);
 
-        // طلب: جاهز (ready)
-        $r2Order6 = Order::query()->create([
-            'restaurant_id' => $restaurant2->id,
-            'table_id' => $tables2[2]->id,
-            'table_session_id' => $r2ActiveSession3->id,
-            'order_number' => 'ORD-' . now()->format('Ymd') . '-0052',
-            'status' => OrderStatus::Ready,
-            'subtotal' => '93.00',
-            'discount_amount' => '0.00',
-            'total' => '93.00',
-            'customer_note' => 'جالسين بالخارج تحت المظلة',
-        ]);
+        // الطاولات
+        $tableNames = [
+            'طاولة القلعة 1', 'طاولة القلعة 2', 'طاولة القلعة 3',
+            'جلسة الباب الأحمر 1', 'جلسة الباب الأحمر 2',
+            'ركن التراث 1',
+        ];
 
-        OrderItem::query()->create([
-            'order_id' => $r2Order6->id,
-            'menu_item_id' => $menuItems2[1]->id, // كبسة دجاج
-            'item_name_snapshot' => 'كبسة دجاج',
-            'unit_price' => '45.00',
-            'quantity' => 1,
-            'subtotal' => '45.00',
-            'note' => 'بدون بهارات',
-        ]);
-        OrderItem::query()->create([
-            'order_id' => $r2Order6->id,
-            'menu_item_id' => $menuItems2[14]->id, // كباب هندي
-            'item_name_snapshot' => 'كباب هندي',
-            'unit_price' => '48.00',
-            'quantity' => 1,
-            'subtotal' => '48.00',
-            'note' => null,
-        ]);
+        $tables = [];
+        foreach ($tableNames as $tName) {
+            $t = RestaurantTable::query()->firstOrCreate(
+                ['restaurant_id' => $restaurant->id, 'name' => $tName],
+                [
+                    'public_token' => $this->tokenGenerator->generatePublicToken(),
+                    'status'       => TableStatus::Active,
+                ]
+            );
 
-        // --- جلسة نشطة (جلسة خارجية 2) - طلب مقبول ---
-        $r2ActiveSession4 = TableSession::query()->create([
-            'table_id' => $tables2[4]->id,
-            'session_token' => $tokenGenerator->generateSessionToken(),
-            'status' => SessionStatus::Active,
-            'started_at' => now()->subMinutes(35),
-            'closed_at' => null,
-        ]);
+            if (! $t->public_token) {
+                $t->public_token = $this->tokenGenerator->generatePublicToken();
+                $t->save();
+            }
 
-        $r2Order7 = Order::query()->create([
-            'restaurant_id' => $restaurant2->id,
-            'table_id' => $tables2[4]->id,
-            'table_session_id' => $r2ActiveSession4->id,
-            'order_number' => 'ORD-' . now()->format('Ymd') . '-0053',
-            'status' => OrderStatus::Accepted,
-            'subtotal' => '178.00',
-            'discount_amount' => '0.00',
-            'total' => '178.00',
-            'customer_note' => null,
-        ]);
+            $qrPath = "qr/{$t->restaurant_id}/{$t->public_token}.png";
+            if (! Storage::disk('public')->exists($qrPath)) {
+                $this->qrService->generateForTable($t);
+            }
+            $tables[] = $t;
+        }
 
-        OrderItem::query()->create([
-            'order_id' => $r2Order7->id,
-            'menu_item_id' => $menuItems2[16]->id, // سمك حامور
-            'item_name_snapshot' => 'سمك حامور مشوي',
-            'unit_price' => '90.00',
-            'quantity' => 1,
-            'subtotal' => '90.00',
-            'note' => 'مع ليمون إضافي',
-        ]);
-        OrderItem::query()->create([
-            'order_id' => $r2Order7->id,
-            'menu_item_id' => $menuItems2[12]->id, // لحم تكة
-            'item_name_snapshot' => 'لحم تكة',
-            'unit_price' => '58.00',
-            'quantity' => 1,
-            'subtotal' => '58.00',
-            'note' => null,
-        ]);
-        OrderItem::query()->create([
-            'order_id' => $r2Order7->id,
-            'menu_item_id' => $menuItems2[7]->id, // سلطة زبادي
-            'item_name_snapshot' => 'سلطة زبادي',
-            'unit_price' => '12.00',
-            'quantity' => 1,
-            'subtotal' => '12.00',
-            'note' => null,
-        ]);
-        OrderItem::query()->create([
-            'order_id' => $r2Order7->id,
-            'menu_item_id' => $menuItems2[22]->id, // عصير رمان
-            'item_name_snapshot' => 'عصير رمان',
-            'unit_price' => '18.00',
-            'quantity' => 1,
-            'subtotal' => '18.00',
-            'note' => null,
-        ]);
-
-        // عناصر سلة
-        CartItem::query()->create([
-            'table_session_id' => $r2ActiveSession4->id,
-            'menu_item_id' => $menuItems2[27]->id, // تمر محشي
-            'quantity' => 1,
-            'note' => 'بدون جوز',
-        ]);
-
-        // =============================================
-        // سجل النشاطات - المطعم الثاني
-        // =============================================
-        ActivityLog::query()->create([
-            'restaurant_id' => $restaurant2->id,
-            'user_id' => $admin2->id,
-            'action' => 'create_restaurant',
-            'description' => 'قام بإنشاء مطعم الديوان الخليجي',
-        ]);
-
-        ActivityLog::query()->create([
-            'restaurant_id' => $restaurant2->id,
-            'user_id' => $admin2->id,
-            'action' => 'create_menu',
-            'description' => 'قام بإضافة قائمة الطعام (5 تصنيفات، 30 صنف)',
-        ]);
-
-        ActivityLog::query()->create([
-            'restaurant_id' => $restaurant2->id,
-            'user_id' => $admin2->id,
-            'action' => 'create_promo',
-            'description' => 'قام بإنشاء كود خصم DIWAN10 (خصم 10%)',
-        ]);
-
-        ActivityLog::query()->create([
-            'restaurant_id' => $restaurant2->id,
-            'user_id' => $admin2->id,
-            'action' => 'create_promo',
-            'description' => 'قام بإنشاء كود خصم RIYADH25 (خصم 25 ريال)',
-        ]);
-
-        ActivityLog::query()->create([
-            'restaurant_id' => $restaurant2->id,
-            'user_id' => $staff2Cashier->id,
-            'action' => 'update_order',
-            'description' => 'قام بتحديث حالة الطلب #' . $r2Order1->order_number . ' إلى "تم التقديم"',
-        ]);
-
-        ActivityLog::query()->create([
-            'restaurant_id' => $restaurant2->id,
-            'user_id' => $staff2Waiter->id,
-            'action' => 'cancel_order',
-            'description' => 'قام بإلغاء الطلب #' . $r2Order2->order_number,
-        ]);
-
-        ActivityLog::query()->create([
-            'restaurant_id' => $restaurant2->id,
-            'user_id' => $staff2Kitchen->id,
-            'action' => 'update_order',
-            'description' => 'قام بتحديث حالة الطلب #' . $r2Order5->order_number . ' إلى "قيد التحضير"',
-        ]);
-
-        ActivityLog::query()->create([
-            'restaurant_id' => $restaurant2->id,
-            'user_id' => $admin2->id,
-            'action' => 'create_table',
-            'description' => 'قام بإضافة 6 طاولات جديدة للمطعم',
-        ]);
-
-        ActivityLog::query()->create([
-            'restaurant_id' => $restaurant2->id,
-            'user_id' => $admin2->id,
-            'action' => 'update_menu_item',
-            'description' => 'قام بتحديث سعر المفطح من 80 إلى 85 ريال',
-        ]);
-
-        // =============================================
-        // المطعم الثالث: قلعة حلب (مطبخ حلبي)
-        // =============================================
-        $restaurant3 = Restaurant::query()->create([
-            'name' => 'مطعم قلعة حلب',
-            'slug' => 'aleppo-citadel',
-            'phone' => '+966559998887',
-            'address' => 'شارع التحلية، الرياض، المملكة العربية السعودية',
-            'currency' => 'SYP',
-            'status' => RestaurantStatus::Active,
-            'logo' => '/storage/restaurants/aleppo-logo.jpg',
-            'navbar_image' => '/storage/restaurants/aleppo-navbar.jpg',
-            'features' => [
-                'promo_codes' => true,
-                'customer_notes' => true,
-                'table_sessions' => true,
-                'activity_log' => true,
-            ],
-        ]);
-
-        $admin3 = User::query()->create([
-            'restaurant_id' => $restaurant3->id,
-            'name' => 'صبحي الحلبي',
-            'email' => 'admin@aleppo.test',
-            'password' => Hash::make('password'),
-            'status' => UserStatus::Active,
-        ]);
-        $admin3->assignRole(UserRole::Admin->value);
-
+        // قائمة الطعام الحلبية
         $categoriesData3 = [
             [
-                'name' => 'المقبلات الحلبية',
+                'name'        => 'المقبلات الحلبية',
                 'description' => 'مقبلات حلبية أصيلة',
-                'items' => [
+                'image'       => '/storage/menu/aleppo-appetizers.jpg',
+                'items'       => [
                     ['name' => 'محمرة بالجوز', 'price' => '25.00', 'description' => 'محمرة بالفليفلة والجوز ودبس الرمان', 'image' => '/storage/menu/items/muhammara.jpg'],
                     ['name' => 'حمص حلبي', 'price' => '18.00', 'description' => 'حمص بالطحينة مع اللحم والصنوبر', 'image' => '/storage/menu/items/hummus.jpg'],
-                    ['name' => 'متبل باذنجان', 'price' => '20.00', 'description' => 'باذنجان مشوي مع الطحينة والرمان', 'image' => '/storage/menu/items/mutabbal.jpg'],
+                    ['name' => 'متبل باذنجان حلبي', 'price' => '20.00', 'description' => 'باذنجان مشوي مع الطحينة والرمان', 'image' => '/storage/menu/items/mutabbal.jpg'],
+                    ['name' => 'فتة حمص بالسمن العربي', 'price' => '32.00', 'description' => 'فتة حمص بالخبز المقرمش والسمن واللحم', 'image' => '/storage/menu/items/fatteh_hummus.jpg'],
                 ],
-                'image' => '/storage/menu/aleppo-appetizers.jpg',
             ],
             [
-                'name' => 'المشاوي',
-                'description' => 'كباب ومشاوي حلبية',
-                'items' => [
+                'name'        => 'المشاوي والكباب الحلبي',
+                'description' => 'كباب ومشاوي حلبية على الفحم',
+                'image'       => '/storage/menu/aleppo-grills.jpg',
+                'items'       => [
                     ['name' => 'كباب بالكرز', 'price' => '75.00', 'description' => 'كباب لحم مع صلصة الكرز الحلبي والصنوبر', 'image' => '/storage/menu/items/cherry_kebab.jpg'],
                     ['name' => 'كباب حلبي', 'price' => '65.00', 'description' => 'كباب لحم غنم مع الفستق الحلبي والتوابل', 'image' => '/storage/menu/items/aleppo_kebab.jpg'],
                     ['name' => 'شقف مشوية', 'price' => '70.00', 'description' => 'شقف لحم عجل طرية مشوية على الفحم', 'image' => '/storage/menu/items/lamb_chops.jpg'],
+                    ['name' => 'شيش طاووق حلبي', 'price' => '52.00', 'description' => 'قطع دجاج متبلة بالثوم ودبس الفليفلة', 'image' => '/storage/menu/items/shish_tawook.jpg'],
                 ],
-                'image' => '/storage/menu/aleppo-grills.jpg',
             ],
             [
-                'name' => 'الأطباق الرئيسية (الكبة)',
+                'name'        => 'الكبب الحلبية العريقة',
                 'description' => 'أنواع الكبة الحلبية الشهيرة',
-                'items' => [
+                'image'       => '/storage/menu/aleppo-kibbeh.jpg',
+                'items'       => [
                     ['name' => 'كبة سفرجلية', 'price' => '60.00', 'description' => 'كبة مع السفرجل ودبس الرمان واللحم', 'image' => '/storage/menu/items/kibbeh_safarjaliyeh.jpg'],
                     ['name' => 'كبة لبنية', 'price' => '55.00', 'description' => 'أقراص كبة مطبوخة باللبن مع الطرخون', 'image' => '/storage/menu/items/kibbeh_labniyeh.jpg'],
                     ['name' => 'كبة مشوية', 'price' => '45.00', 'description' => 'أقراص كبة مشوية على الفحم محشية بالشحم والجوز', 'image' => '/storage/menu/items/grilled_kibbeh.jpg'],
+                    ['name' => 'كبة مقلية حلبية', 'price' => '38.00', 'description' => 'كبة مقلية مقرمشة محشية باللحم والصنوبر', 'image' => '/storage/menu/items/fried_kibbeh.jpg'],
                 ],
-                'image' => '/storage/menu/aleppo-kibbeh.jpg',
             ],
             [
-                'name' => 'الحلويات',
-                'description' => 'حلويات حلبية عريقة',
-                'items' => [
-                    ['name' => 'كرابيج حلب', 'price' => '35.00', 'description' => 'كرابيج محشية بالفستق مع الناطف', 'image' => '/storage/menu/items/karabij.jpg'],
-                    ['name' => 'بقلاوة بالفستق', 'price' => '40.00', 'description' => 'بقلاوة حلبية أصيلة بالفستق الحلبي', 'image' => '/storage/menu/items/baklava.jpg'],
+                'name'        => 'الحلويات الحلبية',
+                'description' => 'حلويات حلبية عريقة بالفستق الحلبي',
+                'image'       => '/storage/menu/aleppo-desserts.jpg',
+                'items'       => [
+                    ['name' => 'كرابيج حلب', 'price' => '35.00', 'description' => 'كرابيج محشية بالفستق مع الناطف الحلبي', 'image' => '/storage/menu/items/karabij.jpg'],
+                    ['name' => 'بقلاوة بالفستق', 'price' => '40.00', 'description' => 'بقلاوة حلبية أصيلة بالسمن العربي والفستق', 'image' => '/storage/menu/items/baklava.jpg'],
+                    ['name' => 'كنافة بالقشطة', 'price' => '30.00', 'description' => 'كنافة ذهبية محشية بالقشطة البلدية', 'image' => '/storage/menu/items/knafeh.jpg'],
+                    ['name' => 'عوامة مقرمشة', 'price' => '22.00', 'description' => 'كرات مقلية ذهبية بالقطر المعطر', 'image' => '/storage/menu/items/awameh.jpg'],
                 ],
-                'image' => '/storage/menu/aleppo-desserts.jpg',
+            ],
+            [
+                'name'        => 'المشروبات',
+                'description' => 'مشروبات شامية منعشة وساخنة',
+                'image'       => '/storage/menu/drinks.jpg',
+                'items'       => [
+                    ['name' => 'عيران حلبي', 'price' => '12.00', 'description' => 'لبن رائب منعش مخفوق بالنعناع والثوم الخفيف', 'image' => '/storage/menu/items/ayran.jpg'],
+                    ['name' => 'ليمون ونعناع', 'price' => '15.00', 'description' => 'عصير ليمون طازج مثلج مع أوراق النعناع', 'image' => '/storage/menu/items/lemon_mint.jpg'],
+                    ['name' => 'قهوة تركية بالهيل', 'price' => '14.00', 'description' => 'قهوة تركية غنية بالرغوة والهيل الحلبي', 'image' => '/storage/menu/items/turkish_coffee.jpg'],
+                    ['name' => 'شاي بالنعناع', 'price' => '8.00', 'description' => 'شاي أحمر مخدر مع أوراق النعناع البلدي', 'image' => '/storage/menu/items/red_tea.jpg'],
+                ],
             ],
         ];
 
+        $menuItems = [];
         foreach ($categoriesData3 as $catIndex => $categoryData) {
-            $category = MenuCategory::query()->create([
-                'restaurant_id' => $restaurant3->id,
-                'name' => $categoryData['name'],
-                'description' => $categoryData['description'] ?? null,
-                'image' => $categoryData['image'] ?? null,
-                'sort_order' => $catIndex + 1,
-                'is_active' => true,
-            ]);
+            $this->ensureImageFile($categoryData['image'], $categoryData['name']);
+
+            $category = MenuCategory::query()->updateOrCreate(
+                ['restaurant_id' => $restaurant->id, 'name' => $categoryData['name']],
+                [
+                    'description' => $categoryData['description'] ?? null,
+                    'image'       => $categoryData['image'] ?? null,
+                    'sort_order'  => $catIndex + 1,
+                    'is_active'   => true,
+                ]
+            );
 
             foreach ($categoryData['items'] as $itemIndex => $itemData) {
-                MenuItem::query()->create([
-                    'restaurant_id' => $restaurant3->id,
-                    'category_id' => $category->id,
-                    'name' => $itemData['name'],
-                    'description' => $itemData['description'],
-                    'price' => $itemData['price'],
-                    'image' => $itemData['image'] ?? $categoryData['image'] ?? null,
-                    'sort_order' => $itemIndex + 1,
-                    'is_available' => true,
-                    'is_active' => true,
-                ]);
+                $this->ensureImageFile($itemData['image'], $itemData['name']);
+                $item = MenuItem::query()->updateOrCreate(
+                    ['restaurant_id' => $restaurant->id, 'name' => $itemData['name']],
+                    [
+                        'category_id'  => $category->id,
+                        'description'  => $itemData['description'],
+                        'price'        => $itemData['price'],
+                        'image'        => $itemData['image'] ?? $categoryData['image'] ?? null,
+                        'sort_order'   => $itemIndex + 1,
+                        'is_available' => true,
+                        'is_active'    => true,
+                    ]
+                );
+                $menuItems[] = $item;
             }
         }
+
+        // أكواد الخصم
+        PromoCode::query()->updateOrCreate(
+            ['restaurant_id' => $restaurant->id, 'code' => 'HALAB15'],
+            [
+                'discount_type'   => 'percentage',
+                'discount_value'  => '15.00',
+                'min_order_value' => '60.00',
+                'is_active'       => true,
+                'expires_at'      => now()->addMonths(4),
+            ]
+        );
+
+        PromoCode::query()->updateOrCreate(
+            ['restaurant_id' => $restaurant->id, 'code' => 'CITADEL25'],
+            [
+                'discount_type'   => 'fixed',
+                'discount_value'  => '25.00',
+                'min_order_value' => '100.00',
+                'is_active'       => true,
+                'expires_at'      => now()->addMonths(2),
+            ]
+        );
+
+        // جلسات وطلبات مدفوعة مسبقاً موزعة على الكواة الثلاثة
+        $session = TableSession::query()->firstOrCreate(
+            ['table_id' => $tables[0]->id, 'status' => SessionStatus::Active],
+            [
+                'session_token' => $this->tokenGenerator->generateSessionToken(),
+                'started_at'    => now()->subMinutes(40),
+            ]
+        );
+
+        // طلب 1: قيد التحضير عند كوة 1 (المشاوي والكباب)
+        $order1 = Order::query()->updateOrCreate(
+            ['order_number' => 'ORD-' . now()->format('Ymd') . '-0091'],
+            [
+                'restaurant_id'    => $restaurant->id,
+                'table_id'         => $tables[0]->id,
+                'table_session_id' => $session->id,
+                'status'           => OrderStatus::Preparing,
+                'service_type'     => 'dine_in',
+                'pickup_window'    => 1, // كوة 1
+                'paid_at'          => now()->subMinutes(35),
+                'paid_by'          => $cashier->id,
+                'subtotal'         => '140.00',
+                'discount_amount'  => '0.00',
+                'total'            => '140.00',
+                'customer_note'    => 'مدفوع مسبقاً - تحضير كوة 1',
+                'accepted_at'      => now()->subMinutes(35),
+                'preparing_at'     => now()->subMinutes(30),
+            ]
+        );
+
+        OrderItem::query()->firstOrCreate(
+            ['order_id' => $order1->id, 'menu_item_id' => $menuItems[4]->id], // كباب بالكرز
+            ['item_name_snapshot' => 'كباب بالكرز', 'unit_price' => '75.00', 'quantity' => 1, 'subtotal' => '75.00']
+        );
+        OrderItem::query()->firstOrCreate(
+            ['order_id' => $order1->id, 'menu_item_id' => $menuItems[5]->id], // كباب حلبي
+            ['item_name_snapshot' => 'كباب حلبي', 'unit_price' => '65.00', 'quantity' => 1, 'subtotal' => '65.00']
+        );
+
+        // طلب 2: جاهز للاستلام عند كوة 2 (الكبب)
+        $order2 = Order::query()->updateOrCreate(
+            ['order_number' => 'ORD-' . now()->format('Ymd') . '-0092'],
+            [
+                'restaurant_id'    => $restaurant->id,
+                'table_id'         => $tables[0]->id,
+                'table_session_id' => $session->id,
+                'status'           => OrderStatus::Ready,
+                'service_type'     => 'takeaway', // سفري
+                'pickup_window'    => 2,          // كوة 2
+                'paid_at'          => now()->subMinutes(25),
+                'paid_by'          => $cashier->id,
+                'subtotal'         => '115.00',
+                'discount_amount'  => '0.00',
+                'total'            => '115.00',
+                'customer_note'    => 'سفري استلام كوة 2 الكبب',
+                'accepted_at'      => now()->subMinutes(25),
+                'preparing_at'     => now()->subMinutes(20),
+                'ready_at'         => now()->subMinutes(2),
+            ]
+        );
+
+        OrderItem::query()->firstOrCreate(
+            ['order_id' => $order2->id, 'menu_item_id' => $menuItems[8]->id], // سفرجلية
+            ['item_name_snapshot' => 'كبة سفرجلية', 'unit_price' => '60.00', 'quantity' => 1, 'subtotal' => '60.00']
+        );
+        OrderItem::query()->firstOrCreate(
+            ['order_id' => $order2->id, 'menu_item_id' => $menuItems[9]->id], // لبنية
+            ['item_name_snapshot' => 'كبة لبنية', 'unit_price' => '55.00', 'quantity' => 1, 'subtotal' => '55.00']
+        );
+
+        // طلب 3: تم تسليمه من كوة 3 (الحلويات والمقبلات)
+        $order3 = Order::query()->updateOrCreate(
+            ['order_number' => 'ORD-' . now()->format('Ymd') . '-0093'],
+            [
+                'restaurant_id'    => $restaurant->id,
+                'table_id'         => $tables[1]->id,
+                'table_session_id' => $session->id,
+                'status'           => OrderStatus::Served,
+                'service_type'     => 'dine_in',
+                'pickup_window'    => 3, // كوة 3
+                'paid_at'          => now()->subMinutes(50),
+                'paid_by'          => $cashier->id,
+                'subtotal'         => '75.00',
+                'discount_amount'  => '0.00',
+                'total'            => '75.00',
+                'customer_note'    => 'تم الاستلام من كوة 3',
+                'accepted_at'      => now()->subMinutes(50),
+                'preparing_at'     => now()->subMinutes(45),
+                'ready_at'         => now()->subMinutes(35),
+                'served_at'        => now()->subMinutes(30),
+            ]
+        );
+
+        OrderItem::query()->firstOrCreate(
+            ['order_id' => $order3->id, 'menu_item_id' => $menuItems[12]->id], // كرابيج
+            ['item_name_snapshot' => 'كرابيج حلب', 'unit_price' => '35.00', 'quantity' => 1, 'subtotal' => '35.00']
+        );
+        OrderItem::query()->firstOrCreate(
+            ['order_id' => $order3->id, 'menu_item_id' => $menuItems[13]->id], // بقلاوة
+            ['item_name_snapshot' => 'بقلاوة بالفستق', 'unit_price' => '40.00', 'quantity' => 1, 'subtotal' => '40.00']
+        );
+
+        // طلب 4: معلق ينتظر الدفع عند الكاشير
+        $orderPending = Order::query()->updateOrCreate(
+            ['order_number' => 'ORD-' . now()->format('Ymd') . '-0094'],
+            [
+                'restaurant_id'    => $restaurant->id,
+                'table_id'         => $tables[2]->id,
+                'table_session_id' => $session->id,
+                'status'           => OrderStatus::Pending,
+                'service_type'     => 'takeaway',
+                'pickup_window'    => null,
+                'paid_at'          => null,
+                'paid_by'          => null,
+                'subtotal'         => '25.00',
+                'discount_amount'  => '0.00',
+                'total'            => '25.00',
+                'customer_note'    => 'طلب جديد بانتظار سداد الكاشير',
+            ]
+        );
+
+        OrderItem::query()->firstOrCreate(
+            ['order_id' => $orderPending->id, 'menu_item_id' => $menuItems[0]->id], // محمرة
+            ['item_name_snapshot' => 'محمرة بالجوز', 'unit_price' => '25.00', 'quantity' => 1, 'subtotal' => '25.00']
+        );
+
+        ActivityLog::query()->firstOrCreate(
+            ['restaurant_id' => $restaurant->id, 'action' => 'create_restaurant'],
+            ['user_id' => $admin->id, 'description' => 'قام بإنشاء وتفعيل مطعم قلعة حلب (Prepaid - 3 كواة تسليم)']
+        );
     }
 }
