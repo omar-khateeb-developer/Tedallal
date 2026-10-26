@@ -621,13 +621,15 @@ onUnmounted(() => {
                     </div>
 
                     <!-- Desktop Nav Links -->
-                    <nav class="hidden lg:flex items-center gap-7 text-sm font-medium text-slate-300">
+                    <nav class="hidden lg:flex items-center gap-5 xl:gap-6 text-sm font-medium text-slate-300">
                         <a href="#how-it-works" class="hover:text-amber-400 transition-colors">{{ t.nav.howItWorks }}</a>
+                        <a href="#solutions" class="hover:text-amber-400 transition-colors">{{ t.nav.solutions }}</a>
                         <a href="#interactive-demo" class="hover:text-amber-400 transition-colors flex items-center gap-1.5">
                             <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
                             {{ t.nav.interactiveDemo }}
                         </a>
                         <a href="#features" class="hover:text-amber-400 transition-colors">{{ t.nav.features }}</a>
+                        <a href="#directory" class="hover:text-amber-400 transition-colors">{{ t.nav.directory }}</a>
                         <a href="#roi-calculator" class="hover:text-amber-400 transition-colors">{{ t.nav.roiCalculator }}</a>
                         <a href="#comparison" class="hover:text-amber-400 transition-colors">{{ t.nav.comparison }}</a>
                         <a href="#faqs" class="hover:text-amber-400 transition-colors">{{ t.nav.faqs }}</a>
@@ -791,8 +793,10 @@ onUnmounted(() => {
                 </div>
 
                 <a @click="isMobileMenuOpen = false" href="#how-it-works" class="block text-slate-200 font-medium py-1.5">{{ t.nav.howItWorks }}</a>
+                <a @click="isMobileMenuOpen = false" href="#solutions" class="block text-slate-200 font-medium py-1.5">{{ t.nav.solutions }}</a>
                 <a @click="isMobileMenuOpen = false" href="#interactive-demo" class="block text-amber-400 font-medium py-1.5">{{ t.nav.interactiveDemo }}</a>
                 <a @click="isMobileMenuOpen = false" href="#features" class="block text-slate-200 font-medium py-1.5">{{ t.nav.features }}</a>
+                <a @click="isMobileMenuOpen = false" href="#directory" class="block text-slate-200 font-medium py-1.5">{{ t.nav.directory }}</a>
                 <a @click="isMobileMenuOpen = false" href="#roi-calculator" class="block text-slate-200 font-medium py-1.5">{{ t.nav.roiCalculator }}</a>
                 <a @click="isMobileMenuOpen = false" href="#comparison" class="block text-slate-200 font-medium py-1.5">{{ t.nav.comparison }}</a>
                 <a @click="isMobileMenuOpen = false" href="#faqs" class="block text-slate-200 font-medium py-1.5">{{ t.nav.faqs }}</a>
@@ -937,6 +941,121 @@ onUnmounted(() => {
                         </div>
                         <h3 class="text-lg font-bold text-white mb-2">{{ t.workflow.step4Title }}</h3>
                         <p class="text-xs text-slate-400 leading-relaxed">{{ t.workflow.step4Desc }}</p>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ========================================================================= -->
+        <!-- TAILORED RESTAURANT SOLUTIONS: POSTPAID & PREPAID -->
+        <!-- ========================================================================= -->
+        <section id="solutions" class="py-24 relative z-10 border-t border-white/5 bg-[#060a13]">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+                <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 text-xs font-bold border border-amber-500/20">
+                        <span>{{ t.solutions.tag }}</span>
+                    </div>
+                    <h2 class="text-3xl sm:text-5xl font-extrabold text-white leading-tight">
+                        {{ t.solutions.title }}
+                    </h2>
+                    <p class="text-slate-400 text-base sm:text-lg">
+                        {{ t.solutions.subtitle }}
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+
+                    <!-- Solution 1: Postpaid (Dine-in / Hall) -->
+                    <div class="relative group p-8 sm:p-10 rounded-3xl bg-slate-900/70 border border-amber-500/20 hover:border-amber-500/40 transition-all duration-300 flex flex-col justify-between shadow-2xl backdrop-blur-xl">
+                        <div class="space-y-6">
+                            <div class="flex items-center justify-between flex-wrap gap-3">
+                                <div class="w-14 h-14 rounded-2xl bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center justify-center text-3xl shadow-lg shadow-amber-500/10">
+                                    🍽️
+                                </div>
+                                <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-300 border border-amber-500/30">
+                                    {{ t.solutions.postpaidBadge }}
+                                </span>
+                            </div>
+
+                            <div>
+                                <h3 class="text-2xl font-black text-white mb-2">{{ t.solutions.postpaidTitle }}</h3>
+                                <p class="text-sm text-slate-300 leading-relaxed">{{ t.solutions.postpaidDesc }}</p>
+                            </div>
+
+                            <ul class="space-y-3.5 pt-2">
+                                <li
+                                    v-for="(point, idx) in t.solutions.postpaidPoints"
+                                    :key="idx"
+                                    class="flex items-start gap-3 text-xs sm:text-sm text-slate-300 leading-relaxed"
+                                >
+                                    <span class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+                                        ✓
+                                    </span>
+                                    <span>{{ point }}</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="pt-8 mt-8 border-t border-white/5 flex items-center justify-between flex-wrap gap-3">
+                            <div class="text-xs text-amber-400 font-semibold flex items-center gap-2">
+                                <span>⭐</span>
+                                <span>{{ currentLocale === 'ar' ? 'مثالي للمطاعم العائلية والمقاهي الراقية' : 'Ideal for Fine Dining & Family Lounges' }}</span>
+                            </div>
+                            <button
+                                @click="isDemoModalOpen = true"
+                                class="px-4 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold transition-all"
+                            >
+                                {{ currentLocale === 'ar' ? 'طلب عرض مخصص' : 'Request Demo' }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Solution 2: Prepaid (Fast Food & Counters) -->
+                    <div class="relative group p-8 sm:p-10 rounded-3xl bg-slate-900/70 border border-orange-500/20 hover:border-orange-500/40 transition-all duration-300 flex flex-col justify-between shadow-2xl backdrop-blur-xl">
+                        <div class="space-y-6">
+                            <div class="flex items-center justify-between flex-wrap gap-3">
+                                <div class="w-14 h-14 rounded-2xl bg-orange-500/15 text-orange-400 border border-orange-500/30 flex items-center justify-center text-3xl shadow-lg shadow-orange-500/10">
+                                    ⚡
+                                </div>
+                                <span class="px-3 py-1 rounded-full text-xs font-bold bg-orange-500/10 text-orange-300 border border-orange-500/30">
+                                    {{ t.solutions.prepaidBadge }}
+                                </span>
+                            </div>
+
+                            <div>
+                                <h3 class="text-2xl font-black text-white mb-2">{{ t.solutions.prepaidTitle }}</h3>
+                                <p class="text-sm text-slate-300 leading-relaxed">{{ t.solutions.prepaidDesc }}</p>
+                            </div>
+
+                            <ul class="space-y-3.5 pt-2">
+                                <li
+                                    v-for="(point, idx) in t.solutions.prepaidPoints"
+                                    :key="idx"
+                                    class="flex items-start gap-3 text-xs sm:text-sm text-slate-300 leading-relaxed"
+                                >
+                                    <span class="w-5 h-5 rounded-full bg-orange-500/20 text-orange-400 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+                                        ✓
+                                    </span>
+                                    <span>{{ point }}</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="pt-8 mt-8 border-t border-white/5 flex items-center justify-between flex-wrap gap-3">
+                            <div class="text-xs text-orange-400 font-semibold flex items-center gap-2">
+                                <span>🚀</span>
+                                <span>{{ currentLocale === 'ar' ? 'مثالي للبرجر، الشاورما، والوجبات السريعة' : 'Ideal for Burgers, Shawarma & Quick Cafés' }}</span>
+                            </div>
+                            <button
+                                @click="isDemoModalOpen = true"
+                                class="px-4 py-2 rounded-xl bg-orange-500/10 hover:bg-orange-500/20 text-orange-300 border border-orange-500/30 text-xs font-bold transition-all"
+                            >
+                                {{ currentLocale === 'ar' ? 'طلب عرض مخصص' : 'Request Demo' }}
+                            </button>
+                        </div>
                     </div>
 
                 </div>
@@ -1524,6 +1643,74 @@ onUnmounted(() => {
         </section>
 
         <!-- ========================================================================= -->
+        <!-- RESTAURANT DIRECTORY & FREE PROMOTION -->
+        <!-- ========================================================================= -->
+        <section id="directory" class="py-24 relative z-10 border-t border-white/5 bg-[#070b14]">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+                <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-500/10 via-slate-900/90 to-orange-500/10 border border-amber-500/30 p-8 sm:p-14 shadow-2xl backdrop-blur-2xl">
+                    <div class="absolute -top-24 -right-24 w-80 h-80 bg-amber-500/15 rounded-full blur-3xl pointer-events-none"></div>
+                    <div class="absolute -bottom-24 -left-24 w-80 h-80 bg-orange-500/15 rounded-full blur-3xl pointer-events-none"></div>
+
+                    <div class="relative z-10 max-w-3xl mx-auto text-center space-y-5 mb-12">
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/15 text-amber-300 text-xs font-bold border border-amber-500/30">
+                            <span>{{ t.directoryPromo.tag }}</span>
+                        </div>
+                        <h2 class="text-3xl sm:text-5xl font-black text-white tracking-tight">
+                            {{ t.directoryPromo.title }}
+                        </h2>
+                        <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
+                            {{ t.directoryPromo.subtitle }}
+                        </p>
+                        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-xs sm:text-sm font-bold">
+                            <span>✨</span>
+                            <span>{{ t.directoryPromo.badge }}</span>
+                        </div>
+                    </div>
+
+                    <!-- 3 Benefit Pillars -->
+                    <div class="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="p-6 rounded-2xl bg-slate-950/70 border border-white/5 hover:border-amber-500/30 transition-all">
+                            <div class="w-12 h-12 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center text-2xl mb-4">
+                                📍
+                            </div>
+                            <h4 class="text-base font-bold text-white mb-2">{{ t.directoryPromo.benefit1Title }}</h4>
+                            <p class="text-xs text-slate-400 leading-relaxed">{{ t.directoryPromo.benefit1Desc }}</p>
+                        </div>
+
+                        <div class="p-6 rounded-2xl bg-slate-950/70 border border-white/5 hover:border-amber-500/30 transition-all">
+                            <div class="w-12 h-12 rounded-xl bg-orange-500/15 text-orange-400 flex items-center justify-center text-2xl mb-4">
+                                🎟️
+                            </div>
+                            <h4 class="text-base font-bold text-white mb-2">{{ t.directoryPromo.benefit2Title }}</h4>
+                            <p class="text-xs text-slate-400 leading-relaxed">{{ t.directoryPromo.benefit2Desc }}</p>
+                        </div>
+
+                        <div class="p-6 rounded-2xl bg-slate-950/70 border border-white/5 hover:border-amber-500/30 transition-all">
+                            <div class="w-12 h-12 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center text-2xl mb-4">
+                                💰
+                            </div>
+                            <h4 class="text-base font-bold text-white mb-2">{{ t.directoryPromo.benefit3Title }}</h4>
+                            <p class="text-xs text-slate-400 leading-relaxed">{{ t.directoryPromo.benefit3Desc }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Join CTA -->
+                    <div class="relative z-10 pt-10 text-center">
+                        <button
+                            @click="isDemoModalOpen = true"
+                            class="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-orange-500 text-slate-950 font-black text-sm sm:text-base shadow-xl shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                        >
+                            <span>{{ currentLocale === 'ar' ? 'سجّل مطعمك في دليل تدلّل الآن 🚀' : 'Feature Your Restaurant on Tedallal Now 🚀' }}</span>
+                        </button>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ========================================================================= -->
         <!-- ROI & SAVINGS CALCULATOR -->
         <!-- ========================================================================= -->
         <section id="roi-calculator" class="py-24 relative z-10 border-t border-white/5 bg-[#070b14]">
@@ -1990,8 +2177,10 @@ onUnmounted(() => {
                         <h5 class="text-xs font-bold text-white uppercase tracking-wider">{{ t.footer.quickLinksTitle }}</h5>
                         <ul class="space-y-2 text-xs">
                             <li><a href="#how-it-works" class="hover:text-amber-400 transition-colors">{{ t.nav.howItWorks }}</a></li>
+                            <li><a href="#solutions" class="hover:text-amber-400 transition-colors">{{ t.nav.solutions }}</a></li>
                             <li><a href="#interactive-demo" class="hover:text-amber-400 transition-colors">{{ t.nav.interactiveDemo }}</a></li>
                             <li><a href="#features" class="hover:text-amber-400 transition-colors">{{ t.nav.features }}</a></li>
+                            <li><a href="#directory" class="hover:text-amber-400 transition-colors">{{ t.nav.directory }}</a></li>
                             <li><a href="#roi-calculator" class="hover:text-amber-400 transition-colors">{{ t.nav.roiCalculator }}</a></li>
                             <li><a href="#faqs" class="hover:text-amber-400 transition-colors">{{ t.nav.faqs }}</a></li>
                         </ul>
@@ -2015,8 +2204,8 @@ onUnmounted(() => {
                         {{ t.footer.rights }} {{ new Date().getFullYear() }}
                     </div>
                     <div class="flex items-center gap-6">
-                        <span class="hover:text-slate-400 transition-colors">Laravel 12 & Vue 3 Composition</span>
-                        <span class="hover:text-slate-400 transition-colors">WebSockets Powered</span>
+                        <span class="hover:text-slate-400 transition-colors">{{ currentLocale === 'ar' ? 'أعلى معايير حماية وأمان البيانات' : 'Enterprise Cloud Security' }}</span>
+                        <span class="hover:text-slate-400 transition-colors">{{ currentLocale === 'ar' ? 'دعم فني واستجابة فورية على مدار الساعة' : '24/7 Dedicated Support' }}</span>
                     </div>
                 </div>
 

@@ -8,10 +8,12 @@ export interface LandingTranslation {
     nav: {
         brandSubtitle: string;
         howItWorks: string;
+        solutions: string;
         interactiveDemo: string;
         features: string;
         roiCalculator: string;
         comparison: string;
+        directory: string;
         faqs: string;
         signIn: string;
         dashboard: string;
@@ -30,6 +32,31 @@ export interface LandingTranslation {
         badgeNoApp: string;
         badgeSockets: string;
         badgeMultiTenant: string;
+    };
+    solutions: {
+        tag: string;
+        title: string;
+        subtitle: string;
+        postpaidTitle: string;
+        postpaidBadge: string;
+        postpaidDesc: string;
+        postpaidPoints: string[];
+        prepaidTitle: string;
+        prepaidBadge: string;
+        prepaidDesc: string;
+        prepaidPoints: string[];
+    };
+    directoryPromo: {
+        tag: string;
+        title: string;
+        subtitle: string;
+        badge: string;
+        benefit1Title: string;
+        benefit1Desc: string;
+        benefit2Title: string;
+        benefit2Desc: string;
+        benefit3Title: string;
+        benefit3Desc: string;
     };
     workflow: {
         tag: string;
@@ -210,43 +237,80 @@ export const translations: Record<Locale, LandingTranslation> = {
             description: 'منصة تدلّل (Tedallal) السحابية المتكاملة للمطاعم والكافيهات. نظام طلب ذكي عبر رموز الاستجابة السريعة QR بدون تطبيقات، شاشة مطبخ حية KDS عبر WebSockets، طباعة حرارية 80mm، وتحليلات أداء متقدمة.',
         },
         nav: {
-            brandSubtitle: 'المنظومة السحابية للضيافة الذكية',
-            howItWorks: 'كيف يعمل النظام؟',
+            brandSubtitle: 'المنظومة السحابية لنمو وأتمتة المطاعم',
+            howItWorks: 'كيف يعمل؟',
+            solutions: 'حلول المطاعم',
             interactiveDemo: 'المحاكي التفاعلي',
-            features: 'مزايا المنصة',
-            roiCalculator: 'حاسبة العائد والتوفير',
+            features: 'مزايا المنظومة',
+            roiCalculator: 'حاسبة الأرباح والتوفير',
             comparison: 'التقليدي vs تدلّل',
+            directory: 'دليل المطاعم',
             faqs: 'الأسئلة الشائعة',
             signIn: 'تسجيل الدخول',
             dashboard: 'لوحة التحكم',
-            bookDemo: 'طلب عرض تجريبي',
+            bookDemo: 'طلب استشارة وعرض حي',
             currencyTitle: 'الدولة والعملة المعروضة',
             autoDetect: 'كشف تلقائي ⚡',
         },
         hero: {
-            statusBadge: 'الجيل الجديد من منصات طلبات المطاعم بنظام Multi-Tenant SaaS',
-            version: 'v2.4 Live Reverb',
-            titleLine1: 'حوّل تجربة ضيافتك إلى',
-            titleLine2: 'سرعة رقمية فائقة',
-            subtitle: 'منظومة سحابية متكاملة تُمكّن زبائنك من الطلب فوراً عبر مسح رمز QR من الطاولة دون تنزيل أي تطبيق، مع إرسال الطلبات آنياً لشاشات المطبخ KDS والطباعة الحرارية المباشرة.',
+            statusBadge: 'المنظومة السحابية الأولى لزيادة مبيعات وتسريع خدمة المطاعم',
+            version: 'جاهز للتشغيل في 10 دقائق ⚡',
+            titleLine1: 'ضاعف سرعة خدمة زبائنك',
+            titleLine2: 'وارفع أرباح مطعمك بنسبة 30%',
+            subtitle: 'منظومة ذكية تمكّن زبائنك من الطلب فوراً عبر مسح رمز QR من هواتفهم، مع وصول فوري للطلبات إلى شاشات المطبخ وطابعات البونات بدون أخطاء يدوية وبدون الحاجة لشراء أجهزة مكلفة.',
             tryDemoBtn: 'جرّب المحاكي التفاعلي الحي ⚡',
             bookConsultationBtn: 'احجز جلسة استشارية وتجربة مجانية',
-            badgeNoApp: 'بدون تطبيقات أو تسجيل',
-            badgeSockets: 'تحديثات فورية عبر WebSockets',
-            badgeMultiTenant: 'معمارية سحابية متعددة الفروع',
+            badgeNoApp: 'يعمل فوراً بدون تنزيل أي تطبيق',
+            badgeSockets: 'وصول فوري للطلبات لشاشات المطبخ',
+            badgeMultiTenant: 'حلان مخصصان: لمطاعم الصالة والوجبات السريعة',
+        },
+        solutions: {
+            tag: '🎯 حلول مخصصة حسب نموذج عملك',
+            title: 'سواء كان مطعم صالة وضيافة أو وجبات سريعة.. تدلّل صُمم لأجلك',
+            subtitle: 'نوفر لك المنظومة الأنسب لطريقة تقديم طعامك لتضمن أعلى كفاءة تشغيلية وأفضل تجربة لزبائنك.',
+            postpaidTitle: 'مطاعم الصالة والضيافة الراقية',
+            postpaidBadge: 'نظام الدفع اللاحق (Postpaid)',
+            postpaidDesc: 'مثالي للمطاعم التي يقضي فيها الزبون وقتاً للاستمتاع بالأجواء والطلب على مراحل متعددة.',
+            postpaidPoints: [
+                'طلب متعدد ومستمر: يطلب الزبون المقبلات ثم الأطباق الرئيسية والمشروبات على نفس الحساب بكل سلاسة.',
+                'تفرغ الويتر للترحيب والضيافة الراقية بدلاً من تدوين الطلبات والركض المرهق بين الطاولات والمطبخ.',
+                'طلب الفاتورة بنقرة زر ودفع الحساب عند المغادرة نقداً أو بالشبكة مع إغلاق آلي للطاولة.',
+                'ميزة استراتيجية قادمة: حجز الطاولات عن بُعد لكبار الشخصيات عبر بطاقات VIP مخصصة لزبائنك المميزين.'
+            ],
+            prepaidTitle: 'مطاعم الوجبات السريعة والكافيهات',
+            prepaidBadge: 'نظام الدفع المسبق وشبابيك الاستلام (Prepaid)',
+            prepaidDesc: 'مصمم لسرعة الحركة، القضاء التام على طوابير الكاشير، وضمان دقة تسليم كل وجبة لصاحبها.',
+            prepaidPoints: [
+                'دفع مسبق فوري: يدفع الزبون عند الطلب أو عبر شباك الكاشير مباشرة قبل بدء تحضير الوجبة.',
+                'أرقام طلبات واضحة وشاشات نداء آلية تتيح للزبون معرفة جاهزية طلبه فوراً دون أي تزاحم.',
+                'إدارة شبابيك الاستلام المتعددة وتوجيه كل صنف لنافذة التحضير المختصة (ساندوتش، مشروبات، شاورما).',
+                'مضاعفة مبيعات ساعات الذروة بتجهيز عشرات الوجبات في دقائق معدودة وبأقل عدد من موظفي الصندوق.'
+            ],
+        },
+        directoryPromo: {
+            tag: '🚀 تسويق مجاني لمطعمك',
+            title: 'دليل تدلّل للمطاعم • زبائن جدد لمطعمك بـ 0% عمولة!',
+            subtitle: 'بانضمامك إلى تدلّل، يحصل مطعمك على ظهور ترويجي مميز في دليل المطاعم الموحد لتصل إلى آلاف الزبائن في منطقتك.',
+            badge: '0% عمولة مبيعات (وداعاً لاقتطاع تطبيقات التوصيل 25%)',
+            benefit1Title: 'استعراض قائمتك وعروضك مجاناً',
+            benefit1Desc: 'يتصفح الزوار منيو مطعمك، صور أطباقك اللذيذة، وموقعك الجغرافي لجذبهم لزيارة مطعمك مباشرة.',
+            benefit2Title: 'كوبونات وحسومات حصرية',
+            benefit2Desc: 'أطلق حملات خصم وكوبونات ترويجية خاصة بمطعمك لجذب زبائن جدد وتشجيعهم على تكرار الزيارة.',
+            benefit3Title: 'أرباحك كاملة 100% لك',
+            benefit3Desc: 'لا نقتطع أي نسب مئوية من مبيعاتك نهائياً؛ احتفظ بكامل أرباحك وعائد جهدك دون أي شركاء خفيين.'
         },
         workflow: {
-            tag: '⚡ دورة عمل مؤتمتة بالكامل',
+            tag: '⚡ دورة عمل مؤتمتة وسريعة',
             title: 'كيف تتدفق تجربة الطلب من الطاولة إلى المطبخ؟',
-            subtitle: 'هندسة تقنية متكاملة تُقضي على طوابير الانتظار، وتختصر زمن معالجة الطلبات إلى ثوانٍ معدودة.',
+            subtitle: 'تسلسل ذكي يقضي على طوابير الانتظار، ويختصر زمن معالجة الطلبات إلى ثوانٍ معدودة.',
             step1Title: 'المسح والطلب الفوري',
-            step1Desc: 'يمسح الزبون رمز الـ QR على الطاولة بكاميرا الجوال، ليفتح المنيو الذكي فوراً بسرعة البرق بدون أي تطبيق.',
-            step2Title: 'المزامنة الحية عبر Reverb',
-            step2Desc: 'بمجرد ضغط الزبون على تأكيد الطلب، يُبث الحدث عبر WebSockets المشفرة إلى طاقم الخدمة والمطبخ في أقل من 200 ميلي ثانية.',
+            step1Desc: 'يمسح الزبون رمز الـ QR بكاميرا هاتفه، ليفتح المنيو الذكي الفاتح للشهية فوراً بدون أي تطبيق وبدون انتظار الويتر.',
+            step2Title: 'وصول فوري للمطبخ والكاشير',
+            step2Desc: 'بمجرد تأكيد الطلب، يصل الأوردر إلى شاشات الطهاة وطابعات البونات آلياً في أجزاء من الثانية دون أي أخطاء يدوية.',
             step3Title: 'شاشة المطبخ الذكية KDS',
-            step3Desc: 'تنظيم كانبان تفاعلي للطلبات (جديد، قيد الطهي، جاهز للتقديم) مع تتبع دقيق للزمن وتنبيهات صوتية فورية.',
-            step4Title: 'الطبع الحراري والإقفال',
-            step4Desc: 'طباعة بونات المطبخ والفواتير الضريبية تلقائياً على طابعات 80mm مع تحديث لحظي للمخزون وتقارير الـ POS.',
+            step3Desc: 'تنظيم محطات الطهي (جديد، قيد التحضير، جاهز للتقديم) مع مؤقتات دقيقة تضمن سرعة تسليم الوجبة ساخنة.',
+            step4Title: 'الطباعة وإقفال الحساب',
+            step4Desc: 'طباعة بونات المطبخ والفواتير الضريبية تلقائياً على طابعاتك الحالية مع تحديث لحظي للمبيعات والتقارير.',
         },
         demo: {
             tag: '🎮 تجربة تفاعلية حيّة حقيقية',
@@ -291,21 +355,21 @@ export const translations: Record<Locale, LandingTranslation> = {
             aiInsightText: 'تظهر البيانات ارتفاع طلبات "المقبلات المشكلة" بين الساعة 8 و 10 مساءً بنسبة 45%. نقترح إنشاء عرض كومبو يجمع المشاوي مع المقبلات لرفع متوسط قيمة الفاتورة بمقدار',
         },
         features: {
-            tag: '💎 قدرات تقنية فائقة التطور',
-            title: 'منظومة صُممت لتحمّل أعلى أوقات الضغط والذروة',
-            subtitle: 'بُنيت تدلّل بأحدث معايير الأداء والأمان السحابي، لتضمن استمرارية أعمالك بلا توقف ولا بطء.',
-            f1Title: 'تزامن لحظي عبر WebSockets',
-            f1Desc: 'تقنية Laravel Reverb المدمجة تضمن وصول الأوردرات لشاشات الطهاة وطاقم الصالة في أجزاء من الثانية دون إرهاق الخادم.',
-            f2Title: 'صفر تنزيل وصفر احتكاك للزبون',
-            f2Desc: 'يعمل المنيو مباشرة في متصفح الزبون بمجرد مسح رمز الاستجابة السريعة، مع واجهة فائقة السلاسة تشبه التطبيقات الأصلية.',
-            f3Title: 'شاشات مطبخ تفاعلية KDS',
-            f3Desc: 'استبدل الفواتير الورقية الفوضوية بشاشات كانبان مخصصة للمطبخ والبار، مع مؤقتات لونية توضح الطلبات المتأخرة فوراً.',
-            f4Title: 'طباعة حرارية 80mm متكاملة',
-            f4Desc: 'دعم مباشر للطباعة الصامتة والتلقائية للبونات والفواتير الضريبية المتوافقة مع معايير هيئة الزكاة والضريبة والجمارك.',
-            f5Title: 'معمارية SaaS متعددة المستأجرين',
-            f5Desc: 'تحكم مرن بالميزات والإضافات لكل مطعم بشكل مستقل، مع إدارة اشتراكات مركزية وحماية وضع الصيانة الحصري لمالك المنصة.',
-            f6Title: 'تحليلات تنبؤية وقرارات مدعومة بالبيانات',
-            f6Desc: 'تقارير يومية وشهرية دقيقة توضح أكثر الأصناف ربحية، متوسط وقت التحضير، وساعات الذروة لتوزيع الكوادر بكفاءة.',
+            tag: '🚀 نمو مبيعات وكفاءة تشغيلية',
+            title: 'مزايا حصرية صُممت لزيادة أرباح مطعمك',
+            subtitle: 'صُممت تدلّل بأحدث حلول الضيافة السحابية لتضمن تشغيل سلس، أرباح أعلى، وزبائن أكثر سعادة.',
+            f1Title: 'تسريع دوران الطاولات 35%',
+            f1Desc: 'القضاء على أوقات الانتظار المملة يتيح استقبال زبائن أكثر في أوقات الذروة وزيادة المبيعات اليومية.',
+            f2Title: 'رفع متوسط الفاتورة بنسبة 20%',
+            f2Desc: 'صور الأطباق الشهية واقتراحات الإضافات والمشروبات التلقائية (Upselling) تدفع الزبون لزيادة مشترياته.',
+            f3Title: 'شاشات مطبخ تفاعلية تلغي الفوضى',
+            f3Desc: 'وداعاً للبونات الضائعة؛ شاشات منظمة للشيفات حسب محطات الطهي مع مؤقتات دقيقة لتسليم الوجبة ساخنة وبأعلى جودة.',
+            f4Title: 'تشغيل فوري على طابعاتك الحالية',
+            f4Desc: 'لا تكاليف إضافية لشراء أجهزة؛ النظام متوافق مباشرة مع كافة طابعات الكاشير والمطبخ 80mm المتوفرة لديك.',
+            f5Title: 'تسويق مجاني في دليل تدلّل',
+            f5Desc: 'ظهور مطعمك وعروضك وكوبوناتك أمام آلاف الزوار في دليل تدلّل الموحد لجلب زبائن جدد بـ 0% عمولة على المبيعات.',
+            f6Title: 'تقارير ربحية تكشف أسرار المبيعات',
+            f6Desc: 'اكتشف الأصناف الأكثر ربحية، وحدد ساعات الذروة بدقة لجدولة موظفيك وتقليل هدر المواد الغذائية.',
         },
         roi: {
             tag: '💰 حاسبة العائد والتوفير المالي',
@@ -342,7 +406,7 @@ export const translations: Record<Locale, LandingTranslation> = {
             r2Ted: 'تعديل فوري من لوحة التحكم بنقرة واحدة ينعكس لجميع الزبائن فوراً',
             r3Label: 'إيصال الطلب للمطبخ',
             r3Trad: 'مشي النادل للكاشير، ثم طباعة بون ورقي قد يضيع أو يتعرض للبلل',
-            r3Ted: 'بث رقمي فوري لشاشات المطبخ عبر WebSockets بأقل من 200ms',
+            r3Ted: 'إرسال رقمي فوري لشاشات المطبخ وطابعات البونات في ثانية واحدة بدون أخطاء السماع',
             r4Label: 'تكلفة العمالة والصالة',
             r4Trad: 'الحاجة لعدد مضاعف من طاقم الصالة فقط لتدوين وتوصيل الأوردرات',
             r4Ted: 'تقليص جهد تسجيل الطلبات بنسبة 70% وتوجيه الطاقم لجودة الخدمة والترحيب',
@@ -360,14 +424,14 @@ export const translations: Record<Locale, LandingTranslation> = {
             t2Text: '«أفضل استثمار قمنا به هذا العام. وفرنا تكاليف طباعة المنيو الموسمية، وارتفع متوسط قيمة الفاتورة بنسبة 18% بفضل صور الأطباق الاحترافية في منيو الجوال.»',
             t2Author: 'سارة العبدالله',
             t2Role: 'مديرة العمليات والضيافة',
-            t3Text: '«السرعة في تدلّل مذهلة. خوادم Reverb تعمل بثبات خارق حتى في ليالي الجمعة المزدحمة. أنصح أي مالك مطعم أو كافيه بالتحول إلى تدلّل فوراً.»',
+            t3Text: '«السرعة في تدلّل استثنائية. الخدمة السحابية تعمل بثبات فائق حتى في أوقات الذروة المزدحمة. أنصح أي مالك مطعم أو كافيه بالانضمام فوراً.»',
             t3Author: 'الشيف فهد التميمي',
             t3Role: 'الشيف التنفيذي والشريك المؤسس',
         },
         faqs: {
             tag: '💬 الأسئلة الأكثر شيوعاً',
             title: 'كل ما تحتاج معرفته عن منصة تدلّل',
-            subtitle: 'إجابات واضحة ومباشرة عن الاستفسارات التقنية والتشغيلية للمنصة.',
+            subtitle: 'إجابات واضحة ومباشرة عن الاستفسارات التشغيلية لمنظومة تدلّل.',
             items: [
                 {
                     q: 'هل يحتاج زبائن المطعم إلى تنزيل أي تطبيق لطلب الطعام؟',
@@ -375,7 +439,7 @@ export const translations: Record<Locale, LandingTranslation> = {
                 },
                 {
                     q: 'كيف تصل طلبات الزبائن إلى المطبخ والكاشير فوراً؟',
-                    a: 'تعتمد تدلّل على محرك Laravel Reverb لبث أحداث الطلب عبر قنوات WebSockets مشفرة. وبمجرد ضغط الزبون على «تأكيد الطلب»، تظهر تفاصيل الأوردر في شاشة المطبخ KDS وتُطبع الفاتورة آلياً في أجزاء من الثانية.',
+                    a: 'بمجرد ضغط الزبون على «تأكيد الطلب»، تُبث بيانات الأوردر سحابياً في أقل من ثانية إلى شاشات المطبخ وطابعات البونات، ليرى الطهاة تفاصيل الوجبة وملاحظاتها الخاصة مباشرة وبدون أي تأخير.',
                 },
                 {
                     q: 'هل يدعم النظام الربط مع طابعات الفواتير الحرارية في الكاشير والمطبخ؟',
@@ -383,11 +447,11 @@ export const translations: Record<Locale, LandingTranslation> = {
                 },
                 {
                     q: 'ماذا يحدث إذا تضرر كود الـ QR على إحدى الطاولات؟',
-                    a: 'بكل تأكيد، تتيح لوحة تحكم المطعم إعادة توليد رمز الـ QR والتوكن السري للطاولة بنقرة زر واحدة (Regenerate QR) بشكل فوري، مع إبقاء سجل الطلبات والمبيعات التاريخية سليماً دون أي تأثر.',
+                    a: 'بكل تأكيد، تتيح لوحة تحكم المطعم إعادة توليد رمز الـ QR للطاولة بنقرة زر واحدة بشكل فوري وطباعته مجدداً، مع إبقاء سجل الطلبات والمبيعات التاريخية سليماً دون أي تأثر.',
                 },
                 {
-                    q: 'هل يمكن تشغيل النظام على عدة فروع أو مطاعم؟',
-                    a: 'نعم، صُممت المنصة وفق معمارية تعدد المستأجرين (Multi-Tenant SaaS) مع لوحة تحكم مركزية للمنصة تتيح تفعيل وإدارة المطاعم، والتحكم بالباقات والميزات الإضافية (Modular Add-ons) بكل مرونة وسلاسة.',
+                    q: 'هل يدعم النظام تشغيل فروع متعددة للمطعم؟',
+                    a: 'نعم بكل سهولة، تتيح المنصة إدارة جميع فروع مطعمك من مكان واحد، مع تخصيص المنيو والأسعار لكل فرع، ولوحة تحكم مركزية للمالك لمتابعة أداء ومبيعات الفروع لحظة بلحظة.',
                 },
             ],
         },
@@ -412,8 +476,8 @@ export const translations: Record<Locale, LandingTranslation> = {
             successDesc: 'شكراً لك. سيتواصل معك مستشار حلول الضيافة لدى «تدلّل» خلال ساعات قليلة عبر الواتساب لتجهيز العرض الحي لحساب مطعمك.',
         },
         footer: {
-            brandDesc: 'منظومة سحابية سعودية متطورة مصممة للمطاعم والكافيهات بنظام SaaS متعدد المستأجرين. أتمتة كاملة لدورة الطلب من الطاولة حتى شاشات المطبخ والطباعة الحرارية.',
-            serverStatus: 'كافة الخوادم السحابية ومحرك Reverb يعملان بكفاءة 99.98%',
+            brandDesc: 'منظومة سحابية متطورة مصممة خصيصاً للمطاعم والكافيهات لزيادة الأرباح وأتمتة دورة الطلب من الطاولة حتى شاشات المطبخ والطباعة الحرارية.',
+            serverStatus: 'الخدمة السحابية تعمل بكفاءة 99.98% على مدار الساعة',
             quickLinksTitle: 'روابط سريعة',
             portalAccessTitle: 'بوابات النظام',
             adminPortal: 'دخول إدارة المطعم (Admin)',
@@ -426,47 +490,84 @@ export const translations: Record<Locale, LandingTranslation> = {
 
     en: {
         meta: {
-            title: 'Tedallal Platform | Next-Gen Cloud Restaurant Management & QR Ordering',
-            description: 'Tedallal is an all-in-one cloud hospitality platform for restaurants and cafes. Smart QR table ordering without apps, real-time WebSocket KDS kitchen screens, 80mm thermal printing, and advanced BI analytics.',
+            title: 'Tedallal Platform | Smart Cloud Hospitality & QR Ordering for Restaurants',
+            description: 'Tedallal is an all-in-one cloud hospitality platform for restaurants and cafes. Smart QR table ordering without apps, real-time KDS kitchen screens, 80mm thermal printing, and revenue-boosting analytics.',
         },
         nav: {
-            brandSubtitle: 'Next-Gen Cloud Hospitality Platform',
+            brandSubtitle: 'Cloud Platform for Restaurant Growth',
             howItWorks: 'How It Works',
+            solutions: 'Solutions',
             interactiveDemo: 'Live Demo',
-            features: 'Features',
+            features: 'Platform Benefits',
             roiCalculator: 'ROI Calculator',
-            comparison: 'Comparison',
+            comparison: 'Legacy vs Tedallal',
+            directory: 'Dining Directory',
             faqs: 'FAQ',
             signIn: 'Sign In',
             dashboard: 'Dashboard',
-            bookDemo: 'Book a Demo',
+            bookDemo: 'Book a Live Demo',
             currencyTitle: 'Display Country & Currency',
             autoDetect: 'Auto-detected ⚡',
         },
         hero: {
-            statusBadge: 'Next-Gen Multi-Tenant Restaurant SaaS Platform',
-            version: 'v2.4 Live Reverb',
-            titleLine1: 'Elevate Dining with',
-            titleLine2: 'Ultra-Fast Digital Ordering',
-            subtitle: 'An all-in-one cloud platform empowering guests to order instantly via table QR codes with zero app downloads, streaming tickets in real time to Kitchen Display Systems (KDS) and thermal printers.',
+            statusBadge: 'Cloud Platform Engineered to Increase Revenue & Service Speed',
+            version: 'Live in 10 Minutes ⚡',
+            titleLine1: 'Double Your Service Speed',
+            titleLine2: 'And Boost Restaurant Revenue by 30%',
+            subtitle: 'An intelligent hospitality system empowering your guests to order instantly via mobile QR codes, dispatching tickets to kitchen screens and thermal printers with zero order mistakes and zero costly proprietary hardware.',
             tryDemoBtn: 'Try Live Interactive Demo ⚡',
             bookConsultationBtn: 'Book a Free Demo Consultation',
-            badgeNoApp: 'Zero App Downloads Required',
-            badgeSockets: 'Real-Time WebSocket Sync',
-            badgeMultiTenant: 'Multi-Branch SaaS Architecture',
+            badgeNoApp: 'Works instantly without downloading apps',
+            badgeSockets: 'Instant ticket delivery to kitchen screens',
+            badgeMultiTenant: 'Dual solutions: Dine-in & Fast Casual',
+        },
+        solutions: {
+            tag: '🎯 Tailored Operating Solutions',
+            title: 'Whether a Dine-In Restaurant or Fast-Casual Café.. Built for You',
+            subtitle: 'We provide the perfect workflow matching how you serve food, ensuring maximum kitchen efficiency and delighting your guests.',
+            postpaidTitle: 'Dine-In & Full-Service Restaurants',
+            postpaidBadge: 'Postpaid Hospitality System',
+            postpaidDesc: 'Ideal for dining rooms where guests relax and order multiple courses throughout their meal.',
+            postpaidPoints: [
+                'Continuous multi-course ordering: guests add appetizers, entrees, desserts, and drinks to their running bill effortlessly.',
+                'Frees waitstaff to focus on genuine guest hospitality rather than exhausting order-taking and punching.',
+                'Guests request their bill in one tap and pay via card or cash at the end with automatic table clearance.',
+                'Upcoming strategic perk: Remote VIP table reservations with custom branded cards for your top clientele.'
+            ],
+            prepaidTitle: 'Fast Food, Cafés & Pickup Counters',
+            prepaidBadge: 'Prepaid & Pickup Counter System',
+            prepaidDesc: 'Engineered for rapid table turns, zero cashier bottlenecks, and 100% accurate food handoffs.',
+            prepaidPoints: [
+                'Instant upfront payment: guests pay immediately upon ordering or at the cashier counter before preparation begins.',
+                'Clear order numbers and automated call screens notify guests the moment their food is ready.',
+                'Multi-window routing: send burgers, drinks, and shawarma tickets to their designated prep counters automatically.',
+                'Multiply rush-hour throughput by handling dozens of orders per minute with minimal cashier staff.'
+            ],
+        },
+        directoryPromo: {
+            tag: '🚀 Free Marketing & Customer Acquisition',
+            title: 'Tedallal Restaurant Directory • New Customers at 0% Commission!',
+            subtitle: 'When you join Tedallal, your restaurant is featured in our centralized dining directory, connecting you with thousands of hungry diners nearby.',
+            badge: '0% sales commission compared to 25% charged by food delivery apps',
+            benefit1Title: 'Free exposure for your menu and specials',
+            benefit1Desc: 'Diners discover your signature dishes, photos, and location directly to drive foot traffic.',
+            benefit2Title: 'Exclusive promo codes and discounts',
+            benefit2Desc: 'Launch custom discount codes and seasonal deals to attract new diners and turn them into loyal regulars.',
+            benefit3Title: 'Keep 100% of your earnings',
+            benefit3Desc: 'We take zero cut from your food sales. All your hard-earned margins remain entirely in your pocket.'
         },
         workflow: {
             tag: '⚡ Fully Automated Operations',
             title: 'How Orders Flow Seamlessly from Table to Kitchen',
-            subtitle: 'A high-performance architecture eliminating waiting queues and reducing ticket processing to mere seconds.',
+            subtitle: 'A streamlined sequence eliminating waiting queues and reducing ticket processing to mere seconds.',
             step1Title: 'Instant QR Scan & Order',
-            step1Desc: 'Guests scan the table QR code with their mobile camera to launch the lightning-fast digital menu with zero app barrier.',
-            step2Title: 'Sub-200ms Reverb Sync',
-            step2Desc: 'Upon guest order confirmation, encrypted WebSockets broadcast the ticket to kitchen and service staff in under 200ms.',
+            step1Desc: 'Guests scan the table QR code with their mobile camera to launch the appetizing digital menu with zero app barrier.',
+            step2Title: 'Instant Kitchen & Cashier Dispatch',
+            step2Desc: 'Upon guest order confirmation, the ticket instantly displays on chef screens and thermal printers with zero manual waiter errors.',
             step3Title: 'Smart Kitchen Display (KDS)',
-            step3Desc: 'Intuitive Kanban order stages (New, Cooking, Ready) with precise countdown timers and audible sound alerts.',
+            step3Desc: 'Intuitive order stages (New, Cooking, Ready) with precise countdown timers ensuring every meal is delivered piping hot.',
             step4Title: 'Thermal Printing & POS Sync',
-            step4Desc: 'Automatic 80mm kitchen tickets and tax invoices with instant inventory reduction and real-time sales reporting.',
+            step4Desc: 'Automatic kitchen tickets and tax invoices print directly on your existing hardware with live sales updates.',
         },
         demo: {
             tag: '🎮 Live Interactive Simulation',
@@ -511,21 +612,21 @@ export const translations: Record<Locale, LandingTranslation> = {
             aiInsightText: 'Data shows a 45% surge in "Mixed Appetizers" between 8:00 PM and 10:00 PM. We recommend launching a dinner combo pairing grills with appetizers to boost average ticket value by',
         },
         features: {
-            tag: '💎 Enterprise-Grade Engineering',
-            title: 'Engineered to Excel Under Maximum Rush Hours',
-            subtitle: 'Crafted with cutting-edge cloud infrastructure and high-availability standards to guarantee zero downtime and lightning response times.',
-            f1Title: 'Instant WebSockets Synchronization',
-            f1Desc: 'Native Laravel Reverb engine streams guest orders to kitchen display systems and front-of-house staff within fractions of a second.',
-            f2Title: 'Zero Friction & Zero App Installs',
-            f2Desc: 'Guests browse, customize, and order instantly in mobile browsers with fluid 60fps micro-animations matching native mobile apps.',
-            f3Title: 'Interactive Kitchen Display (KDS)',
-            f3Desc: 'Replace disorganized paper tickets with clean digital Kanban boards featuring live color-coded timers and audio chimes.',
-            f4Title: 'Seamless 80mm Thermal Receipt Printing',
-            f4Desc: 'Native silent printing for kitchen prep tickets and compliant fiscal tax receipts without relying on third-party drivers.',
-            f5Title: 'Multi-Tenant SaaS Architecture',
-            f5Desc: 'Granular modular features per restaurant branch, central subscription controls, and dedicated maintenance mode safeguards.',
-            f6Title: 'Predictive BI & Real-Time Reporting',
-            f6Desc: 'Deep operational clarity uncovering highest-margin dishes, average prep durations, and optimal staffing schedules.',
+            tag: '🚀 Revenue Growth & Operational Excellence',
+            title: 'Engineered Exclusively to Boost Restaurant Profits',
+            subtitle: 'Crafted with high-reliability cloud standards to guarantee flawless service during your highest rush hours.',
+            f1Title: '35% Faster Table Turnover',
+            f1Desc: 'Eliminate order wait times, accommodate more diners during peak hours, and maximize daily revenue.',
+            f2Title: 'Boost Average Order Value by 20%',
+            f2Desc: 'Appetizing food imagery and automatic upsell prompts encourage diners to add extras and specialty drinks.',
+            f3Title: 'Smart Kitchen Display Screens (KDS)',
+            f3Desc: 'Eliminate lost paper tickets with streamlined digital kitchen stations and timers for hot, timely food delivery.',
+            f4Title: 'Zero Expensive Hardware Upgrades',
+            f4Desc: 'Runs seamlessly with any standard 80mm thermal receipt printer and your staff’s existing tablets or smartphones.',
+            f5Title: 'Free Growth via Tedallal Directory',
+            f5Desc: 'Promote your restaurant, menus, and discount codes to local diners at 0% sales commission.',
+            f6Title: 'Clear Profitability & Sales Insights',
+            f6Desc: 'Uncover your highest-margin dishes, discover peak rush hours, and optimize staffing schedules.',
         },
         roi: {
             tag: '💰 Return on Investment Calculator',
@@ -562,7 +663,7 @@ export const translations: Record<Locale, LandingTranslation> = {
             r2Ted: 'Real-time dashboard updates reflect globally across all dining tables in 1 second',
             r3Label: 'Kitchen Ticket Routing',
             r3Trad: 'Waiters walk back and forth to punch tickets; paper slips risk getting lost or soiled',
-            r3Ted: 'Instant digital dispatch to kitchen display screens over WebSockets in sub-200ms',
+            r3Ted: 'Instant digital dispatch to kitchen display screens and thermal printers in 1 second',
             r4Label: 'Front-of-House Labor Costs',
             r4Trad: 'Requires inflated floor staffing dedicated solely to scribbling and punching orders',
             r4Ted: 'Cuts order-taking labor by 70%, redirecting staff toward guest warmth and upselling',
@@ -580,34 +681,34 @@ export const translations: Record<Locale, LandingTranslation> = {
             t2Text: '"The single best operational investment we made this year. We eradicated seasonal menu reprint costs, and our average order value climbed by 18% thanks to appetizing item photography."',
             t2Author: 'Sarah Al-Abdullah',
             t2Role: 'Director of Hospitality Operations',
-            t3Text: '"The speed of Tedallal is remarkable. Reverb WebSockets remain rock-solid even during peak Friday dinner rushes. I wholeheartedly recommend it to every ambitious restaurant owner."',
+            t3Text: '"The speed and reliability of Tedallal are exceptional. It runs smoothly even during our busiest Friday dinner rushes. A must-have for every ambitious restaurateur."',
             t3Author: 'Chef Fahad Al-Tamimi',
             t3Role: 'Executive Chef & Co-Founder',
         },
         faqs: {
             tag: '💬 Frequently Asked Questions',
             title: 'Everything You Need to Know About Tedallal',
-            subtitle: 'Clear, direct answers regarding technical architecture and daily restaurant operations.',
+            subtitle: 'Clear, direct answers regarding daily restaurant operations and setup.',
             items: [
                 {
                     q: 'Do guests need to install an app to order food?',
                     a: 'Never! Guests simply point their iPhone or Android camera at the table QR code, launching the interactive menu directly in their native browser within under two seconds.',
                 },
                 {
-                    q: 'How do guest orders stream to kitchen staff and cashier instantaneously?',
-                    a: 'Tedallal utilizes Laravel Reverb to broadcast order events via encrypted WebSocket channels. The moment a guest taps "Confirm Order", tickets display on the KDS and print at POS stations in fractions of a second.',
+                    q: 'How do guest orders reach the kitchen staff and cashier instantly?',
+                    a: 'The moment a guest taps "Confirm Order", details stream to kitchen display screens and POS printers in less than a second, so chefs see custom prep notes without delay.',
                 },
                 {
-                    q: 'Does Tedallal support POS 80mm thermal receipt printers?',
-                    a: 'Yes, Tedallal natively supports browser-based silent 80mm thermal printing for all major hardware brands (Epson, Star, Xprinter, etc.), formatted with compliant fiscal tax headers and kitchen prep dockets.',
+                    q: 'Does Tedallal support our existing thermal receipt printers?',
+                    a: 'Yes, Tedallal natively supports browser-based silent 80mm thermal printing for all major hardware brands (Epson, Star, Xprinter, etc.), formatted with compliant fiscal tax headers and kitchen tickets.',
                 },
                 {
                     q: 'What happens if a QR code is damaged or a table is rearranged?',
-                    a: 'Restaurant administrators can regenerate unique table QR codes and secret security tokens with a single click inside the admin dashboard without interrupting historical order logs.',
+                    a: 'Restaurant administrators can regenerate unique table QR codes with a single click inside the admin dashboard and reprint them immediately without interrupting historical sales data.',
                 },
                 {
-                    q: 'Can the platform scale across multiple restaurant branches and concepts?',
-                    a: 'Absolutely. Tedallal is architected from the ground up as a multi-tenant SaaS platform, enabling central branch management, tailored feature add-ons, and centralized administrative controls.',
+                    q: 'Can we manage multiple restaurant branches under one account?',
+                    a: 'Yes! Tedallal allows you to oversee all your branches from a central dashboard, customize individual menus and pricing per branch, and track live performance anytime.',
                 },
             ],
         },
@@ -632,8 +733,8 @@ export const translations: Record<Locale, LandingTranslation> = {
             successDesc: 'Thank you. A Tedallal hospitality consultant will reach out via WhatsApp shortly to schedule your personalized live demo.',
         },
         footer: {
-            brandDesc: 'Advanced cloud hospitality SaaS platform engineered for restaurants and cafés. Complete end-to-end automation from table QR scans to kitchen KDS screens and thermal printing.',
-            serverStatus: 'Cloud infrastructure & Reverb engine operational at 99.98% uptime',
+            brandDesc: 'Advanced cloud platform engineered to increase restaurant revenue and automate orders from table QR scans to kitchen screens and thermal printing.',
+            serverStatus: 'Cloud platform operating with 99.98% uptime around the clock',
             quickLinksTitle: 'Quick Links',
             portalAccessTitle: 'System Portals',
             adminPortal: 'Restaurant Admin Portal',

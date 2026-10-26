@@ -43,6 +43,7 @@ const adding = ref(false);
 const submitting = ref(false);
 const customerNote = ref('');
 const serviceType = ref<'dine_in' | 'takeaway'>('dine_in');
+const promoCode = ref('');
 const cartSubtotal = ref('0.00');
 const cartDrawerRef = ref<InstanceType<typeof CartDrawer> | null>(null);
 const errorMessage = ref('');
@@ -208,9 +209,11 @@ async function submitOrder() {
         const { data } = await axios.post('/api/public/orders', {
             customer_note: customerNote.value || null,
             service_type: serviceType.value,
+            promo_code: promoCode.value || null,
         });
         checkoutOpen.value = false;
         customerNote.value = '';
+        promoCode.value = '';
         router.visit(`/t/${props.table.public_token}/orders/${data.data.order_number}`);
     } catch (e: any) {
         errorMessage.value = e.response?.data?.message || 'تعذر إرسال الطلب. تحقق من السلة وحاول مرة أخرى.';
@@ -508,6 +511,7 @@ onMounted(() => {
         <CheckoutModal
             v-model:customer-note="customerNote"
             v-model:service-type="serviceType"
+            v-model:promo-code="promoCode"
             :open="checkoutOpen"
             :subtotal="cartSubtotal"
             :currency="restaurant.currency"
