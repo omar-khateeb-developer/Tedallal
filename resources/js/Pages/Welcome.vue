@@ -215,6 +215,14 @@ function formatPrice(amountInSar: number, forceDecimals?: number): string {
 const isMobileMenuOpen = ref(false);
 const activeNav = ref('home');
 
+// Workflow Operating Mode Switcher (Postpaid vs Prepaid)
+const selectedOperatingMode = ref<'postpaid' | 'prepaid'>('postpaid');
+const activeWorkflow = computed(() => {
+    return selectedOperatingMode.value === 'prepaid'
+        ? t.value.workflow.prepaid
+        : t.value.workflow.postpaid;
+});
+
 // Interactive Demo State
 const activeDemoTab = ref<'customer' | 'kds' | 'qr' | 'analytics'>('customer');
 
@@ -888,59 +896,232 @@ onUnmounted(() => {
         </section>
 
         <!-- ========================================================================= -->
-        <!-- ARCHITECTURE WORKFLOW: HOW IT WORKS -->
+        <!-- ARCHITECTURE WORKFLOW: HOW IT WORKS (POSTPAID & PREPAID) -->
         <!-- ========================================================================= -->
-        <section id="how-it-works" class="py-20 relative z-10 border-t border-white/5 bg-[#080d19]/60">
+        <section id="how-it-works" class="py-24 relative z-10 border-t border-white/5 bg-[#080d19]/80 backdrop-blur-xl">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-                <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
-                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 text-xs font-bold border border-amber-500/20">
+                <!-- Header & Tag -->
+                <div class="text-center max-w-3xl mx-auto mb-10 space-y-4">
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 text-amber-400 text-xs font-bold border border-amber-500/20 shadow-sm">
                         <span>{{ t.workflow.tag }}</span>
                     </div>
-                    <h2 class="text-3xl sm:text-4xl font-extrabold text-white">
+                    <h2 class="text-3xl sm:text-5xl font-black text-white tracking-tight">
                         {{ t.workflow.title }}
                     </h2>
-                    <p class="text-slate-400 text-base sm:text-lg">
+                    <p class="text-slate-400 text-sm sm:text-base leading-relaxed">
                         {{ t.workflow.subtitle }}
                     </p>
+
+                    <!-- Interactive Restaurant Operating Model Switcher -->
+                    <div class="pt-4 flex justify-center">
+                        <div class="inline-flex p-1.5 rounded-2xl bg-slate-950/90 border border-white/10 shadow-2xl backdrop-blur-2xl max-w-full overflow-x-auto">
+                            <button
+                                @click="selectedOperatingMode = 'postpaid'"
+                                type="button"
+                                class="px-5 py-3 rounded-xl font-extrabold text-xs sm:text-sm transition-all duration-300 flex items-center gap-2.5 whitespace-nowrap"
+                                :class="selectedOperatingMode === 'postpaid'
+                                    ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-lg shadow-amber-500/25 scale-[1.02]'
+                                    : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'"
+                            >
+                                <span class="text-base sm:text-lg">🍽️</span>
+                                <span>{{ t.workflow.togglePostpaid }}</span>
+                            </button>
+
+                            <button
+                                @click="selectedOperatingMode = 'prepaid'"
+                                type="button"
+                                class="px-5 py-3 rounded-xl font-extrabold text-xs sm:text-sm transition-all duration-300 flex items-center gap-2.5 whitespace-nowrap"
+                                :class="selectedOperatingMode === 'prepaid'
+                                    ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-slate-950 shadow-lg shadow-orange-500/25 scale-[1.02]'
+                                    : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'"
+                            >
+                                <span class="text-base sm:text-lg">⚡</span>
+                                <span>{{ t.workflow.togglePrepaid }}</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
+                <!-- Active Mode Overview Banner -->
+                <transition mode="out-in" enter-active-class="transition duration-300 ease-out" enter-from-class="opacity-0 -translate-y-2" enter-to-class="opacity-100 translate-y-0" leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                    <div
+                        :key="selectedOperatingMode"
+                        class="max-w-3xl mx-auto mb-14 p-5 rounded-3xl border shadow-xl flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-start"
+                        :class="selectedOperatingMode === 'prepaid'
+                            ? 'bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-orange-500/10 border-orange-500/30'
+                            : 'bg-gradient-to-r from-amber-500/10 via-yellow-500/10 to-amber-500/10 border-amber-500/30'"
+                    >
+                        <div
+                            class="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0 shadow-lg"
+                            :class="selectedOperatingMode === 'prepaid' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'"
+                        >
+                            {{ selectedOperatingMode === 'prepaid' ? '⚡' : '🍽️' }}
+                        </div>
+                        <div class="space-y-1">
+                            <h3 class="text-base font-extrabold text-white">
+                                {{ activeWorkflow.title }}
+                            </h3>
+                            <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                                {{ activeWorkflow.subtitle }}
+                            </p>
+                        </div>
+                    </div>
+                </transition>
+
+                <!-- 4 Steps Interactive Cards Grid -->
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
                     <!-- Step 1 -->
-                    <div class="relative group p-6 rounded-3xl bg-slate-900/60 border border-white/5 hover:border-amber-500/40 transition-all duration-300 hover:-translate-y-1">
-                        <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center text-xl font-black mb-5">
-                            01
+                    <div class="relative group p-6 rounded-3xl bg-slate-900/70 border border-white/5 hover:border-amber-500/40 transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between shadow-xl backdrop-blur-xl">
+                        <div>
+                            <div class="flex items-center justify-between mb-5">
+                                <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center text-xl font-black">
+                                    01
+                                </div>
+                                <span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 border border-white/5">
+                                    {{ selectedOperatingMode === 'prepaid' ? (currentLocale === 'ar' ? 'طلب فوري + كاشير' : 'Order & Cashier') : (currentLocale === 'ar' ? 'مسح رمز الطاولة' : 'Table QR Scan') }}
+                                </span>
+                            </div>
+                            <h3 class="text-base sm:text-lg font-bold text-white mb-2">{{ activeWorkflow.step1Title }}</h3>
+                            <p class="text-xs text-slate-400 leading-relaxed">{{ activeWorkflow.step1Desc }}</p>
                         </div>
-                        <h3 class="text-lg font-bold text-white mb-2">{{ t.workflow.step1Title }}</h3>
-                        <p class="text-xs text-slate-400 leading-relaxed">{{ t.workflow.step1Desc }}</p>
+
+                        <!-- Simulation Callout -->
+                        <div class="mt-5 pt-4 border-t border-white/5">
+                            <div v-if="selectedOperatingMode === 'prepaid'" class="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs leading-relaxed space-y-1.5">
+                                <div class="font-extrabold text-[11px] text-amber-300 flex items-center gap-1.5">
+                                    <span>💬</span>
+                                    <span>{{ currentLocale === 'ar' ? 'رسالة تظهر للزبون بعد إرسال الطلب:' : 'Prompt shown to guest upon sending:' }}</span>
+                                </div>
+                                <div class="font-bold text-white bg-slate-950/60 p-2.5 rounded-xl border border-amber-500/20 text-[11px] leading-snug">
+                                    {{ currentLocale === 'ar'
+                                        ? '«يرجى التوجه للكاشير و اخباره برقم طلبك لتدفع الفاتورة ليتم تحضير طلبك»'
+                                        : '"Please head to the cashier and share your order number to settle your bill so prep can begin."'
+                                    }}
+                                </div>
+                            </div>
+                            <div v-else class="p-3 rounded-2xl bg-slate-950/50 border border-white/5 text-slate-300 text-xs flex items-center gap-2">
+                                <span class="text-emerald-400 text-base">📲</span>
+                                <span class="text-[11px]">
+                                    {{ currentLocale === 'ar' ? 'فتح المنيو فوراً بدون أي تطبيق وإرسال الأصناف للمطبخ بنقرة' : 'Instant digital menu launch with zero app barrier; send items in a tap' }}
+                                </span>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Step 2 -->
-                    <div class="relative group p-6 rounded-3xl bg-slate-900/60 border border-white/5 hover:border-amber-500/40 transition-all duration-300 hover:-translate-y-1">
-                        <div class="w-12 h-12 rounded-2xl bg-orange-500/10 text-orange-400 border border-orange-500/20 flex items-center justify-center text-xl font-black mb-5">
-                            02
+                    <div class="relative group p-6 rounded-3xl bg-slate-900/70 border border-white/5 hover:border-orange-500/40 transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between shadow-xl backdrop-blur-xl">
+                        <div>
+                            <div class="flex items-center justify-between mb-5">
+                                <div class="w-12 h-12 rounded-2xl bg-orange-500/10 text-orange-400 border border-orange-500/20 flex items-center justify-center text-xl font-black">
+                                    02
+                                </div>
+                                <span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 border border-white/5">
+                                    {{ selectedOperatingMode === 'prepaid' ? (currentLocale === 'ar' ? 'محطة الكاشير' : 'Cashier Station') : (currentLocale === 'ar' ? 'شاشة وبونات المطبخ' : 'Kitchen KDS & Prints') }}
+                                </span>
+                            </div>
+                            <h3 class="text-base sm:text-lg font-bold text-white mb-2">{{ activeWorkflow.step2Title }}</h3>
+                            <p class="text-xs text-slate-400 leading-relaxed">{{ activeWorkflow.step2Desc }}</p>
                         </div>
-                        <h3 class="text-lg font-bold text-white mb-2">{{ t.workflow.step2Title }}</h3>
-                        <p class="text-xs text-slate-400 leading-relaxed">{{ t.workflow.step2Desc }}</p>
+
+                        <!-- Simulation Callout -->
+                        <div class="mt-5 pt-4 border-t border-white/5">
+                            <div v-if="selectedOperatingMode === 'prepaid'" class="p-3.5 rounded-2xl bg-orange-500/10 border border-orange-500/30 text-orange-200 text-xs leading-relaxed space-y-1.5">
+                                <div class="font-extrabold text-[11px] text-orange-300 flex items-center gap-1.5">
+                                    <span>💰</span>
+                                    <span>{{ currentLocale === 'ar' ? 'تأكيد الكاشير اللحظي:' : 'Instant Cashier Confirmation:' }}</span>
+                                </div>
+                                <div class="text-[11px] text-slate-200 bg-slate-950/60 p-2 rounded-xl border border-orange-500/20 leading-relaxed">
+                                    {{ currentLocale === 'ar'
+                                        ? 'يؤكد الكاشير استلام المبلغ ➔ ينبثق الطلب فوراً على شاشات نوافذ المطبخ'
+                                        : 'Cashier confirms payment ➔ order immediately pops up on kitchen window screens'
+                                    }}
+                                </div>
+                            </div>
+                            <div v-else class="p-3 rounded-2xl bg-slate-950/50 border border-white/5 text-slate-300 text-xs flex items-center gap-2">
+                                <span class="text-orange-400 text-base">⚡</span>
+                                <span class="text-[11px]">
+                                    {{ currentLocale === 'ar' ? 'طباعة البونات وتقييد الحساب تلقائياً على رقم الطاولة' : 'Auto kitchen ticket printing and automatic bill binding to the table' }}
+                                </span>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Step 3 -->
-                    <div class="relative group p-6 rounded-3xl bg-slate-900/60 border border-white/5 hover:border-amber-500/40 transition-all duration-300 hover:-translate-y-1">
-                        <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-xl font-black mb-5">
-                            03
+                    <div class="relative group p-6 rounded-3xl bg-slate-900/70 border border-white/5 hover:border-emerald-500/40 transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between shadow-xl backdrop-blur-xl">
+                        <div>
+                            <div class="flex items-center justify-between mb-5">
+                                <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-xl font-black">
+                                    03
+                                </div>
+                                <span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 border border-white/5">
+                                    {{ selectedOperatingMode === 'prepaid' ? (currentLocale === 'ar' ? 'استلام النافذة الذكي' : 'Window Claim') : (currentLocale === 'ar' ? 'تنظيم محطات الطهي' : 'Cook Station Sync') }}
+                                </span>
+                            </div>
+                            <h3 class="text-base sm:text-lg font-bold text-white mb-2">{{ activeWorkflow.step3Title }}</h3>
+                            <p class="text-xs text-slate-400 leading-relaxed">{{ activeWorkflow.step3Desc }}</p>
                         </div>
-                        <h3 class="text-lg font-bold text-white mb-2">{{ t.workflow.step3Title }}</h3>
-                        <p class="text-xs text-slate-400 leading-relaxed">{{ t.workflow.step3Desc }}</p>
+
+                        <!-- Simulation Callout -->
+                        <div class="mt-5 pt-4 border-t border-white/5">
+                            <div v-if="selectedOperatingMode === 'prepaid'" class="p-3.5 rounded-2xl bg-sky-500/10 border border-sky-500/30 text-sky-200 text-xs leading-relaxed space-y-1.5">
+                                <div class="font-extrabold text-[11px] text-sky-300 flex items-center gap-1.5">
+                                    <span>👨‍🍳</span>
+                                    <span>{{ currentLocale === 'ar' ? 'تنسيق النوافذ ومنع التضارب:' : 'Window Sync & Conflict Prevention:' }}</span>
+                                </div>
+                                <div class="text-[11px] text-slate-200 bg-slate-950/60 p-2 rounded-xl border border-sky-500/20 leading-relaxed">
+                                    {{ currentLocale === 'ar'
+                                        ? 'شيف النافذة يستلم الأوردر ➔ يظهر لباقي النوافذ فوراً أنه مستلم ومحجوز'
+                                        : 'Window chef claims ticket ➔ immediately shows as claimed to all other windows'
+                                    }}
+                                </div>
+                            </div>
+                            <div v-else class="p-3 rounded-2xl bg-slate-950/50 border border-white/5 text-slate-300 text-xs flex items-center gap-2">
+                                <span class="text-emerald-400 text-base">⏱️</span>
+                                <span class="text-[11px]">
+                                    {{ currentLocale === 'ar' ? 'مؤقتات دقيقة ومراحل طهي واضحة تضمن تقديم الطعام ساخناً' : 'Precise prep timers and clear stages ensuring piping hot food delivery' }}
+                                </span>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Step 4 -->
-                    <div class="relative group p-6 rounded-3xl bg-slate-900/60 border border-white/5 hover:border-amber-500/40 transition-all duration-300 hover:-translate-y-1">
-                        <div class="w-12 h-12 rounded-2xl bg-amber-400/10 text-amber-300 border border-amber-400/20 flex items-center justify-center text-xl font-black mb-5">
-                            04
+                    <div class="relative group p-6 rounded-3xl bg-slate-900/70 border border-white/5 hover:border-amber-400/40 transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between shadow-xl backdrop-blur-xl">
+                        <div>
+                            <div class="flex items-center justify-between mb-5">
+                                <div class="w-12 h-12 rounded-2xl bg-amber-400/10 text-amber-300 border border-amber-400/20 flex items-center justify-center text-xl font-black">
+                                    04
+                                </div>
+                                <span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 border border-white/5">
+                                    {{ selectedOperatingMode === 'prepaid' ? (currentLocale === 'ar' ? 'جوال الزبون والاستلام' : 'Guest Phone & Pickup') : (currentLocale === 'ar' ? 'دفع الحساب والمغادرة' : 'Bill Pay & Departure') }}
+                                </span>
+                            </div>
+                            <h3 class="text-base sm:text-lg font-bold text-white mb-2">{{ activeWorkflow.step4Title }}</h3>
+                            <p class="text-xs text-slate-400 leading-relaxed">{{ activeWorkflow.step4Desc }}</p>
                         </div>
-                        <h3 class="text-lg font-bold text-white mb-2">{{ t.workflow.step4Title }}</h3>
-                        <p class="text-xs text-slate-400 leading-relaxed">{{ t.workflow.step4Desc }}</p>
+
+                        <!-- Simulation Callout -->
+                        <div class="mt-5 pt-4 border-t border-white/5">
+                            <div v-if="selectedOperatingMode === 'prepaid'" class="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-200 text-xs leading-relaxed space-y-1.5">
+                                <div class="font-extrabold text-[11px] text-emerald-300 flex items-center gap-1.5">
+                                    <span>📱</span>
+                                    <span>{{ currentLocale === 'ar' ? 'شاشة جوال الزبون المباشرة:' : 'Live Guest Mobile Tracker:' }}</span>
+                                </div>
+                                <div class="font-bold text-white bg-slate-950/60 p-2.5 rounded-xl border border-emerald-500/20 text-[11px] leading-snug">
+                                    {{ currentLocale === 'ar'
+                                        ? '«تم استلام طلبك من قِبَل النافذة رقم 2» ثم يظهر تتبع حالة طلب الزبون'
+                                        : '"Your order was received by Window #2" followed by live customer order tracking'
+                                    }}
+                                </div>
+                            </div>
+                            <div v-else class="p-3 rounded-2xl bg-slate-950/50 border border-white/5 text-slate-300 text-xs flex items-center gap-2">
+                                <span class="text-amber-400 text-base">💳</span>
+                                <span class="text-[11px]">
+                                    {{ currentLocale === 'ar' ? 'طلب الفاتورة بلمسة واحدة وسداد المبلغ كاش أو شبكة وإغلاق الطاولة' : 'One-tap bill request, seamless cash or card payment, and auto table closing' }}
+                                </span>
+                            </div>
+                        </div>
                     </div>
 
                 </div>

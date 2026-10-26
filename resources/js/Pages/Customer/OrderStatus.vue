@@ -69,17 +69,17 @@ const isPrepaid = computed(() => order.value?.restaurant_type === 'prepaid');
 const steps = computed(() => {
     if (isPrepaid.value) {
         return [
-            { key: 'pending', label: 'بانتظار الدفع', desc: 'يرجى التوجه إلى الكاشير لدفع الحساب واعتماد الطلب.' },
-            { key: 'accepted', label: 'تم الدفع', desc: 'تم استلام المبلغ والطلب في طابور شبابيك التحضير.' },
+            { key: 'pending', label: 'بانتظار الدفع', desc: 'يرجى التوجه للكاشير و اخباره برقم طلبك لتدفع الفاتورة ليتم تحضير طلبك' },
+            { key: 'accepted', label: 'تم الدفع', desc: 'تم استلام الدفع لدى الكاشير وبانتظار استلام إحدى النوافذ للطلب.' },
             { 
                 key: 'preparing', 
-                label: order.value?.pickup_window ? `قيد التحضير (شباك ${order.value.pickup_window})` : 'قيد التحضير',
-                desc: order.value?.pickup_window ? `يتم تجهيز وجبتك في الشباك رقم ${order.value.pickup_window}` : 'جاري التحضير في المطبخ...'
+                label: order.value?.pickup_window ? `قيد التحضير (نافذة ${order.value.pickup_window})` : 'قيد التحضير',
+                desc: order.value?.pickup_window ? `تم استلام طلبك من قِبَل النافذة رقم ${order.value.pickup_window}` : 'جاري التحضير في المطبخ...'
             },
             { 
                 key: 'ready', 
-                label: order.value?.pickup_window ? `جاهز للاستلام (شباك ${order.value.pickup_window})` : 'جاهز للاستلام',
-                desc: order.value?.pickup_window ? `تفضل بالتوجه إلى الشباك رقم ${order.value.pickup_window} للاستلام!` : 'طلبك جاهز للاستلام.'
+                label: order.value?.pickup_window ? `جاهز للاستلام (نافذة ${order.value.pickup_window})` : 'جاهز للاستلام',
+                desc: order.value?.pickup_window ? `تفضل بالتوجه إلى النافذة رقم ${order.value.pickup_window} للاستلام!` : 'طلبك جاهز للاستلام.'
             },
             { key: 'served', label: 'تم التسليم', desc: 'نتمنى لك وجبة شهية ويوم سعيد!' }
         ];
@@ -114,28 +114,32 @@ const currentStepIndex = computed(() => {
 
         <div v-else class="space-y-5 pb-20">
             <!-- إشعار الدفع للكاشير في حال المطعم دفع مسبق والطلب بانتظار الدفع -->
-            <div v-if="isPrepaid && order.status === 'pending'" class="rounded-3xl bg-amber-500/10 border-2 border-amber-500/40 p-5 text-center shadow-lg relative overflow-hidden">
+            <div v-if="isPrepaid && order.status === 'pending'" class="rounded-3xl bg-amber-500/10 border-2 border-amber-500/40 p-6 text-center shadow-lg relative overflow-hidden">
                 <div class="text-3xl mb-2">💳</div>
-                <h4 class="font-extrabold text-amber-800 dark:text-amber-300 text-lg">يرجى التوجه للكاشير لدفع الحساب</h4>
-                <p class="text-xs text-amber-700 dark:text-amber-400 mt-1.5 leading-relaxed">
-                    أخبر الكاشير برقم طلبك <span class="font-black text-sm underline">{{ orderNumber }}</span>. سيبدأ تجهيز طلبك فور تأكيد الدفع.
-                </p>
+                <h4 class="font-extrabold text-amber-800 dark:text-amber-300 text-lg leading-snug">يرجى التوجه للكاشير و اخباره برقم طلبك لتدفع الفاتورة ليتم تحضير طلبك</h4>
+                <div class="mt-3 inline-flex items-center gap-2 bg-amber-500/20 px-4 py-2 rounded-2xl text-amber-900 dark:text-amber-200">
+                    <span class="text-xs font-semibold">رقم طلبك:</span>
+                    <span class="font-black text-xl font-mono">{{ orderNumber }}</span>
+                </div>
             </div>
 
             <!-- بطاقة إعلان جاهزية الطلب وشباك الاستلام -->
             <div v-if="order.status === 'ready' && order.pickup_window" class="rounded-3xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-6 text-center shadow-xl shadow-emerald-500/20">
                 <span class="inline-block px-3 py-1 bg-white/20 rounded-full text-xs font-bold tracking-wider mb-2">🎉 طلبك جاهز الآن للاستلام</span>
-                <h3 class="text-xl font-bold">تفضل بالتوجه إلى الشباك رقم</h3>
+                <h3 class="text-xl font-bold">تفضل بالتوجه إلى النافذة رقم</h3>
                 <div class="mt-3 inline-flex items-center justify-center gap-3 bg-white text-emerald-950 rounded-2xl px-6 py-2.5 shadow-lg">
-                    <span class="text-xs font-bold text-emerald-700">كوة رقم</span>
+                    <span class="text-xs font-bold text-emerald-700">نافذة رقم</span>
                     <span class="text-3xl font-black text-emerald-600">{{ order.pickup_window }}</span>
                 </div>
             </div>
 
-            <!-- بطاقة إعلام رقم الشباك أثناء التحضير -->
-            <div v-else-if="order.status === 'preparing' && order.pickup_window" class="rounded-2xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 p-4 text-center">
-                <p class="text-xs font-bold text-sky-700 dark:text-sky-300">🏢 جاري تحضير طلبك وستستلمه من:</p>
-                <div class="text-xl font-black text-sky-600 dark:text-sky-400 mt-1">الشباك رقم {{ order.pickup_window }}</div>
+            <!-- بطاقة إعلام رقم النافذة أثناء التحضير -->
+            <div v-else-if="order.status === 'preparing' && order.pickup_window" class="rounded-3xl bg-sky-50 dark:bg-sky-950/40 border-2 border-sky-300 dark:border-sky-800 p-5 text-center shadow-md">
+                <div class="text-2xl mb-1">👨‍🍳</div>
+                <h4 class="text-base font-extrabold text-sky-800 dark:text-sky-300">
+                    تم استلام طلبك من قِبَل النافذة رقم {{ order.pickup_window }}
+                </h4>
+                <p class="text-xs text-sky-600 dark:text-sky-400 mt-1">جاري تجهيز طلبك الآن بعناية، ويظهر أدناه تتبع حالة طلبك اللحظية.</p>
             </div>
 
             <!-- Order Header Card -->
@@ -152,7 +156,7 @@ const currentStepIndex = computed(() => {
                         {{ (order.service_type ?? 'dine_in') === 'takeaway' ? '🥡 سفري / استلام' : `🍽️ محلي (${table.name})` }}
                     </span>
                     <span v-if="order.pickup_window" class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300">
-                        🏢 كوة رقم {{ order.pickup_window }}
+                        🏢 نافذة رقم {{ order.pickup_window }}
                     </span>
                     <span v-if="order.paid_at" class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
                         ✓ مدفوع للكاشير

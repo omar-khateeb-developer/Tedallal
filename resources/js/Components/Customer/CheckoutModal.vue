@@ -120,7 +120,7 @@ const emit = defineEmits<{
                 <div v-if="isPrepaid" class="mt-3 p-3 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 flex items-start gap-2.5">
                     <span class="text-lg leading-none">💳</span>
                     <p class="text-xs text-amber-800 dark:text-amber-300 font-medium leading-relaxed">
-                        نظام دفع مسبق: يرجى التوجه للكاشير لتأكيد الدفع بعد إرسال الطلب، وسيظهر لك رقم الشباك المخصص لاستلام وجبتك.
+                        نظام دفع مسبق: فور إرسال الطلب يرجى التوجه للكاشير و اخباره برقم طلبك لتدفع الفاتورة ليتم تحضير طلبك، وسيظهر لك رقم النافذة وتتبع الطلب لحظياً.
                     </p>
                 </div>
 

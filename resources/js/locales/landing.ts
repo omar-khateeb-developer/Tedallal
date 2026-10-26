@@ -62,6 +62,32 @@ export interface LandingTranslation {
         tag: string;
         title: string;
         subtitle: string;
+        togglePostpaid: string;
+        togglePrepaid: string;
+        postpaid: {
+            title: string;
+            subtitle: string;
+            step1Title: string;
+            step1Desc: string;
+            step2Title: string;
+            step2Desc: string;
+            step3Title: string;
+            step3Desc: string;
+            step4Title: string;
+            step4Desc: string;
+        };
+        prepaid: {
+            title: string;
+            subtitle: string;
+            step1Title: string;
+            step1Desc: string;
+            step2Title: string;
+            step2Desc: string;
+            step3Title: string;
+            step3Desc: string;
+            step4Title: string;
+            step4Desc: string;
+        };
         step1Title: string;
         step1Desc: string;
         step2Title: string;
@@ -301,8 +327,34 @@ export const translations: Record<Locale, LandingTranslation> = {
         },
         workflow: {
             tag: '⚡ دورة عمل مؤتمتة وسريعة',
-            title: 'كيف تتدفق تجربة الطلب من الطاولة إلى المطبخ؟',
-            subtitle: 'تسلسل ذكي يقضي على طوابير الانتظار، ويختصر زمن معالجة الطلبات إلى ثوانٍ معدودة.',
+            title: 'كيف تتدفق تجربة الطلب في مطعمك؟',
+            subtitle: 'اختر نموذج تشغيل مطعمك لمشاهدة التسلسل الدقيق لدورة حياة الطلب من جوال الزبون حتى التسليم.',
+            togglePostpaid: '🍽️ مطاعم الصالة والضيافة (الدفع اللاحق)',
+            togglePrepaid: '⚡ الوجبات السريعة وشبابيك الاستلام (الدفع المسبق)',
+            postpaid: {
+                title: 'دورة حياة الطلب في مطاعم الصالة والضيافة (الدفع اللاحق)',
+                subtitle: 'تجربة ضيافة راقية ومريحة تتيح لزبائنك الطلب على دفعات دون انتظار الويتر وإقفال الفاتورة عند المغادرة.',
+                step1Title: 'المسح والطلب الفوري',
+                step1Desc: 'يمسح الزبون رمز الـ QR على الطاولة بكاميرا الجوال، ليفتح المنيو الذكي فوراً ويبدأ بالطلب دون انتظار النادل.',
+                step2Title: 'وصول فوري للمطبخ والكاشير',
+                step2Desc: 'تصل تفاصيل الأوردر آلياً وبأجزاء من الثانية إلى شاشات الطهاة وطابعات البونات مع تقييدها على حساب الطاولة.',
+                step3Title: 'شاشات المطبخ الذكية KDS',
+                step3Desc: 'تنظيم محطات الطهي مع مؤقتات دقيقة تضمن سرعة تسليم الأطباق ساخنة مع إمكانية طلب أطباق إضافية بسهولة.',
+                step4Title: 'الطباعة ودفع الحساب عند المغادرة',
+                step4Desc: 'يطلب الزبون الفاتورة بنقرة زر ويسدد الحساب نقداً أو بالشبكة مع الويتر أو الكاشير ليتم إغلاق الطاولة تلقائياً.',
+            },
+            prepaid: {
+                title: 'دورة حياة الطلب في الوجبات السريعة وشبابيك الاستلام (الدفع المسبق)',
+                subtitle: 'سرعة فائقة وإلغاء تام لطوابير الكاشير، وتوجيه آلي للأصناف حسب شبابيك التحضير مع تتبع حي للزبون.',
+                step1Title: 'الطلب الفوري وتوجيه الزبون للكاشير',
+                step1Desc: 'يمسح الزبون الـ QR ويختار وجبته، لتظهر له فوراً رسالة: «يرجى التوجه للكاشير و اخباره برقم طلبك لتدفع الفاتورة ليتم تحضير طلبك».',
+                step2Title: 'تأكيد الكاشير وانبثاق الطلب للمطبخ',
+                step2Desc: 'يخبر الزبون الكاشير برقم طلبه، وبنقرة زر واحدة يؤكد الكاشير الدفع، لتنبثق تذكرة الطلب فوراً على شاشات نوافذ المطابخ.',
+                step3Title: 'استلام النافذة وتنبيه باقي الطهاة',
+                step3Desc: 'عندما يضغط الشيف في إحدى النوافذ (مثلاً: نافذة رقم 2) على استلام الطلب، يظهر فوراً لباقي النوافذ أن الطلب تم استلامه لمنع التضارب.',
+                step4Title: 'إشعار شاشة الزبون والتتبع المباشر',
+                step4Desc: 'يظهر فوراً على شاشة جوال الزبون: «تم استلام طلبك من قِبَل النافذة رقم 2» ثم يظهر تتبع حالة طلب الزبون حتى جاهزية الاستلام.',
+            },
             step1Title: 'المسح والطلب الفوري',
             step1Desc: 'يمسح الزبون رمز الـ QR بكاميرا هاتفه، ليفتح المنيو الذكي الفاتح للشهية فوراً بدون أي تطبيق وبدون انتظار الويتر.',
             step2Title: 'وصول فوري للمطبخ والكاشير',
@@ -558,8 +610,34 @@ export const translations: Record<Locale, LandingTranslation> = {
         },
         workflow: {
             tag: '⚡ Fully Automated Operations',
-            title: 'How Orders Flow Seamlessly from Table to Kitchen',
-            subtitle: 'A streamlined sequence eliminating waiting queues and reducing ticket processing to mere seconds.',
+            title: 'How Orders Flow in Your Restaurant',
+            subtitle: 'Choose your restaurant operating model to explore the exact order lifecycle from mobile scan to food pickup.',
+            togglePostpaid: '🍽️ Dine-In & Hospitality (Postpaid)',
+            togglePrepaid: '⚡ Fast Food & Counters (Prepaid)',
+            postpaid: {
+                title: 'Order Lifecycle in Dine-In & Hospitality Restaurants (Postpaid)',
+                subtitle: 'A relaxed dining experience allowing multi-course reordering without waiting for servers, settled upon departure.',
+                step1Title: 'Instant QR Scan & Order',
+                step1Desc: 'Guests scan the table QR code with their phone camera to browse the digital menu and order without waiting for staff.',
+                step2Title: 'Instant Kitchen & Cashier Routing',
+                step2Desc: 'Ticket details route instantaneously to chef screens and printers while appending seamlessly to the table bill.',
+                step3Title: 'Smart Kitchen KDS Organization',
+                step3Desc: 'Dishes are prepared in sync with prep timers, allowing guests to order additional rounds anytime.',
+                step4Title: 'Bill Request & Departure Payment',
+                step4Desc: 'Guests request their bill in one tap and settle via cash or card with waitstaff or cashier, clearing the table automatically.',
+            },
+            prepaid: {
+                title: 'Order Lifecycle in Fast Food & Pickup Counter Restaurants (Prepaid)',
+                subtitle: 'Ultra-fast throughput, complete queue elimination, and smart window routing with live mobile customer tracking.',
+                step1Title: 'Instant Mobile Order & Cashier Prompt',
+                step1Desc: 'Guests scan the QR code and submit their order, immediately seeing: "Please head to the cashier and share your order number to settle your bill so prep can begin."',
+                step2Title: 'Cashier Payment Confirmation & Kitchen Routing',
+                step2Desc: 'The guest shares their order number; in a single tap, the cashier confirms payment, instantly firing tickets to kitchen window screens.',
+                step3Title: 'Window Claim & Multi-Chef Sync',
+                step3Desc: 'When a chef at a window (e.g. Window 2) claims the order, all other windows immediately see it is claimed to prevent double prep.',
+                step4Title: 'Live Guest Mobile Tracking & Pickup Notification',
+                step4Desc: 'The guest phone updates in real-time: "Your order was received by Window #2" with a live visual tracker until pickup.',
+            },
             step1Title: 'Instant QR Scan & Order',
             step1Desc: 'Guests scan the table QR code with their mobile camera to launch the appetizing digital menu with zero app barrier.',
             step2Title: 'Instant Kitchen & Cashier Dispatch',
