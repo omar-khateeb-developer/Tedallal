@@ -37,6 +37,7 @@ class HandleInertiaRequests extends Middleware
                     'name' => $request->user()->name,
                     'email' => $request->user()->email,
                     'role' => $request->user()->roles->first()?->name,
+                    'default_window' => $request->user()->default_window,
                     'status' => $request->user()->status,
                     'permissions' => $request->user()->email === 'admin@tedallal.test'
                         ? $request->user()->getAllPermissions()->pluck('name')->reject(fn ($p) => $p === 'toggle_maintenance')->values()
@@ -46,6 +47,8 @@ class HandleInertiaRequests extends Middleware
                 'restaurant' => $request->user() && $request->user()->restaurant ? [
                     'id' => $request->user()->restaurant->id,
                     'name' => $request->user()->restaurant->name,
+                    'type' => $request->user()->restaurant->type ?? 'postpaid',
+                    'windows_count' => (int) ($request->user()->restaurant->windows_count ?? 1),
                     'currency' => $request->user()->restaurant->currency,
                     'logo' => $request->user()->restaurant->logo,
                     'navbar_image' => $request->user()->restaurant->navbar_image,

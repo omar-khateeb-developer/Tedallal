@@ -20,6 +20,7 @@ class OrderController extends ApiController
         $validated = $request->validate([
             'customer_note' => ['nullable', 'string', 'max:1000'],
             'promo_code' => ['nullable', 'string', 'max:50'],
+            'service_type' => ['nullable', 'string', 'in:dine_in,takeaway'],
         ]);
 
         $session = ValidateTableSession::sessionFrom($request);
@@ -29,6 +30,7 @@ class OrderController extends ApiController
                 $session,
                 $validated['customer_note'] ?? null,
                 $validated['promo_code'] ?? null,
+                $validated['service_type'] ?? 'dine_in',
             );
         } catch (\Illuminate\Validation\ValidationException $e) {
             return $this->error(

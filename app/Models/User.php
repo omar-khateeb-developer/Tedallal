@@ -16,7 +16,7 @@ use Laravel\Sanctum\HasApiTokens;
 
 use Spatie\Permission\Traits\HasRoles;
 
-#[Fillable(['restaurant_id', 'name', 'email', 'password', 'status'])]
+#[Fillable(['restaurant_id', 'name', 'email', 'password', 'status', 'default_window'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -34,6 +34,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'status' => UserStatus::class,
+            'default_window' => 'integer',
         ];
     }
 
@@ -50,6 +51,26 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->hasRole('admin');
+    }
+
+    public function isCashier(): bool
+    {
+        return $this->hasRole('cashier');
+    }
+
+    public function isChef(): bool
+    {
+        return $this->hasRole('chef');
+    }
+
+    public function isSupervisor(): bool
+    {
+        return $this->hasRole('supervisor');
+    }
+
+    public function isWaiter(): bool
+    {
+        return $this->hasRole('waiter');
     }
 
     public function isStaff(): bool

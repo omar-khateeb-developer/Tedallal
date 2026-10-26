@@ -52,6 +52,7 @@ class OrderController extends ApiController
                 $order,
                 OrderStatus::from($validated['status']),
                 $request->user(),
+                $validated
             );
         } catch (\Illuminate\Validation\ValidationException $e) {
             return $this->error(

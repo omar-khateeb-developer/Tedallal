@@ -18,6 +18,9 @@ class RestaurantController extends ApiController
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'type' => 'sometimes|string|in:postpaid,prepaid',
+            'windows_count' => 'sometimes|nullable|integer|min:1|max:50',
+            'tables_count' => 'sometimes|nullable|integer|min:0|max:200',
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:1000',
             'currency' => 'required|string|max:3',
@@ -28,14 +31,36 @@ class RestaurantController extends ApiController
 
         $restaurantData = [
             'name' => $validated['name'],
-            'phone' => $validated['phone'],
-            'address' => $validated['address'],
+            'type' => $validated['type'] ?? 'postpaid',
+            'windows_count' => ($validated['type'] ?? 'postpaid') === 'prepaid' ? (int) ($validated['windows_count'] ?? 1) : 1,
+            'phone' => $validated['phone'] ?? null,
+            'address' => $validated['address'] ?? null,
             'currency' => $validated['currency'],
             'slug' => Str::slug($validated['name']) . '-' . rand(1000, 9999),
             'status' => 'active',
         ];
 
         $restaurant = Restaurant::create($restaurantData);
+
+        // إنشاء الطاولات تلقائياً إذا تم تحديد عددها
+        $tablesCount = (int) ($validated['tables_count'] ?? 0);
+        if ($tablesCount > 0) {
+            $tokenGen = app(\App\Services\TokenGenerator::class);
+            $qrService = app(\App\Services\QrCodeService::class);
+            for ($i = 1; $i <= $tablesCount; $i++) {
+                $table = \App\Models\RestaurantTable::create([
+                    'restaurant_id' => $restaurant->id,
+                    'name' => 'طاولة ' . $i,
+                    'public_token' => $tokenGen->generatePublicToken(),
+                    'status' => 'active',
+                ]);
+                try {
+                    $qrService->generateForTable($table);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning('QR generation failed for table: ' . $e->getMessage());
+                }
+            }
+        }
 
         $manager = \App\Models\User::create([
             'restaurant_id' => $restaurant->id,
@@ -53,6 +78,8 @@ class RestaurantController extends ApiController
     {
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
+            'type' => 'sometimes|required|string|in:postpaid,prepaid',
+            'windows_count' => 'sometimes|nullable|integer|min:1|max:50',
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:1000',
             'currency' => 'sometimes|required|string|max:3',

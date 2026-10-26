@@ -16,6 +16,11 @@ const order = ref<{
     status_label: string;
     total: string;
     customer_note?: string;
+    service_type?: string;
+    pickup_window?: number | null;
+    paid_at?: string | null;
+    restaurant_type?: string;
+    windows_count?: number;
     items: Array<{ item_name_snapshot: string; quantity: number; subtotal: string; note?: string }>;
 } | null>(null);
 
@@ -35,14 +40,11 @@ function subscribeToRealtime() {
 
     window.Echo.channel(`order.${props.orderNumber}`).listen(
         '.order.status_changed',
-        (payload: { order: typeof order.value }) => {
+        (payload: { order: any }) => {
             if (payload.order) {
                 order.value = {
-                    status: payload.order.status,
-                    status_label: payload.order.status_label,
-                    total: payload.order.total,
-                    customer_note: payload.order.customer_note ?? order.value?.customer_note,
-                    items: payload.order.items ?? order.value?.items ?? [],
+                    ...order.value,
+                    ...payload.order,
                 };
             }
         },
@@ -62,18 +64,40 @@ onUnmounted(() => {
     }
 });
 
-const steps = [
-    { key: 'pending', label: 'تم الاستلام' },
-    { key: 'accepted', label: 'مقبول' },
-    { key: 'preparing', label: 'جاري التحضير' },
-    { key: 'ready', label: 'جاهز' },
-    { key: 'served', label: 'تم التقديم' }
-];
+const isPrepaid = computed(() => order.value?.restaurant_type === 'prepaid');
+
+const steps = computed(() => {
+    if (isPrepaid.value) {
+        return [
+            { key: 'pending', label: 'بانتظار الدفع', desc: 'يرجى التوجه إلى الكاشير لدفع الحساب واعتماد الطلب.' },
+            { key: 'accepted', label: 'تم الدفع', desc: 'تم استلام المبلغ والطلب في طابور شبابيك التحضير.' },
+            { 
+                key: 'preparing', 
+                label: order.value?.pickup_window ? `قيد التحضير (شباك ${order.value.pickup_window})` : 'قيد التحضير',
+                desc: order.value?.pickup_window ? `يتم تجهيز وجبتك في الشباك رقم ${order.value.pickup_window}` : 'جاري التحضير في المطبخ...'
+            },
+            { 
+                key: 'ready', 
+                label: order.value?.pickup_window ? `جاهز للاستلام (شباك ${order.value.pickup_window})` : 'جاهز للاستلام',
+                desc: order.value?.pickup_window ? `تفضل بالتوجه إلى الشباك رقم ${order.value.pickup_window} للاستلام!` : 'طلبك جاهز للاستلام.'
+            },
+            { key: 'served', label: 'تم التسليم', desc: 'نتمنى لك وجبة شهية ويوم سعيد!' }
+        ];
+    }
+
+    return [
+        { key: 'pending', label: 'تم الاستلام', desc: 'تم استلام طلبك وجاري إرساله للمطبخ.' },
+        { key: 'accepted', label: 'مقبول', desc: 'تم قبول الطلب وبدأ تجهيزه في المطبخ.' },
+        { key: 'preparing', label: 'جاري التحضير', desc: 'طلبك قيد التحضير الآن...' },
+        { key: 'ready', label: 'جاهز', desc: 'طلبك جاهز وسيقدم لك حالاً.' },
+        { key: 'served', label: 'تم التقديم', desc: 'بالهناء والشفاء!' }
+    ];
+});
 
 const currentStepIndex = computed(() => {
     if (!order.value) return 0;
     if (order.value.status === 'cancelled') return -1;
-    const index = steps.findIndex(s => s.key === order.value!.status);
+    const index = steps.value.findIndex(s => s.key === order.value!.status);
     return index >= 0 ? index : 0;
 });
 </script>
@@ -88,7 +112,32 @@ const currentStepIndex = computed(() => {
             <p>جاري التحميل...</p>
         </div>
 
-        <div v-else class="space-y-6 pb-20">
+        <div v-else class="space-y-5 pb-20">
+            <!-- إشعار الدفع للكاشير في حال المطعم دفع مسبق والطلب بانتظار الدفع -->
+            <div v-if="isPrepaid && order.status === 'pending'" class="rounded-3xl bg-amber-500/10 border-2 border-amber-500/40 p-5 text-center shadow-lg relative overflow-hidden">
+                <div class="text-3xl mb-2">💳</div>
+                <h4 class="font-extrabold text-amber-800 dark:text-amber-300 text-lg">يرجى التوجه للكاشير لدفع الحساب</h4>
+                <p class="text-xs text-amber-700 dark:text-amber-400 mt-1.5 leading-relaxed">
+                    أخبر الكاشير برقم طلبك <span class="font-black text-sm underline">{{ orderNumber }}</span>. سيبدأ تجهيز طلبك فور تأكيد الدفع.
+                </p>
+            </div>
+
+            <!-- بطاقة إعلان جاهزية الطلب وشباك الاستلام -->
+            <div v-if="order.status === 'ready' && order.pickup_window" class="rounded-3xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-6 text-center shadow-xl shadow-emerald-500/20">
+                <span class="inline-block px-3 py-1 bg-white/20 rounded-full text-xs font-bold tracking-wider mb-2">🎉 طلبك جاهز الآن للاستلام</span>
+                <h3 class="text-xl font-bold">تفضل بالتوجه إلى الشباك رقم</h3>
+                <div class="mt-3 inline-flex items-center justify-center gap-3 bg-white text-emerald-950 rounded-2xl px-6 py-2.5 shadow-lg">
+                    <span class="text-xs font-bold text-emerald-700">كوة رقم</span>
+                    <span class="text-3xl font-black text-emerald-600">{{ order.pickup_window }}</span>
+                </div>
+            </div>
+
+            <!-- بطاقة إعلام رقم الشباك أثناء التحضير -->
+            <div v-else-if="order.status === 'preparing' && order.pickup_window" class="rounded-2xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 p-4 text-center">
+                <p class="text-xs font-bold text-sky-700 dark:text-sky-300">🏢 جاري تحضير طلبك وستستلمه من:</p>
+                <div class="text-xl font-black text-sky-600 dark:text-sky-400 mt-1">الشباك رقم {{ order.pickup_window }}</div>
+            </div>
+
             <!-- Order Header Card -->
             <div class="rounded-3xl bg-white dark:bg-[#0a0f1d] p-6 shadow-xs ring-1 ring-stone-100 dark:ring-slate-800 text-center relative overflow-hidden transition-colors">
                 <div class="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-amber-50 dark:bg-amber-950/20 opacity-50"></div>
@@ -97,6 +146,19 @@ const currentStepIndex = computed(() => {
                 <p class="text-sm font-medium text-stone-500 dark:text-slate-400 relative z-10">رقم الطلب</p>
                 <p class="mt-1 text-3xl font-black tracking-wider text-stone-800 dark:text-white relative z-10">{{ orderNumber }}</p>
                 
+                <!-- نوع الطلب والشباك -->
+                <div class="mt-3 flex items-center justify-center gap-2 flex-wrap relative z-10">
+                    <span class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold bg-stone-100 dark:bg-slate-800 text-stone-700 dark:text-slate-300">
+                        {{ (order.service_type ?? 'dine_in') === 'takeaway' ? '🥡 سفري / استلام' : `🍽️ محلي (${table.name})` }}
+                    </span>
+                    <span v-if="order.pickup_window" class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold bg-sky-100 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300">
+                        🏢 كوة رقم {{ order.pickup_window }}
+                    </span>
+                    <span v-if="order.paid_at" class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
+                        ✓ مدفوع للكاشير
+                    </span>
+                </div>
+
                 <div v-if="order.status === 'cancelled'" class="mt-4 inline-flex items-center gap-2 rounded-full bg-red-100 dark:bg-red-950/60 px-4 py-2 text-sm font-bold text-red-700 dark:text-red-300 relative z-10">
                     <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     تم إلغاء الطلب
@@ -136,11 +198,11 @@ const currentStepIndex = computed(() => {
                         <!-- Step Text -->
                         <div class="flex-1" :class="index <= currentStepIndex ? 'opacity-100' : 'opacity-40'">
                             <p class="font-bold transition-colors" 
-                               :class="index === currentStepIndex ? 'text-amber-600 dark:text-amber-400 text-lg' : 'text-stone-800 dark:text-slate-200'">
+                                :class="index === currentStepIndex ? 'text-amber-600 dark:text-amber-400 text-base' : 'text-stone-800 dark:text-slate-200'">
                                 {{ step.label }}
                             </p>
                             <p v-if="index === currentStepIndex" class="text-xs text-stone-500 dark:text-slate-400 mt-0.5">
-                                جاري معالجة طلبك الآن في المطبخ...
+                                {{ step.desc }}
                             </p>
                         </div>
                     </div>

@@ -36,12 +36,12 @@ Route::middleware(['auth', 'verified', 'permission:manage_orders'])->group(funct
 });
 
 Route::middleware(['auth', 'verified', 'permission:manage_orders'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/orders', [AdminDashboardController::class, 'orders'])->name('orders');
     Route::get('/orders/{order}/print', \App\Http\Controllers\Web\Admin\OrderPrintController::class)->name('orders.print');
 });
 
 Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
-    Route::get('/orders', [AdminDashboardController::class, 'orders'])->name('orders');
     Route::get('/settings', [AdminDashboardController::class, 'settings'])->name('settings');
     Route::get('/users', [AdminDashboardController::class, 'users'])->name('users');
     Route::get('/analytics', function () {
@@ -77,6 +77,18 @@ Route::get('/dashboard', function () {
 
     if ($user?->isAdmin()) {
         return redirect()->route('admin.dashboard');
+    }
+
+    if ($user?->isCashier()) {
+        return redirect()->route('admin.orders');
+    }
+
+    if ($user?->isSupervisor()) {
+        return redirect()->route('admin.dashboard');
+    }
+
+    if ($user?->isChef() || $user?->isWaiter() || $user?->isStaff()) {
+        return redirect()->route('staff.orders');
     }
 
     return redirect()->route('staff.orders');

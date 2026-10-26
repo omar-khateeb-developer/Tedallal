@@ -21,6 +21,11 @@ interface Order {
     order_number: string;
     status: string;
     status_label: string;
+    service_type?: string;
+    pickup_window?: number | null;
+    paid_at?: string | null;
+    restaurant_type?: string;
+    windows_count?: number;
     total: string;
     table?: { name: string };
     customer_note?: string | null;
@@ -28,8 +33,25 @@ interface Order {
 }
 
 const orders = ref<Order[]>([]);
+const searchQuery = ref('');
 const page = usePage();
 const restaurantId = computed(() => page.props.restaurantId as number | undefined);
+const authRestaurant = computed(() => (page.props.auth as any)?.restaurant);
+const isPrepaid = computed(() => authRestaurant.value?.type === 'prepaid');
+
+const filteredOrders = computed(() => {
+    if (!searchQuery.value.trim()) return orders.value;
+    const q = searchQuery.value.trim().toLowerCase();
+    return orders.value.filter(o => 
+        o.order_number.toLowerCase().includes(q) ||
+        (o.table?.name && o.table.name.toLowerCase().includes(q))
+    );
+});
+
+const pendingCashierOrdersCount = computed(() => 
+    orders.value.filter(o => o.status === 'pending').length
+);
+
 const { showToast } = useToast();
 
 function playSound() {
@@ -56,15 +78,20 @@ async function loadOrders() {
 
 const updatingIds = ref<Set<number>>(new Set());
 
-async function updateStatus(order: Order, status: string) {
+async function updateStatus(order: Order, status: string, pickupWindow?: number | null) {
     if (updatingIds.value.has(order.id)) return;
     updatingIds.value.add(order.id);
 
     try {
-        const { data } = await axios.patch(`/api/admin/orders/${order.id}/status`, { status });
+        const payload: { status: string; pickup_window?: number | null } = { status };
+        if (pickupWindow !== undefined && pickupWindow !== null) {
+            payload.pickup_window = pickupWindow;
+        }
+
+        const { data } = await axios.patch(`/api/admin/orders/${order.id}/status`, payload);
         const index = orders.value.findIndex(o => o.id === order.id);
         if (index !== -1) {
-            orders.value[index] = data.data ?? { ...order, status };
+            orders.value[index] = data.data ?? { ...order, status, pickup_window: payload.pickup_window };
         }
     } catch (error: any) {
         showToast('خطأ', error.response?.data?.message ?? 'تعذّر تحديث حالة الطلب', 'error');
@@ -115,34 +142,86 @@ useRestaurantOrders(restaurantId.value, {
             <div class="mx-auto max-w-5xl px-4">
                 <AdminNav />
             </div>
-            <div class="mx-auto max-w-5xl space-y-3 px-4">
-                <div v-if="orders.length === 0" class="rounded-2xl bg-white dark:bg-[#0a0f1d] p-8 text-center text-gray-500 dark:text-gray-400 shadow-xs border border-dashed border-gray-300 dark:border-slate-800">
-                    لا يوجد طلبات حالياً
+            <div class="mx-auto max-w-5xl space-y-4 px-4">
+                <!-- شريط بحث الكاشير وتنبيه الطلبات بانتظار الدفع -->
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white dark:bg-[#0a0f1d] p-3.5 rounded-2xl border border-stone-200 dark:border-slate-800 shadow-xs">
+                    <div class="relative flex-1">
+                        <input
+                            v-model="searchQuery"
+                            type="text"
+                            class="w-full rounded-xl border-stone-200 dark:border-slate-700 bg-stone-50 dark:bg-slate-900 pr-10 pl-8 py-2 text-sm text-stone-900 dark:text-white placeholder:text-stone-400 focus:border-amber-500 focus:ring-amber-500 transition-colors"
+                            placeholder="🔎 ابحث برقم الطلب لمحاسبة الزبون فوراً (مثال: ORD-1042)..."
+                        />
+                        <button
+                            v-if="searchQuery"
+                            @click="searchQuery = ''"
+                            class="absolute left-3 top-2.5 text-xs text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"
+                        >
+                            ✕
+                        </button>
+                    </div>
+
+                    <div v-if="isPrepaid" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-xs font-bold text-amber-800 dark:text-amber-300 shrink-0">
+                        <span>💳 بانتظار المحاسبة:</span>
+                        <span class="rounded-full bg-amber-500 text-white px-2 py-0.5 text-xs font-black">{{ pendingCashierOrdersCount }}</span>
+                    </div>
+                </div>
+
+                <div v-if="filteredOrders.length === 0" class="rounded-2xl bg-white dark:bg-[#0a0f1d] p-8 text-center text-gray-500 dark:text-gray-400 shadow-xs border border-dashed border-gray-300 dark:border-slate-800">
+                    {{ searchQuery ? 'لم يتم العثور على أي طلب يطابق بحثك' : 'لا يوجد طلبات حالياً' }}
                 </div>
                 <article
-                    v-for="order in orders"
+                    v-for="order in filteredOrders"
                     :key="order.id"
                     class="rounded-2xl bg-white dark:bg-[#0a0f1d] p-4 shadow-xs border border-slate-100 dark:border-slate-800"
                 >
                     <div class="flex flex-wrap items-center justify-between gap-3">
                         <div>
-                            <p class="font-bold text-gray-900 dark:text-white">{{ order.order_number }}</p>
-                            <p class="text-sm text-stone-500 dark:text-stone-400">
-                                {{ order.table?.name }} — {{ order.total }} {{ $page.props.auth.restaurant?.currency }}
+                            <div class="flex items-center gap-2">
+                                <p class="font-black text-gray-900 dark:text-white text-base">{{ order.order_number }}</p>
+                                <span class="text-xs font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded-full border border-amber-200/50 dark:border-amber-800/40">
+                                    {{ (order.service_type ?? 'dine_in') === 'takeaway' ? '🥡 سفري' : (order.table?.name ? `🍽️ محلي (${order.table.name})` : '🍽️ محلي') }}
+                                </span>
+                                <span v-if="order.pickup_window" class="text-xs font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 px-2 py-0.5 rounded-full border border-sky-200 dark:border-sky-800/40">
+                                    🏢 كوة {{ order.pickup_window }}
+                                </span>
+                                <span v-if="order.paid_at" class="text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/40">
+                                    ✓ مدفوع
+                                </span>
+                            </div>
+                            <p class="text-sm font-semibold text-stone-600 dark:text-stone-300 mt-1">
+                                القيمة: <span class="font-extrabold text-amber-600 dark:text-amber-400">{{ order.total }} {{ $page.props.auth.restaurant?.currency }}</span>
                             </p>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <span class="rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200/50 dark:border-amber-700/50 px-3 py-1 text-sm font-bold">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200/50 dark:border-amber-700/50 px-3 py-1 text-xs font-bold">
                                 {{ order.status_label }}
                             </span>
+
+                            <!-- زر تأكيد الكاشير للدفع في نظام الدفع المسبق -->
                             <button
-                                v-if="nextStatus[order.status]"
+                                v-if="isPrepaid && order.status === 'pending'"
                                 type="button"
                                 :disabled="updatingIds.has(order.id)"
-                                class="rounded-lg bg-amber-600 px-3 py-2 text-sm text-white disabled:opacity-50 hover:bg-amber-700 transition-colors"
+                                class="rounded-xl bg-emerald-600 hover:bg-emerald-700 px-3 py-2 text-xs font-bold text-white shadow-xs disabled:opacity-50 transition-all flex items-center gap-1 cursor-pointer"
+                                @click="updateStatus(order, 'accepted')"
+                            >
+                                💳 تأكيد استلام المبلغ
+                            </button>
+
+                            <!-- زر الانتقال للحالة التالية -->
+                            <button
+                                v-else-if="nextStatus[order.status]"
+                                type="button"
+                                :disabled="updatingIds.has(order.id)"
+                                class="rounded-lg bg-amber-600 px-3 py-2 text-xs font-bold text-white disabled:opacity-50 hover:bg-amber-700 transition-colors cursor-pointer"
                                 @click="updateStatus(order, nextStatus[order.status])"
                             >
-                                التالي
+                                {{ 
+                                    order.status === 'accepted' ? (isPrepaid ? 'بدء تحضير الكوة' : 'بدء التحضير') :
+                                    order.status === 'preparing' ? 'جاهز للاستلام 🔔' :
+                                    order.status === 'ready' ? 'تم التسليم ✓' : 'التالي'
+                                }}
                             </button>
                             <a
                                 :href="`/admin/orders/${order.id}/print`"

@@ -18,6 +18,10 @@ class Order extends Model
         'table_session_id',
         'order_number',
         'status',
+        'service_type',
+        'pickup_window',
+        'paid_at',
+        'paid_by',
         'subtotal',
         'total',
         'customer_note',
@@ -35,17 +39,24 @@ class Order extends Model
         return $this->belongsTo(PromoCode::class);
     }
 
+    public function paidBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'paid_by');
+    }
+
     protected function casts(): array
     {
         return [
-            'status'       => OrderStatus::class,
-            'subtotal'     => 'decimal:2',
-            'total'        => 'decimal:2',
-            'accepted_at'  => 'datetime',
-            'preparing_at' => 'datetime',
-            'ready_at'     => 'datetime',
-            'served_at'    => 'datetime',
-            'cancelled_at' => 'datetime',
+            'status'        => OrderStatus::class,
+            'pickup_window' => 'integer',
+            'subtotal'      => 'decimal:2',
+            'total'         => 'decimal:2',
+            'paid_at'       => 'datetime',
+            'accepted_at'   => 'datetime',
+            'preparing_at'  => 'datetime',
+            'ready_at'      => 'datetime',
+            'served_at'     => 'datetime',
+            'cancelled_at'  => 'datetime',
         ];
     }
 

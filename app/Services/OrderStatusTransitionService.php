@@ -12,7 +12,7 @@ use Illuminate\Validation\ValidationException;
 
 final class OrderStatusTransitionService
 {
-    public function transition(Order $order, OrderStatus $target, User $actor): Order
+    public function transition(Order $order, OrderStatus $target, User $actor, array $attributes = []): Order
     {
         $current = $order->status;
 
@@ -30,6 +30,20 @@ final class OrderStatusTransitionService
 
         $updateData = ['status' => $target];
 
+        // في مطاعم الدفع المسبق: عند موافقة الكاشير على الطلب، نسجل وقت الدفع والموظف
+        $restaurant = $order->restaurant;
+        if ($restaurant && $restaurant->isPrepaid()) {
+            if ($target === OrderStatus::Accepted && ! $order->paid_at) {
+                $updateData['paid_at'] = now();
+                $updateData['paid_by'] = $actor->id;
+            }
+        }
+
+        // تسجيل رقم الكوة / الشباك عند استلام الطلب من قبل أحد الشبابيك
+        if (isset($attributes['pickup_window']) && $attributes['pickup_window'] !== null && $attributes['pickup_window'] !== '') {
+            $updateData['pickup_window'] = (int) $attributes['pickup_window'];
+        }
+
         // تسجيل وقت الحالة تلقائياً
         $timestampColumn = \App\Models\Order::statusTimestampFor($target);
         if ($timestampColumn) {
@@ -43,6 +57,7 @@ final class OrderStatusTransitionService
             'order_number' => $order->order_number,
             'from' => $current->value,
             'to' => $target->value,
+            'pickup_window' => $order->pickup_window,
             'user_id' => $actor->id,
             'user_role' => $actor->role instanceof UserRole ? $actor->role->value : $actor->role,
         ]);
@@ -56,6 +71,6 @@ final class OrderStatusTransitionService
             ]);
         }
 
-        return $order->fresh(['items', 'table']);
+        return $order->fresh(['items', 'table', 'restaurant', 'paidBy']);
     }
 }

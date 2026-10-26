@@ -9,22 +9,21 @@ const isSuperAdmin = computed(() => userRole.value === 'super_admin');
 const isAdmin = computed(() => userRole.value === 'admin');
 
 const allLinks = [
-    { href: 'admin.dashboard', label: 'لوحة التحكم', roles: ['admin'] },
+    { href: 'admin.dashboard', label: 'لوحة التحكم', roles: ['admin', 'supervisor'] },
+    { href: 'admin.orders', label: 'شاشة الكاشير', roles: ['admin', 'cashier', 'supervisor'] },
+    { href: 'staff.orders', label: 'شاشة المطبخ (KDS)', roles: ['admin', 'chef', 'supervisor', 'waiter', 'staff'] },
     { href: 'admin.analytics', label: 'التحليلات (جديد)', roles: ['admin'] },
-    { href: 'admin.offers', label: 'العروض والكوبونات (جديد)', roles: ['admin'] },
-    { href: 'staff.orders', label: 'الطلبات', roles: ['staff'], permission: 'manage_orders' },
-    { href: 'admin.orders', label: 'الطلبات', roles: ['admin'] },
-    { href: 'admin.tables', label: 'الطاولات', roles: ['admin'], permission: 'manage_tables' },
-    { href: 'admin.menu.categories', label: 'التصنيفات', roles: ['admin'], permission: 'manage_menu' },
-    { href: 'admin.menu.items', label: 'الأصناف', roles: ['admin'], permission: 'manage_menu' },
+    { href: 'admin.offers', label: 'العروض والكوبونات (جديد)', roles: ['admin', 'supervisor'] },
+    { href: 'admin.tables', label: 'الطاولات', roles: ['admin', 'supervisor', 'waiter'], permission: 'manage_tables' },
+    { href: 'admin.menu.categories', label: 'التصنيفات', roles: ['admin', 'supervisor'], permission: 'manage_menu' },
+    { href: 'admin.menu.items', label: 'الأصناف', roles: ['admin', 'supervisor'], permission: 'manage_menu' },
     { href: 'admin.settings', label: 'الإعدادات', roles: ['admin'] },
     { href: 'admin.users', label: 'المستخدمون', roles: ['admin'] },
 ];
 
 const links = computed(() => allLinks.filter(link => {
-    if (isAdmin.value || isSuperAdmin.value) return link.roles.includes(userRole.value);
+    if (isAdmin.value || isSuperAdmin.value) return true;
     if (link.roles.includes(userRole.value)) return true;
-    if (link.permission && userPermissions.value.includes(link.permission)) return true;
     return false;
 }));
 </script>

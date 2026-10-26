@@ -19,6 +19,7 @@ class UpdateRestaurantSettingsRequest extends FormRequest
             'phone' => ['nullable', 'string', 'max:30'],
             'address' => ['nullable', 'string', 'max:500'],
             'currency' => ['sometimes', 'string', 'size:3'],
+            'windows_count' => ['nullable', 'integer', 'min:1', 'max:50'],
             'navbar_image' => ['nullable', 'image', 'max:2048'],
             'logo' => ['nullable', 'image', 'max:2048'],
         ];

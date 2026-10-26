@@ -7,6 +7,8 @@ import axios from 'axios';
 
 const restaurant = ref<{
     name: string;
+    type?: string;
+    windows_count?: number;
     phone: string | null;
     address: string | null;
     currency: string;
@@ -17,6 +19,7 @@ const form = ref({
     phone: '',
     address: '',
     currency: 'SAR',
+    windows_count: 1,
     navbar_image: null as File | null,
     logo: null as File | null,
 });
@@ -32,6 +35,7 @@ async function load() {
         phone: data.data.phone ?? '',
         address: data.data.address ?? '',
         currency: data.data.currency,
+        windows_count: data.data.windows_count ?? 1,
         navbar_image: null,
         logo: null,
     };
@@ -47,6 +51,9 @@ async function save() {
         formData.append('phone', form.value.phone);
         formData.append('address', form.value.address);
         formData.append('currency', form.value.currency);
+        if (restaurant.value?.type === 'prepaid') {
+            formData.append('windows_count', form.value.windows_count.toString());
+        }
         if (form.value.navbar_image) {
             formData.append('navbar_image', form.value.navbar_image);
         }
@@ -148,6 +155,37 @@ onMounted(load);
             <AdminNav />
 
             <form v-if="restaurant" class="space-y-4 rounded-2xl bg-white dark:bg-[#0a0f1d] p-6 shadow-xs border border-slate-100 dark:border-slate-800" @submit.prevent="save">
+                <!-- بطاقة توضيح نوع نظام المطعم -->
+                <div v-if="restaurant.type === 'prepaid'" class="rounded-xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 p-4">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="text-xl">⚡</span>
+                        <div>
+                            <p class="font-extrabold text-sm text-amber-900 dark:text-amber-200">نظام المطعم: دفع مسبق (كاشير وشبابيك تسليم)</p>
+                            <p class="text-xs text-amber-700 dark:text-amber-400 mt-0.5">يحاسب الزبون عند الكاشير ثم يستلم وجبته من إحدى كواة التحضير.</p>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-xs font-bold text-stone-700 dark:text-stone-300">عدد كواة وشبابيك التحضير المتاحة</label>
+                        <input
+                            v-model.number="form.windows_count"
+                            type="number"
+                            min="1"
+                            max="50"
+                            required
+                            class="w-full rounded-lg border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white font-bold focus:border-amber-500 focus:ring-amber-500"
+                        />
+                        <p class="text-[11px] text-stone-500 dark:text-slate-400 mt-1">تظهر هذه الكواة في لوحة المطبخ (KDS) وفي شاشة تتبع الطلب لدى الزبائن.</p>
+                    </div>
+                </div>
+
+                <div v-else class="rounded-xl bg-stone-50 dark:bg-slate-900 border border-stone-200 dark:border-slate-800 p-3.5 flex items-center gap-2.5">
+                    <span class="text-xl">🍽️</span>
+                    <div>
+                        <p class="font-bold text-xs text-stone-800 dark:text-stone-200">نظام المطعم: دفع لاحق (طاولات وصالة)</p>
+                        <p class="text-[11px] text-stone-500 dark:text-slate-400">يصل الطلب مباشرة للمطبخ ويتم المحاسبة بعد الانتهاء.</p>
+                    </div>
+                </div>
+
                 <div>
                     <label class="mb-1 block text-sm font-medium text-stone-600 dark:text-stone-300">اسم المطعم</label>
                     <input v-model="form.name" required class="w-full rounded-lg border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white focus:border-amber-500 focus:ring-amber-500" />

@@ -13,8 +13,7 @@ final class OrderNumberGenerator
             $date = now()->format('Ymd');
             $prefix = "ORD-{$date}-";
 
-            $lastSequence = Order::query()
-                ->where('restaurant_id', $restaurantId)
+            $lastSequence = Order::withoutGlobalScopes()
                 ->where('order_number', 'like', $prefix.'%')
                 ->lockForUpdate()
                 ->orderByDesc('order_number')

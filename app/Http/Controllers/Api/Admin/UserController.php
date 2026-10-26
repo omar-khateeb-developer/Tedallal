@@ -28,7 +28,7 @@ class UserController extends ApiController
             ->with(['roles', 'permissions'])
             ->where('restaurant_id', $restaurant->id)
             ->orderBy('name')
-            ->get(['id', 'name', 'email', 'status', 'created_at']);
+            ->get(['id', 'name', 'email', 'status', 'default_window', 'created_at']);
 
         $users->transform(function ($user) {
             return [
@@ -37,6 +37,7 @@ class UserController extends ApiController
                 'email' => $user->email,
                 'status' => $user->status,
                 'role' => $user->roles->first()?->name,
+                'default_window' => $user->default_window,
                 'permissions' => $user->getAllPermissions()->pluck('name'),
                 'created_at' => $user->created_at,
             ];
@@ -56,11 +57,18 @@ class UserController extends ApiController
             'restaurant_id' => $restaurant->id,
             'password' => Hash::make($validated['password']),
             'status' => \App\Enums\UserStatus::Active,
+            'default_window' => $validated['default_window'] ?? null,
         ]);
 
         $user->assignRole($validated['role']);
-        if (!empty($validated['permissions'])) {
-            $user->syncPermissions($validated['permissions']);
+        
+        $roleEnum = UserRole::tryFrom($validated['role']);
+        $perms = !empty($validated['permissions']) 
+            ? $validated['permissions'] 
+            : ($roleEnum?->defaultPermissions() ?? []);
+
+        if (!empty($perms)) {
+            $user->syncPermissions($perms);
         }
 
         return $this->success([
@@ -69,6 +77,7 @@ class UserController extends ApiController
             'email' => $user->email,
             'status' => $user->status,
             'role' => $user->roles->first()?->name,
+            'default_window' => $user->default_window,
             'permissions' => $user->getAllPermissions()->pluck('name'),
         ], 201);
     }
@@ -88,6 +97,13 @@ class UserController extends ApiController
 
         if (isset($validated['role'])) {
             $user->syncRoles([$validated['role']]);
+            // إذا لم يتم تمرير صلاحيات محددة، نحدّث لصلاحيات الدور الافتراضية
+            if (!array_key_exists('permissions', $validated)) {
+                $roleEnum = UserRole::tryFrom($validated['role']);
+                if ($roleEnum) {
+                    $user->syncPermissions($roleEnum->defaultPermissions());
+                }
+            }
         }
 
         if (array_key_exists('permissions', $validated)) {
@@ -100,6 +116,7 @@ class UserController extends ApiController
             'email' => $user->email,
             'status' => $user->status,
             'role' => $user->roles->first()?->name,
+            'default_window' => $user->default_window,
             'permissions' => $user->getAllPermissions()->pluck('name'),
         ]);
     }

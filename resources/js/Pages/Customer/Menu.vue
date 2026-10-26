@@ -22,7 +22,7 @@ interface Category {
 }
 
 const props = defineProps<{
-    restaurant: { name: string; currency: string; navbar_image?: string | null; logo?: string | null };
+    restaurant: { name: string; currency: string; type?: string; windows_count?: number; navbar_image?: string | null; logo?: string | null };
     table: { name: string; public_token: string };
     categories: Category[];
     openCart?: boolean;
@@ -42,6 +42,7 @@ const selectedItem = ref<MenuItem | null>(null);
 const adding = ref(false);
 const submitting = ref(false);
 const customerNote = ref('');
+const serviceType = ref<'dine_in' | 'takeaway'>('dine_in');
 const cartSubtotal = ref('0.00');
 const cartDrawerRef = ref<InstanceType<typeof CartDrawer> | null>(null);
 const errorMessage = ref('');
@@ -206,6 +207,7 @@ async function submitOrder() {
     try {
         const { data } = await axios.post('/api/public/orders', {
             customer_note: customerNote.value || null,
+            service_type: serviceType.value,
         });
         checkoutOpen.value = false;
         customerNote.value = '';
@@ -505,11 +507,13 @@ onMounted(() => {
 
         <CheckoutModal
             v-model:customer-note="customerNote"
+            v-model:service-type="serviceType"
             :open="checkoutOpen"
             :subtotal="cartSubtotal"
             :currency="restaurant.currency"
             :item-count="cartCount"
             :loading="submitting"
+            :is-prepaid="restaurant.type === 'prepaid'"
             @close="checkoutOpen = false"
             @confirm="submitOrder"
         />

@@ -14,6 +14,8 @@ class RestaurantResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'slug' => $this->slug,
+            'type' => $this->type ?? 'postpaid',
+            'windows_count' => (int) ($this->windows_count ?? 1),
             'logo' => $this->logo,
             'navbar_image' => $this->navbar_image,
             'phone' => $this->phone,

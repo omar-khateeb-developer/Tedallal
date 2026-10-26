@@ -5,9 +5,11 @@ defineProps<{
     currency: string;
     itemCount: number;
     loading: boolean;
+    isPrepaid?: boolean;
 }>();
 
 const customerNote = defineModel<string>('customerNote', { default: '' });
+const serviceType = defineModel<string>('serviceType', { default: 'dine_in' });
 
 const emit = defineEmits<{
     close: [];
@@ -28,11 +30,53 @@ const emit = defineEmits<{
                     {{ itemCount }} صنف — <span class="text-amber-600 dark:text-amber-400 font-bold">{{ subtotal }} {{ currency }}</span>
                 </p>
 
-                <div class="mt-5">
+                <!-- خيار نوع الطلب (محلي / سفري) -->
+                <div class="mt-4">
+                    <label class="mb-2 block text-xs font-bold text-stone-700 dark:text-slate-300">نوع الطلب</label>
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <button
+                            type="button"
+                            @click="serviceType = 'dine_in'"
+                            :class="[
+                                'flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border-2 font-bold text-xs transition-all',
+                                serviceType === 'dine_in'
+                                    ? 'border-amber-500 bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:border-amber-500 dark:text-amber-300 shadow-xs'
+                                    : 'border-stone-200 dark:border-slate-800 text-stone-600 dark:text-slate-400 hover:border-stone-300 dark:hover:border-slate-700'
+                            ]"
+                        >
+                            <span class="text-base">🍽️</span>
+                            <span>محلي / في الصالة</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            @click="serviceType = 'takeaway'"
+                            :class="[
+                                'flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl border-2 font-bold text-xs transition-all',
+                                serviceType === 'takeaway'
+                                    ? 'border-amber-500 bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:border-amber-500 dark:text-amber-300 shadow-xs'
+                                    : 'border-stone-200 dark:border-slate-800 text-stone-600 dark:text-slate-400 hover:border-stone-300 dark:hover:border-slate-700'
+                            ]"
+                        >
+                            <span class="text-base">🥡</span>
+                            <span>سفري / استلام</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- إشعار للمطاعم ذات الدفع المسبق -->
+                <div v-if="isPrepaid" class="mt-3 p-3 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 flex items-start gap-2.5">
+                    <span class="text-lg leading-none">💳</span>
+                    <p class="text-xs text-amber-800 dark:text-amber-300 font-medium leading-relaxed">
+                        نظام دفع مسبق: يرجى التوجه للكاشير لتأكيد الدفع بعد إرسال الطلب، وسيظهر لك رقم الشباك المخصص لاستلام وجبتك.
+                    </p>
+                </div>
+
+                <div class="mt-4">
                     <label class="mb-1 block text-sm font-medium text-stone-600 dark:text-slate-300">ملاحظات عامة للطلب (اختياري)</label>
                     <textarea
                         v-model="customerNote"
-                        rows="3"
+                        rows="2"
                         class="w-full rounded-xl border-stone-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-slate-500 text-sm focus:border-amber-500 focus:ring-amber-500 transition-colors"
                         placeholder="أي تفضيلات أو ملاحظات خاصة بالطاولة أو التقديم..."
                     />

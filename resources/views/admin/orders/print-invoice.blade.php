@@ -140,15 +140,29 @@
         <span dir="ltr">{{ $order->created_at?->format('Y-m-d h:i A') ?? now()->format('Y-m-d h:i A') }}</span>
     </div>
 
+    <div class="info-row">
+        <span class="label">نوع الطلب:</span>
+        <span>{{ ($order->service_type ?? 'dine_in') === 'takeaway' ? 'سفري / استلام' : 'محلي / صالة' }}</span>
+    </div>
+
+    @if($order->pickup_window)
+    <div class="info-row" style="background: #f1f5f9; padding: 1mm 2mm; border-radius: 4px; margin: 1mm 0;">
+        <span class="label" style="color: #0f172a; font-weight: 800;">شباك الاستلام:</span>
+        <span style="font-weight: 800; color: #0284c7; font-size: 15px;">كوة رقم {{ $order->pickup_window }}</span>
+    </div>
+    @endif
+
     @if($order->table)
     <div class="info-row">
         <span class="label">الطاولة:</span>
         <span>{{ $order->table->name }}</span>
     </div>
-    @else
+    @endif
+
+    @if($order->paid_at)
     <div class="info-row">
-        <span class="label">النوع:</span>
-        <span>سفري (Takeaway)</span>
+        <span class="label">حالة الدفع:</span>
+        <span style="color: #16a34a; font-weight: 700;">مدفوع للكاشير ✓</span>
     </div>
     @endif
 

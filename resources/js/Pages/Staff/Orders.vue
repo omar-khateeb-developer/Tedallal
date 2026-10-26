@@ -136,6 +136,11 @@ interface Order {
     order_number: string;
     status: string;
     status_label: string;
+    service_type?: string;
+    pickup_window?: number | null;
+    paid_at?: string | null;
+    restaurant_type?: string;
+    windows_count?: number;
     total: string;
     table?: { name: string };
     customer_note?: string | null;
@@ -262,23 +267,59 @@ const onDrop = async (newStatus: string) => {
         return;
     }
 
-    await updateStatus(order, newStatus);
+    const win = (newStatus === 'preparing' && isPrepaid.value) ? (order.pickup_window || selectedWindow.value) : order.pickup_window;
+    await updateStatus(order, newStatus, win);
 };
 
-async function updateStatus(order: Order, status: string) {
+const authUser = computed(() => (page.props.auth as any)?.user);
+const authRestaurant = computed(() => (page.props.auth as any)?.restaurant);
+const isPrepaid = computed(() => authRestaurant.value?.type === 'prepaid');
+const totalWindows = computed(() => (authRestaurant.value?.windows_count as number) || 1);
+
+// الكوة المحددة لهذا الجهاز / الموظف (إذا كان الشيف مرتبطاً بكوة افتراضية تُستخدم تلقائياً)
+const selectedWindow = ref<number>(
+    authUser.value?.default_window || parseInt(localStorage.getItem('tedallal_kds_window') || '1', 10) || 1
+);
+
+function changeWindow(num: number) {
+    selectedWindow.value = num;
+    localStorage.setItem('tedallal_kds_window', num.toString());
+}
+
+// تصفية حسب كوة التحضير (اختياري)
+const filterMyWindowOnly = ref(false);
+
+async function updateStatus(order: Order, status: string, pickupWindow?: number | null) {
     if (processingOrderIds.value.includes(order.id)) return;
     
     processingOrderIds.value.push(order.id);
     try {
-        await axios.patch(`/api/admin/orders/${order.id}/status`, { status });
+        const payload: { status: string; pickup_window?: number | null } = { status };
+        if (pickupWindow !== undefined && pickupWindow !== null) {
+            payload.pickup_window = pickupWindow;
+        } else if (status === 'preparing' && !order.pickup_window && isPrepaid.value) {
+            payload.pickup_window = selectedWindow.value;
+        }
+
+        const { data } = await axios.patch(`/api/admin/orders/${order.id}/status`, payload);
+        const updated = data.data;
         
         // Optimistic update
         const index = orders.value.findIndex(o => o.id === order.id);
         if (index !== -1) {
             orders.value[index].status = status;
+            if (updated?.pickup_window) {
+                orders.value[index].pickup_window = updated.pickup_window;
+            } else if (payload.pickup_window) {
+                orders.value[index].pickup_window = payload.pickup_window;
+            }
+            if (updated?.paid_at) {
+                orders.value[index].paid_at = updated.paid_at;
+            }
             // Best effort status label update locally
             const statusLabels: Record<string, string> = {
-                'accepted': 'مقبول',
+                'pending': isPrepaid.value ? 'بانتظار الدفع' : 'تم الاستلام',
+                'accepted': isPrepaid.value ? 'مدفوع' : 'مقبول',
                 'preparing': 'قيد التحضير',
                 'ready': 'جاهز',
                 'served': 'تم التقديم'
@@ -297,15 +338,56 @@ async function updateStatus(order: Order, status: string) {
 }
 
 // Columns definition
-const columns = [
-    { id: 'pending', title: 'طلبات جديدة', bg: 'bg-orange-50/50 dark:bg-orange-950/25', border: 'border-orange-200 dark:border-orange-900/40' },
-    { id: 'accepted', title: 'بانتظار التحضير', bg: 'bg-blue-50/50 dark:bg-blue-950/25', border: 'border-blue-200 dark:border-blue-900/40' },
-    { id: 'preparing', title: 'قيد التحضير', bg: 'bg-purple-50/50 dark:bg-purple-950/25', border: 'border-purple-200 dark:border-purple-900/40' },
-    { id: 'ready', title: 'جاهز للتقديم', bg: 'bg-emerald-50/50 dark:bg-emerald-950/25', border: 'border-emerald-200 dark:border-emerald-900/40' },
-];
+const columns = computed(() => {
+    if (isPrepaid.value) {
+        return [
+            { 
+                id: 'pending', 
+                title: 'بانتظار الكاشير 💳', 
+                subtitle: 'تأكيد الدفع',
+                bg: 'bg-amber-50/60 dark:bg-amber-950/25', 
+                border: 'border-amber-200 dark:border-amber-900/40' 
+            },
+            { 
+                id: 'accepted', 
+                title: 'طابور الشبابيك ⏳', 
+                subtitle: 'جاهز لاستلام الشباك',
+                bg: 'bg-blue-50/60 dark:bg-blue-950/25', 
+                border: 'border-blue-200 dark:border-blue-900/40' 
+            },
+            { 
+                id: 'preparing', 
+                title: 'قيد التحضير 👨‍🍳', 
+                subtitle: 'موزع على الشبابيك',
+                bg: 'bg-purple-50/60 dark:bg-purple-950/25', 
+                border: 'border-purple-200 dark:border-purple-900/40' 
+            },
+            { 
+                id: 'ready', 
+                title: 'جاهز للاستلام 🔔', 
+                subtitle: 'عند شباك التسليم',
+                bg: 'bg-emerald-50/60 dark:bg-emerald-950/25', 
+                border: 'border-emerald-200 dark:border-emerald-900/40' 
+            },
+        ];
+    }
+
+    return [
+        { id: 'pending', title: 'طلبات جديدة', subtitle: '', bg: 'bg-orange-50/50 dark:bg-orange-950/25', border: 'border-orange-200 dark:border-orange-900/40' },
+        { id: 'accepted', title: 'بانتظار التحضير', subtitle: '', bg: 'bg-blue-50/50 dark:bg-blue-950/25', border: 'border-blue-200 dark:border-blue-900/40' },
+        { id: 'preparing', title: 'قيد التحضير', subtitle: '', bg: 'bg-purple-50/50 dark:bg-purple-950/25', border: 'border-purple-200 dark:border-purple-900/40' },
+        { id: 'ready', title: 'جاهز للتقديم', subtitle: '', bg: 'bg-emerald-50/50 dark:bg-emerald-950/25', border: 'border-emerald-200 dark:border-emerald-900/40' },
+    ];
+});
 
 const getColumnOrders = (status: string) => {
-    return orders.value.filter(o => o.status === status);
+    let list = orders.value.filter(o => o.status === status);
+    if (isPrepaid.value && filterMyWindowOnly.value) {
+        if (['preparing', 'ready'].includes(status)) {
+            list = list.filter(o => o.pickup_window === selectedWindow.value);
+        }
+    }
+    return list;
 };
 
 useRestaurantOrders(restaurantId.value, {
@@ -335,8 +417,43 @@ useRestaurantOrders(restaurantId.value, {
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex items-center justify-between w-full">
-                <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-white">شاشة المطبخ (KDS)</h2>
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 w-full">
+                <div class="flex items-center gap-3">
+                    <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-white">شاشة المطبخ (KDS)</h2>
+                    <span v-if="isPrepaid" class="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50">
+                        ⚡ نظام دفع مسبق ({{ totalWindows }} كواة)
+                    </span>
+                    <span v-if="authUser?.default_window" class="text-xs font-bold px-2.5 py-1 rounded-full bg-blue-100 dark:bg-blue-950/70 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50">
+                        👨‍🍳 شيف كوة {{ authUser.default_window }}
+                    </span>
+                </div>
+
+                <!-- مبدل الكوة والتصفية لمطاعم الدفع المسبق -->
+                <div v-if="isPrepaid" class="flex items-center gap-2 bg-stone-100 dark:bg-slate-800/80 p-1.5 rounded-xl border border-stone-200 dark:border-slate-700">
+                    <span class="text-xs font-bold text-stone-600 dark:text-slate-300 pr-2">🏢 كوة العمل:</span>
+                    <select
+                        :value="selectedWindow"
+                        @change="changeWindow(Number(($event.target as HTMLSelectElement).value))"
+                        class="rounded-lg bg-white dark:bg-slate-900 text-xs font-extrabold text-stone-900 dark:text-white border-stone-300 dark:border-slate-600 py-1 pl-6 pr-2 focus:ring-amber-500 cursor-pointer"
+                    >
+                        <option v-for="w in totalWindows" :key="w" :value="w">
+                            كوة رقم {{ w }}
+                        </option>
+                    </select>
+
+                    <button
+                        type="button"
+                        @click="filterMyWindowOnly = !filterMyWindowOnly"
+                        :class="[
+                            'text-xs font-bold px-2.5 py-1 rounded-lg transition-colors border',
+                            filterMyWindowOnly
+                                ? 'bg-amber-600 text-white border-amber-600'
+                                : 'bg-white dark:bg-slate-900 text-stone-600 dark:text-slate-400 border-stone-200 dark:border-slate-700 hover:bg-stone-50'
+                        ]"
+                    >
+                        {{ filterMyWindowOnly ? `كوة ${selectedWindow} فقط` : 'عرض كل الكواة' }}
+                    </button>
+                </div>
 
                 <!-- أزرار الإشعارات والصوت -->
                 <div class="flex items-center gap-3">
@@ -401,7 +518,10 @@ useRestaurantOrders(restaurantId.value, {
                     >
                         <!-- Column Header -->
                         <div class="p-4 border-b border-stone-100 dark:border-slate-800 flex items-center justify-between" :class="col.bg">
-                            <h3 class="font-bold text-gray-800 dark:text-white">{{ col.title }}</h3>
+                            <div>
+                                <h3 class="font-bold text-gray-800 dark:text-white">{{ col.title }}</h3>
+                                <p v-if="col.subtitle" class="text-[11px] text-stone-500 dark:text-slate-400 mt-0.5">{{ col.subtitle }}</p>
+                            </div>
                             <span class="bg-white dark:bg-slate-800 text-stone-800 dark:text-stone-200 rounded-full px-3 py-1 text-xs font-bold shadow-xs border border-stone-100 dark:border-slate-700">
                                 {{ getColumnOrders(col.id).length }}
                             </span>
@@ -427,9 +547,17 @@ useRestaurantOrders(restaurantId.value, {
                                     <div class="flex items-center justify-between mb-2">
                                         <div>
                                             <p class="font-black text-gray-900 dark:text-white text-lg">{{ order.order_number }}</p>
-                                            <p class="text-xs font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded-full inline-block mt-1 border border-amber-200/50 dark:border-amber-800/40">
-                                                {{ order.table?.name || 'سفري' }}
-                                            </p>
+                                            <div class="flex items-center gap-1.5 flex-wrap mt-1">
+                                                <span class="text-xs font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded-full inline-block border border-amber-200/50 dark:border-amber-800/40">
+                                                    {{ (order.service_type ?? 'dine_in') === 'takeaway' ? '🥡 سفري' : (order.table?.name || 'محلي') }}
+                                                </span>
+                                                <span v-if="order.pickup_window" class="text-xs font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 px-2 py-0.5 rounded-full inline-block border border-sky-200 dark:border-sky-800/40">
+                                                    🏢 كوة {{ order.pickup_window }}
+                                                </span>
+                                                <span v-if="order.paid_at" class="text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full inline-block border border-emerald-200 dark:border-emerald-800/40">
+                                                    ✓ مدفوع
+                                                </span>
+                                            </div>
                                         </div>
                                         <div class="flex items-center gap-1.5">
                                             <a
@@ -525,7 +653,37 @@ useRestaurantOrders(restaurantId.value, {
 
                                     <!-- Action Button (Fallback for touch screens) -->
                                     <div class="mt-4 pt-3 border-t border-stone-100 dark:border-slate-800 flex justify-end" v-if="nextStatus[order.status]">
+                                        <!-- زر تأكيد الكاشير للدفع في نظام الدفع المسبق -->
                                         <button
+                                            v-if="isPrepaid && order.status === 'pending'"
+                                            type="button"
+                                            :disabled="processingOrderIds.includes(order.id)"
+                                            class="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500 py-2.5 px-3 text-sm font-bold text-white shadow-md active:scale-95 transition-all flex items-center justify-center gap-2"
+                                            @click="updateStatus(order, 'accepted')"
+                                        >
+                                            <span v-if="processingOrderIds.includes(order.id)">
+                                                <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-dasharray="31.415, 31.415" opacity="0.3"></circle><path d="M12 2C6.477 2 2 6.477 2 12" stroke="currentColor" stroke-width="4" stroke-linecap="round"></path></svg>
+                                            </span>
+                                            <span v-else>💳 تأكيد استلام المبلغ وإرسال للمطبخ</span>
+                                        </button>
+
+                                        <!-- زر استلام الشباك للطلب في نظام الدفع المسبق -->
+                                        <button
+                                            v-else-if="isPrepaid && order.status === 'accepted'"
+                                            type="button"
+                                            :disabled="processingOrderIds.includes(order.id)"
+                                            class="w-full rounded-xl bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 py-2.5 px-3 text-sm font-bold text-white shadow-md active:scale-95 transition-all flex items-center justify-center gap-2"
+                                            @click="updateStatus(order, 'preparing', selectedWindow)"
+                                        >
+                                            <span v-if="processingOrderIds.includes(order.id)">
+                                                <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-dasharray="31.415, 31.415" opacity="0.3"></circle><path d="M12 2C6.477 2 2 6.477 2 12" stroke="currentColor" stroke-width="4" stroke-linecap="round"></path></svg>
+                                            </span>
+                                            <span v-else>👨‍🍳 استلام على كوة رقم {{ selectedWindow }}</span>
+                                        </button>
+
+                                        <!-- باقي الحالات أو النظام الافتراضي (دفع لاحق) -->
+                                        <button
+                                            v-else
                                             type="button"
                                             :disabled="processingOrderIds.includes(order.id)"
                                             class="w-full rounded-lg bg-stone-900 dark:bg-gradient-to-r dark:from-amber-500 dark:to-orange-500 px-3 py-2.5 text-sm font-bold text-white dark:text-slate-950 shadow-xs hover:bg-stone-800 dark:hover:from-amber-600 dark:hover:to-orange-600 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
@@ -538,7 +696,8 @@ useRestaurantOrders(restaurantId.value, {
                                                 {{ 
                                                     order.status === 'pending' ? 'البدء بالتجهيز' : 
                                                     order.status === 'accepted' ? 'بدء التحضير' : 
-                                                    order.status === 'preparing' ? 'تم التجهيز' : 'التالي' 
+                                                    order.status === 'preparing' ? (isPrepaid ? `جاهز للاستلام (شباك ${order.pickup_window || selectedWindow}) 🔔` : 'تم التجهيز') : 
+                                                    (isPrepaid ? 'تم تسليم الطلب للزبون ✓' : 'تم التقديم للزبون ✓')
                                                 }}
                                             </span>
                                         </button>

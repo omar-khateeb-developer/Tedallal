@@ -13,6 +13,8 @@ class Restaurant extends Model
     protected $fillable = [
         'name',
         'slug',
+        'type',
+        'windows_count',
         'logo',
         'phone',
         'address',
@@ -32,7 +34,18 @@ class Restaurant extends Model
         return [
             'status' => RestaurantStatus::class,
             'features' => 'array',
+            'windows_count' => 'integer',
         ];
+    }
+
+    public function isPrepaid(): bool
+    {
+        return ($this->type ?? 'postpaid') === 'prepaid';
+    }
+
+    public function isPostpaid(): bool
+    {
+        return ($this->type ?? 'postpaid') === 'postpaid';
     }
 
     protected function logo(): \Illuminate\Database\Eloquent\Casts\Attribute

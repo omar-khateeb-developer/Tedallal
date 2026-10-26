@@ -26,6 +26,7 @@ class UpdateOrderRequest extends FormRequest
     {
         return [
             'status' => ['required', 'string', 'in:'.implode(',', array_column(OrderStatus::cases(), 'value'))],
+            'pickup_window' => ['nullable', 'integer', 'min:1', 'max:50'],
         ];
     }
 }

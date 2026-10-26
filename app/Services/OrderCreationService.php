@@ -17,7 +17,7 @@ final class OrderCreationService
         private readonly OrderNumberGenerator $orderNumberGenerator,
     ) {}
 
-    public function createFromCart(TableSession $session, ?string $customerNote = null, ?string $promoCodeStr = null): Order
+    public function createFromCart(TableSession $session, ?string $customerNote = null, ?string $promoCodeStr = null, ?string $serviceType = 'dine_in'): Order
     {
         if (! $session->isActive()) {
             throw ValidationException::withMessages([
@@ -33,7 +33,7 @@ final class OrderCreationService
             ]);
         }
 
-        return DB::transaction(function () use ($session, $customerNote, $summary, $promoCodeStr) {
+        return DB::transaction(function () use ($session, $customerNote, $summary, $promoCodeStr, $serviceType) {
             $table = $session->table()->lockForUpdate()->first();
             $restaurant = $table->restaurant;
 
@@ -94,6 +94,7 @@ final class OrderCreationService
                 'table_session_id' => $session->id,
                 'order_number' => $this->orderNumberGenerator->generate($restaurant->id),
                 'status' => OrderStatus::Pending,
+                'service_type' => in_array($serviceType, ['takeaway', 'dine_in'], true) ? $serviceType : 'dine_in',
                 'subtotal' => $subtotal,
                 'total' => $total,
                 'promo_code_id' => $promoCode?->id,
