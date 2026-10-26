@@ -464,6 +464,35 @@ const topDishesData = computed(() => {
     ];
 });
 
+// CPA-Grade Financial Ledger Simulation for Tab 4
+const financialKpis = computed(() => {
+    const isWeekend = selectedAnalyticsFilter.value === 'weekend';
+    if (isWeekend) {
+        return {
+            netSales: 3450000,
+            grossSales: 3620000,
+            discounts: 170000,
+            ordersCount: 420,
+            aov: 8214,
+            dineInNet: 2450000,
+            takeawayNet: 1000000,
+            cancelledOrders: 0,
+            accuracyBadge: currentLocale.value === 'ar' ? 'دقة محاسبية 0% خطأ' : '0% Float Drift (CPA-Grade)',
+        };
+    }
+    return {
+        netSales: 1980000,
+        grossSales: 2060000,
+        discounts: 80000,
+        ordersCount: 260,
+        aov: 7615,
+        dineInNet: 1380000,
+        takeawayNet: 600000,
+        cancelledOrders: 0,
+        accuracyBadge: currentLocale.value === 'ar' ? 'دقة محاسبية 0% خطأ' : '0% Float Drift (CPA-Grade)',
+    };
+});
+
 // ROI Calculator State
 const tableCount = ref(30);
 const dailyOrdersPerTable = ref(6);
@@ -1686,6 +1715,69 @@ onUnmounted(() => {
                             </div>
                         </div>
 
+                        <!-- CPA Financial Sales Summary Cards -->
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                            <!-- Net Realized Sales -->
+                            <div class="p-4 rounded-2xl bg-gradient-to-br from-emerald-500/15 via-slate-900 to-slate-950 border border-emerald-500/40 shadow-lg relative overflow-hidden">
+                                <div class="flex items-center justify-between text-[11px] font-bold text-emerald-400 mb-1">
+                                    <span>{{ currentLocale === 'ar' ? 'صافي المبيعات المحقق' : 'Net Realized Sales' }}</span>
+                                    <span class="px-1.5 py-0.5 rounded text-[9px] bg-emerald-500/20 text-emerald-300">0% خطأ</span>
+                                </div>
+                                <div class="text-xl sm:text-2xl font-black text-white font-mono">
+                                    {{ formatPrice(financialKpis.netSales) }} <span class="text-xs font-normal text-amber-400">{{ currentCurrencySymbol }}</span>
+                                </div>
+                                <div class="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
+                                    <span>{{ currentLocale === 'ar' ? 'إجمالي الطلبات:' : 'Total Orders:' }}</span>
+                                    <span class="text-white font-mono font-bold">{{ financialKpis.ordersCount }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Gross Sales & Discounts -->
+                            <div class="p-4 rounded-2xl bg-slate-900/80 border border-white/10 shadow-lg">
+                                <div class="text-[11px] font-semibold text-slate-400 mb-1">
+                                    {{ currentLocale === 'ar' ? 'إجمالي المبيعات والخصومات' : 'Gross Sales & Discounts' }}
+                                </div>
+                                <div class="text-lg sm:text-xl font-bold text-slate-200 font-mono">
+                                    {{ formatPrice(financialKpis.grossSales) }} <span class="text-xs font-normal text-slate-400">{{ currentCurrencySymbol }}</span>
+                                </div>
+                                <div class="text-[10px] text-rose-400 mt-1 flex items-center justify-between">
+                                    <span>{{ currentLocale === 'ar' ? 'الخصومات:' : 'Discounts:' }}</span>
+                                    <span class="font-mono font-bold">-{{ formatPrice(financialKpis.discounts) }} {{ currentCurrencySymbol }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Average Order Value (AOV) -->
+                            <div class="p-4 rounded-2xl bg-slate-900/80 border border-white/10 shadow-lg">
+                                <div class="text-[11px] font-semibold text-slate-400 mb-1">
+                                    {{ currentLocale === 'ar' ? 'متوسط الفاتورة (AOV)' : 'Avg Order Value (AOV)' }}
+                                </div>
+                                <div class="text-lg sm:text-xl font-bold text-amber-400 font-mono">
+                                    {{ formatPrice(financialKpis.aov) }} <span class="text-xs font-normal text-amber-300">{{ currentCurrencySymbol }}</span>
+                                </div>
+                                <div class="text-[10px] text-emerald-400 mt-1 flex items-center gap-1">
+                                    <span>▲ +28%</span>
+                                    <span class="text-slate-400">{{ currentLocale === 'ar' ? 'نمو سلة الشراء' : 'Upsell Growth' }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Dine-in vs Takeaway Breakdown -->
+                            <div class="p-4 rounded-2xl bg-slate-900/80 border border-white/10 shadow-lg">
+                                <div class="text-[11px] font-semibold text-slate-400 mb-1">
+                                    {{ currentLocale === 'ar' ? 'الصالة مقابل السفري' : 'Dine-In vs Takeaway' }}
+                                </div>
+                                <div class="text-xs space-y-1 font-mono pt-0.5">
+                                    <div class="flex justify-between text-slate-300">
+                                        <span class="text-[10px] text-slate-400">{{ currentLocale === 'ar' ? '🍽️ صالة:' : '🍽️ Dine-in:' }}</span>
+                                        <span class="font-bold">{{ formatPrice(financialKpis.dineInNet) }} {{ currentCurrencySymbol }}</span>
+                                    </div>
+                                    <div class="flex justify-between text-slate-300">
+                                        <span class="text-[10px] text-slate-400">{{ currentLocale === 'ar' ? '⚡ سفري:' : '⚡ Takeaway:' }}</span>
+                                        <span class="font-bold">{{ formatPrice(financialKpis.takeawayNet) }} {{ currentCurrencySymbol }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                             <!-- Peak Hours Chart -->
                             <div class="lg:col-span-7 p-5 rounded-2xl bg-slate-900/60 border border-white/5 space-y-4">
@@ -1810,12 +1902,14 @@ onUnmounted(() => {
                         <p class="text-sm text-slate-400 leading-relaxed">{{ t.features.f5Desc }}</p>
                     </div>
 
-                    <!-- Feature 6 -->
-                    <div class="p-8 rounded-3xl bg-slate-900/60 border border-white/5 hover:border-amber-500/30 transition-all duration-300 hover:-translate-y-1 group">
-                        <div class="w-14 h-14 rounded-2xl bg-rose-500/10 text-rose-400 border border-rose-500/20 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">
-                            📈
+                    <!-- Feature 6: CPA Reports -->
+                    <div class="p-8 rounded-3xl bg-slate-900/60 border border-white/5 hover:border-emerald-500/40 transition-all duration-300 hover:-translate-y-1 group relative overflow-hidden">
+                        <div class="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">
+                            📊
                         </div>
-                        <h4 class="text-xl font-bold text-white mb-3">{{ t.features.f6Title }}</h4>
+                        <h4 class="text-xl font-bold text-white mb-3 flex items-center gap-2">
+                            <span>{{ t.features.f6Title }}</span>
+                        </h4>
                         <p class="text-sm text-slate-400 leading-relaxed">{{ t.features.f6Desc }}</p>
                     </div>
                 </div>

@@ -12,6 +12,7 @@ const allLinks = [
     { href: 'admin.dashboard', label: 'لوحة التحكم', roles: ['admin', 'supervisor'] },
     { href: 'admin.orders', label: 'شاشة الكاشير', roles: ['admin', 'cashier', 'supervisor'] },
     { href: 'staff.orders', label: 'شاشة المطبخ (KDS)', roles: ['admin', 'chef', 'supervisor', 'waiter', 'staff'] },
+    { href: 'admin.reports', label: 'سجل المبيعات والتقارير 📊', roles: ['admin', 'supervisor'] },
     { href: 'admin.analytics', label: 'التحليلات (جديد)', roles: ['admin'] },
     { href: 'admin.offers', label: 'العروض والكوبونات (جديد)', roles: ['admin', 'supervisor'] },
     { href: 'admin.tables', label: 'الطاولات', roles: ['admin', 'supervisor', 'waiter'], permission: 'manage_tables' },

@@ -47,6 +47,9 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
     Route::get('/analytics', function () {
         return Inertia::render('Admin/Analytics');
     })->name('analytics');
+    Route::get('/reports', function () {
+        return Inertia::render('Admin/Reports');
+    })->name('reports');
     Route::get('/offers', function () {
         return Inertia::render('Admin/Offers');
     })->name('offers');
