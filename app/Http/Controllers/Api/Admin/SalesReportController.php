@@ -148,7 +148,7 @@ class SalesReportController extends ApiController
             'year'              => $year,
             'month'             => $month,
             'month_label'       => $startDate->translatedFormat('F Y'),
-            'currency'          => $restaurant->currency ?? 'SAR',
+            'currency'          => $restaurant->currency ?? 'SYP',
             'summary'           => [
                 'gross_sales'       => $totalGross,
                 'total_discounts'   => $totalDiscount,
@@ -242,7 +242,7 @@ class SalesReportController extends ApiController
         return $this->success([
             'period_type'       => 'monthly',
             'year'              => $year,
-            'currency'          => $restaurant->currency ?? 'SAR',
+            'currency'          => $restaurant->currency ?? 'SYP',
             'summary'           => [
                 'gross_sales'       => $totalGross,
                 'total_discounts'   => $totalDiscount,
@@ -307,7 +307,7 @@ class SalesReportController extends ApiController
 
         return $this->success([
             'period_type'       => 'yearly',
-            'currency'          => $restaurant->currency ?? 'SAR',
+            'currency'          => $restaurant->currency ?? 'SYP',
             'summary'           => [
                 'gross_sales'       => $totalGross,
                 'total_discounts'   => $totalDiscount,
@@ -371,7 +371,7 @@ class SalesReportController extends ApiController
             'period_type'       => 'custom',
             'from_date'         => $startDate->toDateString(),
             'to_date'           => $endDate->toDateString(),
-            'currency'          => $restaurant->currency ?? 'SAR',
+            'currency'          => $restaurant->currency ?? 'SYP',
             'summary'           => [
                 'gross_sales'       => $totalGross,
                 'total_discounts'   => $totalDiscount,

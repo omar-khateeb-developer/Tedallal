@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('logo')->nullable();
             $table->string('phone')->nullable();
             $table->text('address')->nullable();
-            $table->char('currency', 3)->default('SAR');
+            $table->char('currency', 3)->default('SYP');
             $table->string('status')->default('active');
             $table->string('navbar_image')->nullable();
             $table->timestamps();

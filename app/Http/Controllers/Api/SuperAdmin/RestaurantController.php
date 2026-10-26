@@ -23,7 +23,7 @@ class RestaurantController extends ApiController
             'tables_count' => 'sometimes|nullable|integer|min:0|max:200',
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:1000',
-            'currency' => 'required|string|max:3',
+            'currency' => 'sometimes|nullable|string|max:3',
             'manager_name' => 'required|string|max:255',
             'manager_email' => 'required|string|email|max:255|unique:users,email',
             'manager_password' => 'nullable|string|min:6',
@@ -35,7 +35,7 @@ class RestaurantController extends ApiController
             'windows_count' => ($validated['type'] ?? 'postpaid') === 'prepaid' ? (int) ($validated['windows_count'] ?? 1) : 1,
             'phone' => $validated['phone'] ?? null,
             'address' => $validated['address'] ?? null,
-            'currency' => $validated['currency'],
+            'currency' => $validated['currency'] ?? 'SYP',
             'slug' => Str::slug($validated['name']) . '-' . rand(1000, 9999),
             'status' => 'active',
         ];

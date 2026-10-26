@@ -24,6 +24,11 @@ class Restaurant extends Model
         'features',
     ];
 
+    protected $attributes = [
+        'currency' => 'SYP',
+        'type' => 'postpaid',
+    ];
+
     protected $appends = [
         'logo',
         'navbar_image',

@@ -10,13 +10,16 @@ final class RestaurantContext
 
     public function current(): Restaurant
     {
-        if ($this->cached) {
-            return $this->cached;
-        }
-
         // 1. If admin is logged in, use their restaurant
         if (auth()->check() && auth()->user()->restaurant_id) {
+            if ($this->cached && $this->cached->id === auth()->user()->restaurant_id) {
+                return $this->cached;
+            }
             return $this->cached = auth()->user()->restaurant;
+        }
+
+        if ($this->cached) {
+            return $this->cached;
         }
 
         // 2. If it's a public customer request, use the session token

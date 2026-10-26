@@ -128,7 +128,7 @@ const chartData = computed(() => {
         labels,
         datasets: [
             {
-                label: 'صافي المبيعات (' + (reportData.value?.currency || 'SAR') + ')',
+                label: 'صافي المبيعات (' + (reportData.value?.currency || 'SYP') + ')',
                 data: netSales,
                 backgroundColor: 'rgba(245, 158, 11, 0.85)',
                 borderRadius: 8,
@@ -161,7 +161,7 @@ const chartOptions = {
             bodyFont: { family: 'inherit' },
             callbacks: {
                 label: function(context: any) {
-                    return ` ${context.dataset.label}: ${context.raw.toLocaleString('en-US', { minimumFractionDigits: 2 })} ${reportData.value?.currency || 'SAR'}`;
+                    return ` ${context.dataset.label}: ${context.raw.toLocaleString('en-US', { minimumFractionDigits: 2 })} ${reportData.value?.currency || 'SYP'}`;
                 }
             }
         }
@@ -227,7 +227,7 @@ function printReport() {
                     <div class="text-left text-xs text-slate-600">
                         <p>تاريخ استخراج التقرير: {{ new Date().toLocaleString('ar-SA') }}</p>
                         <p>الفترة المحاسبية: {{ activeView === 'daily' ? `${selectedMonth} / ${selectedYear}` : (activeView === 'monthly' ? `سنة ${selectedYear}` : 'تقرير مالي') }}</p>
-                        <p class="font-bold text-slate-900">العملة: {{ reportData?.currency || 'SAR' }}</p>
+                        <p class="font-bold text-slate-900">العملة: {{ reportData?.currency || 'SYP' }}</p>
                     </div>
                 </div>
             </div>

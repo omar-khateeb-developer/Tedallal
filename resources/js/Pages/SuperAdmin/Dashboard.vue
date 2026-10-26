@@ -16,9 +16,12 @@ const stats = ref({
 const showCreateForm = ref(false);
 const form = ref({
     name: '',
+    type: 'postpaid',
+    windows_count: 1,
+    tables_count: 10,
     phone: '',
     address: '',
-    currency: 'SAR',
+    currency: 'SYP',
     manager_name: '',
     manager_email: '',
     manager_password: '',
@@ -65,7 +68,8 @@ const toggleCreateForm = async () => {
 
 const resetForm = () => {
     form.value = {
-        name: '', phone: '', address: '', currency: 'SAR',
+        name: '', type: 'postpaid', windows_count: 1, tables_count: 10,
+        phone: '', address: '', currency: 'SYP',
         manager_name: '', manager_email: '', manager_password: ''
     };
     errors.value = {};
@@ -103,6 +107,23 @@ const toggleStatus = async (restaurant: any) => {
         await fetchStats();
     } catch (e) {
         console.error('Failed to toggle status');
+    }
+};
+
+const toggleRestaurantType = async (restaurant: any) => {
+    const newType = restaurant.type === 'prepaid' ? 'postpaid' : 'prepaid';
+    const confirmMsg = newType === 'prepaid'
+        ? `هل تريد تحويل نظام «${restaurant.name}» إلى دفع مسبق (كاشير وشبابيك تسليم)؟`
+        : `هل تريد تحويل نظام «${restaurant.name}» إلى دفع لاحق (طاولات وضيافة)؟`;
+    if (!confirm(confirmMsg)) return;
+    try {
+        await axios.patch(`/api/super-admin/restaurants/${restaurant.id}`, {
+            type: newType,
+            windows_count: newType === 'prepaid' ? (restaurant.windows_count || 3) : 1,
+        });
+        await fetchRestaurants();
+    } catch (e) {
+        console.error('Failed to change restaurant type');
     }
 };
 
@@ -318,22 +339,31 @@ onMounted(() => {
                         </div>
 
                         <!-- Restaurant List Header + Add Button -->
-                        <div class="flex items-center justify-between mb-6">
+                        <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
                             <h3 class="text-lg font-bold text-gray-800">قائمة المطاعم في النظام</h3>
-                            <button
-                                @click="toggleCreateForm"
-                                class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm transition-all duration-300 shadow-sm focus:ring-2 focus:ring-offset-2"
-                                :class="showCreateForm
-                                    ? 'bg-stone-100 text-stone-600 hover:bg-stone-200 focus:ring-stone-400'
-                                    : 'bg-amber-600 text-white hover:bg-amber-700 hover:shadow-md focus:ring-amber-500'"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
-                                    class="size-4 transition-transform duration-300"
-                                    :class="{ 'rotate-45': showCreateForm }">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                                </svg>
-                                {{ showCreateForm ? 'إلغاء' : 'إضافة مطعم جديد' }}
-                            </button>
+                            <div class="flex items-center gap-2">
+                                <Link
+                                    :href="route('super_admin.restaurants.create')"
+                                    class="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-xs sm:text-sm transition-all duration-200 border border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100"
+                                >
+                                    <span>إنشاء مطعم تفصيلي</span>
+                                    <span>↗</span>
+                                </Link>
+                                <button
+                                    @click="toggleCreateForm"
+                                    class="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl font-medium text-xs sm:text-sm transition-all duration-300 shadow-sm focus:ring-2 focus:ring-offset-2"
+                                    :class="showCreateForm
+                                        ? 'bg-stone-100 text-stone-600 hover:bg-stone-200 focus:ring-stone-400'
+                                        : 'bg-amber-600 text-white hover:bg-amber-700 hover:shadow-md focus:ring-amber-500'"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+                                        class="size-4 transition-transform duration-300"
+                                        :class="{ 'rotate-45': showCreateForm }">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                    </svg>
+                                    {{ showCreateForm ? 'إلغاء' : 'إضافة مطعم جديد' }}
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Collapsible Create Restaurant Form -->
@@ -382,8 +412,8 @@ onMounted(() => {
                                                     <label for="sa-restaurant-currency" class="block text-sm font-medium text-gray-700 mb-1">العملة <span class="text-red-500">*</span></label>
                                                     <select id="sa-restaurant-currency" v-model="form.currency" required
                                                         class="w-full rounded-xl border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 text-sm transition" dir="ltr">
-                                                        <option value="SAR">SAR - ريال سعودي</option>
                                                         <option value="SYP">SYP - ليرة سورية</option>
+                                                        <option value="SAR">SAR - ريال سعودي</option>
                                                         <option value="AED">AED - درهم إماراتي</option>
                                                         <option value="KWD">KWD - دينار كويتي</option>
                                                         <option value="QAR">QAR - ريال قطري</option>
@@ -405,6 +435,104 @@ onMounted(() => {
                                                     <input id="sa-restaurant-address" v-model="form.address"
                                                         class="w-full rounded-xl border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 text-sm transition"
                                                         placeholder="المدينة، الحي، الشارع" />
+                                                </div>
+
+                                                <!-- خيار نوع المطعم وطريقة المحاسبة (دفع لاحق أم دفع مسبق) -->
+                                                <div class="col-span-full mt-2">
+                                                    <label class="block text-sm font-bold text-gray-800 mb-2">نوع نظام المطعم وطريقة المحاسبة <span class="text-red-500">*</span></label>
+                                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                                        <!-- دفع لاحق -->
+                                                        <button
+                                                            type="button"
+                                                            @click="form.type = 'postpaid'"
+                                                            :class="[
+                                                                'p-3.5 rounded-2xl border-2 text-right transition-all flex items-start gap-3 cursor-pointer',
+                                                                form.type === 'postpaid'
+                                                                    ? 'border-amber-600 bg-amber-50/80 shadow-xs ring-2 ring-amber-500/20'
+                                                                    : 'border-gray-200 hover:border-gray-300 bg-white'
+                                                            ]"
+                                                        >
+                                                            <div class="text-2xl p-1.5 rounded-xl bg-white shadow-xs shrink-0">🍽️</div>
+                                                            <div>
+                                                                <p class="font-bold text-sm text-gray-900">مطعم دفع لاحق (طاولات وضيافة صالة)</p>
+                                                                <p class="text-xs text-gray-500 mt-0.5 leading-relaxed">
+                                                                    يصل الطلب مباشرة إلى المطبخ ويحاسب الزبون بعد انتهاء الوجبة قبل المغادرة.
+                                                                </p>
+                                                            </div>
+                                                        </button>
+
+                                                        <!-- دفع مسبق -->
+                                                        <button
+                                                            type="button"
+                                                            @click="form.type = 'prepaid'"
+                                                            :class="[
+                                                                'p-3.5 rounded-2xl border-2 text-right transition-all flex items-start gap-3 cursor-pointer',
+                                                                form.type === 'prepaid'
+                                                                    ? 'border-amber-600 bg-amber-50/80 shadow-xs ring-2 ring-amber-500/20'
+                                                                    : 'border-gray-200 hover:border-gray-300 bg-white'
+                                                            ]"
+                                                        >
+                                                            <div class="text-2xl p-1.5 rounded-xl bg-white shadow-xs shrink-0">⚡</div>
+                                                            <div>
+                                                                <p class="font-bold text-sm text-gray-900">مطعم دفع مسبق (كاشير وشبابيك تسليم)</p>
+                                                                <p class="text-xs text-gray-500 mt-0.5 leading-relaxed">
+                                                                    يدفع الزبون عند الكاشير أولاً، ثم يُحوّل الطلب لنوافذ المطبخ للاستلام والتتبع.
+                                                                </p>
+                                                            </div>
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <!-- حقول خاصة بنظام الدفع المسبق: عدد النوافذ وعدد الطاولات -->
+                                                <div v-if="form.type === 'prepaid'" class="col-span-full grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-2xl bg-amber-50/60 border border-amber-200">
+                                                    <div>
+                                                        <label for="sa-restaurant-windows" class="block text-xs font-bold text-amber-900 mb-1">
+                                                            عدد النوافذ / الكواة المتاحة للتحضير <span class="text-red-500">*</span>
+                                                        </label>
+                                                        <input
+                                                            id="sa-restaurant-windows"
+                                                            v-model.number="form.windows_count"
+                                                            type="number"
+                                                            min="1"
+                                                            max="50"
+                                                            required
+                                                            class="w-full rounded-xl border-amber-300 bg-white shadow-xs focus:border-amber-500 focus:ring-amber-500 text-sm font-bold"
+                                                            placeholder="مثال: 3"
+                                                        />
+                                                        <p class="text-[11px] text-amber-700 mt-1">عدد كواة المطبخ وشبابيك استلام الزبائن.</p>
+                                                    </div>
+
+                                                    <div>
+                                                        <label for="sa-restaurant-tables" class="block text-xs font-bold text-amber-900 mb-1">
+                                                            عدد الطاولات المراد إنشاؤها تلقائياً (اختياري)
+                                                        </label>
+                                                        <input
+                                                            id="sa-restaurant-tables"
+                                                            v-model.number="form.tables_count"
+                                                            type="number"
+                                                            min="0"
+                                                            max="200"
+                                                            class="w-full rounded-xl border-amber-300 bg-white shadow-xs focus:border-amber-500 focus:ring-amber-500 text-sm font-bold"
+                                                            placeholder="مثال: 10 (أو 0 إن كان سفري فقط)"
+                                                        />
+                                                        <p class="text-[11px] text-amber-700 mt-1">سيتم إنشاء الطاولات مع رموز الـ QR تلقائياً.</p>
+                                                    </div>
+                                                </div>
+
+                                                <!-- حقل عدد الطاولات لنظام الدفع اللاحق -->
+                                                <div v-else class="col-span-full">
+                                                    <label for="sa-restaurant-tables-postpaid" class="block text-sm font-medium text-gray-700 mb-1">
+                                                        عدد الطاولات المراد إنشاؤها تلقائياً (اختياري)
+                                                    </label>
+                                                    <input
+                                                        id="sa-restaurant-tables-postpaid"
+                                                        v-model.number="form.tables_count"
+                                                        type="number"
+                                                        min="0"
+                                                        max="200"
+                                                        class="w-full rounded-xl border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 transition text-sm"
+                                                        placeholder="مثال: 15 (سيتم إنشاء الطاولات مع رموز الـ QR تلقائياً)"
+                                                    />
                                                 </div>
                                             </div>
                                         </fieldset>
@@ -516,6 +644,7 @@ onMounted(() => {
                                 <thead>
                                 <tr class="bg-gray-100">
                                     <th class="p-3 border">الاسم</th>
+                                    <th class="p-3 border text-center">نوع النظام</th>
                                     <th class="p-3 border">الحالة</th>
                                     <th class="p-3 border">الميزات الإضافية</th>
                                     <th class="p-3 border">الهاتف</th>
@@ -524,9 +653,40 @@ onMounted(() => {
                             </thead>
                             <tbody>
                                 <tr v-for="restaurant in restaurants" :key="restaurant.id">
-                                    <td class="p-3 border">{{ restaurant.name }}</td>
-                                    <td class="p-3 border">
-                                        <span class="px-2 py-1 rounded text-xs" :class="restaurant.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
+                                    <td class="p-3 border font-semibold text-gray-900">{{ restaurant.name }}</td>
+                                    <td class="p-3 border text-center">
+                                        <div class="inline-flex items-center gap-2">
+                                            <span
+                                                v-if="restaurant.type === 'prepaid'"
+                                                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300"
+                                                title="دفع مسبق: كاشير وشبابيك تحضير وتسليم"
+                                            >
+                                                <span>⚡ دفع مسبق</span>
+                                                <span v-if="restaurant.windows_count" class="bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded-md font-mono text-[11px]">
+                                                    {{ restaurant.windows_count }} كواة
+                                                </span>
+                                            </span>
+                                            <span
+                                                v-else
+                                                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-900 border border-emerald-300"
+                                                title="دفع لاحق: ضيافة وطاولات صالة"
+                                            >
+                                                <span>🍽️ دفع لاحق</span>
+                                            </span>
+                                            <button
+                                                @click="toggleRestaurantType(restaurant)"
+                                                type="button"
+                                                class="p-1 rounded-lg text-gray-400 hover:text-amber-700 hover:bg-amber-50 transition"
+                                                title="تبديل نوع النظام (مسبق / لاحق)"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </td>
+                                    <td class="p-3 border text-center">
+                                        <span class="px-2 py-1 rounded text-xs font-medium" :class="restaurant.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'">
                                             {{ restaurant.status === 'active' ? 'نشط' : 'معطّل' }}
                                         </span>
                                     </td>

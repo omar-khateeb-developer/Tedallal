@@ -21,7 +21,7 @@ class RestaurantFactory extends Factory
             'slug' => Str::slug($name).'-'.fake()->unique()->numberBetween(1, 9999),
             'phone' => fake()->phoneNumber(),
             'address' => fake()->address(),
-            'currency' => 'SAR',
+            'currency' => 'SYP',
             'status' => RestaurantStatus::Active,
         ];
     }

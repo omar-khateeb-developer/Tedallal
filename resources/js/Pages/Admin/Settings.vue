@@ -18,7 +18,7 @@ const form = ref({
     name: '',
     phone: '',
     address: '',
-    currency: 'SAR',
+    currency: 'SYP',
     windows_count: 1,
     navbar_image: null as File | null,
     logo: null as File | null,
@@ -201,8 +201,8 @@ onMounted(load);
                 <div>
                     <label class="mb-1 block text-sm font-medium text-stone-600 dark:text-stone-300">العملة (ISO 4217)</label>
                     <select v-model="form.currency" required class="w-full rounded-lg border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white focus:border-amber-500 focus:ring-amber-500" dir="ltr">
-                        <option value="SAR">SAR - ريال سعودي</option>
                         <option value="SYP">SYP - ليرة سورية</option>
+                        <option value="SAR">SAR - ريال سعودي</option>
                         <option value="AED">AED - درهم إماراتي</option>
                         <option value="KWD">KWD - دينار كويتي</option>
                         <option value="QAR">QAR - ريال قطري</option>
