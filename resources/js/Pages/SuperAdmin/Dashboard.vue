@@ -487,7 +487,7 @@ onMounted(() => {
                                                 <div v-if="form.type === 'prepaid'" class="col-span-full grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-2xl bg-amber-50/60 border border-amber-200">
                                                     <div>
                                                         <label for="sa-restaurant-windows" class="block text-xs font-bold text-amber-900 mb-1">
-                                                            عدد النوافذ / الكواة المتاحة للتحضير <span class="text-red-500">*</span>
+                                                            عدد نوافذ التحضير والاستلام المتاحة <span class="text-red-500">*</span>
                                                         </label>
                                                         <input
                                                             id="sa-restaurant-windows"
@@ -499,7 +499,7 @@ onMounted(() => {
                                                             class="w-full rounded-xl border-amber-300 bg-white shadow-xs focus:border-amber-500 focus:ring-amber-500 text-sm font-bold"
                                                             placeholder="مثال: 3"
                                                         />
-                                                        <p class="text-[11px] text-amber-700 mt-1">عدد كواة المطبخ وشبابيك استلام الزبائن.</p>
+                                                        <p class="text-[11px] text-amber-700 mt-1">عدد نوافذ تحضير المطبخ واستلام الزبائن.</p>
                                                     </div>
 
                                                     <div>
@@ -659,11 +659,11 @@ onMounted(() => {
                                             <span
                                                 v-if="restaurant.type === 'prepaid'"
                                                 class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300"
-                                                title="دفع مسبق: كاشير وشبابيك تحضير وتسليم"
+                                                title="دفع مسبق: كاشير ونوافذ تحضير وتسليم"
                                             >
                                                 <span>⚡ دفع مسبق</span>
                                                 <span v-if="restaurant.windows_count" class="bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded-md font-mono text-[11px]">
-                                                    {{ restaurant.windows_count }} كواة
+                                                    {{ restaurant.windows_count }} نوافذ
                                                 </span>
                                             </span>
                                             <span

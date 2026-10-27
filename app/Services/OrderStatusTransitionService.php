@@ -22,6 +22,15 @@ final class OrderStatusTransitionService
             ]);
         }
 
+        // تقييد صلاحيات الكاشير: الكاشير يستلم المبلغ فقط ولا يتحكم بمراحل المطبخ
+        if ($actor->isCashier() && ! $actor->isAdmin()) {
+            if (in_array($target, [OrderStatus::Preparing, OrderStatus::Ready, OrderStatus::Served], true)) {
+                throw ValidationException::withMessages([
+                    'status' => ['لا يملك الكاشير صلاحية تحضير أو تسليم الطلب، هذا الإجراء مخصص لنوافذ المطبخ حصراً.'],
+                ]);
+            }
+        }
+
         if ($target === OrderStatus::Cancelled && $current === OrderStatus::Preparing && ! $actor->isAdmin()) {
             throw ValidationException::withMessages([
                 'status' => ['فقط المدير يمكنه إلغاء الطلب أثناء التحضير.'],
@@ -30,18 +39,31 @@ final class OrderStatusTransitionService
 
         $updateData = ['status' => $target];
 
-        // في مطاعم الدفع المسبق: عند موافقة الكاشير على الطلب، نسجل وقت الدفع والموظف
         $restaurant = $order->restaurant;
+
+        // في مطاعم الدفع المسبق: التحقق من سداد الفاتورة قبل تحويل الطلب للتحضير
         if ($restaurant && $restaurant->isPrepaid()) {
+            if ($current === OrderStatus::Pending && $target === OrderStatus::Preparing) {
+                throw ValidationException::withMessages([
+                    'status' => ['لا يمكن للنافذة استلام الطلب قبل تأكيد استلام المبلغ من الكاشير.'],
+                ]);
+            }
+            if ($current === OrderStatus::Pending && $target === OrderStatus::Accepted && ! ($actor->isCashier() || $actor->isAdmin())) {
+                throw ValidationException::withMessages([
+                    'status' => ['تأكيد استلام المبلغ يتم عبر الكاشير حصراً.'],
+                ]);
+            }
             if ($target === OrderStatus::Accepted && ! $order->paid_at) {
                 $updateData['paid_at'] = now();
                 $updateData['paid_by'] = $actor->id;
             }
         }
 
-        // تسجيل رقم الكوة / الشباك عند استلام الطلب من قبل أحد الشبابيك
+        // تسجيل رقم النافذة عند استلام الطلب للتحضير من قبل إحدى النوافذ
         if (isset($attributes['pickup_window']) && $attributes['pickup_window'] !== null && $attributes['pickup_window'] !== '') {
             $updateData['pickup_window'] = (int) $attributes['pickup_window'];
+        } elseif ($target === OrderStatus::Preparing && ! $order->pickup_window && $actor->default_window) {
+            $updateData['pickup_window'] = (int) $actor->default_window;
         }
 
         // تسجيل وقت الحالة تلقائياً

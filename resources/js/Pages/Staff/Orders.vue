@@ -276,7 +276,7 @@ const authRestaurant = computed(() => (page.props.auth as any)?.restaurant);
 const isPrepaid = computed(() => authRestaurant.value?.type === 'prepaid');
 const totalWindows = computed(() => (authRestaurant.value?.windows_count as number) || 1);
 
-// الكوة المحددة لهذا الجهاز / الموظف (إذا كان الشيف مرتبطاً بكوة افتراضية تُستخدم تلقائياً)
+// النافذة المحددة لهذا الجهاز / الموظف (إذا كان الشيف مرتبطاً بنافذة افتراضية تُستخدم تلقائياً)
 const selectedWindow = ref<number>(
     authUser.value?.default_window || parseInt(localStorage.getItem('tedallal_kds_window') || '1', 10) || 1
 );
@@ -286,7 +286,7 @@ function changeWindow(num: number) {
     localStorage.setItem('tedallal_kds_window', num.toString());
 }
 
-// تصفية حسب كوة التحضير (اختياري)
+// تصفية حسب نافذة التحضير (اختياري)
 const filterMyWindowOnly = ref(false);
 
 async function updateStatus(order: Order, status: string, pickupWindow?: number | null) {
@@ -350,22 +350,22 @@ const columns = computed(() => {
             },
             { 
                 id: 'accepted', 
-                title: 'طابور الشبابيك ⏳', 
-                subtitle: 'جاهز لاستلام الشباك',
+                title: 'طابور النوافذ ⏳', 
+                subtitle: 'مدفوع - جاهز لاستلام النافذة',
                 bg: 'bg-blue-50/60 dark:bg-blue-950/25', 
                 border: 'border-blue-200 dark:border-blue-900/40' 
             },
             { 
                 id: 'preparing', 
                 title: 'قيد التحضير 👨‍🍳', 
-                subtitle: 'موزع على الشبابيك',
+                subtitle: 'موزع على النوافذ',
                 bg: 'bg-purple-50/60 dark:bg-purple-950/25', 
                 border: 'border-purple-200 dark:border-purple-900/40' 
             },
             { 
                 id: 'ready', 
                 title: 'جاهز للاستلام 🔔', 
-                subtitle: 'عند شباك التسليم',
+                subtitle: 'عند نافذة التسليم',
                 bg: 'bg-emerald-50/60 dark:bg-emerald-950/25', 
                 border: 'border-emerald-200 dark:border-emerald-900/40' 
             },
@@ -421,23 +421,23 @@ useRestaurantOrders(restaurantId.value, {
                 <div class="flex items-center gap-3">
                     <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-white">شاشة المطبخ (KDS)</h2>
                     <span v-if="isPrepaid" class="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50">
-                        ⚡ نظام دفع مسبق ({{ totalWindows }} كواة)
+                        ⚡ نظام دفع مسبق ({{ totalWindows }} نوافذ)
                     </span>
                     <span v-if="authUser?.default_window" class="text-xs font-bold px-2.5 py-1 rounded-full bg-blue-100 dark:bg-blue-950/70 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50">
-                        👨‍🍳 شيف كوة {{ authUser.default_window }}
+                        👨‍🍳 شيف نافذة {{ authUser.default_window }}
                     </span>
                 </div>
 
-                <!-- مبدل الكوة والتصفية لمطاعم الدفع المسبق -->
+                <!-- مبدل النافذة والتصفية لمطاعم الدفع المسبق -->
                 <div v-if="isPrepaid" class="flex items-center gap-2 bg-stone-100 dark:bg-slate-800/80 p-1.5 rounded-xl border border-stone-200 dark:border-slate-700">
-                    <span class="text-xs font-bold text-stone-600 dark:text-slate-300 pr-2">🏢 كوة العمل:</span>
+                    <span class="text-xs font-bold text-stone-600 dark:text-slate-300 pr-2">🏢 نافذة العمل:</span>
                     <select
                         :value="selectedWindow"
                         @change="changeWindow(Number(($event.target as HTMLSelectElement).value))"
                         class="rounded-lg bg-white dark:bg-slate-900 text-xs font-extrabold text-stone-900 dark:text-white border-stone-300 dark:border-slate-600 py-1 pl-6 pr-2 focus:ring-amber-500 cursor-pointer"
                     >
                         <option v-for="w in totalWindows" :key="w" :value="w">
-                            كوة رقم {{ w }}
+                            نافذة رقم {{ w }}
                         </option>
                     </select>
 
@@ -451,7 +451,7 @@ useRestaurantOrders(restaurantId.value, {
                                 : 'bg-white dark:bg-slate-900 text-stone-600 dark:text-slate-400 border-stone-200 dark:border-slate-700 hover:bg-stone-50'
                         ]"
                     >
-                        {{ filterMyWindowOnly ? `كوة ${selectedWindow} فقط` : 'عرض كل الكواة' }}
+                        {{ filterMyWindowOnly ? `نافذة ${selectedWindow} فقط` : 'عرض كل النوافذ' }}
                     </button>
                 </div>
 
@@ -552,7 +552,7 @@ useRestaurantOrders(restaurantId.value, {
                                                     {{ (order.service_type ?? 'dine_in') === 'takeaway' ? '🥡 سفري' : (order.table?.name || 'محلي') }}
                                                 </span>
                                                 <span v-if="order.pickup_window" class="text-xs font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 px-2 py-0.5 rounded-full inline-block border border-sky-200 dark:border-sky-800/40">
-                                                    🏢 كوة {{ order.pickup_window }}
+                                                    🏢 نافذة {{ order.pickup_window }}
                                                 </span>
                                                 <span v-if="order.paid_at" class="text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full inline-block border border-emerald-200 dark:border-emerald-800/40">
                                                     ✓ مدفوع
@@ -667,7 +667,7 @@ useRestaurantOrders(restaurantId.value, {
                                             <span v-else>💳 تأكيد استلام المبلغ وإرسال للمطبخ</span>
                                         </button>
 
-                                        <!-- زر استلام الشباك للطلب في نظام الدفع المسبق -->
+                                        <!-- زر استلام النافذة للطلب في نظام الدفع المسبق -->
                                         <button
                                             v-else-if="isPrepaid && order.status === 'accepted'"
                                             type="button"
@@ -678,7 +678,7 @@ useRestaurantOrders(restaurantId.value, {
                                             <span v-if="processingOrderIds.includes(order.id)">
                                                 <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-dasharray="31.415, 31.415" opacity="0.3"></circle><path d="M12 2C6.477 2 2 6.477 2 12" stroke="currentColor" stroke-width="4" stroke-linecap="round"></path></svg>
                                             </span>
-                                            <span v-else>👨‍🍳 استلام على كوة رقم {{ selectedWindow }}</span>
+                                            <span v-else>👨‍🍳 استلام على نافذة رقم {{ selectedWindow }}</span>
                                         </button>
 
                                         <!-- باقي الحالات أو النظام الافتراضي (دفع لاحق) -->
@@ -696,7 +696,7 @@ useRestaurantOrders(restaurantId.value, {
                                                 {{ 
                                                     order.status === 'pending' ? 'البدء بالتجهيز' : 
                                                     order.status === 'accepted' ? 'بدء التحضير' : 
-                                                    order.status === 'preparing' ? (isPrepaid ? `جاهز للاستلام (شباك ${order.pickup_window || selectedWindow}) 🔔` : 'تم التجهيز') : 
+                                                    order.status === 'preparing' ? (isPrepaid ? `جاهز للاستلام (نافذة ${order.pickup_window || selectedWindow}) 🔔` : 'تم التجهيز') : 
                                                     (isPrepaid ? 'تم تسليم الطلب للزبون ✓' : 'تم التقديم للزبون ✓')
                                                 }}
                                             </span>

@@ -197,9 +197,9 @@ function fieldError(field: string): string | undefined {
                                             >
                                                 <div class="text-2xl p-2 rounded-xl bg-white shadow-xs shrink-0">⚡</div>
                                                 <div>
-                                                    <p class="font-bold text-sm text-gray-900">مطعم دفع مسبق (كاشير وشبابيك تسليم)</p>
+                                                    <p class="font-bold text-sm text-gray-900">مطعم دفع مسبق (كاشير ونوافذ تسليم)</p>
                                                     <p class="text-xs text-gray-500 mt-1 leading-relaxed">
-                                                        يحاسب الزبون عند الكاشير أولاً، ثم يُحوّل الطلب لنوافذ/كواة المطبخ للاستلام.
+                                                        يحاسب الزبون عند الكاشير أولاً، ثم يُحوّل الطلب لنوافذ المطبخ للاستلام.
                                                     </p>
                                                 </div>
                                             </button>
@@ -210,7 +210,7 @@ function fieldError(field: string): string | undefined {
                                     <div v-if="form.type === 'prepaid'" class="col-span-full grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-2xl bg-amber-50/60 border border-amber-200">
                                         <div>
                                             <label for="restaurant-windows" class="block text-xs font-bold text-amber-900 mb-1">
-                                                عدد النوافذ / الكواة المتاحة للتحضير <span class="text-red-500">*</span>
+                                                عدد نوافذ التحضير والاستلام المتاحة <span class="text-red-500">*</span>
                                             </label>
                                             <input
                                                 id="restaurant-windows"
@@ -222,7 +222,7 @@ function fieldError(field: string): string | undefined {
                                                 class="w-full rounded-xl border-amber-300 bg-white shadow-xs focus:border-amber-500 focus:ring-amber-500 text-sm font-bold"
                                                 placeholder="مثال: 3"
                                             />
-                                            <p class="text-[11px] text-amber-700 mt-1">عدد كواة التحضير وشبابيك استلام الزبائن.</p>
+                                            <p class="text-[11px] text-amber-700 mt-1">عدد نوافذ تحضير المطبخ واستلام الزبائن.</p>
                                         </div>
 
                                         <div>

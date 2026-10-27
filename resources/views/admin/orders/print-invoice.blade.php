@@ -147,8 +147,8 @@
 
     @if($order->pickup_window)
     <div class="info-row" style="background: #f1f5f9; padding: 1mm 2mm; border-radius: 4px; margin: 1mm 0;">
-        <span class="label" style="color: #0f172a; font-weight: 800;">شباك الاستلام:</span>
-        <span style="font-weight: 800; color: #0284c7; font-size: 15px;">كوة رقم {{ $order->pickup_window }}</span>
+        <span class="label" style="color: #0f172a; font-weight: 800;">نافذة الاستلام:</span>
+        <span style="font-weight: 800; color: #0284c7; font-size: 15px;">نافذة رقم {{ $order->pickup_window }}</span>
     </div>
     @endif
 

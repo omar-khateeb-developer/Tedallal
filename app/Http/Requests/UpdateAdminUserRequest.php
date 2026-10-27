@@ -54,7 +54,7 @@ class UpdateAdminUserRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'default_window.required' => 'يجب تحديد رقم النافذة / الكوة التابع لها الشيف.',
+            'default_window.required' => 'يجب تحديد رقم النافذة التابع لها الشيف.',
             'default_window.min' => 'رقم النافذة يجب أن يكون 1 على الأقل.',
             'default_window.max' => 'رقم النافذة يتجاوز عدد النوافذ المتاحة في المطعم.',
         ];

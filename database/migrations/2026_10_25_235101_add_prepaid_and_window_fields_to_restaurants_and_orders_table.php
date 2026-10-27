@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::table('restaurants', function (Blueprint $table) {
             $table->string('type')->default('postpaid')->after('slug'); // 'postpaid' أو 'prepaid'
-            $table->unsignedTinyInteger('windows_count')->default(1)->after('type'); // عدد النوافذ/الكواة
+            $table->unsignedTinyInteger('windows_count')->default(1)->after('type'); // عدد النوافذ
         });
 
         Schema::table('orders', function (Blueprint $table) {
             $table->string('service_type')->default('dine_in')->after('status'); // 'dine_in' أو 'takeaway'
-            $table->unsignedTinyInteger('pickup_window')->nullable()->after('service_type'); // رقم النافذة/الكوة
+            $table->unsignedTinyInteger('pickup_window')->nullable()->after('service_type'); // رقم النافذة
             $table->timestamp('paid_at')->nullable()->after('pickup_window');
             $table->foreignId('paid_by')->nullable()->after('paid_at')->constrained('users')->nullOnDelete();
         });

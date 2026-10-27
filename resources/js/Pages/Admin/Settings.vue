@@ -160,12 +160,12 @@ onMounted(load);
                     <div class="flex items-center gap-2 mb-3">
                         <span class="text-xl">⚡</span>
                         <div>
-                            <p class="font-extrabold text-sm text-amber-900 dark:text-amber-200">نظام المطعم: دفع مسبق (كاشير وشبابيك تسليم)</p>
-                            <p class="text-xs text-amber-700 dark:text-amber-400 mt-0.5">يحاسب الزبون عند الكاشير ثم يستلم وجبته من إحدى كواة التحضير.</p>
+                            <p class="font-extrabold text-sm text-amber-900 dark:text-amber-200">نظام المطعم: دفع مسبق (كاشير ونوافذ تسليم)</p>
+                            <p class="text-xs text-amber-700 dark:text-amber-400 mt-0.5">يحاسب الزبون عند الكاشير ثم يستلم وجبته من إحدى نوافذ التحضير.</p>
                         </div>
                     </div>
                     <div>
-                        <label class="mb-1 block text-xs font-bold text-stone-700 dark:text-stone-300">عدد كواة وشبابيك التحضير المتاحة</label>
+                        <label class="mb-1 block text-xs font-bold text-stone-700 dark:text-stone-300">عدد نوافذ التحضير والاستلام المتاحة</label>
                         <input
                             v-model.number="form.windows_count"
                             type="number"
@@ -174,7 +174,7 @@ onMounted(load);
                             required
                             class="w-full rounded-lg border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white font-bold focus:border-amber-500 focus:ring-amber-500"
                         />
-                        <p class="text-[11px] text-stone-500 dark:text-slate-400 mt-1">تظهر هذه الكواة في لوحة المطبخ (KDS) وفي شاشة تتبع الطلب لدى الزبائن.</p>
+                        <p class="text-[11px] text-stone-500 dark:text-slate-400 mt-1">تظهر هذه النوافذ في لوحة المطبخ (KDS) وفي شاشة تتبع الطلب لدى الزبائن.</p>
                     </div>
                 </div>
 

@@ -52,10 +52,10 @@ class DatabaseSeeder extends Seeder
         // 4. المطعم الأول: بيت الشام (Postpaid - دفع لاحق)
         $this->seedRestaurantBaitAlSham();
 
-        // 5. المطعم الثاني: الديوان الخليجي (Prepaid - دفع مسبق مع كوتين)
+        // 5. المطعم الثاني: الديوان الخليجي (Prepaid - دفع مسبق مع نافذتين)
         $this->seedRestaurantAlDiwan();
 
-        // 6. المطعم الثالث: قلعة حلب (Prepaid - دفع مسبق مع 3 كواة)
+        // 6. المطعم الثالث: قلعة حلب (Prepaid - دفع مسبق مع 3 نوافذ)
         $this->seedRestaurantAleppoCitadel();
 
         $this->command?->info('✅ تم تنفيذ السيدر بنجاح مع 3 مطاعم (2 Prepaid و 1 Postpaid) وكامل بياناتهم وصورهم بدون أي تعارض.');
@@ -637,12 +637,12 @@ class DatabaseSeeder extends Seeder
         $cashier->syncRoles([UserRole::Cashier->value]);
         $cashier->givePermissionTo(['manage_orders', 'view_orders', 'update_order_status']);
 
-        // شيف كوة 1 (الأرز والأطباق الرئيسية)
+        // شيف نافذة 1 (الأرز والأطباق الرئيسية)
         $chef1 = User::query()->updateOrCreate(
             ['email' => 'chef1@al-diwan.test'],
             [
                 'restaurant_id'  => $restaurant->id,
-                'name'           => 'الشيف سلطان (كوة 1 - الأرز والكبسات)',
+                'name'           => 'الشيف سلطان (نافذة 1 - الأرز والكبسات)',
                 'password'       => Hash::make('password'),
                 'status'         => UserStatus::Active,
                 'default_window' => 1,
@@ -651,12 +651,12 @@ class DatabaseSeeder extends Seeder
         $chef1->syncRoles([UserRole::Chef->value]);
         $chef1->givePermissionTo(['manage_orders', 'view_orders', 'update_order_status']);
 
-        // شيف كوة 2 (المشويات والمشروبات)
+        // شيف نافذة 2 (المشويات والمشروبات)
         $chef2 = User::query()->updateOrCreate(
             ['email' => 'chef2@al-diwan.test'],
             [
                 'restaurant_id'  => $restaurant->id,
-                'name'           => 'الشيف بدر (كوة 2 - المشويات والسناك)',
+                'name'           => 'الشيف بدر (نافذة 2 - المشويات والسناك)',
                 'password'       => Hash::make('password'),
                 'status'         => UserStatus::Active,
                 'default_window' => 2,
@@ -857,7 +857,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // جلسات وطلبات (نظام الدفع المسبق Prepaid مع كواة الاستلام)
+        // جلسات وطلبات (نظام الدفع المسبق Prepaid مع نوافذ الاستلام)
         $session = TableSession::query()->firstOrCreate(
             ['table_id' => $tables[0]->id, 'status' => SessionStatus::Closed],
             [
@@ -867,7 +867,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // طلب مدفوع مسبقاً ومكتمل من كوة 1
+        // طلب مدفوع مسبقاً ومكتمل من نافذة 1
         $order1 = Order::query()->updateOrCreate(
             ['order_number' => 'ORD-' . now()->subDay()->format('Ymd') . '-0003'],
             [
@@ -876,7 +876,7 @@ class DatabaseSeeder extends Seeder
                 'table_session_id' => $session->id,
                 'status'           => OrderStatus::Served,
                 'service_type'     => 'dine_in',
-                'pickup_window'    => 1, // تم تسليمه من كوة 1
+                'pickup_window'    => 1, // تم تسليمه من نافذة 1
                 'paid_at'          => now()->subDay()->setHour(13)->setMinute(5),
                 'paid_by'          => $cashier->id,
                 'subtotal'         => '144.90',
@@ -899,7 +899,7 @@ class DatabaseSeeder extends Seeder
             ['item_name_snapshot' => 'مندي لحم', 'unit_price' => '70.00', 'quantity' => 1, 'subtotal' => '70.00']
         );
 
-        // طلب سفري جاهز للاستلام عند كوة 2
+        // طلب سفري جاهز للاستلام عند نافذة 2
         $activeSession = TableSession::query()->firstOrCreate(
             ['table_id' => $tables[1]->id, 'status' => SessionStatus::Active],
             [
@@ -916,13 +916,13 @@ class DatabaseSeeder extends Seeder
                 'table_session_id' => $activeSession->id,
                 'status'           => OrderStatus::Ready,
                 'service_type'     => 'takeaway', // سفري
-                'pickup_window'    => 2,          // كوة 2 المشويات
+                'pickup_window'    => 2,          // نافذة 2 المشويات
                 'paid_at'          => now()->subMinutes(25),
                 'paid_by'          => $cashier->id,
                 'subtotal'         => '100.00',
                 'discount_amount'  => '0.00',
                 'total'            => '100.00',
-                'customer_note'    => 'استلام سفري كوة 2',
+                'customer_note'    => 'استلام سفري نافذة 2',
                 'accepted_at'      => now()->subMinutes(25),
                 'preparing_at'     => now()->subMinutes(20),
                 'ready_at'         => now()->subMinutes(5),
@@ -964,13 +964,13 @@ class DatabaseSeeder extends Seeder
 
         ActivityLog::query()->firstOrCreate(
             ['restaurant_id' => $restaurant->id, 'action' => 'create_restaurant'],
-            ['user_id' => $admin->id, 'description' => 'قام بإنشاء وتفعيل مطعم الديوان الخليجي (Prepaid - كواة 2)']
+            ['user_id' => $admin->id, 'description' => 'قام بإنشاء وتفعيل مطعم الديوان الخليجي (Prepaid - نافذتان)']
         );
     }
 
     /**
      * =========================================================================
-     * المطعم الثالث: مطعم قلعة حلب (Prepaid - دفع مسبق مع 3 كواة تسليم)
+     * المطعم الثالث: مطعم قلعة حلب (Prepaid - دفع مسبق مع 3 نوافذ تسليم)
      * =========================================================================
      */
     protected function seedRestaurantAleppoCitadel(): void
@@ -985,7 +985,7 @@ class DatabaseSeeder extends Seeder
             [
                 'name'          => 'مطعم قلعة حلب',
                 'type'          => 'prepaid', // <--- PREPAID
-                'windows_count' => 3,        // <--- 3 كواة تسليم ونوافذ طلبات سريعة
+                'windows_count' => 3,        // <--- 3 نوافذ تسليم
                 'phone'         => '+966559998887',
                 'address'       => 'شارع التحلية، الرياض، المملكة العربية السعودية',
                 'currency'      => 'SYP',
@@ -1001,7 +1001,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // المستخدمون مع كامل الطاقم والأدوار المحدثة والكواة
+        // المستخدمون مع كامل الطاقم والأدوار المحدثة والنوافذ
         $admin = User::query()->updateOrCreate(
             ['email' => 'admin@aleppo.test'],
             [
@@ -1027,12 +1027,12 @@ class DatabaseSeeder extends Seeder
         $cashier->syncRoles([UserRole::Cashier->value]);
         $cashier->givePermissionTo(['manage_orders', 'view_orders', 'update_order_status']);
 
-        // شيف كوة 1: الكباب والمشاوي
+        // شيف نافذة 1: الكباب والمشاوي
         $chef1 = User::query()->updateOrCreate(
             ['email' => 'chef1@aleppo.test'],
             [
                 'restaurant_id'  => $restaurant->id,
-                'name'           => 'الشيف رضوان (كوة 1 - الكباب والمشاوي)',
+                'name'           => 'الشيف رضوان (نافذة 1 - الكباب والمشاوي)',
                 'password'       => Hash::make('password'),
                 'status'         => UserStatus::Active,
                 'default_window' => 1,
@@ -1041,12 +1041,12 @@ class DatabaseSeeder extends Seeder
         $chef1->syncRoles([UserRole::Chef->value]);
         $chef1->givePermissionTo(['manage_orders', 'view_orders', 'update_order_status']);
 
-        // شيف كوة 2: الكبب والأطباق الساخنة
+        // شيف نافذة 2: الكبب والأطباق الساخنة
         $chef2 = User::query()->updateOrCreate(
             ['email' => 'chef2@aleppo.test'],
             [
                 'restaurant_id'  => $restaurant->id,
-                'name'           => 'الشيف مأمون (كوة 2 - الكبب الحلبية)',
+                'name'           => 'الشيف مأمون (نافذة 2 - الكبب الحلبية)',
                 'password'       => Hash::make('password'),
                 'status'         => UserStatus::Active,
                 'default_window' => 2,
@@ -1055,12 +1055,12 @@ class DatabaseSeeder extends Seeder
         $chef2->syncRoles([UserRole::Chef->value]);
         $chef2->givePermissionTo(['manage_orders', 'view_orders', 'update_order_status']);
 
-        // شيف كوة 3: المقبلات والحلويات والسفري
+        // شيف نافذة 3: المقبلات والحلويات والسفري
         $chef3 = User::query()->updateOrCreate(
             ['email' => 'chef3@aleppo.test'],
             [
                 'restaurant_id'  => $restaurant->id,
-                'name'           => 'الشيف حسان (كوة 3 - المقبلات والسفري)',
+                'name'           => 'الشيف حسان (نافذة 3 - المقبلات والسفري)',
                 'password'       => Hash::make('password'),
                 'status'         => UserStatus::Active,
                 'default_window' => 3,
@@ -1236,7 +1236,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // جلسات وطلبات مدفوعة مسبقاً موزعة على الكواة الثلاثة
+        // جلسات وطلبات مدفوعة مسبقاً موزعة على النوافذ الثلاثة
         $session = TableSession::query()->firstOrCreate(
             ['table_id' => $tables[0]->id, 'status' => SessionStatus::Active],
             [
@@ -1245,7 +1245,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // طلب 1: قيد التحضير عند كوة 1 (المشاوي والكباب)
+        // طلب 1: قيد التحضير عند نافذة 1 (المشاوي والكباب)
         $order1 = Order::query()->updateOrCreate(
             ['order_number' => 'ORD-' . now()->format('Ymd') . '-0091'],
             [
@@ -1254,13 +1254,13 @@ class DatabaseSeeder extends Seeder
                 'table_session_id' => $session->id,
                 'status'           => OrderStatus::Preparing,
                 'service_type'     => 'dine_in',
-                'pickup_window'    => 1, // كوة 1
+                'pickup_window'    => 1, // نافذة 1
                 'paid_at'          => now()->subMinutes(35),
                 'paid_by'          => $cashier->id,
                 'subtotal'         => '140.00',
                 'discount_amount'  => '0.00',
                 'total'            => '140.00',
-                'customer_note'    => 'مدفوع مسبقاً - تحضير كوة 1',
+                'customer_note'    => 'مدفوع مسبقاً - تحضير نافذة 1',
                 'accepted_at'      => now()->subMinutes(35),
                 'preparing_at'     => now()->subMinutes(30),
             ]
@@ -1275,7 +1275,7 @@ class DatabaseSeeder extends Seeder
             ['item_name_snapshot' => 'كباب حلبي', 'unit_price' => '65.00', 'quantity' => 1, 'subtotal' => '65.00']
         );
 
-        // طلب 2: جاهز للاستلام عند كوة 2 (الكبب)
+        // طلب 2: جاهز للاستلام عند نافذة 2 (الكبب)
         $order2 = Order::query()->updateOrCreate(
             ['order_number' => 'ORD-' . now()->format('Ymd') . '-0092'],
             [
@@ -1284,13 +1284,13 @@ class DatabaseSeeder extends Seeder
                 'table_session_id' => $session->id,
                 'status'           => OrderStatus::Ready,
                 'service_type'     => 'takeaway', // سفري
-                'pickup_window'    => 2,          // كوة 2
+                'pickup_window'    => 2,          // نافذة 2
                 'paid_at'          => now()->subMinutes(25),
                 'paid_by'          => $cashier->id,
                 'subtotal'         => '115.00',
                 'discount_amount'  => '0.00',
                 'total'            => '115.00',
-                'customer_note'    => 'سفري استلام كوة 2 الكبب',
+                'customer_note'    => 'سفري استلام نافذة 2 الكبب',
                 'accepted_at'      => now()->subMinutes(25),
                 'preparing_at'     => now()->subMinutes(20),
                 'ready_at'         => now()->subMinutes(2),
@@ -1306,7 +1306,7 @@ class DatabaseSeeder extends Seeder
             ['item_name_snapshot' => 'كبة لبنية', 'unit_price' => '55.00', 'quantity' => 1, 'subtotal' => '55.00']
         );
 
-        // طلب 3: تم تسليمه من كوة 3 (الحلويات والمقبلات)
+        // طلب 3: تم تسليمه من نافذة 3 (الحلويات والمقبلات)
         $order3 = Order::query()->updateOrCreate(
             ['order_number' => 'ORD-' . now()->format('Ymd') . '-0093'],
             [
@@ -1315,13 +1315,13 @@ class DatabaseSeeder extends Seeder
                 'table_session_id' => $session->id,
                 'status'           => OrderStatus::Served,
                 'service_type'     => 'dine_in',
-                'pickup_window'    => 3, // كوة 3
+                'pickup_window'    => 3, // نافذة 3
                 'paid_at'          => now()->subMinutes(50),
                 'paid_by'          => $cashier->id,
                 'subtotal'         => '75.00',
                 'discount_amount'  => '0.00',
                 'total'            => '75.00',
-                'customer_note'    => 'تم الاستلام من كوة 3',
+                'customer_note'    => 'تم الاستلام من نافذة 3',
                 'accepted_at'      => now()->subMinutes(50),
                 'preparing_at'     => now()->subMinutes(45),
                 'ready_at'         => now()->subMinutes(35),
@@ -1364,7 +1364,7 @@ class DatabaseSeeder extends Seeder
 
         ActivityLog::query()->firstOrCreate(
             ['restaurant_id' => $restaurant->id, 'action' => 'create_restaurant'],
-            ['user_id' => $admin->id, 'description' => 'قام بإنشاء وتفعيل مطعم قلعة حلب (Prepaid - 3 كواة تسليم)']
+            ['user_id' => $admin->id, 'description' => 'قام بإنشاء وتفعيل مطعم قلعة حلب (Prepaid - 3 نوافذ تسليم)']
         );
     }
 }

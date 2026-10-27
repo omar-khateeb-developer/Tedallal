@@ -42,7 +42,7 @@ const userLogs = ref<any[]>([]);
 
 const rolesList = [
     { value: 'cashier', label: 'كاشير (محاسبة وفواتير)', icon: '💳', desc: 'استلام الدفع، البحث عن الطلبات، وطباعة الفواتير' },
-    { value: 'chef', label: 'شيف / كوة المطبخ', icon: '👨‍🍳', desc: 'تحضير الطلبات واستلامها على كوة محددة' },
+    { value: 'chef', label: 'شيف / نافذة المطبخ', icon: '👨‍🍳', desc: 'تحضير الطلبات واستلامها على نافذة محددة' },
     { value: 'supervisor', label: 'مشرف تشغيل', icon: '👔', desc: 'متابعة الصالة والكاشير والمطبخ وتعديل الطلبات' },
     { value: 'waiter', label: 'ويتر / مضيف صالة', icon: '🍽️', desc: 'متابعة الطاولات وتقديم الوجبات الجاهزة' },
     { value: 'admin', label: 'مدير المطعم', icon: '👑', desc: 'صلاحيات كاملة للمنيو، الأسعار، الطاولات، والمستخدمين' },
@@ -107,7 +107,7 @@ async function saveUser() {
 
     // التحقق من تحديد النافذة إذا كان المستخدم شيف
     if (form.value.role === 'chef' && (!form.value.default_window || form.value.default_window < 1)) {
-        errorMessage.value = 'يجب تحديد رقم النافذة / الكوة التابع لها الشيف.';
+        errorMessage.value = 'يجب تحديد رقم النافذة التابع لها الشيف.';
         return;
     }
 
@@ -156,7 +156,7 @@ async function showLogs(user: UserRow) {
 
 function getRoleInfo(role: string, defaultWindow?: number | null) {
     if (role === 'chef') {
-        const win = defaultWindow ? `كوة رقم ${defaultWindow}` : 'غير محدد';
+        const win = defaultWindow ? `نافذة رقم ${defaultWindow}` : 'غير محدد';
         return {
             label: `شيف (${win})`,
             icon: '👨‍🍳',
@@ -289,7 +289,7 @@ onMounted(load);
                     </div>
                 </div>
 
-                <!-- حقل تحديد النافذة / الكوة للشيف (إلزامي إذا كان شيف) -->
+                <!-- حقل تحديد النافذة للشيف (إلزامي إذا كان شيف) -->
                 <div v-if="form.role === 'chef'" class="sm:col-span-2 rounded-2xl bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-950/40 dark:to-sky-950/30 border border-blue-200 dark:border-blue-800/60 p-4 transition-all">
                     <div class="flex items-start gap-3">
                         <div class="rounded-xl bg-blue-500 text-white p-2.5 text-xl shadow-xs shrink-0">
@@ -297,10 +297,10 @@ onMounted(load);
                         </div>
                         <div class="flex-1">
                             <h4 class="text-sm font-bold text-blue-950 dark:text-blue-200">
-                                النافذة / الكوة التابع لها الشيف (إلزامي):
+                                النافذة التابع لها الشيف (إلزامي):
                             </h4>
                             <p class="text-xs text-blue-800 dark:text-blue-300/80 mt-0.5">
-                                حدد الشباك الذي سيعمل عليه هذا الشيف. <strong class="underline">ملاحظة:</strong> يمكن لأكثر من شيف العمل على نفس النافذة في نفس الوقت.
+                                حدد النافذة التي سيعمل عليها هذا الشيف. <strong class="underline">ملاحظة:</strong> يمكن لأكثر من شيف العمل على نفس النافذة في نفس الوقت.
                             </p>
 
                             <div class="mt-3 grid sm:grid-cols-2 gap-3 items-center">
@@ -310,11 +310,11 @@ onMounted(load);
                                     class="rounded-xl border-blue-300 dark:border-blue-700 bg-white dark:bg-slate-900 text-blue-950 dark:text-blue-100 px-4 py-2.5 font-bold focus:border-blue-500 focus:ring-blue-500 text-sm shadow-xs"
                                 >
                                     <option v-for="w in windowsCount" :key="w" :value="w">
-                                        كوة / شباك رقم {{ w }}
+                                        نافذة رقم {{ w }}
                                     </option>
                                 </select>
                                 <span class="text-xs text-blue-700 dark:text-blue-300 font-medium">
-                                    💡 عند تسجيل دخوله، ستُفتح له شاشة المطبخ محددة على كوة رقم {{ form.default_window || 1 }} تلقائياً.
+                                    💡 عند تسجيل دخوله، ستُفتح له شاشة المطبخ محددة على نافذة رقم {{ form.default_window || 1 }} تلقائياً.
                                 </span>
                             </div>
                         </div>

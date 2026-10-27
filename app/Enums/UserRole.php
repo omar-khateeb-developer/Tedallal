@@ -18,7 +18,7 @@ enum UserRole: string
             self::SuperAdmin => 'مدير النظام',
             self::Admin => 'مدير المطعم',
             self::Cashier => 'كاشير',
-            self::Chef => 'شيف / كوة المطبخ',
+            self::Chef => 'شيف / نافذة المطبخ',
             self::Supervisor => 'مشرف تشغيل',
             self::Waiter => 'ويتر / مضيف',
             self::Staff => 'موظف',
