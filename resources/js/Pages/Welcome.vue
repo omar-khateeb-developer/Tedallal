@@ -419,13 +419,43 @@ const showToast = ref(true);
 const isToastPermanentlyDismissed = ref(false);
 let toastInterval: ReturnType<typeof setInterval> | null = null;
 
-function closeToast() {
+function dismissToast() {
     isToastPermanentlyDismissed.value = true;
     showToast.value = false;
     if (toastInterval) {
         clearInterval(toastInterval);
         toastInterval = null;
     }
+}
+
+// =========================================================================
+// INTERACTIVE HERO TOGGLE EXPERIENCE STATE
+// =========================================================================
+const heroMode = ref<'traditional' | 'smart'>('traditional');
+const isEmeraldFlashing = ref(false);
+let heroAutoSwitchTimer: ReturnType<typeof setTimeout> | null = null;
+let heroFlashTimeout: ReturnType<typeof setTimeout> | null = null;
+
+function setHeroMode(mode: 'traditional' | 'smart', isManual = true) {
+    if (isManual && heroAutoSwitchTimer) {
+        clearTimeout(heroAutoSwitchTimer);
+        heroAutoSwitchTimer = null;
+    }
+    if (heroMode.value === mode) return;
+
+    heroMode.value = mode;
+
+    if (mode === 'smart') {
+        triggerEmeraldFlash();
+    }
+}
+
+function triggerEmeraldFlash() {
+    isEmeraldFlashing.value = true;
+    if (heroFlashTimeout) clearTimeout(heroFlashTimeout);
+    heroFlashTimeout = setTimeout(() => {
+        isEmeraldFlashing.value = false;
+    }, 900);
 }
 
 // Interactive Analytics State & Live Traffic Simulation
@@ -593,12 +623,21 @@ onMounted(async () => {
     // Attach click listener
     window.addEventListener('click', handleGlobalClick);
 
+    // Auto-Demo on load: show traditional mode for 1.8s, then smoothly auto-switch to smart mode
+    heroAutoSwitchTimer = setTimeout(() => {
+        setHeroMode('smart', false);
+        heroAutoSwitchTimer = null;
+    }, 1800);
+
     // Live tickers
     toastInterval = setInterval(() => {
+        if (isToastPermanentlyDismissed.value) return;
         showToast.value = false;
         setTimeout(() => {
-            currentToastIndex.value = (currentToastIndex.value + 1) % liveToasts.value.length;
-            showToast.value = true;
+            if (!isToastPermanentlyDismissed.value) {
+                currentToastIndex.value = (currentToastIndex.value + 1) % liveToasts.value.length;
+                showToast.value = true;
+            }
         }, 400);
     }, 7000);
 
@@ -609,6 +648,8 @@ onMounted(async () => {
 
 onUnmounted(() => {
     window.removeEventListener('click', handleGlobalClick);
+    if (heroAutoSwitchTimer) clearTimeout(heroAutoSwitchTimer);
+    if (heroFlashTimeout) clearTimeout(heroFlashTimeout);
     if (toastInterval) clearInterval(toastInterval);
     if (trafficInterval) clearInterval(trafficInterval);
 });
@@ -867,66 +908,260 @@ onUnmounted(() => {
         </header>
 
         <!-- ========================================================================= -->
-        <!-- HERO SECTION -->
+        <!-- HERO SECTION: INTERACTIVE BEFORE/AFTER TOGGLE EXPERIENCE -->
         <!-- ========================================================================= -->
-        <section class="relative pt-12 pb-24 lg:pt-20 lg:pb-32 overflow-hidden z-10">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center max-w-4xl mx-auto space-y-8">
+        <section class="relative pt-8 pb-20 lg:pt-16 lg:pb-28 overflow-hidden z-10 transition-colors duration-700">
+            <!-- Dynamic Ambient Atmosphere Glow based on Mode -->
+            <div
+                class="pointer-events-none absolute top-1/4 left-1/2 -translate-x-1/2 w-full max-w-5xl h-[450px] rounded-full blur-[140px] transition-all duration-1000 -z-10"
+                :class="heroMode === 'traditional' ? 'bg-rose-950/30' : 'bg-emerald-950/25'"
+            ></div>
 
-                    <!-- Live Status Pill -->
-                    <div class="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-slate-900/80 border border-amber-500/30 text-amber-300 text-xs sm:text-sm font-semibold shadow-lg shadow-amber-500/5 backdrop-blur-md">
-                        <span class="relative flex h-2.5 w-2.5">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                        </span>
-                        <span>{{ t.hero.statusBadge }}</span>
-                        <span class="text-slate-500">|</span>
-                        <span class="text-amber-400/90 font-mono">{{ t.hero.version }}</span>
+            <!-- Soft Emerald Glow Flash Overlay (Triggers on Auto-Switch & Manual Switch to Smart) -->
+            <div
+                class="pointer-events-none absolute inset-0 z-0 transition-opacity duration-700 ease-out"
+                :class="isEmeraldFlashing ? 'opacity-100' : 'opacity-0'"
+            >
+                <div class="absolute inset-0 bg-radial-gradient from-emerald-500/20 via-teal-500/10 to-transparent blur-3xl"></div>
+                <div class="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[750px] h-[400px] bg-emerald-400/15 rounded-full blur-[120px] animate-pulse"></div>
+            </div>
+
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                <div class="text-center max-w-4xl mx-auto space-y-7">
+
+                    <!-- Top Centered Interactive Mode Switcher (Pill Switcher) -->
+                    <div class="flex flex-col items-center justify-center gap-2">
+                        <div class="inline-flex items-center p-1.5 rounded-full bg-slate-900/90 border border-white/10 shadow-2xl backdrop-blur-xl relative z-20">
+                            <!-- Traditional Pill Option -->
+                            <button
+                                @click="setHeroMode('traditional', true)"
+                                type="button"
+                                :class="heroMode === 'traditional'
+                                    ? 'bg-rose-500/20 text-rose-200 border-rose-500/50 shadow-lg shadow-rose-950/60 font-black'
+                                    : 'text-slate-400 hover:text-rose-300 hover:bg-white/5 border-transparent font-medium'"
+                                class="relative flex items-center gap-2 px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm border transition-all duration-300 cursor-pointer"
+                            >
+                                <span class="text-sm sm:text-base">⚠️</span>
+                                <span>{{ currentLocale === 'ar' ? 'الوضع التقليدي (نزيف الأرباح)' : 'Traditional Legacy (Profit Bleed)' }}</span>
+                                <span v-if="heroMode === 'traditional'" class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                            </button>
+
+                            <!-- Smart Platform Pill Option -->
+                            <button
+                                @click="setHeroMode('smart', true)"
+                                type="button"
+                                :class="heroMode === 'smart'
+                                    ? 'bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-400 text-slate-950 font-black shadow-lg shadow-emerald-500/30 border-emerald-300/40'
+                                    : 'text-slate-400 hover:text-emerald-300 hover:bg-white/5 border-transparent font-medium'"
+                                class="relative flex items-center gap-2 px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm border transition-all duration-300 cursor-pointer"
+                            >
+                                <span class="text-sm sm:text-base">✨</span>
+                                <span>{{ currentLocale === 'ar' ? 'مع المنظومة الذكية (التحكم الكامل)' : 'With Smart Platform (Total Control)' }}</span>
+                                <span v-if="heroMode === 'smart'" class="w-2 h-2 rounded-full bg-slate-950 animate-ping"></span>
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- Main Dynamic Headline -->
-                    <h1 class="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.18] sm:leading-[1.18]">
-                        {{ t.hero.titleLine1 }}
-                        <span class="bg-gradient-to-r from-amber-400 via-orange-400 to-amber-300 bg-clip-text text-transparent block mt-2">
-                            {{ t.hero.titleLine2 }}
-                        </span>
-                    </h1>
+                    <!-- Dynamic State Container with Zero Layout Shift -->
+                    <div class="min-h-[520px] sm:min-h-[440px] lg:min-h-[400px] flex flex-col justify-center">
+                        <Transition name="hero-mode" mode="out-in">
+                            <div :key="heroMode" class="space-y-6">
 
-                    <!-- Hero Subtitle -->
-                    <p class="text-lg sm:text-xl text-slate-300 max-w-3xl mx-auto font-normal leading-relaxed">
-                        {{ t.hero.subtitle }}
-                    </p>
+                                <!-- State Dynamic Badge -->
+                                <div class="flex justify-center">
+                                    <div
+                                        class="inline-flex items-center gap-2.5 px-4 py-2 rounded-full text-xs sm:text-sm font-bold shadow-lg backdrop-blur-md transition-all border"
+                                        :class="heroMode === 'traditional'
+                                            ? 'bg-rose-500/10 border-rose-500/30 text-rose-300 shadow-rose-950/40'
+                                            : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300 shadow-emerald-950/40'"
+                                    >
+                                        <span class="relative flex h-2.5 w-2.5">
+                                            <span
+                                                class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                                                :class="heroMode === 'traditional' ? 'bg-rose-400' : 'bg-emerald-400'"
+                                            ></span>
+                                            <span
+                                                class="relative inline-flex rounded-full h-2.5 w-2.5"
+                                                :class="heroMode === 'traditional' ? 'bg-rose-500' : 'bg-emerald-500'"
+                                            ></span>
+                                        </span>
+                                        <span class="text-sm">{{ heroMode === 'traditional' ? '⚠️' : '✨' }}</span>
+                                        <span>
+                                            {{ heroMode === 'traditional'
+                                                ? (currentLocale === 'ar' ? 'فوضى تشغيلية وهدر مستمر' : 'Operational Chaos & Profit Leaks')
+                                                : (currentLocale === 'ar' ? 'السيطرة المالية والتشغيلية الكاملة' : 'Total Financial & Operational Command')
+                                            }}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Dynamic H1 Headline -->
+                                <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.2] sm:leading-[1.2]">
+                                    <template v-if="heroMode === 'traditional'">
+                                        <span>{{ currentLocale === 'ar' ? 'مطبخ مزدحم، مبيعات تتصاعد..' : 'Crowded kitchen, surging sales..' }}</span>
+                                        <span class="bg-gradient-to-r from-rose-400 via-red-500 to-rose-300 bg-clip-text text-transparent block mt-2">
+                                            {{ currentLocale === 'ar' ? 'وأرباحك الحقيقية تتبخر بين التطبيقات والهدر!' : 'yet your true profits vanish between delivery apps and waste!' }}
+                                        </span>
+                                    </template>
+                                    <template v-else>
+                                        <span>{{ currentLocale === 'ar' ? 'مطبخ منظم كالساعة، طلبات مباشرة..' : 'Clockwork kitchen, direct orders..' }}</span>
+                                        <span class="bg-gradient-to-r from-emerald-300 via-teal-300 to-amber-300 bg-clip-text text-transparent block mt-2">
+                                            {{ currentLocale === 'ar' ? 'وكل قرش من أرباحك يدخل جيبك بالكامل!' : 'and every single cent of profit goes directly into your pocket!' }}
+                                        </span>
+                                    </template>
+                                </h1>
+
+                                <!-- Dynamic Sub-headline -->
+                                <p class="text-base sm:text-xl text-slate-300 max-w-3xl mx-auto font-normal leading-relaxed">
+                                    <template v-if="heroMode === 'traditional'">
+                                        {{ currentLocale === 'ar'
+                                            ? 'عمولات تلتهم 25% من إيراداتك، أخطاء طلبات يومية، ومخزون يتسرب دون حسيب أو رقيب.'
+                                            : 'Third-party delivery apps eating 25% of your revenue, daily kitchen ticket errors, and inventory leaking unchecked.'
+                                        }}
+                                    </template>
+                                    <template v-else>
+                                        {{ currentLocale === 'ar'
+                                            ? 'نظام سحابي ذكي يوقف نزيف العمولات، يربط الصالة بالمطبخ لحظياً، ويحميك من أي تسريب مالي بدقة 100%.'
+                                            : 'Intelligent cloud ecosystem that eliminates app commissions, links floor to kitchen instantly, and prevents leakages with 100% precision.'
+                                        }}
+                                    </template>
+                                </p>
+
+                                <!-- Micro-Metrics Cards (3 Cards) -->
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4 max-w-3xl mx-auto pt-2">
+                                    <template v-if="heroMode === 'traditional'">
+                                        <!-- Card 1 -->
+                                        <div class="rounded-2xl bg-slate-900/80 border border-rose-500/25 p-4 sm:p-5 backdrop-blur-md shadow-lg shadow-rose-950/30 flex flex-col items-center justify-center text-center">
+                                            <div class="text-xs sm:text-sm font-semibold text-slate-400 mb-1">
+                                                {{ currentLocale === 'ar' ? 'عمولات تطبيقات' : 'App Commissions' }}
+                                            </div>
+                                            <div class="text-3xl sm:text-4xl font-black text-rose-400 font-mono tracking-tight" dir="ltr">
+                                                -25%
+                                            </div>
+                                            <div class="mt-2 text-[11px] font-semibold text-rose-300/90 bg-rose-500/10 border border-rose-500/20 px-2.5 py-0.5 rounded-full">
+                                                {{ currentLocale === 'ar' ? 'اقتطاع إجباري من الإيراد' : 'Mandatory revenue cut' }}
+                                            </div>
+                                        </div>
+
+                                        <!-- Card 2 -->
+                                        <div class="rounded-2xl bg-slate-900/80 border border-rose-500/25 p-4 sm:p-5 backdrop-blur-md shadow-lg shadow-rose-950/30 flex flex-col items-center justify-center text-center">
+                                            <div class="text-xs sm:text-sm font-semibold text-slate-400 mb-1">
+                                                {{ currentLocale === 'ar' ? 'فاقد وهدر مواد' : 'Kitchen Food Waste' }}
+                                            </div>
+                                            <div class="text-3xl sm:text-4xl font-black text-rose-400 font-mono tracking-tight" dir="ltr">
+                                                -15%
+                                            </div>
+                                            <div class="mt-2 text-[11px] font-semibold text-rose-300/90 bg-rose-500/10 border border-rose-500/20 px-2.5 py-0.5 rounded-full">
+                                                {{ currentLocale === 'ar' ? 'أخطاء وسوء تقدير تكلفة' : 'Ticket errors & food loss' }}
+                                            </div>
+                                        </div>
+
+                                        <!-- Card 3 -->
+                                        <div class="rounded-2xl bg-slate-900/80 border border-rose-500/25 p-4 sm:p-5 backdrop-blur-md shadow-lg shadow-rose-950/30 flex flex-col items-center justify-center text-center">
+                                            <div class="text-xs sm:text-sm font-semibold text-slate-400 mb-1">
+                                                {{ currentLocale === 'ar' ? 'شعور صاحب المطعم' : 'Owner Sentiment' }}
+                                            </div>
+                                            <div class="text-xl sm:text-2xl font-black text-rose-300 mt-1">
+                                                {{ currentLocale === 'ar' ? 'مجهود بلا عائد' : 'Effort Zero Return' }}
+                                            </div>
+                                            <div class="mt-2 text-[11px] font-semibold text-rose-300/90 bg-rose-500/10 border border-rose-500/20 px-2.5 py-0.5 rounded-full">
+                                                {{ currentLocale === 'ar' ? 'إرهاق وضياع للهوامش' : 'Exhaustion & lost margins' }}
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                    <template v-else>
+                                        <!-- Card 1 -->
+                                        <div class="rounded-2xl bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 backdrop-blur-md shadow-lg shadow-emerald-950/30 flex flex-col items-center justify-center text-center">
+                                            <div class="text-xs sm:text-sm font-semibold text-slate-400 mb-1">
+                                                {{ currentLocale === 'ar' ? 'عمولة وسيط' : 'Intermediary Cut' }}
+                                            </div>
+                                            <div class="text-3xl sm:text-4xl font-black text-emerald-400 font-mono tracking-tight" dir="ltr">
+                                                0%
+                                            </div>
+                                            <div class="mt-2 text-[11px] font-semibold text-emerald-300/90 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full">
+                                                {{ currentLocale === 'ar' ? 'أرباحك كاملة 100% لك' : '100% direct revenue retained' }}
+                                            </div>
+                                        </div>
+
+                                        <!-- Card 2 -->
+                                        <div class="rounded-2xl bg-slate-900/80 border border-teal-500/30 p-4 sm:p-5 backdrop-blur-md shadow-lg shadow-teal-950/30 flex flex-col items-center justify-center text-center">
+                                            <div class="text-xs sm:text-sm font-semibold text-slate-400 mb-1">
+                                                {{ currentLocale === 'ar' ? 'ضبط التكاليف' : 'Cost & Stock Control' }}
+                                            </div>
+                                            <div class="text-xl sm:text-2xl font-black text-teal-300 mt-1">
+                                                {{ currentLocale === 'ar' ? 'فوري ولحظي' : 'Real-Time Live' }}
+                                            </div>
+                                            <div class="mt-2 text-[11px] font-semibold text-teal-300/90 bg-teal-500/10 border border-teal-500/20 px-2.5 py-0.5 rounded-full">
+                                                {{ currentLocale === 'ar' ? 'ربط المطبخ بالوصفات آلياً' : 'Automated kitchen & recipe sync' }}
+                                            </div>
+                                        </div>
+
+                                        <!-- Card 3 -->
+                                        <div class="rounded-2xl bg-slate-900/80 border border-amber-500/30 p-4 sm:p-5 backdrop-blur-md shadow-lg shadow-amber-950/30 flex flex-col items-center justify-center text-center">
+                                            <div class="text-xs sm:text-sm font-semibold text-slate-400 mb-1">
+                                                {{ currentLocale === 'ar' ? 'النتيجة' : 'Bottom-Line Result' }}
+                                            </div>
+                                            <div class="text-xl sm:text-2xl font-black text-amber-300 mt-1">
+                                                {{ currentLocale === 'ar' ? 'مضاعفة صافي الأرباح' : '+100% Profit Boost' }}
+                                            </div>
+                                            <div class="mt-2 text-[11px] font-semibold text-amber-300/90 bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-full">
+                                                {{ currentLocale === 'ar' ? 'نمو وسيطرة مالية 100%' : 'High margin & complete control' }}
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+
+                            </div>
+                        </Transition>
+                    </div>
 
                     <!-- CTAs -->
-                    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-                        <a
-                            href="#interactive-demo"
-                            class="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-orange-500 text-slate-950 font-extrabold text-base shadow-xl shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all"
-                        >
-                            <span>{{ t.hero.tryDemoBtn }}</span>
-                        </a>
-
+                    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+                        <!-- Primary CTA -->
                         <button
                             @click="isDemoModalOpen = true"
-                            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-slate-900/90 hover:bg-slate-800/90 border border-slate-700 hover:border-amber-500/50 text-white font-bold text-base transition-all backdrop-blur-md shadow-lg"
+                            type="button"
+                            :class="heroMode === 'traditional'
+                                ? 'bg-gradient-to-r from-rose-500 via-red-500 to-rose-600 text-white shadow-xl shadow-rose-500/25 hover:shadow-rose-500/40'
+                                : 'bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-400 text-slate-950 shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50'"
+                            class="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl font-extrabold text-base hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer group"
                         >
-                            <span>{{ t.hero.bookConsultationBtn }}</span>
+                            <span class="group-hover:scale-110 transition-transform">🛡️</span>
+                            <span>{{ currentLocale === 'ar' ? 'ابدأ بتأمين أرباحك مجاناً' : 'Start Securing Your Profits Free' }}</span>
+                            <span
+                                class="text-xs px-2.5 py-0.5 rounded-full"
+                                :class="heroMode === 'traditional' ? 'bg-black/25 text-white' : 'bg-black/10 text-slate-950 font-black'"
+                            >
+                                14 {{ currentLocale === 'ar' ? 'يوماً تجربة' : 'Days Free' }}
+                            </span>
                         </button>
+
+                        <!-- Secondary CTA -->
+                        <a
+                            href="#how-it-works"
+                            class="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-slate-900/90 hover:bg-slate-800/90 border border-slate-700 hover:border-emerald-500/50 text-white font-bold text-base transition-all backdrop-blur-md shadow-lg group cursor-pointer"
+                        >
+                            <span class="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs group-hover:scale-110 transition-transform font-bold">
+                                ▶
+                            </span>
+                            <span>{{ currentLocale === 'ar' ? 'شاهد كيف توفر في 90 ثانية' : 'See How You Save in 90 Seconds' }}</span>
+                        </a>
                     </div>
 
                     <!-- Micro Trust Badges -->
-                    <div class="pt-8 flex flex-wrap items-center justify-center gap-6 sm:gap-10 text-xs sm:text-sm text-slate-400">
+                    <div class="pt-4 flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-xs sm:text-sm text-slate-400">
                         <div class="flex items-center gap-2">
-                            <span class="text-emerald-400">✓</span>
-                            <span>{{ t.hero.badgeNoApp }}</span>
+                            <span class="text-emerald-400 font-bold">✓</span>
+                            <span>{{ currentLocale === 'ar' ? 'بدون تحميل أي تطبيق للزبائن' : 'Zero App Downloads for Customers' }}</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <span class="text-emerald-400">✓</span>
-                            <span>{{ t.hero.badgeSockets }}</span>
+                            <span class="text-emerald-400 font-bold">✓</span>
+                            <span>{{ currentLocale === 'ar' ? 'شاشات مطبخ KDS وربط مباشر' : 'Real-Time Cloud KDS Kitchen Screens' }}</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <span class="text-emerald-400">✓</span>
-                            <span>{{ t.hero.badgeMultiTenant }}</span>
+                            <span class="text-emerald-400 font-bold">✓</span>
+                            <span>{{ currentLocale === 'ar' ? 'صفر عمولة 0% (أرباحك لك بالكامل)' : '0% Sales Commission (Keep 100%)' }}</span>
                         </div>
                     </div>
 
@@ -2297,8 +2532,8 @@ onUnmounted(() => {
             leave-to-class="transform translate-y-4 opacity-0"
         >
             <div
-                v-if="showToast && !isToastPermanentlyDismissed && liveToasts[currentToastIndex]"
-                class="fixed bottom-6 z-40 max-w-sm w-[90%] sm:w-auto p-4 rounded-2xl bg-[#090e1c]/95 border border-amber-500/30 shadow-2xl backdrop-blur-2xl flex items-center gap-3.5 group"
+                v-if="!isToastPermanentlyDismissed && showToast && liveToasts[currentToastIndex]"
+                class="fixed bottom-6 z-40 max-w-sm w-[90%] sm:w-auto p-4 rounded-2xl bg-[#090e1c]/95 border border-amber-500/30 shadow-2xl backdrop-blur-2xl flex items-center gap-3.5"
                 :class="currentLocale === 'ar' ? 'right-6' : 'left-6'"
             >
                 <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 text-lg font-bold">
@@ -2314,11 +2549,11 @@ onUnmounted(() => {
                     </p>
                 </div>
                 <button
+                    @click="dismissToast"
                     type="button"
-                    @click="closeToast"
-                    class="h-7 w-7 rounded-xl bg-white/5 hover:bg-white/15 text-slate-400 hover:text-white flex items-center justify-center text-xs font-bold transition-all shrink-0 active:scale-95"
+                    class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors shrink-0 -mt-4 text-xs font-bold cursor-pointer"
                     :title="currentLocale === 'ar' ? 'إيقاف ظهور الإشعارات' : 'Dismiss notifications'"
-                    aria-label="Close"
+                    aria-label="Dismiss notifications"
                 >
                     ✕
                 </button>
@@ -2519,5 +2754,21 @@ onUnmounted(() => {
 .custom-scrollbar::-webkit-scrollbar-thumb {
     background: rgba(245, 158, 11, 0.2);
     border-radius: 4px;
+}
+
+/* Hero Mode Switch Transition (Zero Layout Shift Blur Fade) */
+.hero-mode-enter-active,
+.hero-mode-leave-active {
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hero-mode-enter-from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.99);
+    filter: blur(4px);
+}
+.hero-mode-leave-to {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.99);
+    filter: blur(4px);
 }
 </style>
