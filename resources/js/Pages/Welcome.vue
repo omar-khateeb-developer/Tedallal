@@ -416,7 +416,17 @@ const liveToasts = computed(() => {
 
 const currentToastIndex = ref(0);
 const showToast = ref(true);
+const isToastPermanentlyDismissed = ref(false);
 let toastInterval: ReturnType<typeof setInterval> | null = null;
+
+function closeToast() {
+    isToastPermanentlyDismissed.value = true;
+    showToast.value = false;
+    if (toastInterval) {
+        clearInterval(toastInterval);
+        toastInterval = null;
+    }
+}
 
 // Interactive Analytics State & Live Traffic Simulation
 const selectedAnalyticsFilter = ref<'weekend' | 'weekday'>('weekend');
@@ -2287,8 +2297,8 @@ onUnmounted(() => {
             leave-to-class="transform translate-y-4 opacity-0"
         >
             <div
-                v-if="showToast && liveToasts[currentToastIndex]"
-                class="fixed bottom-6 z-40 max-w-sm w-[90%] sm:w-auto p-4 rounded-2xl bg-[#090e1c]/95 border border-amber-500/30 shadow-2xl backdrop-blur-2xl flex items-center gap-3.5"
+                v-if="showToast && !isToastPermanentlyDismissed && liveToasts[currentToastIndex]"
+                class="fixed bottom-6 z-40 max-w-sm w-[90%] sm:w-auto p-4 rounded-2xl bg-[#090e1c]/95 border border-amber-500/30 shadow-2xl backdrop-blur-2xl flex items-center gap-3.5 group"
                 :class="currentLocale === 'ar' ? 'right-6' : 'left-6'"
             >
                 <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 text-lg font-bold">
@@ -2303,6 +2313,15 @@ onUnmounted(() => {
                         {{ liveToasts[currentToastIndex].text }}
                     </p>
                 </div>
+                <button
+                    type="button"
+                    @click="closeToast"
+                    class="h-7 w-7 rounded-xl bg-white/5 hover:bg-white/15 text-slate-400 hover:text-white flex items-center justify-center text-xs font-bold transition-all shrink-0 active:scale-95"
+                    :title="currentLocale === 'ar' ? 'إيقاف ظهور الإشعارات' : 'Dismiss notifications'"
+                    aria-label="Close"
+                >
+                    ✕
+                </button>
             </div>
         </transition>
 
