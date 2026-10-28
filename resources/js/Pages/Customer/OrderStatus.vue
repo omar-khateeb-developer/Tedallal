@@ -123,7 +123,7 @@ const currentStepIndex = computed(() => {
                 </div>
             </div>
 
-            <!-- بطاقة إعلان جاهزية الطلب وشباك الاستلام -->
+            <!-- بطاقة إعلان جاهزية الطلب ونافذة الاستلام -->
             <div v-if="order.status === 'ready' && order.pickup_window" class="rounded-3xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-6 text-center shadow-xl shadow-emerald-500/20">
                 <span class="inline-block px-3 py-1 bg-white/20 rounded-full text-xs font-bold tracking-wider mb-2">🎉 طلبك جاهز الآن للاستلام</span>
                 <h3 class="text-xl font-bold">تفضل بالتوجه إلى النافذة رقم</h3>
@@ -150,7 +150,7 @@ const currentStepIndex = computed(() => {
                 <p class="text-sm font-medium text-stone-500 dark:text-slate-400 relative z-10">رقم الطلب</p>
                 <p class="mt-1 text-3xl font-black tracking-wider text-stone-800 dark:text-white relative z-10">{{ orderNumber }}</p>
                 
-                <!-- نوع الطلب والشباك -->
+                <!-- نوع الطلب والنافذة -->
                 <div class="mt-3 flex items-center justify-center gap-2 flex-wrap relative z-10">
                     <span class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold bg-stone-100 dark:bg-slate-800 text-stone-700 dark:text-slate-300">
                         {{ (order.service_type ?? 'dine_in') === 'takeaway' ? '🥡 سفري / استلام' : `🍽️ محلي (${table.name})` }}

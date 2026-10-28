@@ -113,7 +113,7 @@ const toggleStatus = async (restaurant: any) => {
 const toggleRestaurantType = async (restaurant: any) => {
     const newType = restaurant.type === 'prepaid' ? 'postpaid' : 'prepaid';
     const confirmMsg = newType === 'prepaid'
-        ? `هل تريد تحويل نظام «${restaurant.name}» إلى دفع مسبق (كاشير وشبابيك تسليم)؟`
+        ? `هل تريد تحويل نظام «${restaurant.name}» إلى دفع مسبق (كاشير ونوافذ تسليم)؟`
         : `هل تريد تحويل نظام «${restaurant.name}» إلى دفع لاحق (طاولات وضيافة)؟`;
     if (!confirm(confirmMsg)) return;
     try {
@@ -474,7 +474,7 @@ onMounted(() => {
                                                         >
                                                             <div class="text-2xl p-1.5 rounded-xl bg-white shadow-xs shrink-0">⚡</div>
                                                             <div>
-                                                                <p class="font-bold text-sm text-gray-900">مطعم دفع مسبق (كاشير وشبابيك تسليم)</p>
+                                                                <p class="font-bold text-sm text-gray-900">مطعم دفع مسبق (كاشير ونوافذ تسليم)</p>
                                                                 <p class="text-xs text-gray-500 mt-0.5 leading-relaxed">
                                                                     يدفع الزبون عند الكاشير أولاً، ثم يُحوّل الطلب لنوافذ المطبخ للاستلام والتتبع.
                                                                 </p>
