@@ -24,12 +24,12 @@ class RestaurantSettingsTest extends TestCase
 
         $response = $this->actingAs($admin)->patchJson('/api/admin/restaurant', [
             'name' => 'مطعم محدّث',
-            'phone' => '+966511111111',
+            'phone' => '+963511111111',
         ]);
 
         $response->assertOk()
             ->assertJsonPath('data.name', 'مطعم محدّث')
-            ->assertJsonPath('data.phone', '+966511111111');
+            ->assertJsonPath('data.phone', '+963511111111');
     }
 
     public function test_staff_cannot_update_restaurant_settings(): void

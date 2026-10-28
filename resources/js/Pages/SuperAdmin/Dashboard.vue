@@ -428,7 +428,7 @@ onMounted(() => {
                                                     <label for="sa-restaurant-phone" class="block text-sm font-medium text-gray-700 mb-1">رقم الهاتف</label>
                                                     <input id="sa-restaurant-phone" v-model="form.phone"
                                                         class="w-full rounded-xl border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 text-sm transition" dir="ltr"
-                                                        placeholder="+966 5XXXXXXXX" />
+                                                        placeholder="+963 5XXXXXXXX" />
                                                 </div>
                                                 <div>
                                                     <label for="sa-restaurant-address" class="block text-sm font-medium text-gray-700 mb-1">العنوان</label>

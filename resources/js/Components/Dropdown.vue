@@ -4,7 +4,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue';
 const props = withDefaults(
     defineProps<{
         align?: 'left' | 'right';
-        width?: '48';
+        width?: '48' | '56' | '64' | '72';
         contentClasses?: string;
     }>(),
     {
@@ -25,15 +25,18 @@ onUnmounted(() => document.removeEventListener('keydown', closeOnEscape));
 
 const widthClass = computed(() => {
     return {
-        48: 'w-48',
-    }[props.width.toString()];
+        '48': 'w-48',
+        '56': 'w-56',
+        '64': 'w-64',
+        '72': 'w-72',
+    }[props.width.toString()] || 'w-48';
 });
 
 const alignmentClasses = computed(() => {
     if (props.align === 'left') {
-        return 'ltr:origin-top-left rtl:origin-top-right start-0';
+        return 'origin-top-left left-0';
     } else if (props.align === 'right') {
-        return 'ltr:origin-top-right rtl:origin-top-left end-0';
+        return 'origin-top-right right-0 rtl:right-auto rtl:left-0';
     } else {
         return 'origin-top';
     }
@@ -64,14 +67,13 @@ const open = ref(false);
             leave-to-class="opacity-0 scale-95"
         >
             <div
-                v-show="open"
-                class="absolute z-50 mt-2 rounded-md shadow-lg"
+                v-if="open"
+                class="absolute top-full z-50 mt-2 rounded-2xl shadow-2xl"
                 :class="[widthClass, alignmentClasses]"
-                style="display: none"
                 @click="open = false"
             >
                 <div
-                    class="rounded-md ring-1 ring-black ring-opacity-5"
+                    class="rounded-2xl ring-1 ring-black/5 dark:ring-white/10 overflow-hidden shadow-2xl"
                     :class="contentClasses"
                 >
                     <slot name="content" />

@@ -269,7 +269,7 @@ class DatabaseSeeder extends Seeder
                 'name'          => 'مطعم بيت الشام',
                 'type'          => 'postpaid',
                 'windows_count' => 1,
-                'phone'         => '+966551234567',
+                'phone'         => '+944551234567',
                 'address'       => 'شارع التحلية، جدة، المملكة العربية السعودية',
                 'currency'      => 'SYP',
                 'status'        => RestaurantStatus::Active,
@@ -596,7 +596,7 @@ class DatabaseSeeder extends Seeder
                 'name'          => 'مطعم الديوان الخليجي',
                 'type'          => 'prepaid', // <--- PREPAID
                 'windows_count' => 2,        // <--- كوتين استلام/تحضير
-                'phone'         => '+966559876543',
+                'phone'         => '+944559876543',
                 'address'       => 'طريق الملك فهد، الرياض، المملكة العربية السعودية',
                 'currency'      => 'SYP',
                 'status'        => RestaurantStatus::Active,
@@ -986,7 +986,7 @@ class DatabaseSeeder extends Seeder
                 'name'          => 'مطعم قلعة حلب',
                 'type'          => 'prepaid', // <--- PREPAID
                 'windows_count' => 3,        // <--- 3 نوافذ تسليم
-                'phone'         => '+966559998887',
+                'phone'         => '+944559998887',
                 'address'       => 'شارع التحلية، الرياض، المملكة العربية السعودية',
                 'currency'      => 'SYP',
                 'status'        => RestaurantStatus::Active,
