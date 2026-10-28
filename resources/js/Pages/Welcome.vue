@@ -19,7 +19,7 @@ const props = withDefaults(defineProps<Props>(), {
 // =========================================================================
 // Theme System (Light / Dark Mode)
 // =========================================================================
-const { isDark, toggleTheme, initTheme } = useTheme();
+const { isDark, toggleTheme, setTheme, initTheme } = useTheme();
 
 // =========================================================================
 // Bilingual System (Arabic / English)
@@ -578,8 +578,18 @@ function handleGlobalClick(e: MouseEvent) {
 }
 
 onMounted(async () => {
-    // 0. Initialize theme preference (defaults to dark mode)
-    initTheme('dark');
+    // 0. Initialize theme preference (supports ?theme=light/dark or defaults to dark)
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const themeParam = urlParams.get('theme');
+        if (themeParam === 'light' || themeParam === 'dark') {
+            setTheme(themeParam);
+        } else {
+            initTheme('dark');
+        }
+    } catch {
+        initTheme('dark');
+    }
 
     // 1. Language preference check
     try {
@@ -742,6 +752,7 @@ onUnmounted(() => {
                     <div class="hidden sm:flex items-center gap-3">
                         <!-- Theme Toggle Button (Light / Dark) -->
                         <button
+                            id="theme-toggle-btn"
                             @click="toggleTheme"
                             type="button"
                             class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all shadow-sm border cursor-pointer select-none"
@@ -1313,31 +1324,47 @@ onUnmounted(() => {
         <!-- ========================================================================= -->
         <!-- ARCHITECTURE WORKFLOW: HOW IT WORKS (POSTPAID & PREPAID) -->
         <!-- ========================================================================= -->
-        <section id="how-it-works" class="py-24 relative z-10 border-t border-white/5 bg-[#080d19]/80 backdrop-blur-xl">
+        <section
+            id="how-it-works"
+            class="py-24 relative z-10 border-t backdrop-blur-xl transition-colors duration-500"
+            :class="isDark ? 'border-white/5 bg-[#080d19]/80' : 'border-slate-200/90 bg-white'"
+        >
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
                 <!-- Header & Tag -->
                 <div class="text-center max-w-3xl mx-auto mb-10 space-y-4">
-                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 text-amber-400 text-xs font-bold border border-amber-500/20 shadow-sm">
+                    <div
+                        class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold border shadow-xs"
+                        :class="isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-amber-50 text-amber-800 border-amber-200/80'"
+                    >
                         <span>{{ t.workflow.tag }}</span>
                     </div>
-                    <h2 class="text-3xl sm:text-5xl font-black text-white tracking-tight">
+                    <h2
+                        class="text-3xl sm:text-5xl font-black tracking-tight"
+                        :class="isDark ? 'text-white' : 'text-slate-900'"
+                    >
                         {{ t.workflow.title }}
                     </h2>
-                    <p class="text-slate-400 text-sm sm:text-base leading-relaxed">
+                    <p
+                        class="text-sm sm:text-base leading-relaxed"
+                        :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                    >
                         {{ t.workflow.subtitle }}
                     </p>
 
                     <!-- Interactive Restaurant Operating Model Switcher -->
                     <div class="pt-4 flex justify-center">
-                        <div class="inline-flex p-1.5 rounded-2xl bg-slate-950/90 border border-white/10 shadow-2xl backdrop-blur-2xl max-w-full overflow-x-auto">
+                        <div
+                            class="inline-flex p-1.5 rounded-2xl border shadow-xl backdrop-blur-2xl max-w-full overflow-x-auto transition-colors"
+                            :class="isDark ? 'bg-slate-950/90 border-white/10' : 'bg-slate-100 border-slate-200/90 shadow-inner'"
+                        >
                             <button
                                 @click="selectedOperatingMode = 'postpaid'"
                                 type="button"
-                                class="px-5 py-3 rounded-xl font-extrabold text-xs sm:text-sm transition-all duration-300 flex items-center gap-2.5 whitespace-nowrap"
+                                class="px-5 py-3 rounded-xl font-extrabold text-xs sm:text-sm transition-all duration-300 flex items-center gap-2.5 whitespace-nowrap cursor-pointer"
                                 :class="selectedOperatingMode === 'postpaid'
                                     ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-lg shadow-amber-500/25 scale-[1.02]'
-                                    : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'"
+                                    : (isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-white/5' : 'text-slate-600 hover:text-slate-900 hover:bg-white/80 font-bold')"
                             >
                                 <span class="text-base sm:text-lg">🍽️</span>
                                 <span>{{ t.workflow.togglePostpaid }}</span>
@@ -1346,10 +1373,10 @@ onUnmounted(() => {
                             <button
                                 @click="selectedOperatingMode = 'prepaid'"
                                 type="button"
-                                class="px-5 py-3 rounded-xl font-extrabold text-xs sm:text-sm transition-all duration-300 flex items-center gap-2.5 whitespace-nowrap"
+                                class="px-5 py-3 rounded-xl font-extrabold text-xs sm:text-sm transition-all duration-300 flex items-center gap-2.5 whitespace-nowrap cursor-pointer"
                                 :class="selectedOperatingMode === 'prepaid'
                                     ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-slate-950 shadow-lg shadow-orange-500/25 scale-[1.02]'
-                                    : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'"
+                                    : (isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-white/5' : 'text-slate-600 hover:text-slate-900 hover:bg-white/80 font-bold')"
                             >
                                 <span class="text-base sm:text-lg">⚡</span>
                                 <span>{{ t.workflow.togglePrepaid }}</span>
@@ -1362,22 +1389,30 @@ onUnmounted(() => {
                 <transition mode="out-in" enter-active-class="transition duration-300 ease-out" enter-from-class="opacity-0 -translate-y-2" enter-to-class="opacity-100 translate-y-0" leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0">
                     <div
                         :key="selectedOperatingMode"
-                        class="max-w-3xl mx-auto mb-14 p-5 rounded-3xl border shadow-xl flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-start"
+                        class="max-w-3xl mx-auto mb-14 p-5 rounded-3xl border shadow-xl flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-start transition-all"
                         :class="selectedOperatingMode === 'prepaid'
-                            ? 'bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-orange-500/10 border-orange-500/30'
-                            : 'bg-gradient-to-r from-amber-500/10 via-yellow-500/10 to-amber-500/10 border-amber-500/30'"
+                            ? (isDark ? 'bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-orange-500/10 border-orange-500/30' : 'bg-gradient-to-r from-orange-50/90 via-amber-50/70 to-orange-50/90 border-orange-200/90 shadow-sm')
+                            : (isDark ? 'bg-gradient-to-r from-amber-500/10 via-yellow-500/10 to-amber-500/10 border-amber-500/30' : 'bg-gradient-to-r from-amber-50/90 via-yellow-50/70 to-amber-50/90 border-amber-200/90 shadow-sm')"
                     >
                         <div
                             class="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0 shadow-lg"
-                            :class="selectedOperatingMode === 'prepaid' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'"
+                            :class="selectedOperatingMode === 'prepaid'
+                                ? (isDark ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'bg-orange-100 text-orange-700 border border-orange-200')
+                                : (isDark ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-800 border border-amber-200')"
                         >
                             {{ selectedOperatingMode === 'prepaid' ? '⚡' : '🍽️' }}
                         </div>
                         <div class="space-y-1">
-                            <h3 class="text-base font-extrabold text-white">
+                            <h3
+                                class="text-base font-extrabold"
+                                :class="isDark ? 'text-white' : 'text-slate-900'"
+                            >
                                 {{ activeWorkflow.title }}
                             </h3>
-                            <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                            <p
+                                class="text-xs sm:text-sm leading-relaxed"
+                                :class="isDark ? 'text-slate-300' : 'text-slate-700'"
+                            >
                                 {{ activeWorkflow.subtitle }}
                             </p>
                         </div>
@@ -1388,36 +1423,74 @@ onUnmounted(() => {
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 
                     <!-- Step 1 -->
-                    <div class="relative group p-6 rounded-3xl bg-slate-900/70 border border-white/5 hover:border-amber-500/40 transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between shadow-xl backdrop-blur-xl">
+                    <div
+                        class="relative group p-6 rounded-3xl border transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between shadow-xl backdrop-blur-xl"
+                        :class="isDark
+                            ? 'bg-slate-900/70 border-white/5 hover:border-amber-500/40'
+                            : 'bg-white border-slate-200/90 hover:border-amber-400 hover:shadow-2xl shadow-sm'"
+                    >
                         <div>
                             <div class="flex items-center justify-between mb-5">
-                                <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center text-xl font-black">
+                                <div
+                                    class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black border"
+                                    :class="isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-amber-50 text-amber-700 border-amber-200'"
+                                >
                                     01
                                 </div>
-                                <span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 border border-white/5">
+                                <span
+                                    class="text-[10px] font-bold px-2.5 py-1 rounded-full border"
+                                    :class="isDark ? 'bg-slate-800 text-slate-300 border-white/5' : 'bg-slate-100 text-slate-700 border-slate-200'"
+                                >
                                     {{ selectedOperatingMode === 'prepaid' ? (currentLocale === 'ar' ? 'طلب فوري + كاشير' : 'Order & Cashier') : (currentLocale === 'ar' ? 'مسح رمز الطاولة' : 'Table QR Scan') }}
                                 </span>
                             </div>
-                            <h3 class="text-base sm:text-lg font-bold text-white mb-2">{{ activeWorkflow.step1Title }}</h3>
-                            <p class="text-xs text-slate-400 leading-relaxed">{{ activeWorkflow.step1Desc }}</p>
+                            <h3
+                                class="text-base sm:text-lg font-bold mb-2"
+                                :class="isDark ? 'text-white' : 'text-slate-900'"
+                            >
+                                {{ activeWorkflow.step1Title }}
+                            </h3>
+                            <p
+                                class="text-xs leading-relaxed"
+                                :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                            >
+                                {{ activeWorkflow.step1Desc }}
+                            </p>
                         </div>
 
                         <!-- Simulation Callout -->
-                        <div class="mt-5 pt-4 border-t border-white/5">
-                            <div v-if="selectedOperatingMode === 'prepaid'" class="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs leading-relaxed space-y-1.5">
-                                <div class="font-extrabold text-[11px] text-amber-300 flex items-center gap-1.5">
+                        <div
+                            class="mt-5 pt-4 border-t"
+                            :class="isDark ? 'border-white/5' : 'border-slate-100'"
+                        >
+                            <div
+                                v-if="selectedOperatingMode === 'prepaid'"
+                                class="p-3.5 rounded-2xl border text-xs leading-relaxed space-y-1.5"
+                                :class="isDark ? 'bg-amber-500/10 border-amber-500/30 text-amber-200' : 'bg-amber-50/90 border-amber-200 text-amber-900'"
+                            >
+                                <div
+                                    class="font-extrabold text-[11px] flex items-center gap-1.5"
+                                    :class="isDark ? 'text-amber-300' : 'text-amber-800'"
+                                >
                                     <span>💬</span>
                                     <span>{{ currentLocale === 'ar' ? 'رسالة تظهر للزبون بعد إرسال الطلب:' : 'Prompt shown to guest upon sending:' }}</span>
                                 </div>
-                                <div class="font-bold text-white bg-slate-950/60 p-2.5 rounded-xl border border-amber-500/20 text-[11px] leading-snug">
+                                <div
+                                    class="font-bold p-2.5 rounded-xl border text-[11px] leading-snug"
+                                    :class="isDark ? 'text-white bg-slate-950/60 border-amber-500/20' : 'text-slate-900 bg-white border-amber-200 shadow-xs'"
+                                >
                                     {{ currentLocale === 'ar'
                                         ? '«يرجى التوجه للكاشير و اخباره برقم طلبك لتدفع الفاتورة ليتم تحضير طلبك»'
                                         : '"Please head to the cashier and share your order number to settle your bill so prep can begin."'
                                     }}
                                 </div>
                             </div>
-                            <div v-else class="p-3 rounded-2xl bg-slate-950/50 border border-white/5 text-slate-300 text-xs flex items-center gap-2">
-                                <span class="text-emerald-400 text-base">📲</span>
+                            <div
+                                v-else
+                                class="p-3 rounded-2xl border text-xs flex items-center gap-2"
+                                :class="isDark ? 'bg-slate-950/50 border-white/5 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-700'"
+                            >
+                                <span class="text-base" :class="isDark ? 'text-emerald-400' : 'text-emerald-600'">📲</span>
                                 <span class="text-[11px]">
                                     {{ currentLocale === 'ar' ? 'فتح المنيو فوراً بدون أي تطبيق وإرسال الأصناف للمطبخ بنقرة' : 'Instant digital menu launch with zero app barrier; send items in a tap' }}
                                 </span>
@@ -1426,36 +1499,74 @@ onUnmounted(() => {
                     </div>
 
                     <!-- Step 2 -->
-                    <div class="relative group p-6 rounded-3xl bg-slate-900/70 border border-white/5 hover:border-orange-500/40 transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between shadow-xl backdrop-blur-xl">
+                    <div
+                        class="relative group p-6 rounded-3xl border transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between shadow-xl backdrop-blur-xl"
+                        :class="isDark
+                            ? 'bg-slate-900/70 border-white/5 hover:border-orange-500/40'
+                            : 'bg-white border-slate-200/90 hover:border-orange-400 hover:shadow-2xl shadow-sm'"
+                    >
                         <div>
                             <div class="flex items-center justify-between mb-5">
-                                <div class="w-12 h-12 rounded-2xl bg-orange-500/10 text-orange-400 border border-orange-500/20 flex items-center justify-center text-xl font-black">
+                                <div
+                                    class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black border"
+                                    :class="isDark ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : 'bg-orange-50 text-orange-700 border-orange-200'"
+                                >
                                     02
                                 </div>
-                                <span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 border border-white/5">
+                                <span
+                                    class="text-[10px] font-bold px-2.5 py-1 rounded-full border"
+                                    :class="isDark ? 'bg-slate-800 text-slate-300 border-white/5' : 'bg-slate-100 text-slate-700 border-slate-200'"
+                                >
                                     {{ selectedOperatingMode === 'prepaid' ? (currentLocale === 'ar' ? 'محطة الكاشير' : 'Cashier Station') : (currentLocale === 'ar' ? 'شاشة وبونات المطبخ' : 'Kitchen KDS & Prints') }}
                                 </span>
                             </div>
-                            <h3 class="text-base sm:text-lg font-bold text-white mb-2">{{ activeWorkflow.step2Title }}</h3>
-                            <p class="text-xs text-slate-400 leading-relaxed">{{ activeWorkflow.step2Desc }}</p>
+                            <h3
+                                class="text-base sm:text-lg font-bold mb-2"
+                                :class="isDark ? 'text-white' : 'text-slate-900'"
+                            >
+                                {{ activeWorkflow.step2Title }}
+                            </h3>
+                            <p
+                                class="text-xs leading-relaxed"
+                                :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                            >
+                                {{ activeWorkflow.step2Desc }}
+                            </p>
                         </div>
 
                         <!-- Simulation Callout -->
-                        <div class="mt-5 pt-4 border-t border-white/5">
-                            <div v-if="selectedOperatingMode === 'prepaid'" class="p-3.5 rounded-2xl bg-orange-500/10 border border-orange-500/30 text-orange-200 text-xs leading-relaxed space-y-1.5">
-                                <div class="font-extrabold text-[11px] text-orange-300 flex items-center gap-1.5">
+                        <div
+                            class="mt-5 pt-4 border-t"
+                            :class="isDark ? 'border-white/5' : 'border-slate-100'"
+                        >
+                            <div
+                                v-if="selectedOperatingMode === 'prepaid'"
+                                class="p-3.5 rounded-2xl border text-xs leading-relaxed space-y-1.5"
+                                :class="isDark ? 'bg-orange-500/10 border-orange-500/30 text-orange-200' : 'bg-orange-50/90 border-orange-200 text-orange-900'"
+                            >
+                                <div
+                                    class="font-extrabold text-[11px] flex items-center gap-1.5"
+                                    :class="isDark ? 'text-orange-300' : 'text-orange-800'"
+                                >
                                     <span>💰</span>
                                     <span>{{ currentLocale === 'ar' ? 'تأكيد الكاشير اللحظي:' : 'Instant Cashier Confirmation:' }}</span>
                                 </div>
-                                <div class="text-[11px] text-slate-200 bg-slate-950/60 p-2 rounded-xl border border-orange-500/20 leading-relaxed">
+                                <div
+                                    class="text-[11px] p-2 rounded-xl border leading-relaxed"
+                                    :class="isDark ? 'text-slate-200 bg-slate-950/60 border-orange-500/20' : 'text-slate-800 bg-white border-orange-200 shadow-xs'"
+                                >
                                     {{ currentLocale === 'ar'
                                         ? 'يؤكد الكاشير استلام المبلغ ➔ ينبثق الطلب فوراً على شاشات نوافذ المطبخ'
                                         : 'Cashier confirms payment ➔ order immediately pops up on kitchen window screens'
                                     }}
                                 </div>
                             </div>
-                            <div v-else class="p-3 rounded-2xl bg-slate-950/50 border border-white/5 text-slate-300 text-xs flex items-center gap-2">
-                                <span class="text-orange-400 text-base">⚡</span>
+                            <div
+                                v-else
+                                class="p-3 rounded-2xl border text-xs flex items-center gap-2"
+                                :class="isDark ? 'bg-slate-950/50 border-white/5 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-700'"
+                            >
+                                <span class="text-base" :class="isDark ? 'text-orange-400' : 'text-orange-600'">⚡</span>
                                 <span class="text-[11px]">
                                     {{ currentLocale === 'ar' ? 'طباعة البونات وتقييد الحساب تلقائياً على رقم الطاولة' : 'Auto kitchen ticket printing and automatic bill binding to the table' }}
                                 </span>
@@ -1464,36 +1575,74 @@ onUnmounted(() => {
                     </div>
 
                     <!-- Step 3 -->
-                    <div class="relative group p-6 rounded-3xl bg-slate-900/70 border border-white/5 hover:border-emerald-500/40 transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between shadow-xl backdrop-blur-xl">
+                    <div
+                        class="relative group p-6 rounded-3xl border transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between shadow-xl backdrop-blur-xl"
+                        :class="isDark
+                            ? 'bg-slate-900/70 border-white/5 hover:border-emerald-500/40'
+                            : 'bg-white border-slate-200/90 hover:border-emerald-400 hover:shadow-2xl shadow-sm'"
+                    >
                         <div>
                             <div class="flex items-center justify-between mb-5">
-                                <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-xl font-black">
+                                <div
+                                    class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black border"
+                                    :class="isDark ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-emerald-50 text-emerald-700 border-emerald-200'"
+                                >
                                     03
                                 </div>
-                                <span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 border border-white/5">
+                                <span
+                                    class="text-[10px] font-bold px-2.5 py-1 rounded-full border"
+                                    :class="isDark ? 'bg-slate-800 text-slate-300 border-white/5' : 'bg-slate-100 text-slate-700 border-slate-200'"
+                                >
                                     {{ selectedOperatingMode === 'prepaid' ? (currentLocale === 'ar' ? 'استلام النافذة الذكي' : 'Window Claim') : (currentLocale === 'ar' ? 'تنظيم محطات الطهي' : 'Cook Station Sync') }}
                                 </span>
                             </div>
-                            <h3 class="text-base sm:text-lg font-bold text-white mb-2">{{ activeWorkflow.step3Title }}</h3>
-                            <p class="text-xs text-slate-400 leading-relaxed">{{ activeWorkflow.step3Desc }}</p>
+                            <h3
+                                class="text-base sm:text-lg font-bold mb-2"
+                                :class="isDark ? 'text-white' : 'text-slate-900'"
+                            >
+                                {{ activeWorkflow.step3Title }}
+                            </h3>
+                            <p
+                                class="text-xs leading-relaxed"
+                                :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                            >
+                                {{ activeWorkflow.step3Desc }}
+                            </p>
                         </div>
 
                         <!-- Simulation Callout -->
-                        <div class="mt-5 pt-4 border-t border-white/5">
-                            <div v-if="selectedOperatingMode === 'prepaid'" class="p-3.5 rounded-2xl bg-sky-500/10 border border-sky-500/30 text-sky-200 text-xs leading-relaxed space-y-1.5">
-                                <div class="font-extrabold text-[11px] text-sky-300 flex items-center gap-1.5">
+                        <div
+                            class="mt-5 pt-4 border-t"
+                            :class="isDark ? 'border-white/5' : 'border-slate-100'"
+                        >
+                            <div
+                                v-if="selectedOperatingMode === 'prepaid'"
+                                class="p-3.5 rounded-2xl border text-xs leading-relaxed space-y-1.5"
+                                :class="isDark ? 'bg-sky-500/10 border-sky-500/30 text-sky-200' : 'bg-sky-50/90 border-sky-200 text-sky-900'"
+                            >
+                                <div
+                                    class="font-extrabold text-[11px] flex items-center gap-1.5"
+                                    :class="isDark ? 'text-sky-300' : 'text-sky-800'"
+                                >
                                     <span>👨‍🍳</span>
                                     <span>{{ currentLocale === 'ar' ? 'تنسيق النوافذ ومنع التضارب:' : 'Window Sync & Conflict Prevention:' }}</span>
                                 </div>
-                                <div class="text-[11px] text-slate-200 bg-slate-950/60 p-2 rounded-xl border border-sky-500/20 leading-relaxed">
+                                <div
+                                    class="text-[11px] p-2 rounded-xl border leading-relaxed"
+                                    :class="isDark ? 'text-slate-200 bg-slate-950/60 border-sky-500/20' : 'text-slate-800 bg-white border-sky-200 shadow-xs'"
+                                >
                                     {{ currentLocale === 'ar'
                                         ? 'شيف النافذة يستلم الأوردر ➔ يظهر لباقي النوافذ فوراً أنه مستلم ومحجوز'
                                         : 'Window chef claims ticket ➔ immediately shows as claimed to all other windows'
                                     }}
                                 </div>
                             </div>
-                            <div v-else class="p-3 rounded-2xl bg-slate-950/50 border border-white/5 text-slate-300 text-xs flex items-center gap-2">
-                                <span class="text-emerald-400 text-base">⏱️</span>
+                            <div
+                                v-else
+                                class="p-3 rounded-2xl border text-xs flex items-center gap-2"
+                                :class="isDark ? 'bg-slate-950/50 border-white/5 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-700'"
+                            >
+                                <span class="text-base" :class="isDark ? 'text-emerald-400' : 'text-emerald-600'">⏱️</span>
                                 <span class="text-[11px]">
                                     {{ currentLocale === 'ar' ? 'مؤقتات دقيقة ومراحل طهي واضحة تضمن تقديم الطعام ساخناً' : 'Precise prep timers and clear stages ensuring piping hot food delivery' }}
                                 </span>
@@ -1502,36 +1651,74 @@ onUnmounted(() => {
                     </div>
 
                     <!-- Step 4 -->
-                    <div class="relative group p-6 rounded-3xl bg-slate-900/70 border border-white/5 hover:border-amber-400/40 transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between shadow-xl backdrop-blur-xl">
+                    <div
+                        class="relative group p-6 rounded-3xl border transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between shadow-xl backdrop-blur-xl"
+                        :class="isDark
+                            ? 'bg-slate-900/70 border-white/5 hover:border-amber-400/40'
+                            : 'bg-white border-slate-200/90 hover:border-amber-400 hover:shadow-2xl shadow-sm'"
+                    >
                         <div>
                             <div class="flex items-center justify-between mb-5">
-                                <div class="w-12 h-12 rounded-2xl bg-amber-400/10 text-amber-300 border border-amber-400/20 flex items-center justify-center text-xl font-black">
+                                <div
+                                    class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black border"
+                                    :class="isDark ? 'bg-amber-400/10 text-amber-300 border-amber-400/20' : 'bg-amber-50 text-amber-700 border-amber-200'"
+                                >
                                     04
                                 </div>
-                                <span class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 border border-white/5">
+                                <span
+                                    class="text-[10px] font-bold px-2.5 py-1 rounded-full border"
+                                    :class="isDark ? 'bg-slate-800 text-slate-300 border-white/5' : 'bg-slate-100 text-slate-700 border-slate-200'"
+                                >
                                     {{ selectedOperatingMode === 'prepaid' ? (currentLocale === 'ar' ? 'جوال الزبون والاستلام' : 'Guest Phone & Pickup') : (currentLocale === 'ar' ? 'دفع الحساب والمغادرة' : 'Bill Pay & Departure') }}
                                 </span>
                             </div>
-                            <h3 class="text-base sm:text-lg font-bold text-white mb-2">{{ activeWorkflow.step4Title }}</h3>
-                            <p class="text-xs text-slate-400 leading-relaxed">{{ activeWorkflow.step4Desc }}</p>
+                            <h3
+                                class="text-base sm:text-lg font-bold mb-2"
+                                :class="isDark ? 'text-white' : 'text-slate-900'"
+                            >
+                                {{ activeWorkflow.step4Title }}
+                            </h3>
+                            <p
+                                class="text-xs leading-relaxed"
+                                :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                            >
+                                {{ activeWorkflow.step4Desc }}
+                            </p>
                         </div>
 
                         <!-- Simulation Callout -->
-                        <div class="mt-5 pt-4 border-t border-white/5">
-                            <div v-if="selectedOperatingMode === 'prepaid'" class="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-200 text-xs leading-relaxed space-y-1.5">
-                                <div class="font-extrabold text-[11px] text-emerald-300 flex items-center gap-1.5">
+                        <div
+                            class="mt-5 pt-4 border-t"
+                            :class="isDark ? 'border-white/5' : 'border-slate-100'"
+                        >
+                            <div
+                                v-if="selectedOperatingMode === 'prepaid'"
+                                class="p-3.5 rounded-2xl border text-xs leading-relaxed space-y-1.5"
+                                :class="isDark ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200' : 'bg-emerald-50/90 border-emerald-200 text-emerald-900'"
+                            >
+                                <div
+                                    class="font-extrabold text-[11px] flex items-center gap-1.5"
+                                    :class="isDark ? 'text-emerald-300' : 'text-emerald-800'"
+                                >
                                     <span>📱</span>
                                     <span>{{ currentLocale === 'ar' ? 'شاشة جوال الزبون المباشرة:' : 'Live Guest Mobile Tracker:' }}</span>
                                 </div>
-                                <div class="font-bold text-white bg-slate-950/60 p-2.5 rounded-xl border border-emerald-500/20 text-[11px] leading-snug">
+                                <div
+                                    class="font-bold p-2.5 rounded-xl border text-[11px] leading-snug"
+                                    :class="isDark ? 'text-white bg-slate-950/60 border-emerald-500/20' : 'text-slate-900 bg-white border-emerald-200 shadow-xs'"
+                                >
                                     {{ currentLocale === 'ar'
                                         ? '«تم استلام طلبك من قِبَل النافذة رقم 2» ثم يظهر تتبع حالة طلب الزبون'
                                         : '"Your order was received by Window #2" followed by live customer order tracking'
                                     }}
                                 </div>
                             </div>
-                            <div v-else class="p-3 rounded-2xl bg-slate-950/50 border border-white/5 text-slate-300 text-xs flex items-center gap-2">
-                                <span class="text-amber-400 text-base">💳</span>
+                            <div
+                                v-else
+                                class="p-3 rounded-2xl border text-xs flex items-center gap-2"
+                                :class="isDark ? 'bg-slate-950/50 border-white/5 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-700'"
+                            >
+                                <span class="text-base" :class="isDark ? 'text-amber-400' : 'text-amber-600'">💳</span>
                                 <span class="text-[11px]">
                                     {{ currentLocale === 'ar' ? 'طلب الفاتورة بلمسة واحدة وسداد المبلغ كاش أو شبكة وإغلاق الطاولة' : 'One-tap bill request, seamless cash or card payment, and auto table closing' }}
                                 </span>
@@ -1547,17 +1734,30 @@ onUnmounted(() => {
         <!-- ========================================================================= -->
         <!-- TAILORED RESTAURANT SOLUTIONS: POSTPAID & PREPAID -->
         <!-- ========================================================================= -->
-        <section id="solutions" class="py-24 relative z-10 border-t border-white/5 bg-[#060a13]">
+        <section
+            id="solutions"
+            class="py-24 relative z-10 border-t transition-colors duration-500"
+            :class="isDark ? 'border-white/5 bg-[#060a13]' : 'border-slate-200/90 bg-slate-50/70'"
+        >
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
                 <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
-                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 text-xs font-bold border border-amber-500/20">
+                    <div
+                        class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold border shadow-xs"
+                        :class="isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-amber-50 text-amber-800 border-amber-200/80'"
+                    >
                         <span>{{ t.solutions.tag }}</span>
                     </div>
-                    <h2 class="text-3xl sm:text-5xl font-extrabold text-white leading-tight">
+                    <h2
+                        class="text-3xl sm:text-5xl font-extrabold leading-tight tracking-tight"
+                        :class="isDark ? 'text-white' : 'text-slate-900'"
+                    >
                         {{ t.solutions.title }}
                     </h2>
-                    <p class="text-slate-400 text-base sm:text-lg">
+                    <p
+                        class="text-base sm:text-lg"
+                        :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                    >
                         {{ t.solutions.subtitle }}
                     </p>
                 </div>
@@ -1565,29 +1765,58 @@ onUnmounted(() => {
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
 
                     <!-- Solution 1: Postpaid (Dine-in / Hall) -->
-                    <div class="relative group p-8 sm:p-10 rounded-3xl bg-slate-900/70 border border-amber-500/20 hover:border-amber-500/40 transition-all duration-300 flex flex-col justify-between shadow-2xl backdrop-blur-xl">
+                    <div
+                        class="relative group p-8 sm:p-10 rounded-3xl border transition-all duration-300 flex flex-col justify-between shadow-2xl backdrop-blur-xl"
+                        :class="isDark
+                            ? 'bg-slate-900/70 border-amber-500/20 hover:border-amber-500/40'
+                            : 'bg-white border-slate-200/90 hover:border-amber-400 hover:shadow-2xl shadow-md'"
+                    >
                         <div class="space-y-6">
                             <div class="flex items-center justify-between flex-wrap gap-3">
-                                <div class="w-14 h-14 rounded-2xl bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center justify-center text-3xl shadow-lg shadow-amber-500/10">
+                                <div
+                                    class="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shadow-lg border"
+                                    :class="isDark
+                                        ? 'bg-amber-500/15 text-amber-400 border-amber-500/30 shadow-amber-500/10'
+                                        : 'bg-amber-50 text-amber-700 border-amber-200 shadow-amber-500/5'"
+                                >
                                     🍽️
                                 </div>
-                                <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-300 border border-amber-500/30">
+                                <span
+                                    class="px-3 py-1 rounded-full text-xs font-bold border"
+                                    :class="isDark
+                                        ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
+                                        : 'bg-amber-50 text-amber-800 border-amber-200'"
+                                >
                                     {{ t.solutions.postpaidBadge }}
                                 </span>
                             </div>
 
                             <div>
-                                <h3 class="text-2xl font-black text-white mb-2">{{ t.solutions.postpaidTitle }}</h3>
-                                <p class="text-sm text-slate-300 leading-relaxed">{{ t.solutions.postpaidDesc }}</p>
+                                <h3
+                                    class="text-2xl font-black mb-2"
+                                    :class="isDark ? 'text-white' : 'text-slate-900'"
+                                >
+                                    {{ t.solutions.postpaidTitle }}
+                                </h3>
+                                <p
+                                    class="text-sm leading-relaxed"
+                                    :class="isDark ? 'text-slate-300' : 'text-slate-600'"
+                                >
+                                    {{ t.solutions.postpaidDesc }}
+                                </p>
                             </div>
 
                             <ul class="space-y-3.5 pt-2">
                                 <li
                                     v-for="(point, idx) in t.solutions.postpaidPoints"
                                     :key="idx"
-                                    class="flex items-start gap-3 text-xs sm:text-sm text-slate-300 leading-relaxed"
+                                    class="flex items-start gap-3 text-xs sm:text-sm leading-relaxed"
+                                    :class="isDark ? 'text-slate-300' : 'text-slate-700'"
                                 >
-                                    <span class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+                                    <span
+                                        class="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5"
+                                        :class="isDark ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-100 text-emerald-800 font-black'"
+                                    >
                                         ✓
                                     </span>
                                     <span>{{ point }}</span>
@@ -1595,14 +1824,23 @@ onUnmounted(() => {
                             </ul>
                         </div>
 
-                        <div class="pt-8 mt-8 border-t border-white/5 flex items-center justify-between flex-wrap gap-3">
-                            <div class="text-xs text-amber-400 font-semibold flex items-center gap-2">
+                        <div
+                            class="pt-8 mt-8 border-t flex items-center justify-between flex-wrap gap-3"
+                            :class="isDark ? 'border-white/5' : 'border-slate-100'"
+                        >
+                            <div
+                                class="text-xs font-semibold flex items-center gap-2"
+                                :class="isDark ? 'text-amber-400' : 'text-amber-800'"
+                            >
                                 <span>⭐</span>
                                 <span>{{ currentLocale === 'ar' ? 'مثالي للمطاعم العائلية والمقاهي الراقية' : 'Ideal for Fine Dining & Family Lounges' }}</span>
                             </div>
                             <button
                                 @click="isDemoModalOpen = true"
-                                class="px-4 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold transition-all"
+                                class="px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer"
+                                :class="isDark
+                                    ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border-amber-500/30'
+                                    : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-300 shadow-xs'"
                             >
                                 {{ currentLocale === 'ar' ? 'طلب عرض مخصص' : 'Request Demo' }}
                             </button>
@@ -1610,29 +1848,58 @@ onUnmounted(() => {
                     </div>
 
                     <!-- Solution 2: Prepaid (Fast Food & Counters) -->
-                    <div class="relative group p-8 sm:p-10 rounded-3xl bg-slate-900/70 border border-orange-500/20 hover:border-orange-500/40 transition-all duration-300 flex flex-col justify-between shadow-2xl backdrop-blur-xl">
+                    <div
+                        class="relative group p-8 sm:p-10 rounded-3xl border transition-all duration-300 flex flex-col justify-between shadow-2xl backdrop-blur-xl"
+                        :class="isDark
+                            ? 'bg-slate-900/70 border-orange-500/20 hover:border-orange-500/40'
+                            : 'bg-white border-slate-200/90 hover:border-orange-400 hover:shadow-2xl shadow-md'"
+                    >
                         <div class="space-y-6">
                             <div class="flex items-center justify-between flex-wrap gap-3">
-                                <div class="w-14 h-14 rounded-2xl bg-orange-500/15 text-orange-400 border border-orange-500/30 flex items-center justify-center text-3xl shadow-lg shadow-orange-500/10">
+                                <div
+                                    class="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shadow-lg border"
+                                    :class="isDark
+                                        ? 'bg-orange-500/15 text-orange-400 border-orange-500/30 shadow-orange-500/10'
+                                        : 'bg-orange-50 text-orange-700 border-orange-200 shadow-orange-500/5'"
+                                >
                                     ⚡
                                 </div>
-                                <span class="px-3 py-1 rounded-full text-xs font-bold bg-orange-500/10 text-orange-300 border border-orange-500/30">
+                                <span
+                                    class="px-3 py-1 rounded-full text-xs font-bold border"
+                                    :class="isDark
+                                        ? 'bg-orange-500/10 text-orange-300 border-orange-500/30'
+                                        : 'bg-orange-50 text-orange-800 border-orange-200'"
+                                >
                                     {{ t.solutions.prepaidBadge }}
                                 </span>
                             </div>
 
                             <div>
-                                <h3 class="text-2xl font-black text-white mb-2">{{ t.solutions.prepaidTitle }}</h3>
-                                <p class="text-sm text-slate-300 leading-relaxed">{{ t.solutions.prepaidDesc }}</p>
+                                <h3
+                                    class="text-2xl font-black mb-2"
+                                    :class="isDark ? 'text-white' : 'text-slate-900'"
+                                >
+                                    {{ t.solutions.prepaidTitle }}
+                                </h3>
+                                <p
+                                    class="text-sm leading-relaxed"
+                                    :class="isDark ? 'text-slate-300' : 'text-slate-600'"
+                                >
+                                    {{ t.solutions.prepaidDesc }}
+                                </p>
                             </div>
 
                             <ul class="space-y-3.5 pt-2">
                                 <li
                                     v-for="(point, idx) in t.solutions.prepaidPoints"
                                     :key="idx"
-                                    class="flex items-start gap-3 text-xs sm:text-sm text-slate-300 leading-relaxed"
+                                    class="flex items-start gap-3 text-xs sm:text-sm leading-relaxed"
+                                    :class="isDark ? 'text-slate-300' : 'text-slate-700'"
                                 >
-                                    <span class="w-5 h-5 rounded-full bg-orange-500/20 text-orange-400 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+                                    <span
+                                        class="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5"
+                                        :class="isDark ? 'bg-orange-500/20 text-orange-400' : 'bg-orange-100 text-orange-800 font-black'"
+                                    >
                                         ✓
                                     </span>
                                     <span>{{ point }}</span>
@@ -1640,14 +1907,23 @@ onUnmounted(() => {
                             </ul>
                         </div>
 
-                        <div class="pt-8 mt-8 border-t border-white/5 flex items-center justify-between flex-wrap gap-3">
-                            <div class="text-xs text-orange-400 font-semibold flex items-center gap-2">
+                        <div
+                            class="pt-8 mt-8 border-t flex items-center justify-between flex-wrap gap-3"
+                            :class="isDark ? 'border-white/5' : 'border-slate-100'"
+                        >
+                            <div
+                                class="text-xs font-semibold flex items-center gap-2"
+                                :class="isDark ? 'text-orange-400' : 'text-orange-800'"
+                            >
                                 <span>🚀</span>
                                 <span>{{ currentLocale === 'ar' ? 'مثالي للبرجر، الشاورما، والوجبات السريعة' : 'Ideal for Burgers, Shawarma & Quick Cafés' }}</span>
                             </div>
                             <button
                                 @click="isDemoModalOpen = true"
-                                class="px-4 py-2 rounded-xl bg-orange-500/10 hover:bg-orange-500/20 text-orange-300 border border-orange-500/30 text-xs font-bold transition-all"
+                                class="px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer"
+                                :class="isDark
+                                    ? 'bg-orange-500/10 hover:bg-orange-500/20 text-orange-300 border-orange-500/30'
+                                    : 'bg-orange-50 hover:bg-orange-100 text-orange-800 border-orange-300 shadow-xs'"
                             >
                                 {{ currentLocale === 'ar' ? 'طلب عرض مخصص' : 'Request Demo' }}
                             </button>
@@ -1662,17 +1938,30 @@ onUnmounted(() => {
         <!-- ========================================================================= -->
         <!-- INTERACTIVE LIVE SHOWCASE (4 MODULES) -->
         <!-- ========================================================================= -->
-        <section id="interactive-demo" class="py-24 relative z-10">
+        <section
+            id="interactive-demo"
+            class="py-24 relative z-10 border-t transition-colors duration-500"
+            :class="isDark ? 'border-white/5 bg-transparent' : 'border-slate-200/90 bg-white'"
+        >
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
                 <div class="text-center max-w-3xl mx-auto mb-12 space-y-4">
-                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-300 text-xs font-bold border border-amber-500/30">
+                    <div
+                        class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold border shadow-xs"
+                        :class="isDark ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-300 border-amber-500/30' : 'bg-amber-50 text-amber-800 border-amber-200/90'"
+                    >
                         <span>{{ t.demo.tag }}</span>
                     </div>
-                    <h2 class="text-3xl sm:text-4xl font-extrabold text-white">
+                    <h2
+                        class="text-3xl sm:text-4xl font-extrabold tracking-tight"
+                        :class="isDark ? 'text-white' : 'text-slate-900'"
+                    >
                         {{ t.demo.title }}
                     </h2>
-                    <p class="text-slate-400 text-base sm:text-lg">
+                    <p
+                        class="text-base sm:text-lg"
+                        :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                    >
                         {{ t.demo.subtitle }}
                     </p>
                 </div>
@@ -1681,8 +1970,10 @@ onUnmounted(() => {
                 <div class="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-10">
                     <button
                         @click="activeDemoTab = 'customer'"
-                        class="px-5 py-3 rounded-2xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2"
-                        :class="activeDemoTab === 'customer' ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-lg shadow-amber-500/25' : 'bg-slate-900/80 text-slate-300 hover:bg-slate-800 border border-white/5'"
+                        class="px-5 py-3 rounded-2xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2 cursor-pointer"
+                        :class="activeDemoTab === 'customer'
+                            ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-lg shadow-amber-500/25 font-black scale-[1.02]'
+                            : (isDark ? 'bg-slate-900/80 text-slate-300 hover:bg-slate-800 border border-white/5' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/90 shadow-xs font-bold')"
                     >
                         <span>📱</span>
                         <span>{{ t.demo.tabCustomer }}</span>
@@ -1690,8 +1981,10 @@ onUnmounted(() => {
 
                     <button
                         @click="activeDemoTab = 'kds'"
-                        class="px-5 py-3 rounded-2xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2"
-                        :class="activeDemoTab === 'kds' ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-lg shadow-amber-500/25' : 'bg-slate-900/80 text-slate-300 hover:bg-slate-800 border border-white/5'"
+                        class="px-5 py-3 rounded-2xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2 cursor-pointer"
+                        :class="activeDemoTab === 'kds'
+                            ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-lg shadow-amber-500/25 font-black scale-[1.02]'
+                            : (isDark ? 'bg-slate-900/80 text-slate-300 hover:bg-slate-800 border border-white/5' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/90 shadow-xs font-bold')"
                     >
                         <span>👨‍🍳</span>
                         <span>{{ t.demo.tabKds }}</span>
@@ -1699,8 +1992,10 @@ onUnmounted(() => {
 
                     <button
                         @click="activeDemoTab = 'qr'"
-                        class="px-5 py-3 rounded-2xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2"
-                        :class="activeDemoTab === 'qr' ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-lg shadow-amber-500/25' : 'bg-slate-900/80 text-slate-300 hover:bg-slate-800 border border-white/5'"
+                        class="px-5 py-3 rounded-2xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2 cursor-pointer"
+                        :class="activeDemoTab === 'qr'
+                            ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-lg shadow-amber-500/25 font-black scale-[1.02]'
+                            : (isDark ? 'bg-slate-900/80 text-slate-300 hover:bg-slate-800 border border-white/5' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/90 shadow-xs font-bold')"
                     >
                         <span>🧾</span>
                         <span>{{ t.demo.tabQr }}</span>
@@ -1708,8 +2003,10 @@ onUnmounted(() => {
 
                     <button
                         @click="activeDemoTab = 'analytics'"
-                        class="px-5 py-3 rounded-2xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2"
-                        :class="activeDemoTab === 'analytics' ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-lg shadow-amber-500/25' : 'bg-slate-900/80 text-slate-300 hover:bg-slate-800 border border-white/5'"
+                        class="px-5 py-3 rounded-2xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2 cursor-pointer"
+                        :class="activeDemoTab === 'analytics'
+                            ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-lg shadow-amber-500/25 font-black scale-[1.02]'
+                            : (isDark ? 'bg-slate-900/80 text-slate-300 hover:bg-slate-800 border border-white/5' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/90 shadow-xs font-bold')"
                     >
                         <span>📊</span>
                         <span>{{ t.demo.tabAnalytics }}</span>
@@ -1717,18 +2014,30 @@ onUnmounted(() => {
                 </div>
 
                 <!-- Showcase Stage -->
-                <div class="relative rounded-3xl bg-slate-950/80 border border-white/10 shadow-2xl backdrop-blur-2xl p-4 sm:p-8 overflow-hidden min-h-[580px]">
+                <div
+                    class="relative rounded-3xl border shadow-2xl backdrop-blur-2xl p-4 sm:p-8 overflow-hidden min-h-[580px] transition-colors"
+                    :class="isDark ? 'bg-slate-950/80 border-white/10' : 'bg-slate-50/70 border-slate-200/90 shadow-xl'"
+                >
 
                     <!-- TAB 1: CUSTOMER MOBILE MENU SIMULATOR -->
                     <div v-if="activeDemoTab === 'customer'" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
                         <div class="lg:col-span-5 space-y-5">
-                            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 text-xs font-bold border border-amber-500/20">
+                            <div
+                                class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold border shadow-xs"
+                                :class="isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-amber-100/80 text-amber-900 border-amber-200'"
+                            >
                                 <span>{{ t.demo.tabCustomer }}</span>
                             </div>
-                            <h3 class="text-2xl sm:text-3xl font-extrabold text-white">
+                            <h3
+                                class="text-2xl sm:text-3xl font-extrabold"
+                                :class="isDark ? 'text-white' : 'text-slate-900'"
+                            >
                                 {{ currentLocale === 'ar' ? 'منيو رقمي فوري على الطاولة' : 'Instant Tabletop Digital Menu' }}
                             </h3>
-                            <p class="text-slate-300 text-sm leading-relaxed">
+                            <p
+                                class="text-sm leading-relaxed"
+                                :class="isDark ? 'text-slate-300' : 'text-slate-600'"
+                            >
                                 {{ currentLocale === 'ar'
                                     ? 'بدون الحاجة لتحميل تطبيقات، يتصفح العميل قائمة الطعام بصور احترافية عالية الدقة، مع خيارات الإضافة، التخصيص، وسلة طاولة تفاعلية تتيح له إرسال الأوردر فوراً إلى المطبخ.'
                                     : 'With zero app friction, guests browse appetizing menu items with high-resolution photography, customizations, dietary tags, and a floating interactive cart that routes tickets straight to the kitchen.'
@@ -1739,29 +2048,37 @@ onUnmounted(() => {
                             <div class="flex flex-wrap gap-2 pt-2">
                                 <button
                                     @click="activeCategory = 'grills'"
-                                    class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all"
-                                    :class="activeCategory === 'grills' ? 'bg-amber-500 text-slate-950' : 'bg-slate-900 text-slate-300 hover:bg-slate-800'"
+                                    class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                                    :class="activeCategory === 'grills'
+                                        ? 'bg-amber-500 text-slate-950 font-bold'
+                                        : (isDark ? 'bg-slate-900 text-slate-300 hover:bg-slate-800' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 shadow-xs font-semibold')"
                                 >
                                     {{ t.demo.catGrills }}
                                 </button>
                                 <button
                                     @click="activeCategory = 'appetizers'"
-                                    class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all"
-                                    :class="activeCategory === 'appetizers' ? 'bg-amber-500 text-slate-950' : 'bg-slate-900 text-slate-300 hover:bg-slate-800'"
+                                    class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                                    :class="activeCategory === 'appetizers'
+                                        ? 'bg-amber-500 text-slate-950 font-bold'
+                                        : (isDark ? 'bg-slate-900 text-slate-300 hover:bg-slate-800' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 shadow-xs font-semibold')"
                                 >
                                     {{ t.demo.catAppetizers }}
                                 </button>
                                 <button
                                     @click="activeCategory = 'desserts'"
-                                    class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all"
-                                    :class="activeCategory === 'desserts' ? 'bg-amber-500 text-slate-950' : 'bg-slate-900 text-slate-300 hover:bg-slate-800'"
+                                    class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                                    :class="activeCategory === 'desserts'
+                                        ? 'bg-amber-500 text-slate-950 font-bold'
+                                        : (isDark ? 'bg-slate-900 text-slate-300 hover:bg-slate-800' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 shadow-xs font-semibold')"
                                 >
                                     {{ t.demo.catDesserts }}
                                 </button>
                                 <button
                                     @click="activeCategory = 'drinks'"
-                                    class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all"
-                                    :class="activeCategory === 'drinks' ? 'bg-amber-500 text-slate-950' : 'bg-slate-900 text-slate-300 hover:bg-slate-800'"
+                                    class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                                    :class="activeCategory === 'drinks'
+                                        ? 'bg-amber-500 text-slate-950 font-bold'
+                                        : (isDark ? 'bg-slate-900 text-slate-300 hover:bg-slate-800' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 shadow-xs font-semibold')"
                                 >
                                     {{ t.demo.catDrinks }}
                                 </button>
@@ -1770,26 +2087,53 @@ onUnmounted(() => {
 
                         <!-- Phone Mockup Container -->
                         <div class="lg:col-span-7 flex justify-center">
-                            <div class="w-full max-w-[340px] sm:max-w-[360px] h-[550px] bg-slate-900 border-[6px] border-slate-800 rounded-[44px] shadow-2xl overflow-hidden relative flex flex-col">
+                            <div
+                                class="w-full max-w-[340px] sm:max-w-[360px] h-[550px] rounded-[44px] shadow-2xl overflow-hidden relative flex flex-col transition-all"
+                                :class="isDark ? 'bg-slate-900 border-[6px] border-slate-800' : 'bg-white border-[6px] border-slate-300 shadow-2xl'"
+                            >
                                 <!-- Phone Notch -->
-                                <div class="h-6 bg-slate-950 flex items-center justify-between px-6 text-[10px] text-slate-400 font-mono shrink-0">
+                                <div
+                                    class="h-6 flex items-center justify-between px-6 text-[10px] font-mono shrink-0"
+                                    :class="isDark ? 'bg-slate-950 text-slate-400' : 'bg-slate-100 text-slate-600 border-b border-slate-200/60'"
+                                >
                                     <span>9:41</span>
                                     <div class="w-16 h-3.5 bg-black rounded-full mx-auto"></div>
                                     <span>5G</span>
                                 </div>
 
                                 <!-- Mobile App Header -->
-                                <div class="px-4 py-3 bg-slate-900/90 border-b border-white/5 flex items-center justify-between shrink-0">
+                                <div
+                                    class="px-4 py-3 border-b flex items-center justify-between shrink-0"
+                                    :class="isDark ? 'bg-slate-900/90 border-white/5' : 'bg-slate-50 border-slate-200'"
+                                >
                                     <div class="flex items-center gap-2">
-                                        <div class="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-xs">
+                                        <div
+                                            class="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs"
+                                            :class="isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-800'"
+                                        >
                                             04
                                         </div>
                                         <div>
-                                            <div class="text-xs font-bold text-white">{{ currentLocale === 'ar' ? 'طاولة رقم 04' : 'Table 04' }}</div>
-                                            <div class="text-[10px] text-emerald-400">{{ currentLocale === 'ar' ? 'متصل بالخدمة الحية ⚡' : 'Connected to Live Service ⚡' }}</div>
+                                            <div
+                                                class="text-xs font-bold"
+                                                :class="isDark ? 'text-white' : 'text-slate-900'"
+                                            >
+                                                {{ currentLocale === 'ar' ? 'طاولة رقم 04' : 'Table 04' }}
+                                            </div>
+                                            <div
+                                                class="text-[10px]"
+                                                :class="isDark ? 'text-emerald-400' : 'text-emerald-700 font-bold'"
+                                            >
+                                                {{ currentLocale === 'ar' ? 'متصل بالخدمة الحية ⚡' : 'Connected to Live Service ⚡' }}
+                                            </div>
                                         </div>
                                     </div>
-                                    <span class="text-xs font-bold text-amber-400">{{ currentCurrencySymbol }}</span>
+                                    <span
+                                        class="text-xs font-bold"
+                                        :class="isDark ? 'text-amber-400' : 'text-amber-700'"
+                                    >
+                                        {{ currentCurrencySymbol }}
+                                    </span>
                                 </div>
 
                                 <!-- Scrollable Menu Items -->
@@ -1797,33 +2141,76 @@ onUnmounted(() => {
                                     <div
                                         v-for="item in filteredMenuItems"
                                         :key="item.id"
-                                        class="p-2.5 rounded-2xl bg-slate-950/90 border border-white/5 flex items-center gap-3 hover:border-amber-500/30 transition-all"
+                                        class="p-2.5 rounded-2xl border flex items-center gap-3 transition-all"
+                                        :class="isDark
+                                            ? 'bg-slate-950/90 border-white/5 hover:border-amber-500/30'
+                                            : 'bg-white border-slate-200 hover:border-amber-300 shadow-xs'"
                                     >
                                         <img :src="item.image" :alt="item.name" class="w-14 h-14 rounded-xl object-cover shrink-0" onerror="this.src='/images/logo.jpg'" />
                                         <div class="flex-1 min-w-0">
                                             <div class="flex items-center gap-1.5">
-                                                <h5 class="text-xs font-bold text-white truncate">{{ item.name }}</h5>
-                                                <span v-if="item.badge" class="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 shrink-0">
+                                                <h5
+                                                    class="text-xs font-bold truncate"
+                                                    :class="isDark ? 'text-white' : 'text-slate-900'"
+                                                >
+                                                    {{ item.name }}
+                                                </h5>
+                                                <span
+                                                    v-if="item.badge"
+                                                    class="text-[9px] px-1.5 py-0.2 rounded shrink-0 font-bold"
+                                                    :class="isDark ? 'bg-amber-500/20 text-amber-300' : 'bg-amber-50 text-amber-800 border border-amber-200'"
+                                                >
                                                     {{ item.badge }}
                                                 </span>
                                             </div>
-                                            <p class="text-[10px] text-slate-400 line-clamp-1 mt-0.5">{{ item.description }}</p>
-                                            <div class="text-xs font-bold text-amber-400 mt-1 font-mono">
+                                            <p
+                                                class="text-[10px] line-clamp-1 mt-0.5"
+                                                :class="isDark ? 'text-slate-400' : 'text-slate-500'"
+                                            >
+                                                {{ item.description }}
+                                            </p>
+                                            <div
+                                                class="text-xs mt-1 font-mono"
+                                                :class="isDark ? 'text-amber-400 font-bold' : 'text-amber-700 font-extrabold'"
+                                            >
                                                 {{ formatPrice(item.price) }} {{ currentCurrencySymbol }}
                                             </div>
                                         </div>
 
                                         <!-- Stepper or Add button -->
                                         <div class="shrink-0">
-                                            <div v-if="cartQuantities[item.id]" class="flex items-center gap-1.5 bg-slate-800 border border-amber-500/30 rounded-xl px-1.5 py-1">
-                                                <button @click="removeItem(item.id)" class="w-5 h-5 rounded-lg bg-slate-700 text-white text-xs flex items-center justify-center hover:bg-slate-600">-</button>
-                                                <span class="text-xs font-bold font-mono px-1">{{ cartQuantities[item.id] }}</span>
-                                                <button @click="addItem(item.id)" class="w-5 h-5 rounded-lg bg-amber-500 text-slate-950 text-xs font-bold flex items-center justify-center hover:bg-amber-400">+</button>
+                                            <div
+                                                v-if="cartQuantities[item.id]"
+                                                class="flex items-center gap-1.5 border rounded-xl px-1.5 py-1"
+                                                :class="isDark ? 'bg-slate-800 border-amber-500/30' : 'bg-slate-50 border-amber-300'"
+                                            >
+                                                <button
+                                                    @click="removeItem(item.id)"
+                                                    class="w-5 h-5 rounded-lg text-xs flex items-center justify-center cursor-pointer transition-colors"
+                                                    :class="isDark ? 'bg-slate-700 text-white hover:bg-slate-600' : 'bg-white text-slate-800 border border-slate-200 shadow-xs hover:bg-slate-100'"
+                                                >
+                                                    -
+                                                </button>
+                                                <span
+                                                    class="text-xs font-bold font-mono px-1"
+                                                    :class="isDark ? 'text-white' : 'text-slate-900'"
+                                                >
+                                                    {{ cartQuantities[item.id] }}
+                                                </span>
+                                                <button
+                                                    @click="addItem(item.id)"
+                                                    class="w-5 h-5 rounded-lg bg-amber-500 text-slate-950 text-xs font-bold flex items-center justify-center hover:bg-amber-400 cursor-pointer"
+                                                >
+                                                    +
+                                                </button>
                                             </div>
                                             <button
                                                 v-else
                                                 @click="addItem(item.id)"
-                                                class="w-8 h-8 rounded-xl bg-amber-500/10 hover:bg-amber-500 text-amber-400 hover:text-slate-950 border border-amber-500/30 flex items-center justify-center font-bold text-sm transition-all"
+                                                class="w-8 h-8 rounded-xl flex items-center justify-center font-bold text-sm transition-all cursor-pointer"
+                                                :class="isDark
+                                                    ? 'bg-amber-500/10 hover:bg-amber-500 text-amber-400 hover:text-slate-950 border border-amber-500/30'
+                                                    : 'bg-amber-50 hover:bg-amber-500 text-amber-700 hover:text-slate-950 border border-amber-200'"
                                             >
                                                 +
                                             </button>
@@ -1834,7 +2221,10 @@ onUnmounted(() => {
                                 <!-- Floating Glassmorphism Cart Bar -->
                                 <div
                                     v-if="totalCartCount > 0"
-                                    class="absolute bottom-2.5 right-2.5 left-2.5 p-3 rounded-2xl bg-[#090e1c]/95 border border-amber-500/40 shadow-2xl backdrop-blur-xl flex items-center justify-between z-20"
+                                    class="absolute bottom-2.5 right-2.5 left-2.5 p-3 rounded-2xl border shadow-2xl backdrop-blur-xl flex items-center justify-between z-20 transition-all"
+                                    :class="isDark
+                                        ? 'bg-[#090e1c]/95 border-amber-500/40 text-white'
+                                        : 'bg-white/95 border-amber-400 text-slate-900 shadow-2xl'"
                                 >
                                     <div class="flex items-center gap-2.5">
                                         <div class="relative w-8 h-8 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold shadow-md shadow-amber-500/30">
@@ -1846,14 +2236,24 @@ onUnmounted(() => {
                                             </span>
                                         </div>
                                         <div>
-                                            <div class="text-[10px] text-slate-400">{{ t.demo.cartTitle }}</div>
-                                            <div class="text-xs font-extrabold text-amber-400 font-mono">{{ formatPrice(totalCartPrice) }} {{ currentCurrencySymbol }}</div>
+                                            <div
+                                                class="text-[10px]"
+                                                :class="isDark ? 'text-slate-400' : 'text-slate-500 font-semibold'"
+                                            >
+                                                {{ t.demo.cartTitle }}
+                                            </div>
+                                            <div
+                                                class="text-xs font-mono font-black"
+                                                :class="isDark ? 'text-amber-400' : 'text-amber-800'"
+                                            >
+                                                {{ formatPrice(totalCartPrice) }} {{ currentCurrencySymbol }}
+                                            </div>
                                         </div>
                                     </div>
 
                                     <button
                                         @click="activeDemoTab = 'kds'"
-                                        class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 text-xs font-bold hover:scale-105 active:scale-95 transition-all shadow"
+                                        class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 text-xs font-bold hover:scale-105 active:scale-95 transition-all shadow cursor-pointer"
                                     >
                                         {{ t.demo.sendToKitchenBtn }}
                                     </button>
@@ -1865,17 +2265,33 @@ onUnmounted(() => {
 
                     <!-- TAB 2: KITCHEN DISPLAY SYSTEM (KDS) -->
                     <div v-else-if="activeDemoTab === 'kds'" class="space-y-6">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
+                        <div
+                            class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4"
+                            :class="isDark ? 'border-white/5' : 'border-slate-200'"
+                        >
                             <div>
-                                <h4 class="text-lg font-bold text-white flex items-center gap-2">
+                                <h4
+                                    class="text-lg font-bold flex items-center gap-2"
+                                    :class="isDark ? 'text-white' : 'text-slate-900'"
+                                >
                                     <span>👨‍🍳</span>
                                     <span>{{ t.demo.kdsHeaderTitle }}</span>
                                 </h4>
-                                <p class="text-xs text-slate-400 mt-1">{{ t.demo.kdsHeaderSubtitle }}</p>
+                                <p
+                                    class="text-xs mt-1"
+                                    :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                                >
+                                    {{ t.demo.kdsHeaderSubtitle }}
+                                </p>
                             </div>
                             <div class="flex items-center gap-2 text-xs">
-                                <span class="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold flex items-center gap-1.5">
-                                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                                <span
+                                    class="px-3 py-1 rounded-full border font-bold flex items-center gap-1.5"
+                                    :class="isDark
+                                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                        : 'bg-emerald-50 text-emerald-800 border-emerald-200'"
+                                >
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
                                     Reverb WebSockets Online
                                 </span>
                             </div>
@@ -1884,38 +2300,78 @@ onUnmounted(() => {
                         <!-- Kanban Columns -->
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <!-- New Orders -->
-                            <div class="rounded-2xl bg-slate-900/70 border border-amber-500/20 p-3 space-y-3">
-                                <div class="flex items-center justify-between border-b border-white/5 pb-2">
-                                    <span class="text-xs font-bold text-amber-400 flex items-center gap-1.5">
-                                        <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                            <div
+                                class="rounded-2xl border p-3 space-y-3"
+                                :class="isDark ? 'bg-slate-900/70 border-amber-500/20' : 'bg-amber-50/70 border-amber-200 shadow-xs'"
+                            >
+                                <div
+                                    class="flex items-center justify-between border-b pb-2"
+                                    :class="isDark ? 'border-white/5' : 'border-amber-200/80'"
+                                >
+                                    <span
+                                        class="text-xs font-bold flex items-center gap-1.5"
+                                        :class="isDark ? 'text-amber-400' : 'text-amber-900 font-extrabold'"
+                                    >
+                                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
                                         {{ t.demo.colNew }}
                                     </span>
-                                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono">1</span>
+                                    <span
+                                        class="text-[10px] px-1.5 py-0.5 rounded font-mono font-bold"
+                                        :class="isDark ? 'bg-amber-500/20 text-amber-300' : 'bg-amber-100 text-amber-900'"
+                                    >
+                                        1
+                                    </span>
                                 </div>
                                 <div
                                     v-for="order in kdsOrders.filter(o => o.status === 'new')"
                                     :key="order.id"
-                                    class="p-3 rounded-xl bg-slate-950 border border-amber-500/40 shadow-lg space-y-2.5"
+                                    class="p-3 rounded-xl border shadow-lg space-y-2.5"
+                                    :class="isDark ? 'bg-slate-950 border-amber-500/40' : 'bg-white border-amber-300 shadow-sm'"
                                 >
                                     <div class="flex items-center justify-between text-xs font-bold">
-                                        <span class="text-white">{{ order.table }}</span>
-                                        <span class="text-[10px] text-amber-400 px-2 py-0.5 rounded-full bg-amber-500/10 font-mono">{{ order.time }}</span>
+                                        <span :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'">{{ order.table }}</span>
+                                        <span
+                                            class="text-[10px] px-2 py-0.5 rounded-full font-mono font-bold"
+                                            :class="isDark ? 'text-amber-400 bg-amber-500/10' : 'text-amber-800 bg-amber-50 border border-amber-200'"
+                                        >
+                                            {{ order.time }}
+                                        </span>
                                     </div>
                                     <div class="space-y-1.5 text-xs">
-                                        <div v-for="(it, idx) in order.items" :key="idx" class="border-b border-white/5 pb-1">
-                                            <div class="flex justify-between font-semibold text-slate-200">
+                                        <div
+                                            v-for="(it, idx) in order.items"
+                                            :key="idx"
+                                            class="border-b pb-1"
+                                            :class="isDark ? 'border-white/5' : 'border-slate-100'"
+                                        >
+                                            <div
+                                                class="flex justify-between font-semibold"
+                                                :class="isDark ? 'text-slate-200' : 'text-slate-800 font-bold'"
+                                            >
                                                 <span>{{ it.qty }}x {{ it.name }}</span>
                                             </div>
-                                            <div v-if="it.note" class="text-[10px] text-amber-300 bg-amber-500/10 px-1.5 py-0.5 rounded mt-1">
+                                            <div
+                                                v-if="it.note"
+                                                class="text-[10px] px-1.5 py-0.5 rounded mt-1 font-semibold"
+                                                :class="isDark ? 'text-amber-300 bg-amber-500/10' : 'text-amber-900 bg-amber-100/90'"
+                                            >
                                                 {{ it.note }}
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="pt-2 flex items-center justify-between border-t border-white/5">
-                                        <span class="text-xs font-mono font-bold text-slate-300">{{ formatPrice(order.total) }} {{ currentCurrencySymbol }}</span>
+                                    <div
+                                        class="pt-2 flex items-center justify-between border-t"
+                                        :class="isDark ? 'border-white/5' : 'border-slate-100'"
+                                    >
+                                        <span
+                                            class="text-xs font-mono font-bold"
+                                            :class="isDark ? 'text-slate-300' : 'text-slate-900'"
+                                        >
+                                            {{ formatPrice(order.total) }} {{ currentCurrencySymbol }}
+                                        </span>
                                         <button
                                             @click="advanceKdsOrder(order.id)"
-                                            class="px-3 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold text-xs hover:bg-amber-400 transition-all"
+                                            class="px-3 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold text-xs hover:bg-amber-400 transition-all cursor-pointer"
                                         >
                                             {{ t.demo.btnStartCooking }}
                                         </button>
@@ -1924,38 +2380,78 @@ onUnmounted(() => {
                             </div>
 
                             <!-- Cooking -->
-                            <div class="rounded-2xl bg-slate-900/70 border border-orange-500/20 p-3 space-y-3">
-                                <div class="flex items-center justify-between border-b border-white/5 pb-2">
-                                    <span class="text-xs font-bold text-orange-400 flex items-center gap-1.5">
-                                        <span class="w-2 h-2 rounded-full bg-orange-400"></span>
+                            <div
+                                class="rounded-2xl border p-3 space-y-3"
+                                :class="isDark ? 'bg-slate-900/70 border-orange-500/20' : 'bg-orange-50/70 border-orange-200 shadow-xs'"
+                            >
+                                <div
+                                    class="flex items-center justify-between border-b pb-2"
+                                    :class="isDark ? 'border-white/5' : 'border-orange-200/80'"
+                                >
+                                    <span
+                                        class="text-xs font-bold flex items-center gap-1.5"
+                                        :class="isDark ? 'text-orange-400' : 'text-orange-900 font-extrabold'"
+                                    >
+                                        <span class="w-2 h-2 rounded-full bg-orange-500"></span>
                                         {{ t.demo.colCooking }}
                                     </span>
-                                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-300 font-mono">1</span>
+                                    <span
+                                        class="text-[10px] px-1.5 py-0.5 rounded font-mono font-bold"
+                                        :class="isDark ? 'bg-orange-500/20 text-orange-300' : 'bg-orange-100 text-orange-900'"
+                                    >
+                                        1
+                                    </span>
                                 </div>
                                 <div
                                     v-for="order in kdsOrders.filter(o => o.status === 'cooking')"
                                     :key="order.id"
-                                    class="p-3 rounded-xl bg-slate-950 border border-orange-500/40 shadow-lg space-y-2.5"
+                                    class="p-3 rounded-xl border shadow-lg space-y-2.5"
+                                    :class="isDark ? 'bg-slate-950 border-orange-500/40' : 'bg-white border-orange-300 shadow-sm'"
                                 >
                                     <div class="flex items-center justify-between text-xs font-bold">
-                                        <span class="text-white">{{ order.table }}</span>
-                                        <span class="text-[10px] text-orange-400 px-2 py-0.5 rounded-full bg-orange-500/10 font-mono">{{ order.time }}</span>
+                                        <span :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'">{{ order.table }}</span>
+                                        <span
+                                            class="text-[10px] px-2 py-0.5 rounded-full font-mono font-bold"
+                                            :class="isDark ? 'text-orange-400 bg-orange-500/10' : 'text-orange-800 bg-orange-50 border border-orange-200'"
+                                        >
+                                            {{ order.time }}
+                                        </span>
                                     </div>
                                     <div class="space-y-1.5 text-xs">
-                                        <div v-for="(it, idx) in order.items" :key="idx" class="border-b border-white/5 pb-1">
-                                            <div class="flex justify-between font-semibold text-slate-200">
+                                        <div
+                                            v-for="(it, idx) in order.items"
+                                            :key="idx"
+                                            class="border-b pb-1"
+                                            :class="isDark ? 'border-white/5' : 'border-slate-100'"
+                                        >
+                                            <div
+                                                class="flex justify-between font-semibold"
+                                                :class="isDark ? 'text-slate-200' : 'text-slate-800 font-bold'"
+                                            >
                                                 <span>{{ it.qty }}x {{ it.name }}</span>
                                             </div>
-                                            <div v-if="it.note" class="text-[10px] text-amber-300 bg-amber-500/10 px-1.5 py-0.5 rounded mt-1">
+                                            <div
+                                                v-if="it.note"
+                                                class="text-[10px] px-1.5 py-0.5 rounded mt-1 font-semibold"
+                                                :class="isDark ? 'text-amber-300 bg-amber-500/10' : 'text-amber-900 bg-amber-100/90'"
+                                            >
                                                 {{ it.note }}
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="pt-2 flex items-center justify-between border-t border-white/5">
-                                        <span class="text-xs font-mono font-bold text-slate-300">{{ formatPrice(order.total) }} {{ currentCurrencySymbol }}</span>
+                                    <div
+                                        class="pt-2 flex items-center justify-between border-t"
+                                        :class="isDark ? 'border-white/5' : 'border-slate-100'"
+                                    >
+                                        <span
+                                            class="text-xs font-mono font-bold"
+                                            :class="isDark ? 'text-slate-300' : 'text-slate-900'"
+                                        >
+                                            {{ formatPrice(order.total) }} {{ currentCurrencySymbol }}
+                                        </span>
                                         <button
                                             @click="advanceKdsOrder(order.id)"
-                                            class="px-3 py-1 rounded-lg bg-orange-500 text-slate-950 font-bold text-xs hover:bg-orange-400 transition-all"
+                                            class="px-3 py-1 rounded-lg bg-orange-500 text-slate-950 font-bold text-xs hover:bg-orange-400 transition-all cursor-pointer"
                                         >
                                             {{ t.demo.btnMarkReady }}
                                         </button>
@@ -1964,35 +2460,71 @@ onUnmounted(() => {
                             </div>
 
                             <!-- Ready -->
-                            <div class="rounded-2xl bg-slate-900/70 border border-emerald-500/20 p-3 space-y-3">
-                                <div class="flex items-center justify-between border-b border-white/5 pb-2">
-                                    <span class="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
-                                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                            <div
+                                class="rounded-2xl border p-3 space-y-3"
+                                :class="isDark ? 'bg-slate-900/70 border-emerald-500/20' : 'bg-emerald-50/70 border-emerald-200 shadow-xs'"
+                            >
+                                <div
+                                    class="flex items-center justify-between border-b pb-2"
+                                    :class="isDark ? 'border-white/5' : 'border-emerald-200/80'"
+                                >
+                                    <span
+                                        class="text-xs font-bold flex items-center gap-1.5"
+                                        :class="isDark ? 'text-emerald-400' : 'text-emerald-900 font-extrabold'"
+                                    >
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                                         {{ t.demo.colReady }}
                                     </span>
-                                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono">1</span>
+                                    <span
+                                        class="text-[10px] px-1.5 py-0.5 rounded font-mono font-bold"
+                                        :class="isDark ? 'bg-emerald-500/20 text-emerald-300' : 'bg-emerald-100 text-emerald-900'"
+                                    >
+                                        1
+                                    </span>
                                 </div>
                                 <div
                                     v-for="order in kdsOrders.filter(o => o.status === 'ready')"
                                     :key="order.id"
-                                    class="p-3 rounded-xl bg-slate-950 border border-emerald-500/40 shadow-lg space-y-2.5"
+                                    class="p-3 rounded-xl border shadow-lg space-y-2.5"
+                                    :class="isDark ? 'bg-slate-950 border-emerald-500/40' : 'bg-white border-emerald-300 shadow-sm'"
                                 >
                                     <div class="flex items-center justify-between text-xs font-bold">
-                                        <span class="text-white">{{ order.table }}</span>
-                                        <span class="text-[10px] text-emerald-400 px-2 py-0.5 rounded-full bg-emerald-500/10 font-mono">{{ order.time }}</span>
+                                        <span :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'">{{ order.table }}</span>
+                                        <span
+                                            class="text-[10px] px-2 py-0.5 rounded-full font-mono font-bold"
+                                            :class="isDark ? 'text-emerald-400 bg-emerald-500/10' : 'text-emerald-800 bg-emerald-50 border border-emerald-200'"
+                                        >
+                                            {{ order.time }}
+                                        </span>
                                     </div>
                                     <div class="space-y-1.5 text-xs">
-                                        <div v-for="(it, idx) in order.items" :key="idx" class="border-b border-white/5 pb-1">
-                                            <div class="flex justify-between font-semibold text-slate-200">
+                                        <div
+                                            v-for="(it, idx) in order.items"
+                                            :key="idx"
+                                            class="border-b pb-1"
+                                            :class="isDark ? 'border-white/5' : 'border-slate-100'"
+                                        >
+                                            <div
+                                                class="flex justify-between font-semibold"
+                                                :class="isDark ? 'text-slate-200' : 'text-slate-800 font-bold'"
+                                            >
                                                 <span>{{ it.qty }}x {{ it.name }}</span>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="pt-2 flex items-center justify-between border-t border-white/5">
-                                        <span class="text-xs font-mono font-bold text-slate-300">{{ formatPrice(order.total) }} {{ currentCurrencySymbol }}</span>
+                                    <div
+                                        class="pt-2 flex items-center justify-between border-t"
+                                        :class="isDark ? 'border-white/5' : 'border-slate-100'"
+                                    >
+                                        <span
+                                            class="text-xs font-mono font-bold"
+                                            :class="isDark ? 'text-slate-300' : 'text-slate-900'"
+                                        >
+                                            {{ formatPrice(order.total) }} {{ currentCurrencySymbol }}
+                                        </span>
                                         <button
                                             @click="advanceKdsOrder(order.id)"
-                                            class="px-3 py-1 rounded-lg bg-emerald-500 text-slate-950 font-bold text-xs hover:bg-emerald-400 transition-all"
+                                            class="px-3 py-1 rounded-lg bg-emerald-500 text-slate-950 font-bold text-xs hover:bg-emerald-400 transition-all cursor-pointer"
                                         >
                                             {{ t.demo.btnMarkServed }}
                                         </button>
@@ -2006,22 +2538,45 @@ onUnmounted(() => {
                     <div v-else-if="activeDemoTab === 'qr'" class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
                         <!-- Left: Acrylic Stand -->
                         <div class="flex flex-col items-center text-center space-y-4">
-                            <div class="w-64 p-6 rounded-3xl bg-gradient-to-b from-slate-800 to-slate-900 border-2 border-amber-500/40 shadow-2xl relative">
+                            <div
+                                class="w-64 p-6 rounded-3xl border-2 shadow-2xl relative transition-all"
+                                :class="isDark ? 'bg-gradient-to-b from-slate-800 to-slate-900 border-amber-500/40' : 'bg-white border-amber-300 shadow-xl'"
+                            >
                                 <div class="text-center space-y-2">
-                                    <span class="text-amber-400 font-bold text-sm tracking-widest block uppercase">TEDALLAL</span>
-                                    <h5 class="text-base font-extrabold text-white">{{ t.demo.qrCardTitle }}</h5>
-                                    <div class="w-40 h-40 bg-white rounded-2xl p-2 mx-auto shadow-inner flex items-center justify-center">
+                                    <span
+                                        class="font-bold text-sm tracking-widest block uppercase"
+                                        :class="isDark ? 'text-amber-400' : 'text-amber-700'"
+                                    >
+                                        TEDALLAL
+                                    </span>
+                                    <h5
+                                        class="text-base font-extrabold"
+                                        :class="isDark ? 'text-white' : 'text-slate-900'"
+                                    >
+                                        {{ t.demo.qrCardTitle }}
+                                    </h5>
+                                    <div class="w-40 h-40 bg-white rounded-2xl p-2 mx-auto shadow-inner flex items-center justify-center border border-slate-200">
                                         <img src="/images/qr-sample.png" alt="QR" class="w-full h-full object-contain" />
                                     </div>
-                                    <div class="text-xs text-amber-300 font-bold pt-1">{{ currentLocale === 'ar' ? 'طاولة رقم 04' : 'Table #04' }}</div>
-                                    <p class="text-[10px] text-slate-400 leading-tight">{{ t.demo.qrCardHint }}</p>
+                                    <div
+                                        class="text-xs font-bold pt-1"
+                                        :class="isDark ? 'text-amber-300' : 'text-amber-800 font-extrabold'"
+                                    >
+                                        {{ currentLocale === 'ar' ? 'طاولة رقم 04' : 'Table #04' }}
+                                    </div>
+                                    <p
+                                        class="text-[10px] leading-tight"
+                                        :class="isDark ? 'text-slate-400' : 'text-slate-500'"
+                                    >
+                                        {{ t.demo.qrCardHint }}
+                                    </p>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Right: Thermal Receipt -->
                         <div class="flex flex-col items-center space-y-4">
-                            <div class="w-72 bg-white text-slate-950 p-6 rounded-xl shadow-2xl font-mono text-xs space-y-3 border-t-8 border-amber-500">
+                            <div class="w-72 bg-white text-slate-950 p-6 rounded-xl shadow-2xl font-mono text-xs space-y-3 border-t-8 border-amber-500 border border-slate-200">
                                 <div class="text-center border-b border-dashed border-slate-400 pb-3">
                                     <div class="font-extrabold text-sm tracking-wider">مطعم حلب الشهباء الفاخر</div>
                                     <div class="text-[10px] text-slate-600">{{ t.demo.receiptHeader }}</div>
@@ -2067,7 +2622,10 @@ onUnmounted(() => {
                                     {{ t.demo.receiptFooter }}
                                 </div>
                             </div>
-                            <p class="text-xs text-slate-400 text-center max-w-sm mx-auto">
+                            <p
+                                class="text-xs text-center max-w-sm mx-auto"
+                                :class="isDark ? 'text-slate-400' : 'text-slate-500'"
+                            >
                                 {{ t.demo.receiptHint }}
                             </p>
                         </div>
@@ -2075,26 +2633,41 @@ onUnmounted(() => {
 
                     <!-- TAB 4: SMART ANALYTICS & BI -->
                     <div v-else-if="activeDemoTab === 'analytics'" class="space-y-6">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
+                        <div
+                            class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4"
+                            :class="isDark ? 'border-white/5' : 'border-slate-200'"
+                        >
                             <div>
-                                <h4 class="text-lg font-bold text-white flex items-center gap-2">
+                                <h4
+                                    class="text-lg font-bold flex items-center gap-2"
+                                    :class="isDark ? 'text-white' : 'text-slate-900'"
+                                >
                                     <span>📊</span>
                                     <span>{{ t.demo.analyticsTitle }}</span>
                                 </h4>
-                                <p class="text-xs text-slate-400 mt-1">{{ t.demo.analyticsSubtitle }}</p>
+                                <p
+                                    class="text-xs mt-1"
+                                    :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                                >
+                                    {{ t.demo.analyticsSubtitle }}
+                                </p>
                             </div>
                             <div class="flex items-center gap-2">
                                 <button
                                     @click="selectedAnalyticsFilter = 'weekend'"
-                                    class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all"
-                                    :class="selectedAnalyticsFilter === 'weekend' ? 'bg-amber-500 text-slate-950' : 'bg-slate-900 text-slate-400 border border-white/5'"
+                                    class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                                    :class="selectedAnalyticsFilter === 'weekend'
+                                        ? 'bg-amber-500 text-slate-950 font-bold shadow-xs'
+                                        : (isDark ? 'bg-slate-900 text-slate-400 border border-white/5' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 shadow-xs')"
                                 >
                                     {{ t.demo.filterWeekend }}
                                 </button>
                                 <button
                                     @click="selectedAnalyticsFilter = 'weekday'"
-                                    class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all"
-                                    :class="selectedAnalyticsFilter === 'weekday' ? 'bg-amber-500 text-slate-950' : 'bg-slate-900 text-slate-400 border border-white/5'"
+                                    class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                                    :class="selectedAnalyticsFilter === 'weekday'
+                                        ? 'bg-amber-500 text-slate-950 font-bold shadow-xs'
+                                        : (isDark ? 'bg-slate-900 text-slate-400 border border-white/5' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 shadow-xs')"
                                 >
                                     {{ t.demo.filterWeekday }}
                                 </button>
@@ -2104,60 +2677,125 @@ onUnmounted(() => {
                         <!-- CPA Financial Sales Summary Cards -->
                         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                             <!-- Net Realized Sales -->
-                            <div class="p-4 rounded-2xl bg-gradient-to-br from-emerald-500/15 via-slate-900 to-slate-950 border border-emerald-500/40 shadow-lg relative overflow-hidden">
-                                <div class="flex items-center justify-between text-[11px] font-bold text-emerald-400 mb-1">
+                            <div
+                                class="p-4 rounded-2xl border shadow-lg relative overflow-hidden"
+                                :class="isDark
+                                    ? 'bg-gradient-to-br from-emerald-500/15 via-slate-900 to-slate-950 border-emerald-500/40'
+                                    : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50 border-emerald-200 shadow-sm'"
+                            >
+                                <div
+                                    class="flex items-center justify-between text-[11px] font-bold mb-1"
+                                    :class="isDark ? 'text-emerald-400' : 'text-emerald-800 font-extrabold'"
+                                >
                                     <span>{{ currentLocale === 'ar' ? 'صافي المبيعات المحقق' : 'Net Realized Sales' }}</span>
-                                    <span class="px-1.5 py-0.5 rounded text-[9px] bg-emerald-500/20 text-emerald-300">0% خطأ</span>
+                                    <span
+                                        class="px-1.5 py-0.5 rounded text-[9px] font-bold"
+                                        :class="isDark ? 'bg-emerald-500/20 text-emerald-300' : 'bg-emerald-100 text-emerald-900'"
+                                    >
+                                        0% خطأ
+                                    </span>
                                 </div>
-                                <div class="text-xl sm:text-2xl font-black text-white font-mono">
-                                    {{ formatPrice(financialKpis.netSales) }} <span class="text-xs font-normal text-amber-400">{{ currentCurrencySymbol }}</span>
+                                <div
+                                    class="text-xl sm:text-2xl font-black font-mono"
+                                    :class="isDark ? 'text-white' : 'text-slate-950'"
+                                >
+                                    {{ formatPrice(financialKpis.netSales) }}
+                                    <span
+                                        class="text-xs font-normal"
+                                        :class="isDark ? 'text-amber-400' : 'text-amber-700 font-bold'"
+                                    >
+                                        {{ currentCurrencySymbol }}
+                                    </span>
                                 </div>
-                                <div class="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
+                                <div
+                                    class="text-[10px] mt-1 flex items-center gap-1"
+                                    :class="isDark ? 'text-slate-400' : 'text-slate-600 font-medium'"
+                                >
                                     <span>{{ currentLocale === 'ar' ? 'إجمالي الطلبات:' : 'Total Orders:' }}</span>
-                                    <span class="text-white font-mono font-bold">{{ financialKpis.ordersCount }}</span>
+                                    <span
+                                        class="font-mono font-bold"
+                                        :class="isDark ? 'text-white' : 'text-slate-900'"
+                                    >
+                                        {{ financialKpis.ordersCount }}
+                                    </span>
                                 </div>
                             </div>
 
                             <!-- Gross Sales & Discounts -->
-                            <div class="p-4 rounded-2xl bg-slate-900/80 border border-white/10 shadow-lg">
-                                <div class="text-[11px] font-semibold text-slate-400 mb-1">
+                            <div
+                                class="p-4 rounded-2xl border shadow-lg"
+                                :class="isDark ? 'bg-slate-900/80 border-white/10' : 'bg-white border-slate-200 shadow-sm'"
+                            >
+                                <div
+                                    class="text-[11px] font-semibold mb-1"
+                                    :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                                >
                                     {{ currentLocale === 'ar' ? 'إجمالي المبيعات والخصومات' : 'Gross Sales & Discounts' }}
                                 </div>
-                                <div class="text-lg sm:text-xl font-bold text-slate-200 font-mono">
-                                    {{ formatPrice(financialKpis.grossSales) }} <span class="text-xs font-normal text-slate-400">{{ currentCurrencySymbol }}</span>
+                                <div
+                                    class="text-lg sm:text-xl font-bold font-mono"
+                                    :class="isDark ? 'text-slate-200' : 'text-slate-900 font-extrabold'"
+                                >
+                                    {{ formatPrice(financialKpis.grossSales) }}
+                                    <span class="text-xs font-normal" :class="isDark ? 'text-slate-400' : 'text-slate-500'">{{ currentCurrencySymbol }}</span>
                                 </div>
-                                <div class="text-[10px] text-rose-400 mt-1 flex items-center justify-between">
+                                <div class="text-[10px] text-rose-600 dark:text-rose-400 mt-1 flex items-center justify-between font-bold">
                                     <span>{{ currentLocale === 'ar' ? 'الخصومات:' : 'Discounts:' }}</span>
-                                    <span class="font-mono font-bold">-{{ formatPrice(financialKpis.discounts) }} {{ currentCurrencySymbol }}</span>
+                                    <span class="font-mono">-{{ formatPrice(financialKpis.discounts) }} {{ currentCurrencySymbol }}</span>
                                 </div>
                             </div>
 
                             <!-- Average Order Value (AOV) -->
-                            <div class="p-4 rounded-2xl bg-slate-900/80 border border-white/10 shadow-lg">
-                                <div class="text-[11px] font-semibold text-slate-400 mb-1">
+                            <div
+                                class="p-4 rounded-2xl border shadow-lg"
+                                :class="isDark ? 'bg-slate-900/80 border-white/10' : 'bg-white border-slate-200 shadow-sm'"
+                            >
+                                <div
+                                    class="text-[11px] font-semibold mb-1"
+                                    :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                                >
                                     {{ currentLocale === 'ar' ? 'متوسط الفاتورة (AOV)' : 'Avg Order Value (AOV)' }}
                                 </div>
-                                <div class="text-lg sm:text-xl font-bold text-amber-400 font-mono">
-                                    {{ formatPrice(financialKpis.aov) }} <span class="text-xs font-normal text-amber-300">{{ currentCurrencySymbol }}</span>
+                                <div
+                                    class="text-lg sm:text-xl font-bold font-mono"
+                                    :class="isDark ? 'text-amber-400' : 'text-amber-800 font-extrabold'"
+                                >
+                                    {{ formatPrice(financialKpis.aov) }}
+                                    <span class="text-xs font-normal" :class="isDark ? 'text-amber-300' : 'text-amber-700'">{{ currentCurrencySymbol }}</span>
                                 </div>
-                                <div class="text-[10px] text-emerald-400 mt-1 flex items-center gap-1">
+                                <div
+                                    class="text-[10px] mt-1 flex items-center gap-1 font-bold"
+                                    :class="isDark ? 'text-emerald-400' : 'text-emerald-700'"
+                                >
                                     <span>▲ +28%</span>
-                                    <span class="text-slate-400">{{ currentLocale === 'ar' ? 'نمو سلة الشراء' : 'Upsell Growth' }}</span>
+                                    <span :class="isDark ? 'text-slate-400' : 'text-slate-600 font-normal'">{{ currentLocale === 'ar' ? 'نمو سلة الشراء' : 'Upsell Growth' }}</span>
                                 </div>
                             </div>
 
                             <!-- Dine-in vs Takeaway Breakdown -->
-                            <div class="p-4 rounded-2xl bg-slate-900/80 border border-white/10 shadow-lg">
-                                <div class="text-[11px] font-semibold text-slate-400 mb-1">
+                            <div
+                                class="p-4 rounded-2xl border shadow-lg"
+                                :class="isDark ? 'bg-slate-900/80 border-white/10' : 'bg-white border-slate-200 shadow-sm'"
+                            >
+                                <div
+                                    class="text-[11px] font-semibold mb-1"
+                                    :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                                >
                                     {{ currentLocale === 'ar' ? 'الصالة مقابل السفري' : 'Dine-In vs Takeaway' }}
                                 </div>
                                 <div class="text-xs space-y-1 font-mono pt-0.5">
-                                    <div class="flex justify-between text-slate-300">
-                                        <span class="text-[10px] text-slate-400">{{ currentLocale === 'ar' ? '🍽️ صالة:' : '🍽️ Dine-in:' }}</span>
+                                    <div
+                                        class="flex justify-between"
+                                        :class="isDark ? 'text-slate-300' : 'text-slate-800 font-semibold'"
+                                    >
+                                        <span class="text-[10px]" :class="isDark ? 'text-slate-400' : 'text-slate-500'">{{ currentLocale === 'ar' ? '🍽️ صالة:' : '🍽️ Dine-in:' }}</span>
                                         <span class="font-bold">{{ formatPrice(financialKpis.dineInNet) }} {{ currentCurrencySymbol }}</span>
                                     </div>
-                                    <div class="flex justify-between text-slate-300">
-                                        <span class="text-[10px] text-slate-400">{{ currentLocale === 'ar' ? '⚡ سفري:' : '⚡ Takeaway:' }}</span>
+                                    <div
+                                        class="flex justify-between"
+                                        :class="isDark ? 'text-slate-300' : 'text-slate-800 font-semibold'"
+                                    >
+                                        <span class="text-[10px]" :class="isDark ? 'text-slate-400' : 'text-slate-500'">{{ currentLocale === 'ar' ? '⚡ سفري:' : '⚡ Takeaway:' }}</span>
                                         <span class="font-bold">{{ formatPrice(financialKpis.takeawayNet) }} {{ currentCurrencySymbol }}</span>
                                     </div>
                                 </div>
@@ -2166,13 +2804,27 @@ onUnmounted(() => {
 
                         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                             <!-- Peak Hours Chart -->
-                            <div class="lg:col-span-7 p-5 rounded-2xl bg-slate-900/60 border border-white/5 space-y-4">
-                                <h5 class="text-sm font-bold text-white flex items-center justify-between">
+                            <div
+                                class="lg:col-span-7 p-5 rounded-2xl border space-y-4"
+                                :class="isDark ? 'bg-slate-900/60 border-white/5' : 'bg-white border-slate-200 shadow-sm'"
+                            >
+                                <h5
+                                    class="text-sm font-bold flex items-center justify-between"
+                                    :class="isDark ? 'text-white' : 'text-slate-900'"
+                                >
                                     <span>{{ t.demo.chartPeakTitle }}</span>
-                                    <span class="text-xs text-amber-400 font-mono">{{ t.demo.ordersUnit }} / hr</span>
+                                    <span
+                                        class="text-xs font-mono font-bold"
+                                        :class="isDark ? 'text-amber-400' : 'text-amber-700'"
+                                    >
+                                        {{ t.demo.ordersUnit }} / hr
+                                    </span>
                                 </h5>
 
-                                <div class="h-44 pt-4 flex items-end justify-between gap-2 border-b border-white/10 pb-2">
+                                <div
+                                    class="h-44 pt-4 flex items-end justify-between gap-2 border-b pb-2"
+                                    :class="isDark ? 'border-white/10' : 'border-slate-200'"
+                                >
                                     <div
                                         v-for="(bar, idx) in peakHoursData"
                                         :key="idx"
@@ -2181,25 +2833,50 @@ onUnmounted(() => {
                                         <div class="w-full h-36 flex items-end justify-center">
                                             <div
                                                 class="w-full max-w-[28px] rounded-t-lg transition-all duration-500 group-hover:brightness-125"
-                                                :class="bar.isPeak ? 'bg-gradient-to-t from-orange-500 to-amber-400 shadow-lg shadow-amber-500/30' : 'bg-slate-800 hover:bg-slate-700'"
+                                                :class="bar.isPeak
+                                                    ? 'bg-gradient-to-t from-orange-500 to-amber-400 shadow-lg shadow-amber-500/30'
+                                                    : (isDark ? 'bg-slate-800 hover:bg-slate-700' : 'bg-slate-200 hover:bg-slate-300')"
                                                 :style="{ height: `${bar.height}%` }"
                                             ></div>
                                         </div>
-                                        <span class="text-[11px] font-mono" :class="bar.isPeak ? 'text-amber-400 font-extrabold' : 'text-slate-400'">{{ bar.time }}</span>
+                                        <span
+                                            class="text-[11px] font-mono"
+                                            :class="bar.isPeak
+                                                ? (isDark ? 'text-amber-400 font-extrabold' : 'text-amber-800 font-black')
+                                                : (isDark ? 'text-slate-400' : 'text-slate-600')"
+                                        >
+                                            {{ bar.time }}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Top Dishes -->
-                            <div class="lg:col-span-5 p-5 rounded-2xl bg-slate-900/60 border border-white/5 space-y-4">
-                                <h5 class="text-sm font-bold text-white">{{ t.demo.chartTopDishesTitle }}</h5>
+                            <div
+                                class="lg:col-span-5 p-5 rounded-2xl border space-y-4"
+                                :class="isDark ? 'bg-slate-900/60 border-white/5' : 'bg-white border-slate-200 shadow-sm'"
+                            >
+                                <h5
+                                    class="text-sm font-bold"
+                                    :class="isDark ? 'text-white' : 'text-slate-900'"
+                                >
+                                    {{ t.demo.chartTopDishesTitle }}
+                                </h5>
                                 <div class="space-y-3 pt-2">
                                     <div v-for="(dish, idx) in topDishesData" :key="idx" class="space-y-1">
                                         <div class="flex justify-between text-xs font-semibold">
-                                            <span class="text-slate-200">{{ dish.name }}</span>
-                                            <span class="text-amber-400 font-mono">{{ dish.percent }}% ({{ dish.orders }} {{ t.demo.ordersUnit }})</span>
+                                            <span :class="isDark ? 'text-slate-200' : 'text-slate-800 font-bold'">{{ dish.name }}</span>
+                                            <span
+                                                class="font-mono font-bold"
+                                                :class="isDark ? 'text-amber-400' : 'text-amber-700'"
+                                            >
+                                                {{ dish.percent }}% ({{ dish.orders }} {{ t.demo.ordersUnit }})
+                                            </span>
                                         </div>
-                                        <div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+                                        <div
+                                            class="w-full h-2 rounded-full overflow-hidden"
+                                            :class="isDark ? 'bg-slate-800' : 'bg-slate-200'"
+                                        >
                                             <div class="h-full rounded-full transition-all duration-700" :class="dish.color" :style="{ width: `${dish.percent}%` }"></div>
                                         </div>
                                     </div>
@@ -2208,11 +2885,22 @@ onUnmounted(() => {
                         </div>
 
                         <!-- Rule-Based Smart Advice Engine -->
-                        <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-3">
+                        <div
+                            class="p-4 rounded-2xl border flex items-start gap-3 shadow-xs"
+                            :class="isDark ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-50/90 border-amber-200 text-amber-950'"
+                        >
                             <span class="text-xl">💡</span>
                             <div>
-                                <h5 class="text-sm font-bold text-amber-300">{{ t.demo.aiInsightTitle }}</h5>
-                                <p class="text-xs text-slate-300 mt-1">
+                                <h5
+                                    class="text-sm font-bold"
+                                    :class="isDark ? 'text-amber-300' : 'text-amber-900 font-extrabold'"
+                                >
+                                    {{ t.demo.aiInsightTitle }}
+                                </h5>
+                                <p
+                                    class="text-xs mt-1 leading-relaxed"
+                                    :class="isDark ? 'text-slate-300' : 'text-slate-700'"
+                                >
                                     {{ t.demo.aiInsightText }} {{ formatPrice(35000) }} {{ currentCurrencySymbol }}.
                                 </p>
                             </div>
@@ -2227,76 +2915,161 @@ onUnmounted(() => {
         <!-- ========================================================================= -->
         <!-- CORE SAAS TECHNICAL FEATURES -->
         <!-- ========================================================================= -->
-        <section id="features" class="py-20 relative z-10 border-t border-white/5 bg-[#080d19]/60">
+        <section
+            id="features"
+            class="py-20 relative z-10 border-t transition-colors duration-500"
+            :class="isDark ? 'border-white/5 bg-[#080d19]/60' : 'border-slate-200/90 bg-white'"
+        >
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
                 <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
-                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-500/10 text-orange-400 text-xs font-bold border border-orange-500/20">
+                    <div
+                        class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold border shadow-xs"
+                        :class="isDark ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : 'bg-orange-50 text-orange-800 border-orange-200/90'"
+                    >
                         <span>{{ t.features.tag }}</span>
                     </div>
-                    <h2 class="text-3xl sm:text-4xl font-extrabold text-white">
+                    <h2
+                        class="text-3xl sm:text-4xl font-extrabold tracking-tight"
+                        :class="isDark ? 'text-white' : 'text-slate-900'"
+                    >
                         {{ t.features.title }}
                     </h2>
-                    <p class="text-slate-400 text-base sm:text-lg">
+                    <p
+                        class="text-base sm:text-lg"
+                        :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                    >
                         {{ t.features.subtitle }}
                     </p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     <!-- Feature 1 -->
-                    <div class="p-8 rounded-3xl bg-slate-900/60 border border-white/5 hover:border-amber-500/30 transition-all duration-300 hover:-translate-y-1 group">
-                        <div class="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">
+                    <div
+                        class="p-8 rounded-3xl border transition-all duration-300 hover:-translate-y-1 group"
+                        :class="isDark ? 'bg-slate-900/60 border-white/5 hover:border-amber-500/30' : 'bg-white border-slate-200/90 hover:border-amber-400 hover:shadow-xl shadow-xs'"
+                    >
+                        <div
+                            class="w-14 h-14 rounded-2xl border flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform shadow-xs"
+                            :class="isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-amber-50 text-amber-700 border-amber-200/90'"
+                        >
                             ⚡
                         </div>
-                        <h4 class="text-xl font-bold text-white mb-3">{{ t.features.f1Title }}</h4>
-                        <p class="text-sm text-slate-400 leading-relaxed">{{ t.features.f1Desc }}</p>
+                        <h4
+                            class="text-xl font-bold mb-3"
+                            :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'"
+                        >{{ t.features.f1Title }}</h4>
+                        <p
+                            class="text-sm leading-relaxed"
+                            :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                        >{{ t.features.f1Desc }}</p>
                     </div>
 
                     <!-- Feature 2 -->
-                    <div class="p-8 rounded-3xl bg-slate-900/60 border border-white/5 hover:border-amber-500/30 transition-all duration-300 hover:-translate-y-1 group">
-                        <div class="w-14 h-14 rounded-2xl bg-orange-500/10 text-orange-400 border border-orange-500/20 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">
+                    <div
+                        class="p-8 rounded-3xl border transition-all duration-300 hover:-translate-y-1 group"
+                        :class="isDark ? 'bg-slate-900/60 border-white/5 hover:border-amber-500/30' : 'bg-white border-slate-200/90 hover:border-amber-400 hover:shadow-xl shadow-xs'"
+                    >
+                        <div
+                            class="w-14 h-14 rounded-2xl border flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform shadow-xs"
+                            :class="isDark ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : 'bg-orange-50 text-orange-700 border-orange-200/90'"
+                        >
                             📱
                         </div>
-                        <h4 class="text-xl font-bold text-white mb-3">{{ t.features.f2Title }}</h4>
-                        <p class="text-sm text-slate-400 leading-relaxed">{{ t.features.f2Desc }}</p>
+                        <h4
+                            class="text-xl font-bold mb-3"
+                            :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'"
+                        >{{ t.features.f2Title }}</h4>
+                        <p
+                            class="text-sm leading-relaxed"
+                            :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                        >{{ t.features.f2Desc }}</p>
                     </div>
 
                     <!-- Feature 3 -->
-                    <div class="p-8 rounded-3xl bg-slate-900/60 border border-white/5 hover:border-amber-500/30 transition-all duration-300 hover:-translate-y-1 group">
-                        <div class="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">
+                    <div
+                        class="p-8 rounded-3xl border transition-all duration-300 hover:-translate-y-1 group"
+                        :class="isDark ? 'bg-slate-900/60 border-white/5 hover:border-amber-500/30' : 'bg-white border-slate-200/90 hover:border-amber-400 hover:shadow-xl shadow-xs'"
+                    >
+                        <div
+                            class="w-14 h-14 rounded-2xl border flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform shadow-xs"
+                            :class="isDark ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-emerald-50 text-emerald-700 border-emerald-200/90'"
+                        >
                             👨‍🍳
                         </div>
-                        <h4 class="text-xl font-bold text-white mb-3">{{ t.features.f3Title }}</h4>
-                        <p class="text-sm text-slate-400 leading-relaxed">{{ t.features.f3Desc }}</p>
+                        <h4
+                            class="text-xl font-bold mb-3"
+                            :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'"
+                        >{{ t.features.f3Title }}</h4>
+                        <p
+                            class="text-sm leading-relaxed"
+                            :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                        >{{ t.features.f3Desc }}</p>
                     </div>
 
                     <!-- Feature 4 -->
-                    <div class="p-8 rounded-3xl bg-slate-900/60 border border-white/5 hover:border-amber-500/30 transition-all duration-300 hover:-translate-y-1 group">
-                        <div class="w-14 h-14 rounded-2xl bg-amber-400/10 text-amber-300 border border-amber-400/20 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">
+                    <div
+                        class="p-8 rounded-3xl border transition-all duration-300 hover:-translate-y-1 group"
+                        :class="isDark ? 'bg-slate-900/60 border-white/5 hover:border-amber-500/30' : 'bg-white border-slate-200/90 hover:border-amber-400 hover:shadow-xl shadow-xs'"
+                    >
+                        <div
+                            class="w-14 h-14 rounded-2xl border flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform shadow-xs"
+                            :class="isDark ? 'bg-amber-400/10 text-amber-300 border-amber-400/20' : 'bg-amber-50 text-amber-700 border-amber-200/90'"
+                        >
                             🖨️
                         </div>
-                        <h4 class="text-xl font-bold text-white mb-3">{{ t.features.f4Title }}</h4>
-                        <p class="text-sm text-slate-400 leading-relaxed">{{ t.features.f4Desc }}</p>
+                        <h4
+                            class="text-xl font-bold mb-3"
+                            :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'"
+                        >{{ t.features.f4Title }}</h4>
+                        <p
+                            class="text-sm leading-relaxed"
+                            :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                        >{{ t.features.f4Desc }}</p>
                     </div>
 
                     <!-- Feature 5 -->
-                    <div class="p-8 rounded-3xl bg-slate-900/60 border border-white/5 hover:border-amber-500/30 transition-all duration-300 hover:-translate-y-1 group">
-                        <div class="w-14 h-14 rounded-2xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">
+                    <div
+                        class="p-8 rounded-3xl border transition-all duration-300 hover:-translate-y-1 group"
+                        :class="isDark ? 'bg-slate-900/60 border-white/5 hover:border-amber-500/30' : 'bg-white border-slate-200/90 hover:border-amber-400 hover:shadow-xl shadow-xs'"
+                    >
+                        <div
+                            class="w-14 h-14 rounded-2xl border flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform shadow-xs"
+                            :class="isDark ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' : 'bg-indigo-50 text-indigo-700 border-indigo-200/90'"
+                        >
                             🏢
                         </div>
-                        <h4 class="text-xl font-bold text-white mb-3">{{ t.features.f5Title }}</h4>
-                        <p class="text-sm text-slate-400 leading-relaxed">{{ t.features.f5Desc }}</p>
+                        <h4
+                            class="text-xl font-bold mb-3"
+                            :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'"
+                        >{{ t.features.f5Title }}</h4>
+                        <p
+                            class="text-sm leading-relaxed"
+                            :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                        >{{ t.features.f5Desc }}</p>
                     </div>
 
                     <!-- Feature 6: CPA Reports -->
-                    <div class="p-8 rounded-3xl bg-slate-900/60 border border-white/5 hover:border-emerald-500/40 transition-all duration-300 hover:-translate-y-1 group relative overflow-hidden">
-                        <div class="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">
+                    <div
+                        class="p-8 rounded-3xl border transition-all duration-300 hover:-translate-y-1 group relative overflow-hidden"
+                        :class="isDark ? 'bg-slate-900/60 border-white/5 hover:border-emerald-500/40' : 'bg-white border-slate-200/90 hover:border-emerald-500 hover:shadow-xl shadow-xs'"
+                    >
+                        <div
+                            class="w-14 h-14 rounded-2xl border flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform shadow-xs"
+                            :class="isDark ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-emerald-50 text-emerald-700 border-emerald-200/90'"
+                        >
                             📊
                         </div>
-                        <h4 class="text-xl font-bold text-white mb-3 flex items-center gap-2">
+                        <h4
+                            class="text-xl font-bold mb-3 flex items-center gap-2"
+                            :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'"
+                        >
                             <span>{{ t.features.f6Title }}</span>
                         </h4>
-                        <p class="text-sm text-slate-400 leading-relaxed">{{ t.features.f6Desc }}</p>
+                        <p
+                            class="text-sm leading-relaxed"
+                            :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                        >{{ t.features.f6Desc }}</p>
                     </div>
                 </div>
 
@@ -2306,24 +3079,54 @@ onUnmounted(() => {
         <!-- ========================================================================= -->
         <!-- RESTAURANT DIRECTORY & FREE PROMOTION -->
         <!-- ========================================================================= -->
-        <section id="directory" class="py-24 relative z-10 border-t border-white/5 bg-[#070b14]">
+        <!-- ========================================================================= -->
+        <!-- RESTAURANT DIRECTORY & FREE PROMOTION -->
+        <!-- ========================================================================= -->
+        <section
+            id="directory"
+            class="py-24 relative z-10 border-t transition-colors duration-500"
+            :class="isDark ? 'border-white/5 bg-[#070b14]' : 'border-slate-200/90 bg-slate-50/60'"
+        >
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-                <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-500/10 via-slate-900/90 to-orange-500/10 border border-amber-500/30 p-8 sm:p-14 shadow-2xl backdrop-blur-2xl">
-                    <div class="absolute -top-24 -right-24 w-80 h-80 bg-amber-500/15 rounded-full blur-3xl pointer-events-none"></div>
-                    <div class="absolute -bottom-24 -left-24 w-80 h-80 bg-orange-500/15 rounded-full blur-3xl pointer-events-none"></div>
+                <div
+                    class="relative overflow-hidden rounded-3xl border p-8 sm:p-14 backdrop-blur-2xl transition-all"
+                    :class="isDark
+                        ? 'bg-gradient-to-br from-amber-500/10 via-slate-900/90 to-orange-500/10 border-amber-500/30 shadow-2xl'
+                        : 'bg-gradient-to-br from-amber-50/80 via-white to-orange-50/80 border-amber-300/80 shadow-2xl'"
+                >
+                    <div
+                        class="absolute -top-24 -right-24 w-80 h-80 rounded-full blur-3xl pointer-events-none"
+                        :class="isDark ? 'bg-amber-500/15' : 'bg-amber-300/30'"
+                    ></div>
+                    <div
+                        class="absolute -bottom-24 -left-24 w-80 h-80 rounded-full blur-3xl pointer-events-none"
+                        :class="isDark ? 'bg-orange-500/15' : 'bg-orange-300/30'"
+                    ></div>
 
                     <div class="relative z-10 max-w-3xl mx-auto text-center space-y-5 mb-12">
-                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/15 text-amber-300 text-xs font-bold border border-amber-500/30">
+                        <div
+                            class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold border shadow-xs"
+                            :class="isDark ? 'bg-amber-500/15 text-amber-300 border-amber-500/30' : 'bg-amber-100/90 text-amber-900 border-amber-300 font-bold'"
+                        >
                             <span>{{ t.directoryPromo.tag }}</span>
                         </div>
-                        <h2 class="text-3xl sm:text-5xl font-black text-white tracking-tight">
+                        <h2
+                            class="text-3xl sm:text-5xl font-black tracking-tight"
+                            :class="isDark ? 'text-white' : 'text-slate-950 font-black'"
+                        >
                             {{ t.directoryPromo.title }}
                         </h2>
-                        <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
+                        <p
+                            class="text-sm sm:text-base leading-relaxed"
+                            :class="isDark ? 'text-slate-300' : 'text-slate-700'"
+                        >
                             {{ t.directoryPromo.subtitle }}
                         </p>
-                        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-xs sm:text-sm font-bold">
+                        <div
+                            class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold border shadow-xs"
+                            :class="isDark ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' : 'bg-emerald-100/90 text-emerald-900 border-emerald-300'"
+                        >
                             <span>✨</span>
                             <span>{{ t.directoryPromo.badge }}</span>
                         </div>
@@ -2331,28 +3134,64 @@ onUnmounted(() => {
 
                     <!-- 3 Benefit Pillars -->
                     <div class="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="p-6 rounded-2xl bg-slate-950/70 border border-white/5 hover:border-amber-500/30 transition-all">
-                            <div class="w-12 h-12 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center text-2xl mb-4">
+                        <div
+                            class="p-6 rounded-2xl border transition-all"
+                            :class="isDark ? 'bg-slate-950/70 border-white/5 hover:border-amber-500/30' : 'bg-white border-slate-200/90 hover:border-amber-400 hover:shadow-xl shadow-xs'"
+                        >
+                            <div
+                                class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-4 shadow-xs"
+                                :class="isDark ? 'bg-amber-500/15 text-amber-400' : 'bg-amber-100/90 text-amber-800'"
+                            >
                                 📍
                             </div>
-                            <h4 class="text-base font-bold text-white mb-2">{{ t.directoryPromo.benefit1Title }}</h4>
-                            <p class="text-xs text-slate-400 leading-relaxed">{{ t.directoryPromo.benefit1Desc }}</p>
+                            <h4
+                                class="text-base font-bold mb-2"
+                                :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'"
+                            >{{ t.directoryPromo.benefit1Title }}</h4>
+                            <p
+                                class="text-xs leading-relaxed"
+                                :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                            >{{ t.directoryPromo.benefit1Desc }}</p>
                         </div>
 
-                        <div class="p-6 rounded-2xl bg-slate-950/70 border border-white/5 hover:border-amber-500/30 transition-all">
-                            <div class="w-12 h-12 rounded-xl bg-orange-500/15 text-orange-400 flex items-center justify-center text-2xl mb-4">
+                        <div
+                            class="p-6 rounded-2xl border transition-all"
+                            :class="isDark ? 'bg-slate-950/70 border-white/5 hover:border-amber-500/30' : 'bg-white border-slate-200/90 hover:border-amber-400 hover:shadow-xl shadow-xs'"
+                        >
+                            <div
+                                class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-4 shadow-xs"
+                                :class="isDark ? 'bg-orange-500/15 text-orange-400' : 'bg-orange-100/90 text-orange-800'"
+                            >
                                 🎟️
                             </div>
-                            <h4 class="text-base font-bold text-white mb-2">{{ t.directoryPromo.benefit2Title }}</h4>
-                            <p class="text-xs text-slate-400 leading-relaxed">{{ t.directoryPromo.benefit2Desc }}</p>
+                            <h4
+                                class="text-base font-bold mb-2"
+                                :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'"
+                            >{{ t.directoryPromo.benefit2Title }}</h4>
+                            <p
+                                class="text-xs leading-relaxed"
+                                :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                            >{{ t.directoryPromo.benefit2Desc }}</p>
                         </div>
 
-                        <div class="p-6 rounded-2xl bg-slate-950/70 border border-white/5 hover:border-amber-500/30 transition-all">
-                            <div class="w-12 h-12 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center text-2xl mb-4">
+                        <div
+                            class="p-6 rounded-2xl border transition-all"
+                            :class="isDark ? 'bg-slate-950/70 border-white/5 hover:border-amber-500/30' : 'bg-white border-slate-200/90 hover:border-amber-400 hover:shadow-xl shadow-xs'"
+                        >
+                            <div
+                                class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-4 shadow-xs"
+                                :class="isDark ? 'bg-emerald-500/15 text-emerald-400' : 'bg-emerald-100/90 text-emerald-800'"
+                            >
                                 💰
                             </div>
-                            <h4 class="text-base font-bold text-white mb-2">{{ t.directoryPromo.benefit3Title }}</h4>
-                            <p class="text-xs text-slate-400 leading-relaxed">{{ t.directoryPromo.benefit3Desc }}</p>
+                            <h4
+                                class="text-base font-bold mb-2"
+                                :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'"
+                            >{{ t.directoryPromo.benefit3Title }}</h4>
+                            <p
+                                class="text-xs leading-relaxed"
+                                :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                            >{{ t.directoryPromo.benefit3Desc }}</p>
                         </div>
                     </div>
 
@@ -2360,7 +3199,7 @@ onUnmounted(() => {
                     <div class="relative z-10 pt-10 text-center">
                         <button
                             @click="isDemoModalOpen = true"
-                            class="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-orange-500 text-slate-950 font-black text-sm sm:text-base shadow-xl shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                            class="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-orange-500 text-slate-950 font-black text-sm sm:text-base shadow-xl shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
                         >
                             <span>{{ currentLocale === 'ar' ? 'سجّل مطعمك في دليل تدلّل الآن 🚀' : 'Feature Your Restaurant on Tedallal Now 🚀' }}</span>
                         </button>
@@ -2374,22 +3213,41 @@ onUnmounted(() => {
         <!-- ========================================================================= -->
         <!-- ROI & SAVINGS CALCULATOR -->
         <!-- ========================================================================= -->
-        <section id="roi-calculator" class="py-24 relative z-10 border-t border-white/5 bg-[#070b14]">
+        <!-- ========================================================================= -->
+        <!-- ROI & SAVINGS CALCULATOR -->
+        <!-- ========================================================================= -->
+        <section
+            id="roi-calculator"
+            class="py-24 relative z-10 border-t transition-colors duration-500"
+            :class="isDark ? 'border-white/5 bg-[#070b14]' : 'border-slate-200/90 bg-white'"
+        >
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
                 <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
-                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-bold border border-emerald-500/20">
+                    <div
+                        class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold border shadow-xs"
+                        :class="isDark ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-emerald-50 text-emerald-800 border-emerald-200/90 font-bold'"
+                    >
                         <span>{{ t.roi.tag }}</span>
                     </div>
-                    <h2 class="text-3xl sm:text-4xl font-extrabold text-white">
+                    <h2
+                        class="text-3xl sm:text-4xl font-extrabold tracking-tight"
+                        :class="isDark ? 'text-white' : 'text-slate-900'"
+                    >
                         {{ t.roi.title }}
                     </h2>
-                    <p class="text-slate-400 text-base sm:text-lg">
+                    <p
+                        class="text-base sm:text-lg"
+                        :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                    >
                         {{ t.roi.subtitle }}
                     </p>
                 </div>
 
-                <div class="max-w-4xl mx-auto p-8 sm:p-12 rounded-3xl bg-slate-900/80 border border-white/10 shadow-2xl backdrop-blur-xl">
+                <div
+                    class="max-w-4xl mx-auto p-8 sm:p-12 rounded-3xl border shadow-2xl backdrop-blur-xl transition-all"
+                    :class="isDark ? 'bg-slate-900/80 border-white/10' : 'bg-slate-50/70 border-slate-200/90 shadow-2xl'"
+                >
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
 
                         <!-- Sliders Controls -->
@@ -2397,8 +3255,14 @@ onUnmounted(() => {
                             <!-- Table Count Slider -->
                             <div class="space-y-3">
                                 <div class="flex justify-between items-center text-sm">
-                                    <span class="font-bold text-white">{{ t.roi.tablesLabel }}</span>
-                                    <span class="text-amber-400 font-extrabold text-xl font-mono">{{ tableCount }} {{ t.roi.tablesUnit }}</span>
+                                    <span
+                                        class="font-bold"
+                                        :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'"
+                                    >{{ t.roi.tablesLabel }}</span>
+                                    <span
+                                        class="font-extrabold text-xl font-mono"
+                                        :class="isDark ? 'text-amber-400' : 'text-amber-800 font-black'"
+                                    >{{ tableCount }} {{ t.roi.tablesUnit }}</span>
                                 </div>
                                 <input
                                     type="range"
@@ -2406,9 +3270,13 @@ onUnmounted(() => {
                                     max="120"
                                     step="5"
                                     v-model.number="tableCount"
-                                    class="w-full accent-amber-500 bg-slate-800 h-2.5 rounded-lg cursor-pointer"
+                                    class="w-full accent-amber-500 h-2.5 rounded-lg cursor-pointer"
+                                    :class="isDark ? 'bg-slate-800' : 'bg-slate-200'"
                                 />
-                                <div class="flex justify-between text-[11px] text-slate-500 font-mono">
+                                <div
+                                    class="flex justify-between text-[11px] font-mono"
+                                    :class="isDark ? 'text-slate-500' : 'text-slate-400 font-semibold'"
+                                >
                                     <span>5</span>
                                     <span>120</span>
                                 </div>
@@ -2417,8 +3285,14 @@ onUnmounted(() => {
                             <!-- Daily Orders Slider -->
                             <div class="space-y-3">
                                 <div class="flex justify-between items-center text-sm">
-                                    <span class="font-bold text-white">{{ t.roi.dailyOrdersLabel }}</span>
-                                    <span class="text-amber-400 font-extrabold text-xl font-mono">{{ dailyOrdersPerTable }} {{ t.roi.dailyOrdersUnit }}</span>
+                                    <span
+                                        class="font-bold"
+                                        :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'"
+                                    >{{ t.roi.dailyOrdersLabel }}</span>
+                                    <span
+                                        class="font-extrabold text-xl font-mono"
+                                        :class="isDark ? 'text-amber-400' : 'text-amber-800 font-black'"
+                                    >{{ dailyOrdersPerTable }} {{ t.roi.dailyOrdersUnit }}</span>
                                 </div>
                                 <input
                                     type="range"
@@ -2426,51 +3300,103 @@ onUnmounted(() => {
                                     max="15"
                                     step="1"
                                     v-model.number="dailyOrdersPerTable"
-                                    class="w-full accent-amber-500 bg-slate-800 h-2.5 rounded-lg cursor-pointer"
+                                    class="w-full accent-amber-500 h-2.5 rounded-lg cursor-pointer"
+                                    :class="isDark ? 'bg-slate-800' : 'bg-slate-200'"
                                 />
-                                <div class="flex justify-between text-[11px] text-slate-500 font-mono">
+                                <div
+                                    class="flex justify-between text-[11px] font-mono"
+                                    :class="isDark ? 'text-slate-500' : 'text-slate-400 font-semibold'"
+                                >
                                     <span>2</span>
                                     <span>15</span>
                                 </div>
                             </div>
 
-                            <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/5 text-xs text-slate-400 space-y-1">
+                            <div
+                                class="p-4 rounded-2xl border text-xs space-y-1"
+                                :class="isDark ? 'bg-white/[0.02] border-white/5 text-slate-400' : 'bg-white border-slate-200/90 text-slate-600 shadow-xs'"
+                            >
                                 <div class="flex justify-between">
                                     <span>{{ t.roi.monthlyOrdersEst }}</span>
-                                    <strong class="text-white font-mono">{{ monthlyOrders.toLocaleString('en-US') }} {{ t.roi.ordersCountUnit }}</strong>
+                                    <strong
+                                        class="font-mono font-bold"
+                                        :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'"
+                                    >{{ monthlyOrders.toLocaleString('en-US') }} {{ t.roi.ordersCountUnit }}</strong>
                                 </div>
                                 <div class="flex justify-between">
                                     <span>{{ t.roi.avgTimeSavedLabel }}</span>
-                                    <strong class="text-emerald-400 font-mono">{{ t.roi.avgTimeSavedVal }}</strong>
+                                    <strong
+                                        class="font-mono font-bold"
+                                        :class="isDark ? 'text-emerald-400' : 'text-emerald-700'"
+                                    >{{ t.roi.avgTimeSavedVal }}</strong>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Computed Impact Output -->
-                        <div class="space-y-4 p-6 rounded-2xl bg-slate-950 border border-amber-500/20">
+                        <div
+                            class="space-y-4 p-6 rounded-2xl border"
+                            :class="isDark ? 'bg-slate-950 border-amber-500/20' : 'bg-white border-slate-200/90 shadow-md'"
+                        >
 
-                            <div class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
-                                <div class="text-xs text-amber-300 font-medium">{{ t.roi.paperSavingsTitle }}</div>
-                                <div class="text-2xl sm:text-3xl font-black text-amber-400 font-mono mt-1">
+                            <div
+                                class="p-4 rounded-xl border"
+                                :class="isDark ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-50/90 border-amber-200 shadow-xs'"
+                            >
+                                <div
+                                    class="text-xs font-semibold"
+                                    :class="isDark ? 'text-amber-300' : 'text-amber-900 font-bold'"
+                                >{{ t.roi.paperSavingsTitle }}</div>
+                                <div
+                                    class="text-2xl sm:text-3xl font-black font-mono mt-1"
+                                    :class="isDark ? 'text-amber-400' : 'text-amber-800 font-black'"
+                                >
                                     {{ formatPrice(yearlyPaperSavings) }} {{ currentCurrencySymbol }}
                                 </div>
-                                <div class="text-[11px] text-slate-400 mt-1">{{ t.roi.paperSavingsNote }}</div>
+                                <div
+                                    class="text-[11px] mt-1"
+                                    :class="isDark ? 'text-slate-400' : 'text-slate-600 font-medium'"
+                                >{{ t.roi.paperSavingsNote }}</div>
                             </div>
 
-                            <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30">
-                                <div class="text-xs text-emerald-300 font-medium">{{ t.roi.laborHoursTitle }}</div>
-                                <div class="text-2xl sm:text-3xl font-black text-emerald-400 font-mono mt-1">
+                            <div
+                                class="p-4 rounded-xl border"
+                                :class="isDark ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-emerald-50/90 border-emerald-200 shadow-xs'"
+                            >
+                                <div
+                                    class="text-xs font-semibold"
+                                    :class="isDark ? 'text-emerald-300' : 'text-emerald-900 font-bold'"
+                                >{{ t.roi.laborHoursTitle }}</div>
+                                <div
+                                    class="text-2xl sm:text-3xl font-black font-mono mt-1"
+                                    :class="isDark ? 'text-emerald-400' : 'text-emerald-800 font-black'"
+                                >
                                     {{ timeSavedHoursMonthly.toLocaleString('en-US') }} {{ t.roi.laborHoursUnit }}
                                 </div>
-                                <div class="text-[11px] text-slate-400 mt-1">{{ t.roi.laborHoursNote }}</div>
+                                <div
+                                    class="text-[11px] mt-1"
+                                    :class="isDark ? 'text-slate-400' : 'text-slate-600 font-medium'"
+                                >{{ t.roi.laborHoursNote }}</div>
                             </div>
 
-                            <div class="p-4 rounded-xl bg-orange-500/10 border border-orange-500/30">
-                                <div class="text-xs text-orange-300 font-medium">{{ t.roi.revenueBoostTitle }}</div>
-                                <div class="text-2xl sm:text-3xl font-black text-orange-400 font-mono mt-1">
+                            <div
+                                class="p-4 rounded-xl border"
+                                :class="isDark ? 'bg-orange-500/10 border-orange-500/30' : 'bg-orange-50/90 border-orange-200 shadow-xs'"
+                            >
+                                <div
+                                    class="text-xs font-semibold"
+                                    :class="isDark ? 'text-orange-300' : 'text-orange-900 font-bold'"
+                                >{{ t.roi.revenueBoostTitle }}</div>
+                                <div
+                                    class="text-2xl sm:text-3xl font-black font-mono mt-1"
+                                    :class="isDark ? 'text-orange-400' : 'text-orange-800 font-black'"
+                                >
                                     +{{ formatPrice(estimatedRevenueBoost) }} {{ currentCurrencySymbol }} {{ t.roi.revenueBoostPerMonth }}
                                 </div>
-                                <div class="text-[11px] text-slate-400 mt-1">{{ t.roi.revenueBoostNote }}</div>
+                                <div
+                                    class="text-[11px] mt-1"
+                                    :class="isDark ? 'text-slate-400' : 'text-slate-600 font-medium'"
+                                >{{ t.roi.revenueBoostNote }}</div>
                             </div>
 
                         </div>
@@ -2484,62 +3410,153 @@ onUnmounted(() => {
         <!-- ========================================================================= -->
         <!-- COMPARISON: TRADITIONAL VS TEDALLAL -->
         <!-- ========================================================================= -->
-        <section id="comparison" class="py-20 border-t border-white/5 bg-[#090e1c] relative z-10">
+        <section
+            id="comparison"
+            class="py-20 border-t transition-colors duration-500 relative z-10"
+            :class="isDark ? 'border-white/5 bg-[#090e1c]' : 'border-slate-200/90 bg-slate-50/60'"
+        >
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
                 <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
-                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/10 text-rose-400 text-xs font-bold border border-rose-500/20">
+                    <div
+                        class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold border shadow-xs"
+                        :class="isDark ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 'bg-rose-50 text-rose-800 border-rose-200/90 font-bold'"
+                    >
                         <span>{{ t.comparison.tag }}</span>
                     </div>
-                    <h2 class="text-3xl sm:text-4xl font-extrabold text-white">
+                    <h2
+                        class="text-3xl sm:text-4xl font-extrabold tracking-tight"
+                        :class="isDark ? 'text-white' : 'text-slate-900'"
+                    >
                         {{ t.comparison.title }}
                     </h2>
-                    <p class="text-slate-400 text-base sm:text-lg">
+                    <p
+                        class="text-base sm:text-lg"
+                        :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                    >
                         {{ t.comparison.subtitle }}
                     </p>
                 </div>
 
-                <div class="max-w-4xl mx-auto overflow-hidden rounded-3xl border border-white/10 bg-slate-900/60 backdrop-blur-xl shadow-2xl">
-                    <div class="grid grid-cols-12 bg-slate-950 border-b border-white/10 p-4 sm:p-6 text-xs sm:text-sm font-bold">
-                        <div class="col-span-4 sm:col-span-4 text-slate-400">{{ currentLocale === 'ar' ? 'المعيار التشغيلي' : 'Operational Metric' }}</div>
-                        <div class="col-span-4 sm:col-span-4 text-rose-400">{{ t.comparison.colTraditional }}</div>
-                        <div class="col-span-4 sm:col-span-4 text-amber-400 font-black">{{ t.comparison.colTedallal }}</div>
+                <div
+                    class="max-w-4xl mx-auto overflow-hidden rounded-3xl border shadow-2xl transition-all"
+                    :class="isDark ? 'border-white/10 bg-slate-900/60 backdrop-blur-xl' : 'border-slate-200/90 bg-white shadow-xl'"
+                >
+                    <div
+                        class="grid grid-cols-12 border-b p-4 sm:p-6 text-xs sm:text-sm font-bold"
+                        :class="isDark ? 'bg-slate-950 border-white/10' : 'bg-slate-100/90 border-slate-200/90'"
+                    >
+                        <div
+                            class="col-span-4 sm:col-span-4"
+                            :class="isDark ? 'text-slate-400' : 'text-slate-700 font-bold'"
+                        >{{ currentLocale === 'ar' ? 'المعيار التشغيلي' : 'Operational Metric' }}</div>
+                        <div
+                            class="col-span-4 sm:col-span-4"
+                            :class="isDark ? 'text-rose-400' : 'text-rose-700 font-bold'"
+                        >{{ t.comparison.colTraditional }}</div>
+                        <div
+                            class="col-span-4 sm:col-span-4 font-black"
+                            :class="isDark ? 'text-amber-400' : 'text-amber-800 font-black'"
+                        >{{ t.comparison.colTedallal }}</div>
                     </div>
 
-                    <div class="divide-y divide-white/5 text-xs sm:text-sm">
+                    <div
+                        class="divide-y text-xs sm:text-sm"
+                        :class="isDark ? 'divide-white/5' : 'divide-slate-200/80'"
+                    >
                         <!-- Row 1 -->
-                        <div class="grid grid-cols-12 p-4 sm:p-6 items-center hover:bg-white/[0.02] transition-colors">
-                            <div class="col-span-4 font-bold text-white">{{ t.comparison.r1Label }}</div>
-                            <div class="col-span-4 text-slate-400 leading-relaxed">{{ t.comparison.r1Trad }}</div>
-                            <div class="col-span-4 text-amber-300 font-semibold leading-relaxed">{{ t.comparison.r1Ted }}</div>
+                        <div
+                            class="grid grid-cols-12 p-4 sm:p-6 items-center transition-colors"
+                            :class="isDark ? 'hover:bg-white/[0.02]' : 'hover:bg-amber-50/40'"
+                        >
+                            <div
+                                class="col-span-4 font-bold"
+                                :class="isDark ? 'text-white' : 'text-slate-900 font-bold'"
+                            >{{ t.comparison.r1Label }}</div>
+                            <div
+                                class="col-span-4 leading-relaxed"
+                                :class="isDark ? 'text-slate-400' : 'text-slate-600 font-medium'"
+                            >{{ t.comparison.r1Trad }}</div>
+                            <div
+                                class="col-span-4 font-bold leading-relaxed"
+                                :class="isDark ? 'text-amber-300' : 'text-amber-800 font-extrabold'"
+                            >{{ t.comparison.r1Ted }}</div>
                         </div>
 
                         <!-- Row 2 -->
-                        <div class="grid grid-cols-12 p-4 sm:p-6 items-center hover:bg-white/[0.02] transition-colors">
-                            <div class="col-span-4 font-bold text-white">{{ t.comparison.r2Label }}</div>
-                            <div class="col-span-4 text-slate-400 leading-relaxed">{{ t.comparison.r2Trad }}</div>
-                            <div class="col-span-4 text-amber-300 font-semibold leading-relaxed">{{ t.comparison.r2Ted }}</div>
+                        <div
+                            class="grid grid-cols-12 p-4 sm:p-6 items-center transition-colors"
+                            :class="isDark ? 'hover:bg-white/[0.02]' : 'hover:bg-amber-50/40'"
+                        >
+                            <div
+                                class="col-span-4 font-bold"
+                                :class="isDark ? 'text-white' : 'text-slate-900 font-bold'"
+                            >{{ t.comparison.r2Label }}</div>
+                            <div
+                                class="col-span-4 leading-relaxed"
+                                :class="isDark ? 'text-slate-400' : 'text-slate-600 font-medium'"
+                            >{{ t.comparison.r2Trad }}</div>
+                            <div
+                                class="col-span-4 font-bold leading-relaxed"
+                                :class="isDark ? 'text-amber-300' : 'text-amber-800 font-extrabold'"
+                            >{{ t.comparison.r2Ted }}</div>
                         </div>
 
                         <!-- Row 3 -->
-                        <div class="grid grid-cols-12 p-4 sm:p-6 items-center hover:bg-white/[0.02] transition-colors">
-                            <div class="col-span-4 font-bold text-white">{{ t.comparison.r3Label }}</div>
-                            <div class="col-span-4 text-slate-400 leading-relaxed">{{ t.comparison.r3Trad }}</div>
-                            <div class="col-span-4 text-amber-300 font-semibold leading-relaxed">{{ t.comparison.r3Ted }}</div>
+                        <div
+                            class="grid grid-cols-12 p-4 sm:p-6 items-center transition-colors"
+                            :class="isDark ? 'hover:bg-white/[0.02]' : 'hover:bg-amber-50/40'"
+                        >
+                            <div
+                                class="col-span-4 font-bold"
+                                :class="isDark ? 'text-white' : 'text-slate-900 font-bold'"
+                            >{{ t.comparison.r3Label }}</div>
+                            <div
+                                class="col-span-4 leading-relaxed"
+                                :class="isDark ? 'text-slate-400' : 'text-slate-600 font-medium'"
+                            >{{ t.comparison.r3Trad }}</div>
+                            <div
+                                class="col-span-4 font-bold leading-relaxed"
+                                :class="isDark ? 'text-amber-300' : 'text-amber-800 font-extrabold'"
+                            >{{ t.comparison.r3Ted }}</div>
                         </div>
 
                         <!-- Row 4 -->
-                        <div class="grid grid-cols-12 p-4 sm:p-6 items-center hover:bg-white/[0.02] transition-colors">
-                            <div class="col-span-4 font-bold text-white">{{ t.comparison.r4Label }}</div>
-                            <div class="col-span-4 text-slate-400 leading-relaxed">{{ t.comparison.r4Trad }}</div>
-                            <div class="col-span-4 text-amber-300 font-semibold leading-relaxed">{{ t.comparison.r4Ted }}</div>
+                        <div
+                            class="grid grid-cols-12 p-4 sm:p-6 items-center transition-colors"
+                            :class="isDark ? 'hover:bg-white/[0.02]' : 'hover:bg-amber-50/40'"
+                        >
+                            <div
+                                class="col-span-4 font-bold"
+                                :class="isDark ? 'text-white' : 'text-slate-900 font-bold'"
+                            >{{ t.comparison.r4Label }}</div>
+                            <div
+                                class="col-span-4 leading-relaxed"
+                                :class="isDark ? 'text-slate-400' : 'text-slate-600 font-medium'"
+                            >{{ t.comparison.r4Trad }}</div>
+                            <div
+                                class="col-span-4 font-bold leading-relaxed"
+                                :class="isDark ? 'text-amber-300' : 'text-amber-800 font-extrabold'"
+                            >{{ t.comparison.r4Ted }}</div>
                         </div>
 
                         <!-- Row 5 -->
-                        <div class="grid grid-cols-12 p-4 sm:p-6 items-center hover:bg-white/[0.02] transition-colors">
-                            <div class="col-span-4 font-bold text-white">{{ t.comparison.r5Label }}</div>
-                            <div class="col-span-4 text-slate-400 leading-relaxed">{{ t.comparison.r5Trad }}</div>
-                            <div class="col-span-4 text-amber-300 font-semibold leading-relaxed">{{ t.comparison.r5Ted }}</div>
+                        <div
+                            class="grid grid-cols-12 p-4 sm:p-6 items-center transition-colors"
+                            :class="isDark ? 'hover:bg-white/[0.02]' : 'hover:bg-amber-50/40'"
+                        >
+                            <div
+                                class="col-span-4 font-bold"
+                                :class="isDark ? 'text-white' : 'text-slate-900 font-bold'"
+                            >{{ t.comparison.r5Label }}</div>
+                            <div
+                                class="col-span-4 leading-relaxed"
+                                :class="isDark ? 'text-slate-400' : 'text-slate-600 font-medium'"
+                            >{{ t.comparison.r5Trad }}</div>
+                            <div
+                                class="col-span-4 font-bold leading-relaxed"
+                                :class="isDark ? 'text-amber-300' : 'text-amber-800 font-extrabold'"
+                            >{{ t.comparison.r5Ted }}</div>
                         </div>
                     </div>
                 </div>
@@ -2550,66 +3567,123 @@ onUnmounted(() => {
         <!-- ========================================================================= -->
         <!-- TESTIMONIALS -->
         <!-- ========================================================================= -->
-        <section class="py-20 relative z-10 border-t border-white/5 bg-[#070b14]">
+        <section
+            class="py-20 relative z-10 border-t transition-colors duration-500"
+            :class="isDark ? 'border-white/5 bg-[#070b14]' : 'border-slate-200/90 bg-white'"
+        >
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
                 <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
-                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 text-xs font-bold border border-amber-500/20">
+                    <div
+                        class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold border shadow-xs"
+                        :class="isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-amber-50 text-amber-800 border-amber-200/90 font-bold'"
+                    >
                         <span>{{ t.testimonials.tag }}</span>
                     </div>
-                    <h2 class="text-3xl sm:text-4xl font-extrabold text-white">
+                    <h2
+                        class="text-3xl sm:text-4xl font-extrabold tracking-tight"
+                        :class="isDark ? 'text-white' : 'text-slate-900'"
+                    >
                         {{ t.testimonials.title }}
                     </h2>
-                    <p class="text-slate-400 text-base sm:text-lg">
+                    <p
+                        class="text-base sm:text-lg"
+                        :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                    >
                         {{ t.testimonials.subtitle }}
                     </p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <!-- Review 1 -->
-                    <div class="p-8 rounded-3xl bg-slate-900/60 border border-white/5 space-y-6 flex flex-col justify-between">
-                        <p class="text-slate-300 text-sm leading-relaxed italic">
+                    <div
+                        class="p-8 rounded-3xl border space-y-6 flex flex-col justify-between transition-all"
+                        :class="isDark ? 'bg-slate-900/60 border-white/5' : 'bg-white border-slate-200/90 shadow-sm hover:shadow-md'"
+                    >
+                        <p
+                            class="text-sm leading-relaxed italic"
+                            :class="isDark ? 'text-slate-300' : 'text-slate-700 font-medium'"
+                        >
                             {{ t.testimonials.t1Text }}
                         </p>
-                        <div class="flex items-center gap-4 pt-4 border-t border-white/5">
-                            <div class="w-11 h-11 rounded-full bg-gradient-to-tr from-amber-500 to-orange-500 text-slate-950 font-bold flex items-center justify-center text-sm">
+                        <div
+                            class="flex items-center gap-4 pt-4 border-t"
+                            :class="isDark ? 'border-white/5' : 'border-slate-100'"
+                        >
+                            <div class="w-11 h-11 rounded-full bg-gradient-to-tr from-amber-500 to-orange-500 text-slate-950 font-bold flex items-center justify-center text-sm shadow-xs">
                                 TS
                             </div>
                             <div>
-                                <h5 class="text-sm font-bold text-white">{{ t.testimonials.t1Author }}</h5>
-                                <p class="text-xs text-amber-400/90">{{ t.testimonials.t1Role }}</p>
+                                <h5
+                                    class="text-sm font-bold"
+                                    :class="isDark ? 'text-white' : 'text-slate-900 font-bold'"
+                                >{{ t.testimonials.t1Author }}</h5>
+                                <p
+                                    class="text-xs"
+                                    :class="isDark ? 'text-amber-400/90' : 'text-amber-800 font-semibold'"
+                                >{{ t.testimonials.t1Role }}</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Review 2 -->
-                    <div class="p-8 rounded-3xl bg-slate-900/60 border border-white/5 space-y-6 flex flex-col justify-between">
-                        <p class="text-slate-300 text-sm leading-relaxed italic">
+                    <div
+                        class="p-8 rounded-3xl border space-y-6 flex flex-col justify-between transition-all"
+                        :class="isDark ? 'bg-slate-900/60 border-white/5' : 'bg-white border-slate-200/90 shadow-sm hover:shadow-md'"
+                    >
+                        <p
+                            class="text-sm leading-relaxed italic"
+                            :class="isDark ? 'text-slate-300' : 'text-slate-700 font-medium'"
+                        >
                             {{ t.testimonials.t2Text }}
                         </p>
-                        <div class="flex items-center gap-4 pt-4 border-t border-white/5">
-                            <div class="w-11 h-11 rounded-full bg-gradient-to-tr from-orange-500 to-rose-500 text-white font-bold flex items-center justify-center text-sm">
+                        <div
+                            class="flex items-center gap-4 pt-4 border-t"
+                            :class="isDark ? 'border-white/5' : 'border-slate-100'"
+                        >
+                            <div class="w-11 h-11 rounded-full bg-gradient-to-tr from-orange-500 to-rose-500 text-white font-bold flex items-center justify-center text-sm shadow-xs">
                                 SA
                             </div>
                             <div>
-                                <h5 class="text-sm font-bold text-white">{{ t.testimonials.t2Author }}</h5>
-                                <p class="text-xs text-amber-400/90">{{ t.testimonials.t2Role }}</p>
+                                <h5
+                                    class="text-sm font-bold"
+                                    :class="isDark ? 'text-white' : 'text-slate-900 font-bold'"
+                                >{{ t.testimonials.t2Author }}</h5>
+                                <p
+                                    class="text-xs"
+                                    :class="isDark ? 'text-amber-400/90' : 'text-amber-800 font-semibold'"
+                                >{{ t.testimonials.t2Role }}</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Review 3 -->
-                    <div class="p-8 rounded-3xl bg-slate-900/60 border border-white/5 space-y-6 flex flex-col justify-between">
-                        <p class="text-slate-300 text-sm leading-relaxed italic">
+                    <div
+                        class="p-8 rounded-3xl border space-y-6 flex flex-col justify-between transition-all"
+                        :class="isDark ? 'bg-slate-900/60 border-white/5' : 'bg-white border-slate-200/90 shadow-sm hover:shadow-md'"
+                    >
+                        <p
+                            class="text-sm leading-relaxed italic"
+                            :class="isDark ? 'text-slate-300' : 'text-slate-700 font-medium'"
+                        >
                             {{ t.testimonials.t3Text }}
                         </p>
-                        <div class="flex items-center gap-4 pt-4 border-t border-white/5">
-                            <div class="w-11 h-11 rounded-full bg-gradient-to-tr from-emerald-500 to-amber-500 text-slate-950 font-bold flex items-center justify-center text-sm">
+                        <div
+                            class="flex items-center gap-4 pt-4 border-t"
+                            :class="isDark ? 'border-white/5' : 'border-slate-100'"
+                        >
+                            <div class="w-11 h-11 rounded-full bg-gradient-to-tr from-emerald-500 to-amber-500 text-slate-950 font-bold flex items-center justify-center text-sm shadow-xs">
                                 FT
                             </div>
                             <div>
-                                <h5 class="text-sm font-bold text-white">{{ t.testimonials.t3Author }}</h5>
-                                <p class="text-xs text-amber-400/90">{{ t.testimonials.t3Role }}</p>
+                                <h5
+                                    class="text-sm font-bold"
+                                    :class="isDark ? 'text-white' : 'text-slate-900 font-bold'"
+                                >{{ t.testimonials.t3Author }}</h5>
+                                <p
+                                    class="text-xs"
+                                    :class="isDark ? 'text-amber-400/90' : 'text-amber-800 font-semibold'"
+                                >{{ t.testimonials.t3Role }}</p>
                             </div>
                         </div>
                     </div>
@@ -2621,17 +3695,30 @@ onUnmounted(() => {
         <!-- ========================================================================= -->
         <!-- FAQS ACCORDION -->
         <!-- ========================================================================= -->
-        <section id="faqs" class="py-20 relative z-10 border-t border-white/5 bg-[#080d19]/80">
+        <section
+            id="faqs"
+            class="py-20 relative z-10 border-t transition-colors duration-500"
+            :class="isDark ? 'border-white/5 bg-[#080d19]/80' : 'border-slate-200/90 bg-slate-50/60'"
+        >
             <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
                 <div class="text-center mb-16 space-y-4">
-                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 text-xs font-bold border border-amber-500/20">
+                    <div
+                        class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold border shadow-xs"
+                        :class="isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-amber-50 text-amber-800 border-amber-200/90 font-bold'"
+                    >
                         <span>{{ t.faqs.tag }}</span>
                     </div>
-                    <h2 class="text-3xl sm:text-4xl font-extrabold text-white">
+                    <h2
+                        class="text-3xl sm:text-4xl font-extrabold tracking-tight"
+                        :class="isDark ? 'text-white' : 'text-slate-900'"
+                    >
                         {{ t.faqs.title }}
                     </h2>
-                    <p class="text-slate-400 text-base">
+                    <p
+                        class="text-base"
+                        :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                    >
                         {{ t.faqs.subtitle }}
                     </p>
                 </div>
@@ -2640,19 +3727,30 @@ onUnmounted(() => {
                     <div
                         v-for="(faq, idx) in t.faqs.items"
                         :key="idx"
-                        class="rounded-2xl border border-white/5 bg-slate-900/70 overflow-hidden transition-all"
+                        class="rounded-2xl border overflow-hidden transition-all"
+                        :class="isDark ? 'border-white/5 bg-slate-900/70' : 'border-slate-200/90 bg-white shadow-xs'"
                     >
                         <button
                             @click="toggleFaq(idx)"
-                            class="w-full p-5 text-right flex items-center justify-between gap-4 font-bold text-sm sm:text-base text-white hover:text-amber-400 transition-colors"
-                            :class="currentLocale === 'en' ? 'text-left' : 'text-right'"
+                            class="w-full p-5 text-right flex items-center justify-between gap-4 font-bold text-sm sm:text-base transition-colors cursor-pointer"
+                            :class="[
+                                currentLocale === 'en' ? 'text-left' : 'text-right',
+                                isDark ? 'text-white hover:text-amber-400' : 'text-slate-900 hover:text-amber-700'
+                            ]"
                         >
                             <span>{{ faq.q }}</span>
-                            <span class="text-amber-400 text-xl font-mono shrink-0">
+                            <span
+                                class="text-xl font-mono shrink-0 font-bold"
+                                :class="isDark ? 'text-amber-400' : 'text-amber-700'"
+                            >
                                 {{ openFaqIndex === idx ? '−' : '+' }}
                             </span>
                         </button>
-                        <div v-if="openFaqIndex === idx" class="px-5 pb-5 text-xs sm:text-sm text-slate-300 leading-relaxed border-t border-white/5 pt-4">
+                        <div
+                            v-if="openFaqIndex === idx"
+                            class="px-5 pb-5 text-xs sm:text-sm leading-relaxed border-t pt-4"
+                            :class="isDark ? 'border-white/5 text-slate-300' : 'border-slate-100 text-slate-600 bg-slate-50/50'"
+                        >
                             {{ faq.a }}
                         </div>
                     </div>
@@ -2674,25 +3772,38 @@ onUnmounted(() => {
         >
             <div
                 v-if="!isToastPermanentlyDismissed && showToast && liveToasts[currentToastIndex]"
-                class="fixed bottom-6 z-40 max-w-sm w-[90%] sm:w-auto p-4 rounded-2xl bg-[#090e1c]/95 border border-amber-500/30 shadow-2xl backdrop-blur-2xl flex items-center gap-3.5"
-                :class="currentLocale === 'ar' ? 'right-6' : 'left-6'"
+                class="fixed bottom-6 z-40 max-w-sm w-[90%] sm:w-auto p-4 rounded-2xl border shadow-2xl backdrop-blur-2xl flex items-center gap-3.5 transition-all"
+                :class="[
+                    currentLocale === 'ar' ? 'right-6' : 'left-6',
+                    isDark ? 'bg-[#090e1c]/95 border-amber-500/30 text-white' : 'bg-white/95 border-amber-300 text-slate-900 shadow-xl'
+                ]"
             >
-                <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 text-lg font-bold">
+                <div
+                    class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-lg font-bold shadow-xs"
+                    :class="isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-800'"
+                >
                     🔔
                 </div>
                 <div class="flex-1 text-xs">
                     <div class="flex items-center justify-between gap-2 mb-0.5">
-                        <span class="font-extrabold text-amber-400">{{ liveToasts[currentToastIndex].table }}</span>
-                        <span class="text-[10px] text-slate-400 font-mono">{{ liveToasts[currentToastIndex].time }}</span>
+                        <span
+                            class="font-extrabold"
+                            :class="isDark ? 'text-amber-400' : 'text-amber-800'"
+                        >{{ liveToasts[currentToastIndex].table }}</span>
+                        <span
+                            class="text-[10px] font-mono"
+                            :class="isDark ? 'text-slate-400' : 'text-slate-500'"
+                        >{{ liveToasts[currentToastIndex].time }}</span>
                     </div>
-                    <p class="text-slate-200 line-clamp-2">
+                    <p :class="isDark ? 'text-slate-200' : 'text-slate-700 font-medium'" class="line-clamp-2">
                         {{ liveToasts[currentToastIndex].text }}
                     </p>
                 </div>
                 <button
                     @click="dismissToast"
                     type="button"
-                    class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors shrink-0 -mt-4 text-xs font-bold cursor-pointer"
+                    class="p-1 rounded-lg transition-colors shrink-0 -mt-4 text-xs font-bold cursor-pointer"
+                    :class="isDark ? 'text-slate-400 hover:text-white hover:bg-white/10' : 'text-slate-400 hover:text-slate-900 hover:bg-slate-100'"
                     :title="currentLocale === 'ar' ? 'إيقاف ظهور الإشعارات' : 'Dismiss notifications'"
                     aria-label="Dismiss notifications"
                 >
@@ -2709,12 +3820,18 @@ onUnmounted(() => {
             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
             @click.self="isDemoModalOpen = false"
         >
-            <div class="relative w-full max-w-lg rounded-3xl bg-slate-900 border border-white/10 p-6 sm:p-8 shadow-2xl space-y-6">
+            <div
+                class="relative w-full max-w-lg rounded-3xl border p-6 sm:p-8 shadow-2xl space-y-6 transition-all"
+                :class="isDark ? 'bg-slate-900 border-white/10' : 'bg-white border-slate-200/90 shadow-2xl'"
+            >
 
                 <button
                     @click="isDemoModalOpen = false"
-                    class="absolute top-5 text-slate-400 hover:text-white text-xl font-bold p-2"
-                    :class="currentLocale === 'ar' ? 'left-5' : 'right-5'"
+                    class="absolute top-5 text-xl font-bold p-2 transition-colors cursor-pointer"
+                    :class="[
+                        currentLocale === 'ar' ? 'left-5' : 'right-5',
+                        isDark ? 'text-slate-400 hover:text-white' : 'text-slate-400 hover:text-slate-900'
+                    ]"
                 >
                     ✕
                 </button>
@@ -2722,52 +3839,77 @@ onUnmounted(() => {
                 <!-- Initial Form State -->
                 <div v-if="!isSubmitted" class="space-y-4">
                     <div class="space-y-2">
-                        <span class="text-xs font-bold text-amber-400">{{ t.modal.badge }}</span>
-                        <h3 class="text-2xl font-black text-white">{{ t.modal.title }}</h3>
-                        <p class="text-xs text-slate-400">
+                        <span
+                            class="text-xs font-bold"
+                            :class="isDark ? 'text-amber-400' : 'text-amber-700'"
+                        >{{ t.modal.badge }}</span>
+                        <h3
+                            class="text-2xl font-black"
+                            :class="isDark ? 'text-white' : 'text-slate-900'"
+                        >{{ t.modal.title }}</h3>
+                        <p
+                            class="text-xs"
+                            :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                        >
                             {{ t.modal.subtitle }}
                         </p>
                     </div>
 
                     <form @submit.prevent="submitDemoRequest" class="space-y-3.5 pt-2">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-300 mb-1">{{ t.modal.restaurantName }}</label>
+                            <label
+                                class="block text-xs font-semibold mb-1"
+                                :class="isDark ? 'text-slate-300' : 'text-slate-700 font-bold'"
+                            >{{ t.modal.restaurantName }}</label>
                             <input
                                 v-model="demoForm.restaurantName"
                                 required
                                 type="text"
                                 :placeholder="t.modal.restaurantNamePlaceholder"
-                                class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-500 focus:outline-none"
+                                class="w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none transition-colors"
+                                :class="isDark ? 'bg-slate-900 border-slate-700 text-white focus:border-amber-500' : 'bg-slate-50 border-slate-300 text-slate-900 focus:bg-white focus:border-amber-500 shadow-xs'"
                             />
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold text-slate-300 mb-1">{{ t.modal.contactPerson }}</label>
+                            <label
+                                class="block text-xs font-semibold mb-1"
+                                :class="isDark ? 'text-slate-300' : 'text-slate-700 font-bold'"
+                            >{{ t.modal.contactPerson }}</label>
                             <input
                                 v-model="demoForm.contactPerson"
                                 required
                                 type="text"
                                 :placeholder="t.modal.contactPersonPlaceholder"
-                                class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-500 focus:outline-none"
+                                class="w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none transition-colors"
+                                :class="isDark ? 'bg-slate-900 border-slate-700 text-white focus:border-amber-500' : 'bg-slate-50 border-slate-300 text-slate-900 focus:bg-white focus:border-amber-500 shadow-xs'"
                             />
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-xs font-semibold text-slate-300 mb-1">{{ t.modal.phone }}</label>
+                                <label
+                                    class="block text-xs font-semibold mb-1"
+                                    :class="isDark ? 'text-slate-300' : 'text-slate-700 font-bold'"
+                                >{{ t.modal.phone }}</label>
                                 <input
                                     v-model="demoForm.phone"
                                     required
                                     type="tel"
                                     :placeholder="t.modal.phonePlaceholder"
-                                    class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-500 focus:outline-none"
+                                    class="w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none transition-colors"
+                                    :class="isDark ? 'bg-slate-900 border-slate-700 text-white focus:border-amber-500' : 'bg-slate-50 border-slate-300 text-slate-900 focus:bg-white focus:border-amber-500 shadow-xs'"
                                 />
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-300 mb-1">{{ t.modal.country }}</label>
+                                <label
+                                    class="block text-xs font-semibold mb-1"
+                                    :class="isDark ? 'text-slate-300' : 'text-slate-700 font-bold'"
+                                >{{ t.modal.country }}</label>
                                 <select
                                     v-model="demoForm.country"
-                                    class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-500 focus:outline-none"
+                                    class="w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none transition-colors"
+                                    :class="isDark ? 'bg-slate-900 border-slate-700 text-white focus:border-amber-500' : 'bg-slate-50 border-slate-300 text-slate-900 focus:bg-white focus:border-amber-500 shadow-xs'"
                                 >
                                     <option
                                         v-for="c in Object.values(supportedArabCurrencies)"
@@ -2781,10 +3923,14 @@ onUnmounted(() => {
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold text-slate-300 mb-1">{{ t.modal.tablesCount }}</label>
+                            <label
+                                class="block text-xs font-semibold mb-1"
+                                :class="isDark ? 'text-slate-300' : 'text-slate-700 font-bold'"
+                            >{{ t.modal.tablesCount }}</label>
                             <select
                                 v-model="demoForm.tablesCount"
-                                class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:border-amber-500 focus:outline-none"
+                                class="w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none transition-colors"
+                                :class="isDark ? 'bg-slate-900 border-slate-700 text-white focus:border-amber-500' : 'bg-slate-50 border-slate-300 text-slate-900 focus:bg-white focus:border-amber-500 shadow-xs'"
                             >
                                 <option value="1-15">{{ t.modal.tablesOption1 }}</option>
                                 <option value="15-35">{{ t.modal.tablesOption2 }}</option>
@@ -2795,7 +3941,7 @@ onUnmounted(() => {
 
                         <button
                             type="submit"
-                            class="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-extrabold text-sm shadow-xl shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.01] transition-all mt-2"
+                            class="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-extrabold text-sm shadow-xl shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.01] transition-all mt-2 cursor-pointer"
                         >
                             {{ t.modal.submitBtn }}
                         </button>
@@ -2807,8 +3953,14 @@ onUnmounted(() => {
                     <div class="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 text-3xl flex items-center justify-center mx-auto animate-bounce">
                         ✓
                     </div>
-                    <h3 class="text-2xl font-bold text-white">{{ t.modal.successTitle }}</h3>
-                    <p class="text-slate-300 text-sm max-w-sm mx-auto">
+                    <h3
+                        class="text-2xl font-bold"
+                        :class="isDark ? 'text-white' : 'text-slate-900'"
+                    >{{ t.modal.successTitle }}</h3>
+                    <p
+                        class="text-sm max-w-sm mx-auto"
+                        :class="isDark ? 'text-slate-300' : 'text-slate-600'"
+                    >
                         {{ t.modal.successDesc }}
                     </p>
                 </div>
@@ -2819,7 +3971,10 @@ onUnmounted(() => {
         <!-- ========================================================================= -->
         <!-- FOOTER -->
         <!-- ========================================================================= -->
-        <footer class="border-t border-white/5 bg-[#05080f] py-12 relative z-10 text-slate-400 text-sm">
+        <footer
+            class="border-t py-12 relative z-10 text-sm transition-colors duration-500"
+            :class="isDark ? 'border-white/5 bg-[#05080f] text-slate-400' : 'border-slate-200/90 bg-slate-100 text-slate-600'"
+        >
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
 
@@ -2827,55 +3982,76 @@ onUnmounted(() => {
                     <div class="space-y-4 md:col-span-2">
                         <div class="flex items-center gap-3">
                             <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 p-[1.5px]">
-                                <div class="w-full h-full bg-[#0b101d] rounded-xl flex items-center justify-center overflow-hidden">
+                                <div
+                                    class="w-full h-full rounded-xl flex items-center justify-center overflow-hidden"
+                                    :class="isDark ? 'bg-[#0b101d]' : 'bg-white'"
+                                >
                                     <img src="/images/tedallal-brand-logo.jpg" alt="Logo" class="w-full h-full object-cover" onerror="this.src='/images/logo.jpg'" />
                                 </div>
                             </div>
-                            <span class="text-2xl font-extrabold text-white">تدلّل • Tedallal</span>
+                            <span
+                                class="text-2xl font-extrabold"
+                                :class="isDark ? 'text-white' : 'text-slate-900'"
+                            >تدلّل • Tedallal</span>
                         </div>
-                        <p class="text-xs text-slate-400 leading-relaxed max-w-md">
+                        <p
+                            class="text-xs leading-relaxed max-w-md"
+                            :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                        >
                             {{ t.footer.brandDesc }}
                         </p>
-                        <div class="flex items-center gap-2 text-xs text-emerald-400">
-                            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                        <div
+                            class="flex items-center gap-2 text-xs font-semibold"
+                            :class="isDark ? 'text-emerald-400' : 'text-emerald-700'"
+                        >
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                             <span>{{ t.footer.serverStatus }}</span>
                         </div>
                     </div>
 
                     <!-- Col 2: Quick Links -->
                     <div class="space-y-3">
-                        <h5 class="text-xs font-bold text-white uppercase tracking-wider">{{ t.footer.quickLinksTitle }}</h5>
+                        <h5
+                            class="text-xs font-bold uppercase tracking-wider"
+                            :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'"
+                        >{{ t.footer.quickLinksTitle }}</h5>
                         <ul class="space-y-2 text-xs">
-                            <li><a href="#how-it-works" class="hover:text-amber-400 transition-colors">{{ t.nav.howItWorks }}</a></li>
-                            <li><a href="#solutions" class="hover:text-amber-400 transition-colors">{{ t.nav.solutions }}</a></li>
-                            <li><a href="#interactive-demo" class="hover:text-amber-400 transition-colors">{{ t.nav.interactiveDemo }}</a></li>
-                            <li><a href="#features" class="hover:text-amber-400 transition-colors">{{ t.nav.features }}</a></li>
-                            <li><a href="#directory" class="hover:text-amber-400 transition-colors">{{ t.nav.directory }}</a></li>
-                            <li><a href="#roi-calculator" class="hover:text-amber-400 transition-colors">{{ t.nav.roiCalculator }}</a></li>
-                            <li><a href="#faqs" class="hover:text-amber-400 transition-colors">{{ t.nav.faqs }}</a></li>
+                            <li><a href="#how-it-works" class="hover:text-amber-500 transition-colors">{{ t.nav.howItWorks }}</a></li>
+                            <li><a href="#solutions" class="hover:text-amber-500 transition-colors">{{ t.nav.solutions }}</a></li>
+                            <li><a href="#interactive-demo" class="hover:text-amber-500 transition-colors">{{ t.nav.interactiveDemo }}</a></li>
+                            <li><a href="#features" class="hover:text-amber-500 transition-colors">{{ t.nav.features }}</a></li>
+                            <li><a href="#directory" class="hover:text-amber-500 transition-colors">{{ t.nav.directory }}</a></li>
+                            <li><a href="#roi-calculator" class="hover:text-amber-500 transition-colors">{{ t.nav.roiCalculator }}</a></li>
+                            <li><a href="#faqs" class="hover:text-amber-500 transition-colors">{{ t.nav.faqs }}</a></li>
                         </ul>
                     </div>
 
                     <!-- Col 3: Portal Access -->
                     <div class="space-y-3">
-                        <h5 class="text-xs font-bold text-white uppercase tracking-wider">{{ t.footer.portalAccessTitle }}</h5>
+                        <h5
+                            class="text-xs font-bold uppercase tracking-wider"
+                            :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'"
+                        >{{ t.footer.portalAccessTitle }}</h5>
                         <ul class="space-y-2 text-xs">
-                            <li><Link :href="route('login')" class="hover:text-amber-400 transition-colors">{{ t.footer.adminPortal }}</Link></li>
-                            <li><Link :href="route('login')" class="hover:text-amber-400 transition-colors">{{ t.footer.kdsPortal }}</Link></li>
-                            <li><Link :href="route('login')" class="hover:text-amber-400 transition-colors">{{ t.footer.superAdminPortal }}</Link></li>
-                            <li><button @click="isDemoModalOpen = true" class="text-amber-400 hover:underline">{{ t.footer.requestAccount }}</button></li>
+                            <li><Link :href="route('login')" class="hover:text-amber-500 transition-colors">{{ t.footer.adminPortal }}</Link></li>
+                            <li><Link :href="route('login')" class="hover:text-amber-500 transition-colors">{{ t.footer.kdsPortal }}</Link></li>
+                            <li><Link :href="route('login')" class="hover:text-amber-500 transition-colors">{{ t.footer.superAdminPortal }}</Link></li>
+                            <li><button @click="isDemoModalOpen = true" class="text-amber-600 dark:text-amber-400 font-bold hover:underline cursor-pointer">{{ t.footer.requestAccount }}</button></li>
                         </ul>
                     </div>
 
                 </div>
 
-                <div class="pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+                <div
+                    class="pt-8 border-t flex flex-col sm:flex-row items-center justify-between gap-4 text-xs"
+                    :class="isDark ? 'border-white/5 text-slate-500' : 'border-slate-200 text-slate-500'"
+                >
                     <div>
                         {{ t.footer.rights }} {{ new Date().getFullYear() }}
                     </div>
                     <div class="flex items-center gap-6">
-                        <span class="hover:text-slate-400 transition-colors">{{ currentLocale === 'ar' ? 'أعلى معايير حماية وأمان البيانات' : 'Enterprise Cloud Security' }}</span>
-                        <span class="hover:text-slate-400 transition-colors">{{ currentLocale === 'ar' ? 'دعم فني واستجابة فورية على مدار الساعة' : '24/7 Dedicated Support' }}</span>
+                        <span class="hover:text-slate-700 dark:hover:text-slate-400 transition-colors">{{ currentLocale === 'ar' ? 'أعلى معايير حماية وأمان البيانات' : 'Enterprise Cloud Security' }}</span>
+                        <span class="hover:text-slate-700 dark:hover:text-slate-400 transition-colors">{{ currentLocale === 'ar' ? 'دعم فني واستجابة فورية على مدار الساعة' : '24/7 Dedicated Support' }}</span>
                     </div>
                 </div>
 
@@ -2920,24 +4096,29 @@ onUnmounted(() => {
     color-scheme: light;
 }
 
-/* Light mode ambient background mesh */
+.light-mode-theme,
+.dark-mode-theme {
+    transition: background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease;
+}
+
+/* Light mode ambient background mesh & glowing warmth */
 .light-mode-theme .ambient-glow-layer .bg-radial-mesh {
-    background-image: radial-gradient(#94a3b8 1.2px, transparent 1.2px) !important;
-    opacity: 0.25 !important;
+    background-image: radial-gradient(#cbd5e1 1.2px, transparent 1.2px) !important;
+    opacity: 0.35 !important;
 }
 
 /* Header & Navigation in Light Mode */
 .light-mode-theme header {
-    background-color: rgba(255, 255, 255, 0.92) !important;
+    background-color: rgba(255, 255, 255, 0.94) !important;
     border-bottom-color: rgba(226, 232, 240, 0.9) !important;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.03);
 }
 
 .light-mode-theme header nav a {
     color: #475569 !important;
 }
 .light-mode-theme header nav a:hover {
-    color: #d97706 !important;
+    color: #b45309 !important;
 }
 
 /* Main section alternating backgrounds in Light Mode */
@@ -2958,7 +4139,7 @@ onUnmounted(() => {
     background-color: #f8fafc !important;
 }
 
-/* Light mode headings & titles */
+/* Light mode headings & titles (High contrast #0f172a) */
 .light-mode-theme h1:not([class*="text-transparent"]):not([class*="bg-clip-text"]),
 .light-mode-theme h2:not([class*="text-transparent"]):not([class*="bg-clip-text"]),
 .light-mode-theme h3:not([class*="text-transparent"]):not([class*="bg-clip-text"]),
@@ -2968,30 +4149,60 @@ onUnmounted(() => {
 }
 
 .light-mode-theme .text-slate-300 {
-    color: #475569 !important;
+    color: #334155 !important;
 }
 
 .light-mode-theme .text-slate-400 {
     color: #64748b !important;
 }
 
-/* Cards & containers in Light Mode */
+/* Light mode high-contrast color tokens for WCAG AA+ accessibility */
+.light-mode-theme .text-amber-400 {
+    color: #b45309 !important;
+}
+.light-mode-theme .text-amber-300 {
+    color: #92400e !important;
+}
+.light-mode-theme .text-emerald-400 {
+    color: #047857 !important;
+}
+.light-mode-theme .text-emerald-300 {
+    color: #065f46 !important;
+}
+.light-mode-theme .text-orange-400 {
+    color: #c2410c !important;
+}
+.light-mode-theme .text-orange-300 {
+    color: #9a3412 !important;
+}
+.light-mode-theme .text-rose-400 {
+    color: #be123c !important;
+}
+.light-mode-theme .text-rose-300 {
+    color: #9f1239 !important;
+}
+
+/* Catch-all for dark backgrounds in light mode */
 .light-mode-theme .bg-slate-900,
+.light-mode-theme .bg-slate-900\/60,
 .light-mode-theme .bg-slate-900\/70,
 .light-mode-theme .bg-slate-900\/80,
 .light-mode-theme .bg-slate-900\/90,
 .light-mode-theme .bg-slate-900\/95,
 .light-mode-theme .bg-slate-950,
+.light-mode-theme .bg-slate-950\/70,
+.light-mode-theme .bg-slate-950\/80,
 .light-mode-theme .bg-slate-950\/90,
 .light-mode-theme .bg-\[\#090e1c\],
 .light-mode-theme .bg-\[\#090e1c\]\/95,
 .light-mode-theme .bg-\[\#0b101d\],
 .light-mode-theme .bg-\[\#080d19\]\/80,
 .light-mode-theme .bg-\[\#080d19\]\/60,
+.light-mode-theme .bg-\[\#070b14\],
 .light-mode-theme .bg-\[\#060a13\] {
     background-color: #ffffff !important;
     border-color: #e2e8f0 !important;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
 }
 
 /* Text white inside light cards */
@@ -2999,12 +4210,10 @@ onUnmounted(() => {
 .light-mode-theme .bg-slate-900 p.text-white,
 .light-mode-theme .bg-slate-900 h3.text-white,
 .light-mode-theme .bg-slate-900 h4.text-white,
-.light-mode-theme .bg-slate-900\/70 span.text-white,
-.light-mode-theme .bg-slate-900\/70 p.text-white,
-.light-mode-theme .bg-slate-900\/70 h3.text-white,
-.light-mode-theme .bg-slate-900\/80 span.text-white,
-.light-mode-theme .bg-slate-900\/80 p.text-white,
-.light-mode-theme .bg-slate-900\/80 h3.text-white,
+.light-mode-theme .bg-slate-950 span.text-white,
+.light-mode-theme .bg-slate-950 p.text-white,
+.light-mode-theme .bg-slate-950 h3.text-white,
+.light-mode-theme .bg-slate-950 h4.text-white,
 .light-mode-theme #comparison .text-white,
 .light-mode-theme #faqs .text-white {
     color: #0f172a !important;
@@ -3026,7 +4235,7 @@ onUnmounted(() => {
 .light-mode-theme #faqs .rounded-2xl {
     background-color: #ffffff !important;
     border-color: #e2e8f0 !important;
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+    box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.04);
 }
 .light-mode-theme #faqs button span:first-child {
     color: #0f172a !important;
@@ -3043,6 +4252,7 @@ onUnmounted(() => {
 .light-mode-theme select:focus {
     border-color: #f59e0b !important;
     background-color: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15) !important;
 }
 
 /* Light mode mobile drawer */
@@ -3058,7 +4268,7 @@ onUnmounted(() => {
 .light-mode-theme .fixed.bottom-6.bg-\[\#090e1c\]\/95 {
     background-color: rgba(255, 255, 255, 0.98) !important;
     border-color: rgba(245, 158, 11, 0.4) !important;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.08);
 }
 .light-mode-theme .fixed.bottom-6 p.text-slate-200 {
     color: #334155 !important;
@@ -3068,7 +4278,7 @@ onUnmounted(() => {
 .light-mode-theme .bg-slate-900.border-white\/10 {
     background-color: #ffffff !important;
     border-color: #e2e8f0 !important;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
 }
 
 /* Light mode footer */
@@ -3084,7 +4294,7 @@ onUnmounted(() => {
     color: #64748b !important;
 }
 .light-mode-theme footer a:hover {
-    color: #d97706 !important;
+    color: #b45309 !important;
 }
 .light-mode-theme footer span.text-white {
     color: #0f172a !important;
