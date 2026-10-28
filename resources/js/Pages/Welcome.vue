@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { translations, type Locale } from '@/locales/landing';
+import { useTheme } from '@/composables/useTheme';
 
 interface Props {
     canLogin?: boolean;
@@ -14,6 +15,11 @@ const props = withDefaults(defineProps<Props>(), {
     canRegister: true,
     detectedCountry: null,
 });
+
+// =========================================================================
+// Theme System (Light / Dark Mode)
+// =========================================================================
+const { isDark, toggleTheme, initTheme } = useTheme();
 
 // =========================================================================
 // Bilingual System (Arabic / English)
@@ -572,6 +578,9 @@ function handleGlobalClick(e: MouseEvent) {
 }
 
 onMounted(async () => {
+    // 0. Initialize theme preference (defaults to dark mode)
+    initTheme('dark');
+
     // 1. Language preference check
     try {
         const savedLocale = localStorage.getItem('tedallal_locale') as Locale | null;
@@ -663,21 +672,27 @@ onUnmounted(() => {
 
     <div
         :dir="currentLocale === 'ar' ? 'rtl' : 'ltr'"
-        :class="currentLocale === 'ar' ? 'font-sans' : 'font-sans font-english'"
-        class="min-h-screen bg-[#070b14] text-slate-100 selection:bg-amber-500 selection:text-slate-950 antialiased overflow-x-hidden relative"
+        :class="[
+            currentLocale === 'ar' ? 'font-sans' : 'font-sans font-english',
+            isDark ? 'dark-mode-theme' : 'light-mode-theme'
+        ]"
+        class="min-h-screen bg-slate-50 dark:bg-[#070b14] text-slate-900 dark:text-slate-100 selection:bg-amber-500 selection:text-slate-950 antialiased overflow-x-hidden relative transition-colors duration-300"
     >
         <!-- Ambient Glow Effects & Mesh Gradients -->
-        <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-            <div class="absolute -top-40 right-1/4 w-[600px] h-[600px] bg-amber-500/10 rounded-full blur-[140px]"></div>
-            <div class="absolute top-[35%] -left-32 w-[500px] h-[500px] bg-orange-600/10 rounded-full blur-[130px]"></div>
-            <div class="absolute bottom-1/4 right-10 w-[550px] h-[550px] bg-emerald-600/10 rounded-full blur-[150px]"></div>
-            <div class="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:28px_28px] opacity-30"></div>
+        <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden ambient-glow-layer">
+            <div class="absolute -top-40 right-1/4 w-[600px] h-[600px] rounded-full blur-[140px] transition-colors duration-700" :class="isDark ? 'bg-amber-500/10' : 'bg-amber-500/15'"></div>
+            <div class="absolute top-[35%] -left-32 w-[500px] h-[500px] rounded-full blur-[130px] transition-colors duration-700" :class="isDark ? 'bg-orange-600/10' : 'bg-orange-500/10'"></div>
+            <div class="absolute bottom-1/4 right-10 w-[550px] h-[550px] rounded-full blur-[150px] transition-colors duration-700" :class="isDark ? 'bg-emerald-600/10' : 'bg-emerald-500/10'"></div>
+            <div class="absolute inset-0 bg-radial-mesh [background-size:28px_28px] transition-opacity duration-500" :class="isDark ? 'bg-[radial-gradient(#1e293b_1px,transparent_1px)] opacity-30' : 'bg-[radial-gradient(#94a3b8_1.2px,transparent_1.2px)] opacity-25'"></div>
         </div>
 
         <!-- ========================================================================= -->
         <!-- TOP NAVBAR -->
         <!-- ========================================================================= -->
-        <header class="sticky top-0 z-50 backdrop-blur-xl bg-[#070b14]/80 border-b border-white/5 transition-all">
+        <header
+            class="sticky top-0 z-50 backdrop-blur-xl border-b transition-all duration-300"
+            :class="isDark ? 'bg-[#070b14]/80 border-white/5 shadow-none' : 'bg-white/90 border-slate-200/90 shadow-xs'"
+        >
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between h-20">
 
@@ -723,17 +738,44 @@ onUnmounted(() => {
                         <a href="#faqs" class="hover:text-amber-400 transition-colors">{{ t.nav.faqs }}</a>
                     </nav>
 
-                    <!-- Language & Currency Controls + Auth CTAs -->
+                    <!-- Language, Currency & Theme Controls + Auth CTAs -->
                     <div class="hidden sm:flex items-center gap-3">
+                        <!-- Theme Toggle Button (Light / Dark) -->
+                        <button
+                            @click="toggleTheme"
+                            type="button"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all shadow-sm border cursor-pointer select-none"
+                            :class="isDark
+                                ? 'bg-slate-900/90 hover:bg-slate-800 border-slate-700/80 hover:border-amber-500/50 text-slate-200'
+                                : 'bg-white hover:bg-slate-100 border-slate-200 hover:border-amber-500/50 text-slate-700 shadow-xs'"
+                            :title="isDark ? (currentLocale === 'ar' ? 'التبديل إلى الوضع الفاتح' : 'Switch to Light Mode') : (currentLocale === 'ar' ? 'التبديل إلى الوضع الداكن' : 'Switch to Dark Mode')"
+                        >
+                            <span v-if="isDark" class="flex items-center gap-1.5">
+                                <svg class="h-4 w-4 text-amber-400 transition-transform duration-300 hover:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                                </svg>
+                                <span class="text-xs font-bold text-amber-300">{{ currentLocale === 'ar' ? 'فاتح' : 'Light' }}</span>
+                            </span>
+                            <span v-else class="flex items-center gap-1.5">
+                                <svg class="h-4 w-4 text-slate-700 transition-transform duration-300 hover:-rotate-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                                </svg>
+                                <span class="text-xs font-bold text-slate-700">{{ currentLocale === 'ar' ? 'داكن' : 'Dark' }}</span>
+                            </span>
+                        </button>
+
                         <!-- Language Switcher Toggle -->
                         <button
                             @click="toggleLocale"
                             type="button"
-                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-amber-500/50 text-slate-200 text-xs font-semibold transition-all shadow-sm"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all shadow-sm cursor-pointer"
+                            :class="isDark
+                                ? 'bg-slate-900/90 hover:bg-slate-800 border-slate-700/80 hover:border-amber-500/50 text-slate-200'
+                                : 'bg-white hover:bg-slate-100 border-slate-200 hover:border-amber-500/50 text-slate-700 shadow-xs'"
                             :title="currentLocale === 'ar' ? 'Switch to English' : 'التحويل إلى العربية'"
                         >
                             <span class="text-sm">🌐</span>
-                            <span class="font-bold text-amber-400">{{ currentLocale === 'ar' ? 'English' : 'العربية' }}</span>
+                            <span class="font-bold text-amber-500">{{ currentLocale === 'ar' ? 'English' : 'العربية' }}</span>
                         </button>
 
                         <!-- Arab Currency Switcher Dropdown -->
@@ -741,11 +783,14 @@ onUnmounted(() => {
                             <button
                                 @click="isCurrencyMenuOpen = !isCurrencyMenuOpen"
                                 type="button"
-                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-amber-500/50 text-slate-200 text-xs font-semibold transition-all shadow-sm"
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all shadow-sm cursor-pointer"
+                                :class="isDark
+                                    ? 'bg-slate-900/90 hover:bg-slate-800 border-slate-700/80 hover:border-amber-500/50 text-slate-200'
+                                    : 'bg-white hover:bg-slate-100 border-slate-200 hover:border-amber-500/50 text-slate-700 shadow-xs'"
                                 :title="t.nav.currencyTitle"
                             >
                                 <span>{{ currentCurrency.flag }}</span>
-                                <span class="font-bold text-amber-400 font-mono">{{ currentCurrencySymbol }}</span>
+                                <span class="font-bold text-amber-500 font-mono">{{ currentCurrencySymbol }}</span>
                                 <svg class="w-3 h-3 text-slate-400 transition-transform duration-200" :class="{ 'rotate-180': isCurrencyMenuOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                 </svg>
@@ -762,12 +807,15 @@ onUnmounted(() => {
                             >
                                 <div
                                     v-if="isCurrencyMenuOpen"
-                                    class="absolute mt-2 w-56 rounded-2xl bg-slate-900/95 border border-slate-700 shadow-2xl backdrop-blur-xl p-2 z-50 space-y-1 text-xs"
-                                    :class="currentLocale === 'ar' ? 'left-0' : 'right-0'"
+                                    class="absolute mt-2 w-56 rounded-2xl shadow-2xl backdrop-blur-xl p-2 z-50 space-y-1 text-xs border"
+                                    :class="[
+                                        currentLocale === 'ar' ? 'left-0' : 'right-0',
+                                        isDark ? 'bg-slate-900/95 border-slate-700 text-slate-200' : 'bg-white border-slate-200 text-slate-800 shadow-xl'
+                                    ]"
                                 >
-                                    <div class="px-2.5 py-1 text-[10px] text-slate-400 font-bold border-b border-white/5 flex items-center justify-between">
+                                    <div class="px-2.5 py-1 text-[10px] font-bold border-b flex items-center justify-between" :class="isDark ? 'text-slate-400 border-white/5' : 'text-slate-500 border-slate-100'">
                                         <span>{{ t.nav.currencyTitle }}</span>
-                                        <span class="text-emerald-400 text-[9px]">{{ t.nav.autoDetect }}</span>
+                                        <span class="text-emerald-500 text-[9px]">{{ t.nav.autoDetect }}</span>
                                     </div>
                                     <div class="max-h-60 overflow-y-auto space-y-0.5 custom-scrollbar">
                                         <button
@@ -775,17 +823,19 @@ onUnmounted(() => {
                                             :key="c.code"
                                             @click="setCurrency(c.code)"
                                             type="button"
-                                            class="w-full flex items-center justify-between px-2.5 py-2 rounded-xl transition-colors"
+                                            class="w-full flex items-center justify-between px-2.5 py-2 rounded-xl transition-colors cursor-pointer"
                                             :class="[
                                                 currentLocale === 'ar' ? 'text-right' : 'text-left',
-                                                currentCountryCode === c.code ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30' : 'text-slate-300 hover:bg-white/5'
+                                                currentCountryCode === c.code
+                                                    ? (isDark ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30' : 'bg-amber-50 text-amber-800 font-bold border border-amber-200')
+                                                    : (isDark ? 'text-slate-300 hover:bg-white/5' : 'text-slate-700 hover:bg-slate-100')
                                             ]"
                                         >
                                             <div class="flex items-center gap-2">
                                                 <span class="text-base">{{ c.flag }}</span>
                                                 <span class="truncate">{{ c.countryName[currentLocale] }}</span>
                                             </div>
-                                            <span class="font-mono text-amber-400 text-xs shrink-0 font-bold">{{ c.symbol[currentLocale] }}</span>
+                                            <span class="font-mono text-amber-500 text-xs shrink-0 font-bold">{{ c.symbol[currentLocale] }}</span>
                                         </button>
                                     </div>
                                 </div>
@@ -807,13 +857,14 @@ onUnmounted(() => {
                         <template v-else>
                             <Link
                                 :href="route('login')"
-                                class="text-xs font-semibold text-slate-300 hover:text-white px-3 py-2 rounded-xl hover:bg-white/5 transition-all"
+                                class="text-xs font-semibold px-3 py-2 rounded-xl transition-all"
+                                :class="isDark ? 'text-slate-300 hover:text-white hover:bg-white/5' : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'"
                             >
                                 {{ t.nav.signIn }}
                             </Link>
                             <button
                                 @click="isDemoModalOpen = true"
-                                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 hover:shadow-amber-500/35 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 hover:shadow-amber-500/35 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
                             >
                                 <span>{{ t.nav.bookDemo }}</span>
                                 <svg class="w-3.5 h-3.5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -823,27 +874,45 @@ onUnmounted(() => {
                         </template>
                     </div>
 
-                    <!-- Mobile Menu Hamburger & Quick Action -->
+                    <!-- Mobile Menu Hamburger & Quick Actions -->
                     <div class="flex lg:hidden items-center gap-2">
+                        <!-- Mobile Theme Toggle -->
+                        <button
+                            @click="toggleTheme"
+                            type="button"
+                            class="p-2 rounded-lg border text-xs font-bold transition-all cursor-pointer"
+                            :class="isDark ? 'bg-slate-900 border-slate-700 text-amber-400' : 'bg-white border-slate-200 text-slate-700 shadow-xs'"
+                            :title="isDark ? (currentLocale === 'ar' ? 'التبديل إلى الوضع الفاتح' : 'Switch to Light Mode') : (currentLocale === 'ar' ? 'التبديل إلى الوضع الداكن' : 'Switch to Dark Mode')"
+                        >
+                            <svg v-if="isDark" class="h-4 w-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                            <svg v-else class="h-4 w-4 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                            </svg>
+                        </button>
+
                         <!-- Mobile Lang Switcher -->
                         <button
                             @click="toggleLocale"
                             type="button"
-                            class="px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs font-bold text-amber-400"
+                            class="px-2.5 py-1.5 rounded-lg border text-xs font-bold transition-all cursor-pointer"
+                            :class="isDark ? 'bg-slate-900 border-slate-700 text-amber-400' : 'bg-white border-slate-200 text-amber-600 shadow-xs'"
                         >
                             {{ currentLocale === 'ar' ? 'EN' : 'عربي' }}
                         </button>
 
                         <button
                             @click="isDemoModalOpen = true"
-                            class="px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-bold text-xs"
+                            class="px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-bold text-xs shadow-sm cursor-pointer"
                         >
                             {{ currentLocale === 'ar' ? 'عرض حي' : 'Demo' }}
                         </button>
 
                         <button
                             @click="isMobileMenuOpen = !isMobileMenuOpen"
-                            class="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-all"
+                            class="p-2 rounded-xl transition-all cursor-pointer"
+                            :class="isDark ? 'text-slate-400 hover:text-white hover:bg-white/5' : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'"
                             aria-label="Menu"
                         >
                             <svg v-if="!isMobileMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -859,15 +928,33 @@ onUnmounted(() => {
             </div>
 
             <!-- Mobile Navigation Drawer -->
-            <div v-if="isMobileMenuOpen" class="lg:hidden border-t border-white/5 bg-[#090e1c]/95 backdrop-blur-2xl px-6 py-6 space-y-4">
+            <div
+                v-if="isMobileMenuOpen"
+                class="lg:hidden border-t backdrop-blur-2xl px-6 py-6 space-y-4"
+                :class="isDark ? 'bg-[#090e1c]/95 border-white/5' : 'bg-white/95 border-slate-200 shadow-xl'"
+            >
+                <!-- Theme Mode row for mobile -->
+                <div class="flex items-center justify-between pb-3 border-b text-xs" :class="isDark ? 'border-white/10' : 'border-slate-100'">
+                    <span :class="isDark ? 'text-slate-400' : 'text-slate-500'">{{ currentLocale === 'ar' ? 'مظهر الصفحة' : 'Theme Mode' }}:</span>
+                    <button
+                        @click="toggleTheme"
+                        type="button"
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold cursor-pointer"
+                        :class="isDark ? 'bg-slate-800 border-slate-700 text-amber-300' : 'bg-slate-100 border-slate-200 text-slate-800'"
+                    >
+                        <span>{{ isDark ? '🌙 ' + (currentLocale === 'ar' ? 'الوضع الداكن' : 'Dark Mode') : '☀️ ' + (currentLocale === 'ar' ? 'الوضع الفاتح' : 'Light Mode') }}</span>
+                    </button>
+                </div>
+
                 <!-- Country & Currency selector row for mobile -->
-                <div class="flex items-center justify-between pb-3 border-b border-white/10 text-xs">
-                    <span class="text-slate-400">{{ t.nav.currencyTitle }}:</span>
+                <div class="flex items-center justify-between pb-3 border-b text-xs" :class="isDark ? 'border-white/10' : 'border-slate-100'">
+                    <span :class="isDark ? 'text-slate-400' : 'text-slate-500'">{{ t.nav.currencyTitle }}:</span>
                     <div class="flex items-center gap-2">
                         <select
                             v-model="currentCountryCode"
                             @change="setCurrency(currentCountryCode)"
-                            class="bg-slate-800 border border-slate-700 text-white rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:border-amber-500"
+                            class="rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:border-amber-500 border"
+                            :class="isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'"
                         >
                             <option
                                 v-for="c in Object.values(supportedArabCurrencies)"
@@ -880,23 +967,27 @@ onUnmounted(() => {
                     </div>
                 </div>
 
-                <a @click="isMobileMenuOpen = false" href="#how-it-works" class="block text-slate-200 font-medium py-1.5">{{ t.nav.howItWorks }}</a>
-                <a @click="isMobileMenuOpen = false" href="#solutions" class="block text-slate-200 font-medium py-1.5">{{ t.nav.solutions }}</a>
-                <a @click="isMobileMenuOpen = false" href="#interactive-demo" class="block text-amber-400 font-medium py-1.5">{{ t.nav.interactiveDemo }}</a>
-                <a @click="isMobileMenuOpen = false" href="#features" class="block text-slate-200 font-medium py-1.5">{{ t.nav.features }}</a>
-                <a @click="isMobileMenuOpen = false" href="#directory" class="block text-slate-200 font-medium py-1.5">{{ t.nav.directory }}</a>
-                <a @click="isMobileMenuOpen = false" href="#roi-calculator" class="block text-slate-200 font-medium py-1.5">{{ t.nav.roiCalculator }}</a>
-                <a @click="isMobileMenuOpen = false" href="#comparison" class="block text-slate-200 font-medium py-1.5">{{ t.nav.comparison }}</a>
-                <a @click="isMobileMenuOpen = false" href="#faqs" class="block text-slate-200 font-medium py-1.5">{{ t.nav.faqs }}</a>
+                <a @click="isMobileMenuOpen = false" href="#how-it-works" class="block font-medium py-1.5" :class="isDark ? 'text-slate-200' : 'text-slate-700'">{{ t.nav.howItWorks }}</a>
+                <a @click="isMobileMenuOpen = false" href="#solutions" class="block font-medium py-1.5" :class="isDark ? 'text-slate-200' : 'text-slate-700'">{{ t.nav.solutions }}</a>
+                <a @click="isMobileMenuOpen = false" href="#interactive-demo" class="block text-amber-500 font-medium py-1.5">{{ t.nav.interactiveDemo }}</a>
+                <a @click="isMobileMenuOpen = false" href="#features" class="block font-medium py-1.5" :class="isDark ? 'text-slate-200' : 'text-slate-700'">{{ t.nav.features }}</a>
+                <a @click="isMobileMenuOpen = false" href="#directory" class="block font-medium py-1.5" :class="isDark ? 'text-slate-200' : 'text-slate-700'">{{ t.nav.directory }}</a>
+                <a @click="isMobileMenuOpen = false" href="#roi-calculator" class="block font-medium py-1.5" :class="isDark ? 'text-slate-200' : 'text-slate-700'">{{ t.nav.roiCalculator }}</a>
+                <a @click="isMobileMenuOpen = false" href="#comparison" class="block font-medium py-1.5" :class="isDark ? 'text-slate-200' : 'text-slate-700'">{{ t.nav.comparison }}</a>
+                <a @click="isMobileMenuOpen = false" href="#faqs" class="block font-medium py-1.5" :class="isDark ? 'text-slate-200' : 'text-slate-700'">{{ t.nav.faqs }}</a>
 
-                <div class="pt-4 border-t border-white/10 flex flex-col gap-3">
+                <div class="pt-4 border-t flex flex-col gap-3" :class="isDark ? 'border-white/10' : 'border-slate-100'">
                     <template v-if="$page.props.auth?.user">
                         <Link :href="route('dashboard')" class="text-center w-full py-3 rounded-xl bg-amber-500 text-slate-950 font-bold text-sm">
                             {{ t.nav.dashboard }}
                         </Link>
                     </template>
                     <template v-else>
-                        <Link :href="route('login')" class="text-center w-full py-2.5 rounded-xl border border-white/10 text-white font-medium text-sm">
+                        <Link
+                            :href="route('login')"
+                            class="text-center w-full py-2.5 rounded-xl font-medium text-sm border"
+                            :class="isDark ? 'border-white/10 text-white' : 'border-slate-200 text-slate-800 bg-slate-50'"
+                        >
                             {{ t.nav.signIn }}
                         </Link>
                         <button @click="isDemoModalOpen = true; isMobileMenuOpen = false" class="w-full py-3 rounded-xl bg-amber-500 text-slate-950 font-bold text-sm">
@@ -914,7 +1005,9 @@ onUnmounted(() => {
             <!-- Dynamic Ambient Atmosphere Glow based on Mode -->
             <div
                 class="pointer-events-none absolute top-1/4 left-1/2 -translate-x-1/2 w-full max-w-5xl h-[450px] rounded-full blur-[140px] transition-all duration-1000 -z-10"
-                :class="heroMode === 'traditional' ? 'bg-rose-950/30' : 'bg-emerald-950/25'"
+                :class="heroMode === 'traditional'
+                    ? (isDark ? 'bg-rose-950/30' : 'bg-rose-200/40')
+                    : (isDark ? 'bg-emerald-950/25' : 'bg-emerald-200/40')"
             ></div>
 
             <!-- Soft Emerald Glow Flash Overlay (Triggers on Auto-Switch & Manual Switch to Smart) -->
@@ -931,19 +1024,22 @@ onUnmounted(() => {
 
                     <!-- Top Centered Interactive Mode Switcher (Pill Switcher) -->
                     <div class="flex flex-col items-center justify-center gap-2">
-                        <div class="inline-flex items-center p-1.5 rounded-full bg-slate-900/90 border border-white/10 shadow-2xl backdrop-blur-xl relative z-20">
+                        <div
+                            class="inline-flex items-center p-1.5 rounded-full border shadow-2xl backdrop-blur-xl relative z-20 transition-colors"
+                            :class="isDark ? 'bg-slate-900/90 border-white/10' : 'bg-white/95 border-slate-200/90 shadow-md'"
+                        >
                             <!-- Traditional Pill Option -->
                             <button
                                 @click="setHeroMode('traditional', true)"
                                 type="button"
                                 :class="heroMode === 'traditional'
-                                    ? 'bg-rose-500/20 text-rose-200 border-rose-500/50 shadow-lg shadow-rose-950/60 font-black'
-                                    : 'text-slate-400 hover:text-rose-300 hover:bg-white/5 border-transparent font-medium'"
+                                    ? (isDark ? 'bg-rose-500/20 text-rose-200 border-rose-500/50 shadow-lg shadow-rose-950/60 font-black' : 'bg-rose-50 text-rose-700 border-rose-300 shadow-sm font-black')
+                                    : (isDark ? 'text-slate-400 hover:text-rose-300 hover:bg-white/5 border-transparent font-medium' : 'text-slate-500 hover:text-rose-600 hover:bg-slate-50 border-transparent font-medium')"
                                 class="relative flex items-center gap-2 px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm border transition-all duration-300 cursor-pointer"
                             >
                                 <span class="text-sm sm:text-base">⚠️</span>
                                 <span>{{ currentLocale === 'ar' ? 'الوضع التقليدي (نزيف الأرباح)' : 'Traditional Legacy (Profit Bleed)' }}</span>
-                                <span v-if="heroMode === 'traditional'" class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                                <span v-if="heroMode === 'traditional'" class="w-2 h-2 rounded-full" :class="isDark ? 'bg-rose-500 animate-pulse' : 'bg-rose-600 animate-pulse'"></span>
                             </button>
 
                             <!-- Smart Platform Pill Option -->
@@ -952,7 +1048,7 @@ onUnmounted(() => {
                                 type="button"
                                 :class="heroMode === 'smart'
                                     ? 'bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-400 text-slate-950 font-black shadow-lg shadow-emerald-500/30 border-emerald-300/40'
-                                    : 'text-slate-400 hover:text-emerald-300 hover:bg-white/5 border-transparent font-medium'"
+                                    : (isDark ? 'text-slate-400 hover:text-emerald-300 hover:bg-white/5 border-transparent font-medium' : 'text-slate-500 hover:text-emerald-700 hover:bg-slate-50 border-transparent font-medium')"
                                 class="relative flex items-center gap-2 px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm border transition-all duration-300 cursor-pointer"
                             >
                                 <span class="text-sm sm:text-base">✨</span>
@@ -972,17 +1068,17 @@ onUnmounted(() => {
                                     <div
                                         class="inline-flex items-center gap-2.5 px-4 py-2 rounded-full text-xs sm:text-sm font-bold shadow-lg backdrop-blur-md transition-all border"
                                         :class="heroMode === 'traditional'
-                                            ? 'bg-rose-500/10 border-rose-500/30 text-rose-300 shadow-rose-950/40'
-                                            : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300 shadow-emerald-950/40'"
+                                            ? (isDark ? 'bg-rose-500/10 border-rose-500/30 text-rose-300 shadow-rose-950/40' : 'bg-rose-50 border-rose-200 text-rose-700 shadow-rose-100')
+                                            : (isDark ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300 shadow-emerald-950/40' : 'bg-emerald-50 border-emerald-200 text-emerald-800 shadow-emerald-100')"
                                     >
                                         <span class="relative flex h-2.5 w-2.5">
                                             <span
                                                 class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
-                                                :class="heroMode === 'traditional' ? 'bg-rose-400' : 'bg-emerald-400'"
+                                                :class="heroMode === 'traditional' ? (isDark ? 'bg-rose-400' : 'bg-rose-500') : (isDark ? 'bg-emerald-400' : 'bg-emerald-500')"
                                             ></span>
                                             <span
                                                 class="relative inline-flex rounded-full h-2.5 w-2.5"
-                                                :class="heroMode === 'traditional' ? 'bg-rose-500' : 'bg-emerald-500'"
+                                                :class="heroMode === 'traditional' ? (isDark ? 'bg-rose-500' : 'bg-rose-600') : (isDark ? 'bg-emerald-500' : 'bg-emerald-600')"
                                             ></span>
                                         </span>
                                         <span class="text-sm">{{ heroMode === 'traditional' ? '⚠️' : '✨' }}</span>
@@ -998,21 +1094,24 @@ onUnmounted(() => {
                                 <!-- Dynamic H1 Headline -->
                                 <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.2] sm:leading-[1.2]">
                                     <template v-if="heroMode === 'traditional'">
-                                        <span>{{ currentLocale === 'ar' ? 'مطبخ مزدحم، مبيعات تتصاعد..' : 'Crowded kitchen, surging sales..' }}</span>
-                                        <span class="bg-gradient-to-r from-rose-400 via-red-500 to-rose-300 bg-clip-text text-transparent block mt-2">
+                                        <span :class="isDark ? 'text-white' : 'text-slate-900'">{{ currentLocale === 'ar' ? 'مطبخ مزدحم، مبيعات تتصاعد..' : 'Crowded kitchen, surging sales..' }}</span>
+                                        <span class="bg-gradient-to-r from-rose-500 via-red-600 to-rose-500 dark:from-rose-400 dark:via-red-500 dark:to-rose-300 bg-clip-text text-transparent block mt-2">
                                             {{ currentLocale === 'ar' ? 'وأرباحك الحقيقية تتبخر بين التطبيقات والهدر!' : 'yet your true profits vanish between delivery apps and waste!' }}
                                         </span>
                                     </template>
                                     <template v-else>
-                                        <span>{{ currentLocale === 'ar' ? 'مطبخ منظم كالساعة، طلبات مباشرة..' : 'Clockwork kitchen, direct orders..' }}</span>
-                                        <span class="bg-gradient-to-r from-emerald-300 via-teal-300 to-amber-300 bg-clip-text text-transparent block mt-2">
+                                        <span :class="isDark ? 'text-white' : 'text-slate-900'">{{ currentLocale === 'ar' ? 'مطبخ منظم كالساعة، طلبات مباشرة..' : 'Clockwork kitchen, direct orders..' }}</span>
+                                        <span class="bg-gradient-to-r from-emerald-600 via-teal-600 to-amber-600 dark:from-emerald-300 dark:via-teal-300 dark:to-amber-300 bg-clip-text text-transparent block mt-2">
                                             {{ currentLocale === 'ar' ? 'وكل قرش من أرباحك يدخل جيبك بالكامل!' : 'and every single cent of profit goes directly into your pocket!' }}
                                         </span>
                                     </template>
                                 </h1>
 
                                 <!-- Dynamic Sub-headline -->
-                                <p class="text-base sm:text-xl text-slate-300 max-w-3xl mx-auto font-normal leading-relaxed">
+                                <p
+                                    class="text-base sm:text-xl max-w-3xl mx-auto font-normal leading-relaxed"
+                                    :class="isDark ? 'text-slate-300' : 'text-slate-600'"
+                                >
                                     <template v-if="heroMode === 'traditional'">
                                         {{ currentLocale === 'ar'
                                             ? 'عمولات تلتهم 25% من إيراداتك، أخطاء طلبات يومية، ومخزون يتسرب دون حسيب أو رقيب.'
@@ -1031,40 +1130,58 @@ onUnmounted(() => {
                                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4 max-w-3xl mx-auto pt-2">
                                     <template v-if="heroMode === 'traditional'">
                                         <!-- Card 1 -->
-                                        <div class="rounded-2xl bg-slate-900/80 border border-rose-500/25 p-4 sm:p-5 backdrop-blur-md shadow-lg shadow-rose-950/30 flex flex-col items-center justify-center text-center">
-                                            <div class="text-xs sm:text-sm font-semibold text-slate-400 mb-1">
+                                        <div
+                                            class="rounded-2xl p-4 sm:p-5 backdrop-blur-md flex flex-col items-center justify-center text-center transition-all border shadow-lg"
+                                            :class="isDark ? 'bg-slate-900/80 border-rose-500/25 shadow-rose-950/30' : 'bg-white border-rose-200 shadow-sm'"
+                                        >
+                                            <div class="text-xs sm:text-sm font-semibold mb-1" :class="isDark ? 'text-slate-400' : 'text-slate-500'">
                                                 {{ currentLocale === 'ar' ? 'عمولات تطبيقات' : 'App Commissions' }}
                                             </div>
-                                            <div class="text-3xl sm:text-4xl font-black text-rose-400 font-mono tracking-tight" dir="ltr">
+                                            <div class="text-3xl sm:text-4xl font-black font-mono tracking-tight" :class="isDark ? 'text-rose-400' : 'text-rose-600'" dir="ltr">
                                                 -25%
                                             </div>
-                                            <div class="mt-2 text-[11px] font-semibold text-rose-300/90 bg-rose-500/10 border border-rose-500/20 px-2.5 py-0.5 rounded-full">
+                                            <div
+                                                class="mt-2 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border"
+                                                :class="isDark ? 'text-rose-300/90 bg-rose-500/10 border-rose-500/20' : 'text-rose-700 bg-rose-50 border-rose-200'"
+                                            >
                                                 {{ currentLocale === 'ar' ? 'اقتطاع إجباري من الإيراد' : 'Mandatory revenue cut' }}
                                             </div>
                                         </div>
 
                                         <!-- Card 2 -->
-                                        <div class="rounded-2xl bg-slate-900/80 border border-rose-500/25 p-4 sm:p-5 backdrop-blur-md shadow-lg shadow-rose-950/30 flex flex-col items-center justify-center text-center">
-                                            <div class="text-xs sm:text-sm font-semibold text-slate-400 mb-1">
+                                        <div
+                                            class="rounded-2xl p-4 sm:p-5 backdrop-blur-md flex flex-col items-center justify-center text-center transition-all border shadow-lg"
+                                            :class="isDark ? 'bg-slate-900/80 border-rose-500/25 shadow-rose-950/30' : 'bg-white border-rose-200 shadow-sm'"
+                                        >
+                                            <div class="text-xs sm:text-sm font-semibold mb-1" :class="isDark ? 'text-slate-400' : 'text-slate-500'">
                                                 {{ currentLocale === 'ar' ? 'فاقد وهدر مواد' : 'Kitchen Food Waste' }}
                                             </div>
-                                            <div class="text-3xl sm:text-4xl font-black text-rose-400 font-mono tracking-tight" dir="ltr">
+                                            <div class="text-3xl sm:text-4xl font-black font-mono tracking-tight" :class="isDark ? 'text-rose-400' : 'text-rose-600'" dir="ltr">
                                                 -15%
                                             </div>
-                                            <div class="mt-2 text-[11px] font-semibold text-rose-300/90 bg-rose-500/10 border border-rose-500/20 px-2.5 py-0.5 rounded-full">
+                                            <div
+                                                class="mt-2 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border"
+                                                :class="isDark ? 'text-rose-300/90 bg-rose-500/10 border-rose-500/20' : 'text-rose-700 bg-rose-50 border-rose-200'"
+                                            >
                                                 {{ currentLocale === 'ar' ? 'أخطاء وسوء تقدير تكلفة' : 'Ticket errors & food loss' }}
                                             </div>
                                         </div>
 
                                         <!-- Card 3 -->
-                                        <div class="rounded-2xl bg-slate-900/80 border border-rose-500/25 p-4 sm:p-5 backdrop-blur-md shadow-lg shadow-rose-950/30 flex flex-col items-center justify-center text-center">
-                                            <div class="text-xs sm:text-sm font-semibold text-slate-400 mb-1">
+                                        <div
+                                            class="rounded-2xl p-4 sm:p-5 backdrop-blur-md flex flex-col items-center justify-center text-center transition-all border shadow-lg"
+                                            :class="isDark ? 'bg-slate-900/80 border-rose-500/25 shadow-rose-950/30' : 'bg-white border-rose-200 shadow-sm'"
+                                        >
+                                            <div class="text-xs sm:text-sm font-semibold mb-1" :class="isDark ? 'text-slate-400' : 'text-slate-500'">
                                                 {{ currentLocale === 'ar' ? 'شعور صاحب المطعم' : 'Owner Sentiment' }}
                                             </div>
-                                            <div class="text-xl sm:text-2xl font-black text-rose-300 mt-1">
+                                            <div class="text-xl sm:text-2xl font-black mt-1" :class="isDark ? 'text-rose-300' : 'text-rose-700'">
                                                 {{ currentLocale === 'ar' ? 'مجهود بلا عائد' : 'Effort Zero Return' }}
                                             </div>
-                                            <div class="mt-2 text-[11px] font-semibold text-rose-300/90 bg-rose-500/10 border border-rose-500/20 px-2.5 py-0.5 rounded-full">
+                                            <div
+                                                class="mt-2 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border"
+                                                :class="isDark ? 'text-rose-300/90 bg-rose-500/10 border-rose-500/20' : 'text-rose-700 bg-rose-50 border-rose-200'"
+                                            >
                                                 {{ currentLocale === 'ar' ? 'إرهاق وضياع للهوامش' : 'Exhaustion & lost margins' }}
                                             </div>
                                         </div>
@@ -1072,40 +1189,58 @@ onUnmounted(() => {
 
                                     <template v-else>
                                         <!-- Card 1 -->
-                                        <div class="rounded-2xl bg-slate-900/80 border border-emerald-500/30 p-4 sm:p-5 backdrop-blur-md shadow-lg shadow-emerald-950/30 flex flex-col items-center justify-center text-center">
-                                            <div class="text-xs sm:text-sm font-semibold text-slate-400 mb-1">
+                                        <div
+                                            class="rounded-2xl p-4 sm:p-5 backdrop-blur-md flex flex-col items-center justify-center text-center transition-all border shadow-lg"
+                                            :class="isDark ? 'bg-slate-900/80 border-emerald-500/30 shadow-emerald-950/30' : 'bg-white border-emerald-200 shadow-sm'"
+                                        >
+                                            <div class="text-xs sm:text-sm font-semibold mb-1" :class="isDark ? 'text-slate-400' : 'text-slate-500'">
                                                 {{ currentLocale === 'ar' ? 'عمولة وسيط' : 'Intermediary Cut' }}
                                             </div>
-                                            <div class="text-3xl sm:text-4xl font-black text-emerald-400 font-mono tracking-tight" dir="ltr">
+                                            <div class="text-3xl sm:text-4xl font-black font-mono tracking-tight" :class="isDark ? 'text-emerald-400' : 'text-emerald-600'" dir="ltr">
                                                 0%
                                             </div>
-                                            <div class="mt-2 text-[11px] font-semibold text-emerald-300/90 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full">
+                                            <div
+                                                class="mt-2 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border"
+                                                :class="isDark ? 'text-emerald-300/90 bg-emerald-500/10 border-emerald-500/20' : 'text-emerald-800 bg-emerald-50 border-emerald-200'"
+                                            >
                                                 {{ currentLocale === 'ar' ? 'أرباحك كاملة 100% لك' : '100% direct revenue retained' }}
                                             </div>
                                         </div>
 
                                         <!-- Card 2 -->
-                                        <div class="rounded-2xl bg-slate-900/80 border border-teal-500/30 p-4 sm:p-5 backdrop-blur-md shadow-lg shadow-teal-950/30 flex flex-col items-center justify-center text-center">
-                                            <div class="text-xs sm:text-sm font-semibold text-slate-400 mb-1">
+                                        <div
+                                            class="rounded-2xl p-4 sm:p-5 backdrop-blur-md flex flex-col items-center justify-center text-center transition-all border shadow-lg"
+                                            :class="isDark ? 'bg-slate-900/80 border-teal-500/30 shadow-teal-950/30' : 'bg-white border-teal-200 shadow-sm'"
+                                        >
+                                            <div class="text-xs sm:text-sm font-semibold mb-1" :class="isDark ? 'text-slate-400' : 'text-slate-500'">
                                                 {{ currentLocale === 'ar' ? 'ضبط التكاليف' : 'Cost & Stock Control' }}
                                             </div>
-                                            <div class="text-xl sm:text-2xl font-black text-teal-300 mt-1">
+                                            <div class="text-xl sm:text-2xl font-black mt-1" :class="isDark ? 'text-teal-300' : 'text-teal-700'">
                                                 {{ currentLocale === 'ar' ? 'فوري ولحظي' : 'Real-Time Live' }}
                                             </div>
-                                            <div class="mt-2 text-[11px] font-semibold text-teal-300/90 bg-teal-500/10 border border-teal-500/20 px-2.5 py-0.5 rounded-full">
+                                            <div
+                                                class="mt-2 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border"
+                                                :class="isDark ? 'text-teal-300/90 bg-teal-500/10 border-teal-500/20' : 'text-teal-800 bg-teal-50 border-teal-200'"
+                                            >
                                                 {{ currentLocale === 'ar' ? 'ربط المطبخ بالوصفات آلياً' : 'Automated kitchen & recipe sync' }}
                                             </div>
                                         </div>
 
                                         <!-- Card 3 -->
-                                        <div class="rounded-2xl bg-slate-900/80 border border-amber-500/30 p-4 sm:p-5 backdrop-blur-md shadow-lg shadow-amber-950/30 flex flex-col items-center justify-center text-center">
-                                            <div class="text-xs sm:text-sm font-semibold text-slate-400 mb-1">
+                                        <div
+                                            class="rounded-2xl p-4 sm:p-5 backdrop-blur-md flex flex-col items-center justify-center text-center transition-all border shadow-lg"
+                                            :class="isDark ? 'bg-slate-900/80 border-amber-500/30 shadow-amber-950/30' : 'bg-white border-amber-200 shadow-sm'"
+                                        >
+                                            <div class="text-xs sm:text-sm font-semibold mb-1" :class="isDark ? 'text-slate-400' : 'text-slate-500'">
                                                 {{ currentLocale === 'ar' ? 'النتيجة' : 'Bottom-Line Result' }}
                                             </div>
-                                            <div class="text-xl sm:text-2xl font-black text-amber-300 mt-1">
+                                            <div class="text-xl sm:text-2xl font-black mt-1" :class="isDark ? 'text-amber-300' : 'text-amber-700'">
                                                 {{ currentLocale === 'ar' ? 'مضاعفة صافي الأرباح' : '+100% Profit Boost' }}
                                             </div>
-                                            <div class="mt-2 text-[11px] font-semibold text-amber-300/90 bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-full">
+                                            <div
+                                                class="mt-2 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border"
+                                                :class="isDark ? 'text-amber-300/90 bg-amber-500/10 border-amber-500/20' : 'text-amber-800 bg-amber-50 border-amber-200'"
+                                            >
                                                 {{ currentLocale === 'ar' ? 'نمو وسيطرة مالية 100%' : 'High margin & complete control' }}
                                             </div>
                                         </div>
@@ -1140,9 +1275,12 @@ onUnmounted(() => {
                         <!-- Secondary CTA -->
                         <a
                             href="#how-it-works"
-                            class="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-slate-900/90 hover:bg-slate-800/90 border border-slate-700 hover:border-emerald-500/50 text-white font-bold text-base transition-all backdrop-blur-md shadow-lg group cursor-pointer"
+                            class="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl border font-bold text-base transition-all backdrop-blur-md shadow-lg group cursor-pointer"
+                            :class="isDark
+                                ? 'bg-slate-900/90 hover:bg-slate-800/90 border-slate-700 hover:border-emerald-500/50 text-white'
+                                : 'bg-white hover:bg-slate-50 border-slate-300 hover:border-emerald-500/60 text-slate-800 shadow-xs'"
                         >
-                            <span class="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs group-hover:scale-110 transition-transform font-bold">
+                            <span class="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-500 dark:text-emerald-400 flex items-center justify-center text-xs group-hover:scale-110 transition-transform font-bold">
                                 ▶
                             </span>
                             <span>{{ currentLocale === 'ar' ? 'شاهد كيف توفر في 90 ثانية' : 'See How You Save in 90 Seconds' }}</span>
@@ -1150,17 +1288,20 @@ onUnmounted(() => {
                     </div>
 
                     <!-- Micro Trust Badges -->
-                    <div class="pt-4 flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-xs sm:text-sm text-slate-400">
+                    <div
+                        class="pt-4 flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-xs sm:text-sm"
+                        :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                    >
                         <div class="flex items-center gap-2">
-                            <span class="text-emerald-400 font-bold">✓</span>
+                            <span class="text-emerald-500 font-bold">✓</span>
                             <span>{{ currentLocale === 'ar' ? 'بدون تحميل أي تطبيق للزبائن' : 'Zero App Downloads for Customers' }}</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <span class="text-emerald-400 font-bold">✓</span>
+                            <span class="text-emerald-500 font-bold">✓</span>
                             <span>{{ currentLocale === 'ar' ? 'شاشات مطبخ KDS وربط مباشر' : 'Real-Time Cloud KDS Kitchen Screens' }}</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <span class="text-emerald-400 font-bold">✓</span>
+                            <span class="text-emerald-500 font-bold">✓</span>
                             <span>{{ currentLocale === 'ar' ? 'صفر عمولة 0% (أرباحك لك بالكامل)' : '0% Sales Commission (Keep 100%)' }}</span>
                         </div>
                     </div>
@@ -2770,5 +2911,182 @@ onUnmounted(() => {
     opacity: 0;
     transform: translateY(-10px) scale(0.99);
     filter: blur(4px);
+}
+
+/* =========================================================================
+   LIGHT MODE DESIGN SYSTEM FOR TEDALLAL LANDING PAGE
+   ========================================================================= */
+.light-mode-theme {
+    color-scheme: light;
+}
+
+/* Light mode ambient background mesh */
+.light-mode-theme .ambient-glow-layer .bg-radial-mesh {
+    background-image: radial-gradient(#94a3b8 1.2px, transparent 1.2px) !important;
+    opacity: 0.25 !important;
+}
+
+/* Header & Navigation in Light Mode */
+.light-mode-theme header {
+    background-color: rgba(255, 255, 255, 0.92) !important;
+    border-bottom-color: rgba(226, 232, 240, 0.9) !important;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+}
+
+.light-mode-theme header nav a {
+    color: #475569 !important;
+}
+.light-mode-theme header nav a:hover {
+    color: #d97706 !important;
+}
+
+/* Main section alternating backgrounds in Light Mode */
+.light-mode-theme section {
+    border-top-color: #e2e8f0 !important;
+}
+
+.light-mode-theme section#how-it-works,
+.light-mode-theme section#features,
+.light-mode-theme section#roi-calculator {
+    background-color: #ffffff !important;
+}
+
+.light-mode-theme section#solutions,
+.light-mode-theme section#directory,
+.light-mode-theme section#comparison,
+.light-mode-theme section#faqs {
+    background-color: #f8fafc !important;
+}
+
+/* Light mode headings & titles */
+.light-mode-theme h1:not([class*="text-transparent"]):not([class*="bg-clip-text"]),
+.light-mode-theme h2:not([class*="text-transparent"]):not([class*="bg-clip-text"]),
+.light-mode-theme h3:not([class*="text-transparent"]):not([class*="bg-clip-text"]),
+.light-mode-theme h4:not([class*="text-transparent"]):not([class*="bg-clip-text"]),
+.light-mode-theme h5:not([class*="text-transparent"]):not([class*="bg-clip-text"]) {
+    color: #0f172a !important;
+}
+
+.light-mode-theme .text-slate-300 {
+    color: #475569 !important;
+}
+
+.light-mode-theme .text-slate-400 {
+    color: #64748b !important;
+}
+
+/* Cards & containers in Light Mode */
+.light-mode-theme .bg-slate-900,
+.light-mode-theme .bg-slate-900\/70,
+.light-mode-theme .bg-slate-900\/80,
+.light-mode-theme .bg-slate-900\/90,
+.light-mode-theme .bg-slate-900\/95,
+.light-mode-theme .bg-slate-950,
+.light-mode-theme .bg-slate-950\/90,
+.light-mode-theme .bg-\[\#090e1c\],
+.light-mode-theme .bg-\[\#090e1c\]\/95,
+.light-mode-theme .bg-\[\#0b101d\],
+.light-mode-theme .bg-\[\#080d19\]\/80,
+.light-mode-theme .bg-\[\#080d19\]\/60,
+.light-mode-theme .bg-\[\#060a13\] {
+    background-color: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+}
+
+/* Text white inside light cards */
+.light-mode-theme .bg-slate-900 span.text-white,
+.light-mode-theme .bg-slate-900 p.text-white,
+.light-mode-theme .bg-slate-900 h3.text-white,
+.light-mode-theme .bg-slate-900 h4.text-white,
+.light-mode-theme .bg-slate-900\/70 span.text-white,
+.light-mode-theme .bg-slate-900\/70 p.text-white,
+.light-mode-theme .bg-slate-900\/70 h3.text-white,
+.light-mode-theme .bg-slate-900\/80 span.text-white,
+.light-mode-theme .bg-slate-900\/80 p.text-white,
+.light-mode-theme .bg-slate-900\/80 h3.text-white,
+.light-mode-theme #comparison .text-white,
+.light-mode-theme #faqs .text-white {
+    color: #0f172a !important;
+}
+
+/* Comparison table alternate rows in light mode */
+.light-mode-theme #comparison tr:nth-child(even) {
+    background-color: #f8fafc !important;
+}
+.light-mode-theme #comparison tr:nth-child(odd) {
+    background-color: #ffffff !important;
+}
+.light-mode-theme #comparison td,
+.light-mode-theme #comparison th {
+    border-color: #e2e8f0 !important;
+}
+
+/* Light mode FAQ items */
+.light-mode-theme #faqs .rounded-2xl {
+    background-color: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+}
+.light-mode-theme #faqs button span:first-child {
+    color: #0f172a !important;
+}
+
+/* Light mode form inputs & selects */
+.light-mode-theme input,
+.light-mode-theme select {
+    background-color: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+}
+.light-mode-theme input:focus,
+.light-mode-theme select:focus {
+    border-color: #f59e0b !important;
+    background-color: #ffffff !important;
+}
+
+/* Light mode mobile drawer */
+.light-mode-theme .lg\:hidden.bg-\[\#090e1c\]\/95 {
+    background-color: rgba(255, 255, 255, 0.98) !important;
+    border-top-color: #e2e8f0 !important;
+}
+.light-mode-theme .lg\:hidden.bg-\[\#090e1c\]\/95 a.text-slate-200 {
+    color: #1e293b !important;
+}
+
+/* Light mode floating toast */
+.light-mode-theme .fixed.bottom-6.bg-\[\#090e1c\]\/95 {
+    background-color: rgba(255, 255, 255, 0.98) !important;
+    border-color: rgba(245, 158, 11, 0.4) !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+.light-mode-theme .fixed.bottom-6 p.text-slate-200 {
+    color: #334155 !important;
+}
+
+/* Light mode modal card */
+.light-mode-theme .bg-slate-900.border-white\/10 {
+    background-color: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Light mode footer */
+.light-mode-theme footer {
+    background-color: #f1f5f9 !important;
+    border-top-color: #e2e8f0 !important;
+    color: #64748b !important;
+}
+.light-mode-theme footer h5 {
+    color: #0f172a !important;
+}
+.light-mode-theme footer a {
+    color: #64748b !important;
+}
+.light-mode-theme footer a:hover {
+    color: #d97706 !important;
+}
+.light-mode-theme footer span.text-white {
+    color: #0f172a !important;
 }
 </style>
