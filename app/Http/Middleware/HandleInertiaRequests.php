@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\UserRole;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -37,6 +38,7 @@ class HandleInertiaRequests extends Middleware
                     'name' => $request->user()->name,
                     'email' => $request->user()->email,
                     'role' => $request->user()->roles->first()?->name,
+                    'role_label' => UserRole::labelFor($request->user()->roles->first()?->name, $request->user()->default_window),
                     'default_window' => $request->user()->default_window,
                     'status' => $request->user()->status,
                     'permissions' => $request->user()->email === 'admin@tedallal.test'
@@ -48,6 +50,7 @@ class HandleInertiaRequests extends Middleware
                     'id' => $request->user()->restaurant->id,
                     'name' => $request->user()->restaurant->name,
                     'type' => $request->user()->restaurant->type ?? 'postpaid',
+                    'type_label' => ($request->user()->restaurant->type ?? 'postpaid') === 'prepaid' ? 'دفع مسبق (Prepaid)' : 'دفع لاحق (Postpaid)',
                     'windows_count' => (int) ($request->user()->restaurant->windows_count ?? 1),
                     'currency' => $request->user()->restaurant->currency,
                     'logo' => $request->user()->restaurant->logo,

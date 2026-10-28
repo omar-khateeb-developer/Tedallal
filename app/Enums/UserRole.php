@@ -25,6 +25,24 @@ enum UserRole: string
         };
     }
 
+    public static function labelFor(?string $role, ?int $defaultWindow = null): string
+    {
+        if (! $role) {
+            return 'مستخدم';
+        }
+
+        $enum = self::tryFrom($role);
+        if (! $enum) {
+            return $role;
+        }
+
+        if ($enum === self::Chef && $defaultWindow) {
+            return "شيف (نافذة {$defaultWindow})";
+        }
+
+        return $enum->label();
+    }
+
     public function isSuperAdmin(): bool
     {
         return $this === self::SuperAdmin;
