@@ -32,6 +32,7 @@ Route::prefix('public')->middleware('throttle:public-api')->group(function () {
         Route::delete('cart/items/{cartItem}', [CartController::class, 'destroy']);
         Route::delete('cart', [CartController::class, 'clear']);
         Route::post('promo-codes/validate', [PromoCodeController::class, 'validateCode'])->middleware('throttle:public-promo-codes');
+        Route::post('promo-codes/force-activate', [PromoCodeController::class, 'forceActivate']);
         Route::post('orders', [OrderController::class, 'store'])->middleware('throttle:public-orders');
         Route::get('orders/{orderNumber}', [OrderController::class, 'show']);
     });
@@ -97,5 +98,11 @@ Route::prefix('super-admin')->middleware(['auth:sanctum', EnsureUserHasRole::cla
     // وضع الصيانة
     Route::get('maintenance', [\App\Http\Controllers\Api\SuperAdmin\MaintenanceController::class, 'status']);
     Route::post('maintenance/toggle', [\App\Http\Controllers\Api\SuperAdmin\MaintenanceController::class, 'toggle']);
+
+    // وضع التجريب وفحص الكوبونات
+    Route::get('promo-testing', [\App\Http\Controllers\Api\SuperAdmin\PromoTestingController::class, 'status']);
+    Route::post('promo-testing/toggle', [\App\Http\Controllers\Api\SuperAdmin\PromoTestingController::class, 'toggle']);
+    Route::post('promo-testing/diagnose', [\App\Http\Controllers\Api\SuperAdmin\PromoTestingController::class, 'diagnose']);
+    Route::post('promo-testing/force-activate', [\App\Http\Controllers\Api\SuperAdmin\PromoTestingController::class, 'forceActivate']);
 });
 

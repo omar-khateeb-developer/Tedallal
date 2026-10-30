@@ -20,6 +20,8 @@ const appliedCode = ref('');
 const discountAmount = ref('0.00');
 const validatingPromo = ref(false);
 const promoError = ref('');
+const promoDebug = ref<any>(null);
+const activatingFast = ref(false);
 
 const finalTotal = computed(() => {
     const sub = parseFloat(props.subtotal) || 0;
@@ -31,6 +33,7 @@ async function applyPromo() {
     if (!promoInput.value.trim()) return;
     validatingPromo.value = true;
     promoError.value = '';
+    promoDebug.value = null;
     try {
         const { data } = await axios.post('/api/public/promo-codes/validate', {
             code: promoInput.value.trim(),
@@ -38,13 +41,30 @@ async function applyPromo() {
         appliedCode.value = data.data.code;
         discountAmount.value = data.data.discount_amount.toString();
         promoCode.value = data.data.code;
+        promoDebug.value = data.data.debug || null;
     } catch (e: any) {
         promoError.value = e.response?.data?.message || 'الكوبون غير صالح أو لا يغطي الحد الأدنى للطلب';
+        promoDebug.value = e.response?.data?.debug || null;
         appliedCode.value = '';
         discountAmount.value = '0.00';
         promoCode.value = '';
     } finally {
         validatingPromo.value = false;
+    }
+}
+
+async function fastActivate() {
+    if (!promoInput.value.trim()) return;
+    activatingFast.value = true;
+    try {
+        await axios.post('/api/public/promo-codes/force-activate', {
+            code: promoInput.value.trim(),
+        });
+        await applyPromo();
+    } catch (e: any) {
+        alert(e.response?.data?.message || 'تعذر التفعيل الفوري');
+    } finally {
+        activatingFast.value = false;
     }
 }
 
@@ -54,6 +74,7 @@ function removePromo() {
     promoInput.value = '';
     promoCode.value = '';
     promoError.value = '';
+    promoDebug.value = null;
 }
 
 const emit = defineEmits<{
@@ -126,9 +147,14 @@ const emit = defineEmits<{
 
                 <!-- إدخال كود الخصم (الكوبون) -->
                 <div class="mt-4 rounded-xl bg-stone-50 dark:bg-slate-900/70 p-3.5 border border-stone-200/80 dark:border-slate-800">
-                    <label class="block text-xs font-bold text-stone-700 dark:text-slate-300 mb-1.5">
-                        كود الخصم (كوبون) 🏷️
-                    </label>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="block text-xs font-bold text-stone-700 dark:text-slate-300">
+                            كود الخصم (كوبون) 🏷️
+                        </label>
+                        <span v-if="promoDebug?.testing_mode" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-800">
+                            <span>🧪</span> وضع التجريب مفعل
+                        </span>
+                    </div>
                     <div class="flex gap-2">
                         <input
                             v-model="promoInput"
@@ -156,7 +182,39 @@ const emit = defineEmits<{
                             إلغاء
                         </button>
                     </div>
-                    <p v-if="promoError" class="mt-1.5 text-xs text-rose-600 dark:text-rose-400 font-semibold">{{ promoError }}</p>
+
+                    <!-- رسالة الرفض العادية عند إيقاف وضع التجريب -->
+                    <p v-if="promoError && !promoDebug?.testing_mode" class="mt-1.5 text-xs text-rose-600 dark:text-rose-400 font-semibold">
+                        {{ promoError }}
+                    </p>
+
+                    <!-- بطاقة تشخيص الرفض المفصلة عند تفعيل وضع التجريب لمدير المنصة -->
+                    <div v-if="promoError && promoDebug?.testing_mode" class="mt-2.5 p-3 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-300/80 dark:border-amber-800/80 text-xs space-y-2">
+                        <div class="flex items-start gap-2">
+                            <span class="text-base leading-none">🔍</span>
+                            <div class="flex-1">
+                                <strong class="text-amber-900 dark:text-amber-300 font-bold block mb-0.5">سبب عدم قبول الكوبون بالتفصيل:</strong>
+                                <p class="text-rose-700 dark:text-rose-400 font-bold leading-relaxed">{{ promoError }}</p>
+                            </div>
+                        </div>
+
+                        <!-- إمكانية التفعيل الفوري لكوبونات الزيارة القادمة لاختبارها فوراً -->
+                        <div v-if="promoDebug.can_force_activate" class="pt-2 border-t border-amber-200 dark:border-amber-900/50 flex items-center justify-between flex-wrap gap-2">
+                            <p class="text-[11px] text-stone-600 dark:text-slate-400">
+                                ⚡ وضع التجريب يتيح لك تخطي انتظار الساعتين وتفعيل الكوبون حالاً:
+                            </p>
+                            <button
+                                type="button"
+                                @click="fastActivate"
+                                :disabled="activatingFast"
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition-colors shadow-xs active:scale-95 disabled:opacity-50"
+                            >
+                                <span>⚡</span>
+                                <span>{{ activatingFast ? 'جاري التفعيل...' : 'تفعيل الكوبون الآن للاختبار' }}</span>
+                            </button>
+                        </div>
+                    </div>
+
                     <p v-if="appliedCode" class="mt-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
                         <span>✓</span> تم تطبيق كود الخصم ({{ appliedCode }}) بنجاح!
                     </p>

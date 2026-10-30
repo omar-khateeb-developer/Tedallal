@@ -304,4 +304,126 @@ class LuckyWheelAndPromoCodeTest extends TestCase
             ->has('slices', 8)
         );
     }
+
+    public function test_super_admin_can_toggle_promo_testing_mode_and_diagnose_coupon(): void
+    {
+        $superAdmin = User::where('email', 'super@tedallal.test')->firstOrFail();
+        $restaurant = Restaurant::firstOrFail();
+
+        $features = $restaurant->features ?? [];
+        $features['offers'] = true;
+        $restaurant->features = $features;
+        $restaurant->save();
+
+        // 1. Toggle promo testing ON
+        $toggleResp = $this->actingAs($superAdmin, 'sanctum')->postJson('/api/super-admin/promo-testing/toggle', [
+            'enabled' => true,
+        ]);
+        $toggleResp->assertOk();
+        $toggleResp->assertJsonPath('data.testing_mode', true);
+        $this->assertTrue(\App\Models\Setting::isPromoTestingModeEnabled());
+
+        // 2. Create coupon starting in 2 hours
+        $voucher = PromoCode::create([
+            'restaurant_id' => $restaurant->id,
+            'code' => 'DIAG-TEST-99',
+            'discount_type' => 'percentage',
+            'discount_value' => 25,
+            'min_order_value' => 50,
+            'is_active' => true,
+            'starts_at' => now()->addHours(2),
+            'is_single_use' => true,
+            'times_used' => 0,
+        ]);
+
+        // 3. Diagnose coupon
+        $diagResp = $this->actingAs($superAdmin, 'sanctum')->postJson('/api/super-admin/promo-testing/diagnose', [
+            'code' => 'DIAG-TEST-99',
+            'restaurant_id' => $restaurant->id,
+            'cart_total' => 100,
+        ]);
+
+        $diagResp->assertOk();
+        $diagResp->assertJsonPath('data.diagnostics.valid', false);
+        $diagResp->assertJsonPath('data.diagnostics.reason_code', 'future_start');
+        $diagResp->assertJsonPath('data.diagnostics.can_force_activate', true);
+
+        // 4. Force activate coupon from SuperAdmin
+        $activateResp = $this->actingAs($superAdmin, 'sanctum')->postJson('/api/super-admin/promo-testing/force-activate', [
+            'code' => 'DIAG-TEST-99',
+            'restaurant_id' => $restaurant->id,
+        ]);
+        $activateResp->assertOk();
+
+        $voucher->refresh();
+        $this->assertTrue($voucher->starts_at->isPast());
+    }
+
+    public function test_public_checkout_shows_detailed_reason_and_allows_force_activate_in_testing_mode(): void
+    {
+        $restaurant = Restaurant::firstOrFail();
+        $features = $restaurant->features ?? [];
+        $features['offers'] = true;
+        $restaurant->features = $features;
+        $restaurant->save();
+
+        $table = RestaurantTable::where('restaurant_id', $restaurant->id)->firstOrFail();
+        $session = app(TableSessionService::class)->resolveOrCreate($table);
+
+        $item = MenuItem::where('restaurant_id', $restaurant->id)->where('is_available', true)->firstOrFail();
+        $this->withHeader('X-Session-Token', $session->session_token)
+            ->postJson('/api/public/cart/items', [
+                'menu_item_id' => $item->id,
+                'quantity' => 2,
+            ])
+            ->assertSuccessful();
+
+        // Create coupon starting in 2 hours
+        $voucher = PromoCode::create([
+            'restaurant_id' => $restaurant->id,
+            'code' => 'FUTURE-WHEEL-1',
+            'discount_type' => 'percentage',
+            'discount_value' => 15,
+            'min_order_value' => 10,
+            'is_active' => true,
+            'starts_at' => now()->addHours(2),
+            'is_single_use' => true,
+            'times_used' => 0,
+        ]);
+
+        // When testing mode is OFF
+        \App\Models\Setting::set('promo_testing_mode', '0');
+        $failOff = $this->withHeader('X-Session-Token', $session->session_token)
+            ->postJson('/api/public/promo-codes/validate', [
+                'code' => 'FUTURE-WHEEL-1',
+            ]);
+        $failOff->assertStatus(400);
+        $failOff->assertJsonPath('message', 'الكوبون غير صالح أو لا يغطي الحد الأدنى للطلب.');
+
+        // When testing mode is ON
+        \App\Models\Setting::set('promo_testing_mode', '1');
+        $failOn = $this->withHeader('X-Session-Token', $session->session_token)
+            ->postJson('/api/public/promo-codes/validate', [
+                'code' => 'FUTURE-WHEEL-1',
+            ]);
+        $failOn->assertStatus(400);
+        $this->assertStringContainsString('الكوبون خاص بزيارتك القادمة', $failOn->json('message'));
+        $failOn->assertJsonPath('debug.reason_code', 'future_start');
+        $failOn->assertJsonPath('debug.can_force_activate', true);
+
+        // Force activate via public endpoint in testing mode
+        $forceResp = $this->withHeader('X-Session-Token', $session->session_token)
+            ->postJson('/api/public/promo-codes/force-activate', [
+                'code' => 'FUTURE-WHEEL-1',
+            ]);
+        $forceResp->assertOk();
+
+        // Validate again -> Now succeeds!
+        $successResp = $this->withHeader('X-Session-Token', $session->session_token)
+            ->postJson('/api/public/promo-codes/validate', [
+                'code' => 'FUTURE-WHEEL-1',
+            ]);
+        $successResp->assertOk();
+        $successResp->assertJsonPath('data.code', 'FUTURE-WHEEL-1');
+    }
 }

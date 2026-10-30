@@ -43,4 +43,12 @@ class Setting extends Model
     {
         return static::get('maintenance_mode', '0') === '1';
     }
+
+    /**
+     * هل وضع التجريب وفحص الكوبونات مفعل لمدير المنصة؟
+     */
+    public static function isPromoTestingModeEnabled(): bool
+    {
+        return static::get('promo_testing_mode', '0') === '1';
+    }
 }

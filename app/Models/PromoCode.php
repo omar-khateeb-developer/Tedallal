@@ -61,6 +61,73 @@ class PromoCode extends Model
         return true;
     }
 
+    /**
+     * تشخيص تفصيلي لسبب رفض الكوبون (لحالة التجريب والديباج)
+     */
+    public function getValidationDiagnostics(?float $orderTotal = null, string $currency = 'SYP'): array
+    {
+        $now = now();
+        $isFuture = $this->starts_at && $this->starts_at->isFuture();
+        $isPast = $this->expires_at && $this->expires_at->isPast();
+        $isSingleUsed = $this->is_single_use && $this->times_used >= 1;
+        $isMinNotMet = $orderTotal !== null && $orderTotal < (float)$this->min_order_value;
+        $isInactive = !$this->is_active;
+
+        $valid = !$isInactive && !$isFuture && !$isPast && !$isSingleUsed && !$isMinNotMet;
+
+        $reasonCode = 'valid';
+        $reasonMessage = 'الكوبون صالح وجاهز للتطبيق.';
+        $canForceActivate = false;
+
+        if ($isInactive) {
+            $reasonCode = 'inactive';
+            $reasonMessage = 'الكوبون معطل وموقوف حالياً من قبل الإدارة.';
+        } elseif ($isFuture) {
+            $reasonCode = 'future_start';
+            $diffMinutes = $now->diffInMinutes($this->starts_at);
+            $hours = intdiv($diffMinutes, 60);
+            $mins = $diffMinutes % 60;
+            $timeStr = ($hours > 0 ? "{$hours} ساعة و " : '') . "{$mins} دقيقة";
+            $formattedStart = $this->starts_at->format('Y-m-d h:i A');
+
+            $reasonMessage = "الكوبون خاص بزيارتك القادمة: يبدأ تفعيله بتاريخ {$formattedStart} (متبقي حوالي {$timeStr}).";
+            $canForceActivate = true;
+        } elseif ($isPast) {
+            $reasonCode = 'expired';
+            $formattedEnd = $this->expires_at->format('Y-m-d h:i A');
+            $reasonMessage = "انتهت صلاحية هذا الكوبون بتاريخ {$formattedEnd}.";
+        } elseif ($isSingleUsed) {
+            $reasonCode = 'already_used';
+            $reasonMessage = "تم استخدام هذا الكوبون مسبقاً (كوبون ذو استخدام واحد تم استهلاكه).";
+        } elseif ($isMinNotMet) {
+            $reasonCode = 'min_order_not_met';
+            $diff = round((float)$this->min_order_value - (float)$orderTotal, 2);
+            $reasonMessage = "الحد الأدنى لتطبيق هذا الكوبون هو {$this->min_order_value} {$currency}، ومجموع سلتك الحالي {$orderTotal} {$currency} (ينقصك {$diff} {$currency}).";
+        }
+
+        return [
+            'valid' => $valid,
+            'reason_code' => $reasonCode,
+            'reason_message' => $reasonMessage,
+            'can_force_activate' => $canForceActivate,
+            'details' => [
+                'code' => $this->code,
+                'is_active' => (bool)$this->is_active,
+                'starts_at' => $this->starts_at?->toIso8601String(),
+                'starts_at_formatted' => $this->starts_at?->format('Y-m-d h:i A'),
+                'is_future' => $isFuture,
+                'expires_at' => $this->expires_at?->toIso8601String(),
+                'expires_at_formatted' => $this->expires_at?->format('Y-m-d h:i A'),
+                'is_single_use' => (bool)$this->is_single_use,
+                'times_used' => (int)$this->times_used,
+                'min_order_value' => (float)$this->min_order_value,
+                'discount_type' => $this->discount_type,
+                'discount_value' => (float)$this->discount_value,
+                'current_total' => $orderTotal !== null ? (float)$orderTotal : null,
+            ],
+        ];
+    }
+
     public function calculateDiscount(float $orderTotal): float
     {
         if (!$this->isValid($orderTotal)) {
