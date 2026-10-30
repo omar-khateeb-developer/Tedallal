@@ -1,71 +1,123 @@
-name: Deploy to Hostinger
+name: Zero-Downtime Production Deployment
 
 on:
   push:
     branches:
-      - main # يتم التشغيل عند الدفع للفرع الرئيسي
+      - main
 
 jobs:
   build-and-deploy:
+    name: Build Assets & Zero-Downtime Deploy
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
-      - name: Checkout Code
+      - name: 1. Checkout Application Code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: 2. Setup Node.js Environment
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: "npm"
 
-      - name: Install NPM dependencies
-        run: npm ci
+      - name: 3. Compile Frontend Assets (Vite / Vue)
+        run: |
+          npm ci
+          npm run build
 
-      - name: Build frontend assets
-        run: npm run build
-
-      - name: Setup PHP
+      - name: 4. Setup PHP 8.4 Environment
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.3"
+          php-version: "8.4"
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_mysql, bcmath, redis
+          coverage: none
 
-      - name: Install Composer dependencies
-        run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist --no-dev
+      - name: 5. Install Composer Production Dependencies
+        run: |
+          composer install --no-dev --prefer-dist --optimize-autoloader --no-progress --no-interaction
 
-      - name: Remove unnecessary files before deploy
+      - name: 6. Prepare Clean Release Artifact
         run: |
           rm -rf node_modules
           rm -rf .git
-          rm -rf tests
           rm -rf .github
+          rm -rf tests
 
-      - name: Sync files to Hostinger
+      - name: 7. Prepare Remote Release Directory
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          RELEASE_ID: ${{ github.sha }}-${{ github.run_number }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          envs: RELEASE_ID
+          script_stop: true
+          script: |
+            set -e
+            DEPLOY_PATH="/var/www/tedallal"
+            mkdir -p "$DEPLOY_PATH/releases/$RELEASE_ID"
+            mkdir -p "$DEPLOY_PATH/shared/storage/app/public"
+            mkdir -p "$DEPLOY_PATH/shared/storage/framework/cache/data"
+            mkdir -p "$DEPLOY_PATH/shared/storage/framework/sessions"
+            mkdir -p "$DEPLOY_PATH/shared/storage/framework/views"
+            mkdir -p "$DEPLOY_PATH/shared/storage/logs"
+
+      - name: 8. Transfer Pre-Built Code to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.HOSTINGER_HOST }}
-          username: ${{ secrets.HOSTINGER_USERNAME }}
-          port: ${{ secrets.HOSTINGER_PORT }}
-          key: ${{ secrets.HOSTINGER_SSH_KEY }}
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
           source: "."
-          target: ${{ secrets.HOSTINGER_TARGET_DIR }}
+          target: "/var/www/tedallal/releases/${{ github.sha }}-${{ github.run_number }}"
           strip_components: 0
 
-      - name: Run Artisan Commands on Hostinger
+      - name: 9. Activate Release & Graceful Restart
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          RELEASE_ID: ${{ github.sha }}-${{ github.run_number }}
         with:
-          host: ${{ secrets.HOSTINGER_HOST }}
-          username: ${{ secrets.HOSTINGER_USERNAME }}
-          port: ${{ secrets.HOSTINGER_PORT }}
-          key: ${{ secrets.HOSTINGER_SSH_KEY }}
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          envs: RELEASE_ID
+          script_stop: true
           script: |
-            cd ${{ secrets.HOSTINGER_TARGET_DIR }}
-            sudo chown -R deployer:www-data storage bootstrap/cache
-            sudo chmod -R 775 storage bootstrap/cache
+            set -e
+            DEPLOY_PATH="/var/www/tedallal"
+            RELEASE_PATH="$DEPLOY_PATH/releases/$RELEASE_ID"
+
+            echo "🔗 [1/5] ربط الملفات المشتركة (.env و storage)"
+            rm -rf "$RELEASE_PATH/storage"
+            ln -nfs "$DEPLOY_PATH/shared/.env" "$RELEASE_PATH/.env"
+            ln -nfs "$DEPLOY_PATH/shared/storage" "$RELEASE_PATH/storage"
+
+            echo "🗄️ [2/5] ترقية قاعدة البيانات وتجهيز كاش الإنتاج"
+            cd "$RELEASE_PATH"
             php artisan storage:link || true
-            php artisan optimize:clear
             php artisan migrate --force
             php artisan config:cache
             php artisan route:cache
             php artisan view:cache
-            php artisan optimize
-            sudo systemctl reload php8.3-fpm
+            php artisan event:cache
+
+            echo "⚡ [3/5] التبديل الذري للإصدار الجديد (Atomic Symlink Swap)"
+            ln -nfs "$RELEASE_PATH" "$DEPLOY_PATH/current_tmp"
+            mv -Tf "$DEPLOY_PATH/current_tmp" "$DEPLOY_PATH/current"
+
+            echo "🔄 [4/5] إعادة تحميل الخدمات بسلاسة دون قطع اتصالات الزبائن"
+            sudo systemctl reload php8.4-fpm
+            php artisan queue:restart
+            sudo supervisorctl update || true
+            sudo supervisorctl restart all || true
+
+            echo "🧹 [5/5] تنظيف الإصدارات القديمة (الاحتفاظ بآخر 4 فقط)"
+            cd "$DEPLOY_PATH/releases"
+            ls -dt */ 2>/dev/null | tail -n +5 | xargs -I {} rm -rf "{}" || true
+
+            echo "✅ اكتمل النشر بنجاح وبدون أي توقف للخدمة!"
