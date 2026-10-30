@@ -57,7 +57,20 @@ class WheelController extends Controller
             '#8b5cf6', '#14b8a6', '#f97316', '#6366f1'
         ];
 
-        $slices = $activeOffers->map(function ($offer, $index) use ($restaurant, $colors) {
+        // Ensure the wheel has at least 6 to 8 attractive slices by repeating active offers
+        $rawCount = $activeOffers->count();
+        $expandedOffers = collect();
+        if ($rawCount > 0 && $rawCount < 6) {
+            $repeatTimes = (int) ceil(8 / $rawCount);
+            for ($i = 0; $i < $repeatTimes; $i++) {
+                $expandedOffers = $expandedOffers->concat($activeOffers);
+            }
+            $expandedOffers = $expandedOffers->take(max(6, min(8, $expandedOffers->count())));
+        } else {
+            $expandedOffers = $activeOffers;
+        }
+
+        $slices = $expandedOffers->values()->map(function ($offer, $index) use ($restaurant, $colors) {
             $discountText = $offer->discount_type === 'percentage'
                 ? "خصم %{$offer->discount_value}"
                 : "خصم {$offer->discount_value} {$restaurant->currency}";
@@ -70,7 +83,7 @@ class WheelController extends Controller
                 'discount_type' => $offer->discount_type,
                 'color' => $colors[$index % count($colors)],
             ];
-        })->values()->toArray();
+        })->toArray();
 
         return Inertia::render('Wheel', [
             'token' => $token,

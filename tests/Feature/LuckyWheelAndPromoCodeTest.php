@@ -223,4 +223,85 @@ class LuckyWheelAndPromoCodeTest extends TestCase
 
         Carbon::setTestNow();
     }
+
+    public function test_admin_can_toggle_promo_code_active_status_without_server_error(): void
+    {
+        $admin = User::where('email', 'admin@bait-alsham.test')->firstOrFail();
+        $restaurant = Restaurant::find($admin->restaurant_id);
+
+        $features = $restaurant->features ?? [];
+        $features['offers'] = true;
+        $restaurant->features = $features;
+        $restaurant->save();
+
+        $promo = PromoCode::where('restaurant_id', $restaurant->id)->firstOrFail();
+        $this->assertTrue((bool) $promo->is_active);
+
+        $response = $this->actingAs($admin)->patchJson("/api/admin/promo-codes/{$promo->id}", [
+            'code' => $promo->code,
+            'discount_type' => $promo->discount_type,
+            'discount_value' => $promo->discount_value,
+            'is_active' => false,
+        ]);
+
+        $response->assertOk();
+        $response->assertJson(['success' => true]);
+
+        $promo->refresh();
+        $this->assertFalse((bool) $promo->is_active);
+    }
+
+    public function test_wheel_page_expands_slices_to_at_least_six_when_few_coupons_exist(): void
+    {
+        $admin = User::where('email', 'admin@bait-alsham.test')->firstOrFail();
+        $restaurant = Restaurant::find($admin->restaurant_id);
+
+        $table = RestaurantTable::where('restaurant_id', $restaurant->id)->firstOrFail();
+        $session = app(TableSessionService::class)->resolveOrCreate($table);
+
+        $order = Order::create([
+            'restaurant_id' => $restaurant->id,
+            'table_id' => $table->id,
+            'table_session_id' => $session->id,
+            'order_number' => 'ORD-WHEEL-03',
+            'status' => 'served',
+            'subtotal' => 60,
+            'total' => 60,
+        ]);
+
+        $wheelToken = OrderWheelToken::create([
+            'restaurant_id' => $restaurant->id,
+            'order_id' => $order->id,
+            'token' => 'random_token_expansion_test',
+            'expires_at' => now()->addDays(7),
+        ]);
+
+        // Keep exactly 2 active master coupons for this restaurant
+        PromoCode::where('restaurant_id', $restaurant->id)->delete();
+        PromoCode::create([
+            'restaurant_id' => $restaurant->id,
+            'code' => 'COUPON1',
+            'discount_type' => 'percentage',
+            'discount_value' => 10,
+            'is_active' => true,
+            'is_single_use' => false,
+        ]);
+        PromoCode::create([
+            'restaurant_id' => $restaurant->id,
+            'code' => 'COUPON2',
+            'discount_type' => 'percentage',
+            'discount_value' => 20,
+            'is_active' => true,
+            'is_single_use' => false,
+        ]);
+
+        $response = $this->get("/wheel/{$wheelToken->token}");
+        $response->assertOk();
+
+        // Check Inertia slices prop has at least 6 slices
+        $response->assertInertia(fn ($page) => $page
+            ->component('Wheel')
+            ->has('slices', 8)
+        );
+    }
 }

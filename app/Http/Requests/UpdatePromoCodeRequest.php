@@ -25,6 +25,7 @@ class UpdatePromoCodeRequest extends FormRequest
 
         return [
             'code' => [
+                'sometimes',
                 'required',
                 'string',
                 'max:50',
@@ -32,10 +33,10 @@ class UpdatePromoCodeRequest extends FormRequest
                     ->where('restaurant_id', $restaurantId)
                     ->ignore($promoCodeId),
             ],
-            'discount_type' => 'required|in:percentage,fixed',
-            'discount_value' => 'required|numeric|min:0',
+            'discount_type' => 'sometimes|required|in:percentage,fixed',
+            'discount_value' => 'sometimes|required|numeric|min:0',
             'min_order_value' => 'nullable|numeric|min:0',
-            'is_active' => 'boolean',
+            'is_active' => 'sometimes|boolean',
             'expires_at' => 'nullable|date',
         ];
     }

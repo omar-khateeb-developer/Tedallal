@@ -215,9 +215,13 @@ const spinWheel = async () => {
         const response = await axios.post(`/wheel/${props.token}/spin`);
         const { won_id, voucher: wonVoucher } = response.data;
 
-        // Find index of winning slice
-        const wonIndex = props.slices.findIndex((s) => s.id === won_id);
-        const targetIndex = wonIndex >= 0 ? wonIndex : 0;
+        // Find all matching slice indices for won_id
+        const matchingIndices = props.slices
+            .map((s, idx) => (s.id === won_id ? idx : -1))
+            .filter((idx) => idx !== -1);
+        const targetIndex = matchingIndices.length > 0
+            ? matchingIndices[Math.floor(Math.random() * matchingIndices.length)]
+            : 0;
 
         // Calculate stop angle so the pointer at top (3 * PI / 2 or 270 deg) points to target slice
         const numSlices = props.slices.length;

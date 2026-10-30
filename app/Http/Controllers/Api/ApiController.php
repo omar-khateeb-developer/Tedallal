@@ -2,17 +2,18 @@
 
 namespace App\Http\Controllers\Api;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Collection;
 
 abstract class ApiController
 {
-    protected function success(JsonResource|array|\Illuminate\Support\Collection $data, int $status = 200): JsonResponse
+    protected function success(JsonResource|array|Collection|Model $data, int $status = 200): JsonResponse
     {
         $payload = $data instanceof JsonResource
             ? $data->response()->getData(true)
-            : ($data instanceof \Illuminate\Support\Collection ? $data->toArray() : $data);
-
+            : ($data instanceof Model || $data instanceof Collection ? $data->toArray() : $data);
 
         return response()->json([
             'success' => true,
