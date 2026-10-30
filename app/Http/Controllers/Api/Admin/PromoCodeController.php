@@ -18,8 +18,30 @@ class PromoCodeController extends ApiController
             return $this->error('Feature Locked', 403);
         }
 
-        $codes = PromoCode::latest()->get();
-        return $this->success($codes);
+        $query = PromoCode::latest();
+
+        if ($request->query('type') === 'wheel') {
+            $query->where('is_single_use', true);
+        } elseif ($request->query('type') === 'all') {
+            // return all
+        } else {
+            // default: master coupons
+            $query->where('is_single_use', false);
+        }
+
+        $codes = $query->get();
+
+        $stats = [
+            'active_master_count' => PromoCode::where('restaurant_id', $restaurant->id)->where('is_single_use', false)->where('is_active', true)->count(),
+            'total_wheel_vouchers' => PromoCode::where('restaurant_id', $restaurant->id)->where('is_single_use', true)->count(),
+            'used_wheel_vouchers' => PromoCode::where('restaurant_id', $restaurant->id)->where('is_single_use', true)->where('times_used', '>', 0)->count(),
+        ];
+
+        return response()->json([
+            'success' => true,
+            'data' => $codes,
+            'stats' => $stats,
+        ]);
     }
 
     public function store(StorePromoCodeRequest $request)
@@ -38,11 +60,16 @@ class PromoCodeController extends ApiController
         return $this->success($promoCode, 201);
     }
 
-    public function update(UpdatePromoCodeRequest $request, PromoCode $promoCode)
+    public function update(UpdatePromoCodeRequest $request, $promoCode)
     {
         $restaurant = auth()->user()->restaurant;
 
-        if ($promoCode->restaurant_id !== $restaurant->id) {
+        if (!($promoCode instanceof PromoCode) || !$promoCode->exists) {
+            $id = (is_object($promoCode) && !empty($promoCode->id))
+                ? $promoCode->id
+                : ($request->route('promoCode') ?? $request->route('promo_code'));
+            $promoCode = PromoCode::where('restaurant_id', $restaurant->id)->findOrFail($id);
+        } elseif ($promoCode->restaurant_id !== $restaurant->id) {
             return $this->error('Unauthorized', 403);
         }
 
@@ -53,11 +80,16 @@ class PromoCodeController extends ApiController
         return $this->success($promoCode);
     }
 
-    public function destroy(PromoCode $promoCode)
+    public function destroy($promoCode)
     {
         $restaurant = auth()->user()->restaurant;
 
-        if ($promoCode->restaurant_id !== $restaurant->id) {
+        if (!($promoCode instanceof PromoCode) || !$promoCode->exists) {
+            $id = (is_object($promoCode) && !empty($promoCode->id))
+                ? $promoCode->id
+                : (request()->route('promoCode') ?? request()->route('promo_code'));
+            $promoCode = PromoCode::where('restaurant_id', $restaurant->id)->findOrFail($id);
+        } elseif ($promoCode->restaurant_id !== $restaurant->id) {
             return $this->error('Unauthorized', 403);
         }
 

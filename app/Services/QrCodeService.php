@@ -46,6 +46,21 @@ final class QrCodeService
         ))->build()->getString();
     }
 
+    public function generateBase64ForUrl(string $url, int $size = 200): string
+    {
+        $png = (new Builder(
+            writer: new PngWriter,
+            data: $url,
+            encoding: new Encoding('UTF-8'),
+            errorCorrectionLevel: ErrorCorrectionLevel::High,
+            size: $size,
+            margin: 4,
+            roundBlockSizeMode: RoundBlockSizeMode::Margin,
+        ))->build()->getString();
+
+        return base64_encode($png);
+    }
+
     public function getPngContents(RestaurantTable $table): string
     {
         $path = $this->storagePath($table);

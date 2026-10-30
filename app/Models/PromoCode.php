@@ -15,11 +15,17 @@ class PromoCode extends Model
         'discount_value',
         'min_order_value',
         'is_active',
+        'starts_at',
+        'is_single_use',
+        'times_used',
         'expires_at',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'is_single_use' => 'boolean',
+        'times_used' => 'integer',
+        'starts_at' => 'datetime',
         'expires_at' => 'datetime',
         'discount_value' => 'decimal:2',
         'min_order_value' => 'decimal:2',
@@ -36,7 +42,15 @@ class PromoCode extends Model
             return false;
         }
 
+        if ($this->starts_at && $this->starts_at->isFuture()) {
+            return false;
+        }
+
         if ($this->expires_at && $this->expires_at->isPast()) {
+            return false;
+        }
+
+        if ($this->is_single_use && $this->times_used >= 1) {
             return false;
         }
 

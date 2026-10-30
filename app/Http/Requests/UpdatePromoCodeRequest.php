@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\Models\PromoCode;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdatePromoCodeRequest extends FormRequest
 {
@@ -18,9 +20,18 @@ class UpdatePromoCodeRequest extends FormRequest
     public function rules(): array
     {
         $restaurantId = auth()->user()->restaurant_id;
-        $promoCodeId = $this->route('promoCode') ? $this->route('promoCode')->id : 'NULL';
+        $promoCode = $this->route('promoCode') ?? $this->route('promo_code');
+        $promoCodeId = $promoCode instanceof PromoCode ? $promoCode->id : $promoCode;
+
         return [
-            'code' => 'required|string|max:50|unique:promo_codes,code,' . $promoCodeId . ',id,restaurant_id,' . $restaurantId,
+            'code' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('promo_codes', 'code')
+                    ->where('restaurant_id', $restaurantId)
+                    ->ignore($promoCodeId),
+            ],
             'discount_type' => 'required|in:percentage,fixed',
             'discount_value' => 'required|numeric|min:0',
             'min_order_value' => 'nullable|numeric|min:0',

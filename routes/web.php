@@ -31,6 +31,10 @@ Route::get('/t/{token}', [CustomerController::class, 'table'])->name('customer.m
 Route::get('/t/{token}/cart', [CustomerController::class, 'cart'])->name('customer.cart');
 Route::get('/t/{token}/orders/{orderNumber}', [CustomerController::class, 'order'])->name('customer.order');
 
+// Lucky Wheel routes (Marketing Gamification)
+Route::get('/wheel/{token}', [\App\Http\Controllers\Web\WheelController::class, 'show'])->name('wheel.show');
+Route::post('/wheel/{token}/spin', [\App\Http\Controllers\Web\WheelController::class, 'spin'])->name('wheel.spin');
+
 Route::middleware(['auth', 'verified', 'permission:manage_orders'])->group(function () {
     Route::get('/staff/orders', [StaffController::class, 'orders'])->name('staff.orders');
 });

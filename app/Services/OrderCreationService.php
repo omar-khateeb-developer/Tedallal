@@ -106,6 +106,11 @@ final class OrderCreationService
                 $order->items()->create($itemData);
             }
 
+            if ($promoCode && $promoCode->is_single_use) {
+                $promoCode->increment('times_used');
+                $promoCode->update(['is_active' => false]);
+            }
+
             $this->cartService->clear($session);
 
             $order->load(['items', 'table']);

@@ -208,6 +208,16 @@
         </div>
     </div>
 
+    @if(!empty($wheelQrBase64))
+    <div class="divider"></div>
+    <div style="text-align: center; margin: 3mm 0; padding: 2.5mm 1mm; border: 1.5px dashed #000; border-radius: 4px; background: #fafafa;">
+        <div style="font-weight: 800; font-size: 13px; margin-bottom: 1mm;">🎁 عجلة الحظ (خصم زيارتك القادمة)</div>
+        <div style="font-size: 11px; margin-bottom: 2mm; color: #222;">امسح الرمز لتدوير العجلة وربح كود خصم!</div>
+        <img src="data:image/png;base64,{{ $wheelQrBase64 }}" style="width: 30mm; height: 30mm; margin: 0 auto; display: block;" alt="رمز عجلة الحظ" />
+        <div style="font-size: 10px; margin-top: 1.5mm; font-weight: 700; color: #444;">كود فريد لمرة واحدة • صالح لـ 14 يوم</div>
+    </div>
+    @endif
+
     <div class="divider"></div>
 
     <div class="footer">
