@@ -183,25 +183,25 @@ const emit = defineEmits<{
                         </button>
                     </div>
 
-                    <!-- رسالة الرفض العادية عند إيقاف وضع التجريب -->
-                    <p v-if="promoError && !promoDebug?.testing_mode" class="mt-1.5 text-xs text-rose-600 dark:text-rose-400 font-semibold">
-                        {{ promoError }}
-                    </p>
-
-                    <!-- بطاقة تشخيص الرفض المفصلة عند تفعيل وضع التجريب لمدير المنصة -->
-                    <div v-if="promoError && promoDebug?.testing_mode" class="mt-2.5 p-3 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-300/80 dark:border-amber-800/80 text-xs space-y-2">
+                    <!-- بطاقة توضيحية لتفاصيل الكوبون للزبون -->
+                    <div v-if="promoError" class="mt-2.5 p-3 rounded-xl border text-xs leading-relaxed space-y-2"
+                        :class="promoError.includes('🎁') || promoError.includes('🏷️')
+                            ? 'bg-amber-50/80 dark:bg-amber-950/30 border-amber-300/80 dark:border-amber-800/80 text-amber-900 dark:text-amber-200'
+                            : 'bg-rose-50/80 dark:bg-rose-950/30 border-rose-200 dark:border-rose-900/60 text-rose-800 dark:text-rose-300'"
+                    >
                         <div class="flex items-start gap-2">
-                            <span class="text-base leading-none">🔍</span>
+                            <span class="text-base leading-none">
+                                {{ promoError.includes('🎁') ? '🎁' : (promoError.includes('🏷️') ? '💡' : 'ℹ️') }}
+                            </span>
                             <div class="flex-1">
-                                <strong class="text-amber-900 dark:text-amber-300 font-bold block mb-0.5">سبب عدم قبول الكوبون بالتفصيل:</strong>
-                                <p class="text-rose-700 dark:text-rose-400 font-bold leading-relaxed">{{ promoError }}</p>
+                                <p class="font-bold leading-relaxed">{{ promoError }}</p>
                             </div>
                         </div>
 
-                        <!-- إمكانية التفعيل الفوري لكوبونات الزيارة القادمة لاختبارها فوراً -->
-                        <div v-if="promoDebug.can_force_activate" class="pt-2 border-t border-amber-200 dark:border-amber-900/50 flex items-center justify-between flex-wrap gap-2">
+                        <!-- إمكانية التفعيل الفوري لكوبونات الزيارة القادمة في وضع التجريب -->
+                        <div v-if="promoDebug?.testing_mode && promoDebug?.can_force_activate" class="pt-2 border-t border-amber-200 dark:border-amber-900/50 flex items-center justify-between flex-wrap gap-2">
                             <p class="text-[11px] text-stone-600 dark:text-slate-400">
-                                ⚡ وضع التجريب يتيح لك تخطي انتظار الساعتين وتفعيل الكوبون حالاً:
+                                ⚡ وضع التجريب: يمكنك تخطي مدة الانتظار وتفعيل الكوبون فوراً:
                             </p>
                             <button
                                 type="button"

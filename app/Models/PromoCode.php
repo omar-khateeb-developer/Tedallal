@@ -81,7 +81,7 @@ class PromoCode extends Model
 
         if ($isInactive) {
             $reasonCode = 'inactive';
-            $reasonMessage = 'الكوبون معطل وموقوف حالياً من قبل الإدارة.';
+            $reasonMessage = 'هذا الكوبون معطل وموقوف حالياً من قبل إدارة المطعم.';
         } elseif ($isFuture) {
             $reasonCode = 'future_start';
             $diffMinutes = $now->diffInMinutes($this->starts_at);
@@ -90,7 +90,7 @@ class PromoCode extends Model
             $timeStr = ($hours > 0 ? "{$hours} ساعة و " : '') . "{$mins} دقيقة";
             $formattedStart = $this->starts_at->format('Y-m-d h:i A');
 
-            $reasonMessage = "الكوبون خاص بزيارتك القادمة: يبدأ تفعيله بتاريخ {$formattedStart} (متبقي حوالي {$timeStr}).";
+            $reasonMessage = "🎁 هذا الكوبون مخصص لزيارتك القادمة: يبدأ تفعيله بتاريخ {$formattedStart} (متبقي حوالي {$timeStr}). نتشرف بزيارتك القادمة!";
             $canForceActivate = true;
         } elseif ($isPast) {
             $reasonCode = 'expired';
@@ -98,11 +98,11 @@ class PromoCode extends Model
             $reasonMessage = "انتهت صلاحية هذا الكوبون بتاريخ {$formattedEnd}.";
         } elseif ($isSingleUsed) {
             $reasonCode = 'already_used';
-            $reasonMessage = "تم استخدام هذا الكوبون مسبقاً (كوبون ذو استخدام واحد تم استهلاكه).";
+            $reasonMessage = "✓ تم استخدام هذا الكوبون مسبقاً (صالح للاستخدام لمرة واحدة فقط).";
         } elseif ($isMinNotMet) {
             $reasonCode = 'min_order_not_met';
             $diff = round((float)$this->min_order_value - (float)$orderTotal, 2);
-            $reasonMessage = "الحد الأدنى لتطبيق هذا الكوبون هو {$this->min_order_value} {$currency}، ومجموع سلتك الحالي {$orderTotal} {$currency} (ينقصك {$diff} {$currency}).";
+            $reasonMessage = "🏷️ الحد الأدنى لتطبيق هذا الكوبون هو {$this->min_order_value} {$currency} ومجموع سلتك الحالي {$orderTotal} {$currency}. أضف أصنافاً بقيمة {$diff} {$currency} لتفعيل الخصم!";
         }
 
         return [

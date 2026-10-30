@@ -391,23 +391,23 @@ class LuckyWheelAndPromoCodeTest extends TestCase
             'times_used' => 0,
         ]);
 
-        // When testing mode is OFF
+        // When testing mode is OFF - Customer still receives informative guidance
         \App\Models\Setting::set('promo_testing_mode', '0');
         $failOff = $this->withHeader('X-Session-Token', $session->session_token)
             ->postJson('/api/public/promo-codes/validate', [
                 'code' => 'FUTURE-WHEEL-1',
             ]);
         $failOff->assertStatus(400);
-        $failOff->assertJsonPath('message', 'الكوبون غير صالح أو لا يغطي الحد الأدنى للطلب.');
+        $this->assertStringContainsString('الكوبون مخصص لزيارتك القادمة', $failOff->json('message'));
 
-        // When testing mode is ON
+        // When testing mode is ON - Debug controls available
         \App\Models\Setting::set('promo_testing_mode', '1');
         $failOn = $this->withHeader('X-Session-Token', $session->session_token)
             ->postJson('/api/public/promo-codes/validate', [
                 'code' => 'FUTURE-WHEEL-1',
             ]);
         $failOn->assertStatus(400);
-        $this->assertStringContainsString('الكوبون خاص بزيارتك القادمة', $failOn->json('message'));
+        $this->assertStringContainsString('الكوبون مخصص لزيارتك القادمة', $failOn->json('message'));
         $failOn->assertJsonPath('debug.reason_code', 'future_start');
         $failOn->assertJsonPath('debug.can_force_activate', true);
 

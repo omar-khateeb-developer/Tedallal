@@ -47,13 +47,12 @@ class PromoCodeController extends ApiController
         $currency = $restaurant->currency ?? 'SYP';
 
         if (!$promoCode) {
-            $message = $isTestingMode
-                ? "الكود المدخل ({$request->code}) غير موجود ضمن كوبونات مطعم {$restaurant->name}."
-                : 'الكوبون غير صالح أو لا يغطي الحد الأدنى للطلب.';
+            $message = "رمز الكوبون المدخل ({$request->code}) غير مسجل في هذا المطعم، يرجى التأكد من كتابة الرمز بشكل مطابق.";
 
             return response()->json([
                 'success' => false,
                 'message' => $message,
+                'reason_code' => 'not_found',
                 'debug' => $isTestingMode ? [
                     'testing_mode' => true,
                     'reason_code' => 'not_found',
@@ -65,14 +64,13 @@ class PromoCodeController extends ApiController
         $diagnostics = $promoCode->getValidationDiagnostics($subtotal, $currency);
 
         if (!$diagnostics['valid']) {
-            $message = $isTestingMode
-                ? $diagnostics['reason_message']
-                : 'الكوبون غير صالح أو لا يغطي الحد الأدنى للطلب.';
-
             return response()->json([
                 'success' => false,
-                'message' => $message,
-                'debug' => $isTestingMode ? array_merge(['testing_mode' => true], $diagnostics) : null,
+                'message' => $diagnostics['reason_message'],
+                'reason_code' => $diagnostics['reason_code'],
+                'debug' => $isTestingMode ? array_merge(['testing_mode' => true], $diagnostics) : [
+                    'can_force_activate' => false,
+                ],
             ], 400);
         }
 
