@@ -43,6 +43,9 @@ const isAdminUser = computed(() => {
     const role = authUser.value?.role;
     return role === 'admin' || role === 'super_admin' || authUser.value?.is_super_admin;
 });
+const isCashierUser = computed(() => {
+    return authUser.value?.role === 'cashier';
+});
 
 const filteredOrders = computed(() => {
     if (!searchQuery.value.trim()) return orders.value;
@@ -54,7 +57,7 @@ const filteredOrders = computed(() => {
 });
 
 const pendingCashierOrdersCount = computed(() => 
-    orders.value.filter(o => o.status === 'pending').length
+    orders.value.filter(o => o.status === 'pending' && !o.paid_at).length
 );
 
 const { showToast } = useToast();
@@ -106,12 +109,6 @@ async function updateStatus(order: Order, status: string, pickupWindow?: number 
     }
 }
 
-const nextStatus: Record<string, string> = {
-    pending: 'accepted',
-    accepted: 'preparing',
-    preparing: 'ready',
-    ready: 'served',
-};
 
 useRestaurantOrders(restaurantId.value, {
     onInitialLoad: loadOrders,
@@ -203,87 +200,55 @@ useRestaurantOrders(restaurantId.value, {
                                 {{ order.status_label }}
                             </span>
 
-                            <!-- أزرار الإجراءات الخاصة بنظام الدفع المسبق (Prepaid) -->
-                            <template v-if="isPrepaid">
-                                <!-- زر تأكيد الكاشير للدفع: ينقل الطلب إلى مدفوع فقط -->
-                                <button
-                                    v-if="order.status === 'pending'"
-                                    type="button"
-                                    :disabled="updatingIds.has(order.id)"
-                                    class="rounded-xl bg-emerald-600 hover:bg-emerald-700 px-3 py-2 text-xs font-bold text-white shadow-xs disabled:opacity-50 transition-all flex items-center gap-1 cursor-pointer"
-                                    @click="updateStatus(order, 'accepted')"
-                                >
-                                    💳 تأكيد استلام المبلغ
-                                </button>
+                            <!-- دور المحاسب (الكاشير): تحديد أن الطلب تم دفعه ليظهر لنوافذ المطبخ -->
+                            <!-- إذا لم يتم دفع الطلب بعد: يظهر زر الدفع فقط -->
+                            <button
+                                v-if="order.status === 'pending' && !order.paid_at"
+                                type="button"
+                                :disabled="updatingIds.has(order.id)"
+                                class="rounded-xl bg-emerald-600 hover:bg-emerald-700 px-3 py-2 text-xs font-bold text-white shadow-xs disabled:opacity-50 transition-all flex items-center gap-1 cursor-pointer"
+                                @click="updateStatus(order, 'accepted')"
+                            >
+                                💳 تحديد أن الطلب تم دفعه
+                            </button>
 
-                                <!-- إذا تم الدفع: الكاشير ينتظر استلام إحدى النوافذ (لا يملك زر تحضير) -->
-                                <span
-                                    v-else-if="order.status === 'accepted' && !isAdminUser"
-                                    class="rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 px-3 py-1.5 text-xs font-bold flex items-center gap-1"
-                                >
-                                    ⏳ بانتظار استلام النافذة
-                                </span>
+                            <!-- الحالات التالية: المحاسب لا يملك أي أزرار لتغيير الحالة، تظهر مؤشرات توضيحية فقط -->
+                            <span
+                                v-else-if="order.status === 'accepted'"
+                                class="rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 px-3 py-1.5 text-xs font-bold flex items-center gap-1"
+                            >
+                                ⏳ مدفوع • بانتظار استلام المطبخ
+                            </span>
 
-                                <!-- زر تحضير النافذة للمدير فقط كاستثناء إداري -->
-                                <button
-                                    v-else-if="order.status === 'accepted' && isAdminUser"
-                                    type="button"
-                                    :disabled="updatingIds.has(order.id)"
-                                    class="rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white disabled:opacity-50 hover:bg-blue-700 transition-colors cursor-pointer"
-                                    @click="updateStatus(order, 'preparing', 1)"
-                                >
-                                    بدء تحضير النافذة
-                                </button>
+                            <span
+                                v-else-if="order.status === 'preparing'"
+                                class="rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60 px-3 py-1.5 text-xs font-bold flex items-center gap-1"
+                            >
+                                👨‍🍳 قيد التحضير {{ order.pickup_window ? `(نافذة ${order.pickup_window})` : '' }}
+                            </span>
 
-                                <!-- أثناء التحضير: يظهر للكاشير اسم ورقم النافذة القائمة بالتحضير -->
-                                <span
-                                    v-else-if="order.status === 'preparing' && !isAdminUser"
-                                    class="rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60 px-3 py-1.5 text-xs font-bold flex items-center gap-1"
-                                >
-                                    👨‍🍳 قيد التحضير (نافذة {{ order.pickup_window || 1 }})
-                                </span>
+                            <span
+                                v-else-if="order.status === 'ready'"
+                                class="rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 px-3 py-1.5 text-xs font-bold flex items-center gap-1"
+                            >
+                                🔔 جاهز للاستلام {{ order.pickup_window ? `(نافذة ${order.pickup_window})` : '' }}
+                            </span>
 
-                                <!-- زر إعلان الجاهزية للمدير فقط -->
-                                <button
-                                    v-else-if="order.status === 'preparing' && isAdminUser"
-                                    type="button"
-                                    :disabled="updatingIds.has(order.id)"
-                                    class="rounded-lg bg-amber-600 px-3 py-2 text-xs font-bold text-white disabled:opacity-50 hover:bg-amber-700 transition-colors cursor-pointer"
-                                    @click="updateStatus(order, 'ready')"
-                                >
-                                    جاهز للاستلام 🔔
-                                </button>
+                            <span
+                                v-else-if="order.status === 'served'"
+                                class="rounded-xl bg-stone-100 dark:bg-slate-800 text-stone-600 dark:text-stone-300 border border-stone-200 dark:border-slate-700 px-3 py-1.5 text-xs font-bold flex items-center gap-1"
+                            >
+                                ✓ تم تسليم الطلب
+                            </span>
 
-                                <!-- عند الجاهزية: يمكن للكاشير أو المشرف أو النافذة تأكيد تسليم الوجبة للزبون -->
-                                <button
-                                    v-else-if="order.status === 'ready'"
-                                    type="button"
-                                    :disabled="updatingIds.has(order.id)"
-                                    class="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white disabled:opacity-50 hover:bg-emerald-700 transition-colors cursor-pointer"
-                                    @click="updateStatus(order, 'served')"
-                                >
-                                    تم تسليم الطلب للزبون ✓
-                                </button>
-                            </template>
+                            <span
+                                v-else-if="order.status === 'cancelled'"
+                                class="rounded-xl bg-red-50 dark:bg-red-950/60 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800/60 px-3 py-1.5 text-xs font-bold flex items-center gap-1"
+                            >
+                                ✕ تم إلغاء الطلب
+                            </span>
 
-                            <!-- نظام الدفع اللاحق التقليدي (Postpaid) -->
-                            <template v-else>
-                                <button
-                                    v-if="nextStatus[order.status]"
-                                    type="button"
-                                    :disabled="updatingIds.has(order.id)"
-                                    class="rounded-lg bg-amber-600 px-3 py-2 text-xs font-bold text-white disabled:opacity-50 hover:bg-amber-700 transition-colors cursor-pointer"
-                                    @click="updateStatus(order, nextStatus[order.status])"
-                                >
-                                    {{ 
-                                        order.status === 'pending' ? 'قبول الطلب' :
-                                        order.status === 'accepted' ? 'بدء التحضير' :
-                                        order.status === 'preparing' ? 'جاهز للاستلام 🔔' :
-                                        order.status === 'ready' ? 'تم التقديم ✓' : 'التالي'
-                                    }}
-                                </button>
-                            </template>
-
+                            <!-- طباعة الفاتورة -->
                             <a
                                 :href="`/admin/orders/${order.id}/print`"
                                 target="_blank"
@@ -293,15 +258,6 @@ useRestaurantOrders(restaurantId.value, {
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                                 <span class="hidden sm:inline">طباعة</span>
                             </a>
-                            <button
-                                v-if="['pending', 'accepted'].includes(order.status) || (order.status === 'preparing' && isAdminUser)"
-                                type="button"
-                                :disabled="updatingIds.has(order.id)"
-                                class="rounded-lg bg-red-100 dark:bg-red-950/60 px-3 py-2 text-sm text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/50 disabled:opacity-50 transition-colors"
-                                @click="updateStatus(order, 'cancelled')"
-                            >
-                                إلغاء
-                            </button>
                         </div>
                     </div>
 

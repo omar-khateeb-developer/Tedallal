@@ -75,6 +75,13 @@ class CashierAndWindowOrderWorkflowTest extends TestCase
         ]);
         $chefPaymentAttempt->assertStatus(422);
 
+        // 4.1 الكاشير لا يمكنه إلغاء الطلب (دوره يقتصر على تأكيد الدفع فقط)
+        Sanctum::actingAs($cashier);
+        $cashierCancelPending = $this->patchJson("/api/admin/orders/{$order->id}/status", [
+            'status' => OrderStatus::Cancelled->value,
+        ]);
+        $cashierCancelPending->assertStatus(422);
+
         // 5. الكاشير يؤكد استلام المبلغ (Pending -> Accepted)
         Sanctum::actingAs($cashier);
         $cashierConfirm = $this->patchJson("/api/admin/orders/{$order->id}/status", [
