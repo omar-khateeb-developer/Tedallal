@@ -1,0 +1,1 @@
+@keyframes confettiFall-c8892928{0%{opacity:1;transform:translateY(-20px)rotate(0)}to{opacity:0;transform:translateY(100vh)rotate(720deg)}}[data-v-c8892928] .confetti{opacity:.9;border-radius:2px;width:10px;height:14px;animation:3s linear forwards confettiFall-c8892928;position:absolute;top:0}
