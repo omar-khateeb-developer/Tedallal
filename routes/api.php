@@ -33,6 +33,9 @@ Route::prefix('public')->middleware('throttle:public-api')->group(function () {
         Route::delete('cart', [CartController::class, 'clear']);
         Route::post('promo-codes/validate', [PromoCodeController::class, 'validateCode'])->middleware('throttle:public-promo-codes');
         Route::post('promo-codes/force-activate', [PromoCodeController::class, 'forceActivate']);
+        // الويتر الذكي (AI Smart Waiter)
+        Route::get('ai-waiter/status', [\App\Http\Controllers\Api\Public\AiWaiterController::class, 'status']);
+        Route::post('ai-waiter/chat', [\App\Http\Controllers\Api\Public\AiWaiterController::class, 'chat'])->middleware('throttle:30,1');
         Route::post('orders', [OrderController::class, 'store'])->middleware('throttle:public-orders');
         Route::get('orders/{orderNumber}', [OrderController::class, 'show']);
     });

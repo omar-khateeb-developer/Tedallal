@@ -1,0 +1,1 @@
+import{M as e,x as t}from"./app-D8EtOvHZ.js";import{t as n}from"./_plugin-vue_export-helper-BDNMzG2s.js";var r={},i={src:`/images/logo.jpg`,alt:`تدلّل`,class:`object-contain drop-shadow-md rounded-xl`};function a(n,r){return e(),t(`img`,i)}var o=n(r,[[`render`,a]]);export{o as t};

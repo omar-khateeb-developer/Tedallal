@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import AddItemModal from '@/Components/Customer/AddItemModal.vue';
+import AiWaiterModal from '@/Components/Customer/AiWaiterModal.vue';
 import CartDrawer from '@/Components/Customer/CartDrawer.vue';
 import CheckoutModal from '@/Components/Customer/CheckoutModal.vue';
 import CustomerLayout from '@/Layouts/CustomerLayout.vue';
@@ -22,7 +23,15 @@ interface Category {
 }
 
 const props = defineProps<{
-    restaurant: { name: string; currency: string; type?: string; windows_count?: number; navbar_image?: string | null; logo?: string | null };
+    restaurant: {
+        name: string;
+        currency: string;
+        type?: string;
+        windows_count?: number;
+        navbar_image?: string | null;
+        logo?: string | null;
+        features?: Record<string, any>;
+    };
     table: { name: string; public_token: string };
     categories: Category[];
     openCart?: boolean;
@@ -520,6 +529,13 @@ onMounted(() => {
             :is-prepaid="restaurant.type === 'prepaid'"
             @close="checkoutOpen = false"
             @confirm="submitOrder"
+        />
+
+        <AiWaiterModal
+            v-if="restaurant.features?.ai_waiter"
+            :restaurant-name="restaurant.name"
+            :currency="restaurant.currency"
+            @item-added="refreshCartSummary"
         />
     </CustomerLayout>
 </template>

@@ -108,4 +108,19 @@ class Restaurant extends Model
     {
         return $this->status === RestaurantStatus::Active;
     }
+
+    public function hasAiWaiterFeature(): bool
+    {
+        return !empty($this->features['ai_waiter']);
+    }
+
+    public function hasOffersFeature(): bool
+    {
+        return !empty($this->features['offers']);
+    }
+
+    public function hasAnalyticsFeature(): bool
+    {
+        return !empty($this->features['analytics']);
+    }
 }

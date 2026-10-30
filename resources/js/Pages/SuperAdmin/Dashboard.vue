@@ -951,6 +951,18 @@ onMounted(() => {
                                                 >
                                                 <span class="text-sm font-medium text-gray-700">نظام العروض</span>
                                             </label>
+
+                                            <label class="inline-flex items-center gap-2 cursor-pointer">
+                                                <input type="checkbox"
+                                                    :checked="restaurant.features?.ai_waiter"
+                                                    @change="toggleFeature(restaurant, 'ai_waiter')"
+                                                    class="rounded border-gray-300 text-purple-600 shadow-sm focus:border-purple-300 focus:ring focus:ring-purple-200 focus:ring-opacity-50"
+                                                >
+                                                <span class="text-sm font-bold text-purple-700 dark:text-purple-300 flex items-center gap-1">
+                                                    <span>🤖</span>
+                                                    <span>الويتر الذكي (AI)</span>
+                                                </span>
+                                            </label>
                                         </div>
                                     </td>
                                     <td class="p-3 border" dir="ltr">{{ restaurant.phone }}</td>
