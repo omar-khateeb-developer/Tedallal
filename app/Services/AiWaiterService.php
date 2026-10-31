@@ -33,7 +33,7 @@ class AiWaiterService
         }
 
         $apiKey = config('services.gemini.api_key');
-        $model = config('services.gemini.model', 'gemini-1.5-flash');
+        $model = config('services.gemini.model', 'gemini-flash-lite-latest');
 
         if (!empty($apiKey)) {
             try {
