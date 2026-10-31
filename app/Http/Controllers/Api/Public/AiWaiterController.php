@@ -63,3 +63,4 @@ class AiWaiterController extends ApiController
         return $this->success($result);
     }
 }
+

@@ -144,4 +144,42 @@ class AiWaiterFeatureTest extends TestCase
             'success' => false,
         ]);
     }
+
+    public function test_ai_waiter_handles_greetings_conversational(): void
+    {
+        $restaurant = Restaurant::firstOrFail();
+        $restaurant->features = ['ai_waiter' => true];
+        $restaurant->save();
+
+        $table = RestaurantTable::where('restaurant_id', $restaurant->id)->firstOrFail();
+        $session = app(TableSessionService::class)->resolveOrCreate($table);
+
+        $response = $this->withHeaders(['X-Session-Token' => $session->session_token])
+            ->postJson('/api/public/ai-waiter/chat', [
+                'message' => 'هلا',
+            ]);
+
+        $response->assertOk();
+        $this->assertStringContainsString('يا هلا', $response->json('data.reply'));
+        $this->assertEmpty($response->json('data.recommended_items'));
+    }
+
+    public function test_ai_waiter_handles_gratitude_conversational(): void
+    {
+        $restaurant = Restaurant::firstOrFail();
+        $restaurant->features = ['ai_waiter' => true];
+        $restaurant->save();
+
+        $table = RestaurantTable::where('restaurant_id', $restaurant->id)->firstOrFail();
+        $session = app(TableSessionService::class)->resolveOrCreate($table);
+
+        $response = $this->withHeaders(['X-Session-Token' => $session->session_token])
+            ->postJson('/api/public/ai-waiter/chat', [
+                'message' => 'شكراً لك يعطيك العافية',
+            ]);
+
+        $response->assertOk();
+        $this->assertStringContainsString('صحة وهنا', $response->json('data.reply'));
+        $this->assertEmpty($response->json('data.recommended_items'));
+    }
 }
