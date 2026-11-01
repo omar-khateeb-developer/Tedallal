@@ -21,7 +21,7 @@
                                 متطلبات مطعم: {{ $lead->restaurant_name }}
                             </h1>
                             <p style="margin: 8px 0 0; color: #94a3b8; font-size: 14px;">
-                                تم التقديم بتاريخ {{ $lead->created_at->format('Y-m-d h:i A') }}
+                                تم التقديم بتاريخ {{ $lead->created_at ? $lead->created_at->format('Y-m-d h:i A') : now()->format('Y-m-d h:i A') }}
                             </p>
                         </td>
                     </tr>

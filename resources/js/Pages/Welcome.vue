@@ -745,6 +745,7 @@ onUnmounted(() => {
                         <a href="#directory" class="hover:text-amber-400 transition-colors">{{ t.nav.directory }}</a>
                         <a href="#roi-calculator" class="hover:text-amber-400 transition-colors">{{ t.nav.roiCalculator }}</a>
                         <a href="#comparison" class="hover:text-amber-400 transition-colors">{{ t.nav.comparison }}</a>
+                        <a href="#pricing" class="hover:text-amber-400 transition-colors font-bold">{{ currentLocale === 'ar' ? 'الباقات والأسعار' : 'Pricing' }}</a>
                         <a href="#faqs" class="hover:text-amber-400 transition-colors">{{ t.nav.faqs }}</a>
                         <Link href="/consultation" class="text-amber-400 font-bold hover:text-amber-300 transition-colors inline-flex items-center gap-1 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20">
                             <span>📋</span>
@@ -989,6 +990,7 @@ onUnmounted(() => {
                 <a @click="isMobileMenuOpen = false" href="#directory" class="block font-medium py-1.5" :class="isDark ? 'text-slate-200' : 'text-slate-700'">{{ t.nav.directory }}</a>
                 <a @click="isMobileMenuOpen = false" href="#roi-calculator" class="block font-medium py-1.5" :class="isDark ? 'text-slate-200' : 'text-slate-700'">{{ t.nav.roiCalculator }}</a>
                 <a @click="isMobileMenuOpen = false" href="#comparison" class="block font-medium py-1.5" :class="isDark ? 'text-slate-200' : 'text-slate-700'">{{ t.nav.comparison }}</a>
+                <a @click="isMobileMenuOpen = false" href="#pricing" class="block font-bold py-1.5 text-amber-500">{{ currentLocale === 'ar' ? 'الباقات والأسعار' : 'Pricing Plans' }}</a>
                 <a @click="isMobileMenuOpen = false" href="#faqs" class="block font-medium py-1.5" :class="isDark ? 'text-slate-200' : 'text-slate-700'">{{ t.nav.faqs }}</a>
                 <Link @click="isMobileMenuOpen = false" href="/consultation" class="block font-bold py-2 text-amber-400 bg-amber-500/10 px-3 rounded-xl border border-amber-500/20">
                     📋 {{ currentLocale === 'ar' ? 'استمارة متطلبات مطعمك (دراسة ما قبل البيع)' : 'Restaurant Assessment Form' }}
@@ -2312,7 +2314,7 @@ onUnmounted(() => {
                                         : 'bg-emerald-50 text-emerald-800 border-emerald-200'"
                                 >
                                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-                                    Reverb WebSockets Online
+                                    {{ currentLocale === 'ar' ? 'مزامنة سحابية لحظية ومباشرة' : 'Live Real-Time Cloud Sync' }}
                                 </span>
                             </div>
                         </div>
@@ -3709,6 +3711,282 @@ onUnmounted(() => {
                     </div>
                 </div>
 
+            </div>
+        </section>
+
+        <!-- ========================================================================= -->
+        <!-- PRICING & TAILORED PACKAGES (BASIC, PRO, MAX) -->
+        <!-- ========================================================================= -->
+        <section
+            id="pricing"
+            class="py-24 border-t transition-colors duration-500 relative z-10"
+            :class="isDark ? 'border-white/5 bg-[#070b14]' : 'border-slate-200/90 bg-white'"
+        >
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <!-- Section Header -->
+                <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
+                    <div
+                        class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-black border shadow-xs"
+                        :class="isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-amber-50 text-amber-900 border-amber-200'"
+                    >
+                        <span>💎 {{ currentLocale === 'ar' ? 'باقات مرنة ومخصصة لأهداف مطعمك' : 'Flexible Packages Tailored For You' }}</span>
+                    </div>
+                    <h2
+                        class="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight"
+                        :class="isDark ? 'text-white' : 'text-slate-900'"
+                    >
+                        {{ currentLocale === 'ar' ? 'استثمر في نمو مطعمك بعائد فوري ومباشر' : 'Invest in Growth with Immediate ROI' }}
+                    </h2>
+                    <p
+                        class="text-base sm:text-lg leading-relaxed max-w-2xl mx-auto"
+                        :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                    >
+                        {{ currentLocale === 'ar'
+                            ? 'باقات مدروسة تمنحك الأتمتة الشاملة بدون اقتطاع أي عمولة من مبيعاتك (0% عمولة) — اختر الباقة التي تلائم نموذج تشغيلك.'
+                            : 'Transparent plans designed for measurable growth with 0% commissions on your food sales — pick what fits your operations.'
+                        }}
+                    </p>
+                </div>
+
+                <!-- 3 Packages Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch max-w-7xl mx-auto">
+                    
+                    <!-- 1. PACKAGE BASIC -->
+                    <div
+                        class="rounded-3xl border p-7 sm:p-8 flex flex-col justify-between transition-all duration-300 relative"
+                        :class="isDark
+                            ? 'bg-slate-900/60 border-slate-800 hover:border-slate-700 hover:bg-slate-900/80'
+                            : 'bg-stone-50/70 border-slate-200 hover:border-amber-300 hover:bg-white shadow-xs hover:shadow-md'"
+                    >
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="text-xs font-black px-3 py-1 rounded-full bg-stone-200 text-stone-700 dark:bg-slate-800 dark:text-slate-300">
+                                    {{ currentLocale === 'ar' ? 'الباقة الأساسية' : 'Starter Plan' }}
+                                </span>
+                                <span class="text-2xl">⚡</span>
+                            </div>
+                            <h3 class="text-2xl font-black text-slate-900 dark:text-white mb-2">
+                                Basic
+                            </h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 min-h-[40px] leading-relaxed mb-6">
+                                {{ currentLocale === 'ar'
+                                    ? 'إدارة الطلب والتشغيل الأساسي: الحل الأمثل لرقمنة الصالة والمطبخ والتخلص من فوضى الأوراق وأخطاء الفواتير.'
+                                    : 'Core Ordering Operations: Digitize table orders and kitchen flow, eliminating paper errors.'
+                                }}
+                            </p>
+
+                            <!-- Direct Value Highlight -->
+                            <div class="mb-6 rounded-2xl p-3.5 border text-xs font-bold flex items-center gap-2.5"
+                                :class="isDark ? 'bg-amber-500/10 border-amber-500/20 text-amber-300' : 'bg-amber-50 border-amber-200 text-amber-900'">
+                                <span class="text-base shrink-0">🎯</span>
+                                <span>{{ currentLocale === 'ar' ? 'تسريع خدمة الطاولات بنسبة 35% ومنع أي طلب ضائع' : '35% faster table service with zero lost tickets' }}</span>
+                            </div>
+
+                            <!-- Features List -->
+                            <div class="space-y-3 mb-8 text-xs sm:text-sm">
+                                <div class="font-extrabold text-slate-900 dark:text-slate-200 mb-2">
+                                    {{ currentLocale === 'ar' ? 'تشمل هذه الباقة:' : 'What is included:' }}
+                                </div>
+                                <div class="flex items-start gap-2.5 text-slate-700 dark:text-slate-300">
+                                    <span class="text-emerald-500 font-bold shrink-0">✓</span>
+                                    <span>{{ currentLocale === 'ar' ? 'منيو الباركود التفاعلي فائق السرعة عبر رمز QR دون تحميل تطبيقات' : 'Fast interactive QR menu without app download' }}</span>
+                                </div>
+                                <div class="flex items-start gap-2.5 text-slate-700 dark:text-slate-300">
+                                    <span class="text-emerald-500 font-bold shrink-0">✓</span>
+                                    <span>{{ currentLocale === 'ar' ? 'إدارة واستقبال طلبات الصالة والطاولات والطلبات السريعة' : 'Manage dine-in tables and quick takeaway orders' }}</span>
+                                </div>
+                                <div class="flex items-start gap-2.5 text-slate-700 dark:text-slate-300">
+                                    <span class="text-emerald-500 font-bold shrink-0">✓</span>
+                                    <span>{{ currentLocale === 'ar' ? 'شاشة المطبخ الرقمية لتنظيم وتتبع حالة تحضير الوجبات' : 'Digital kitchen display to organize food prep status' }}</span>
+                                </div>
+                                <div class="flex items-start gap-2.5 text-slate-700 dark:text-slate-300">
+                                    <span class="text-emerald-500 font-bold shrink-0">✓</span>
+                                    <span>{{ currentLocale === 'ar' ? 'إدارة جلسات الطاولات ونقاط البيع وإصدار الفواتير' : 'Table sessions, cashier workflow & instant invoicing' }}</span>
+                                </div>
+                                <div class="flex items-start gap-2.5 text-slate-700 dark:text-slate-300">
+                                    <span class="text-emerald-500 font-bold shrink-0">✓</span>
+                                    <span>{{ currentLocale === 'ar' ? 'تقارير يومية لمبيعات الصندوق والأصناف المباعة' : 'Daily cashier sales & top-item reports' }}</span>
+                                </div>
+                                <div class="flex items-start gap-2.5 text-slate-700 dark:text-slate-300">
+                                    <span class="text-emerald-500 font-bold shrink-0">✓</span>
+                                    <span>{{ currentLocale === 'ar' ? 'دعم فني وضمان استقرار وتشغيل المنظومة' : 'Continuous technical support & high availability' }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CTA Button -->
+                        <Link
+                            href="/consultation"
+                            class="w-full text-center py-3.5 px-6 rounded-2xl font-bold text-sm border-2 transition-all cursor-pointer block"
+                            :class="isDark
+                                ? 'border-slate-700 hover:border-amber-400 bg-slate-800/80 text-white hover:bg-slate-800'
+                                : 'border-slate-300 hover:border-amber-500 bg-white text-slate-900 hover:bg-stone-50 shadow-xs'"
+                        >
+                            {{ currentLocale === 'ar' ? 'طلب باقة Basic' : 'Select Basic Plan' }}
+                        </Link>
+                    </div>
+
+                    <!-- 2. PACKAGE PRO (MOST POPULAR) -->
+                    <div
+                        class="rounded-3xl border-2 p-7 sm:p-8 flex flex-col justify-between transition-all duration-300 relative shadow-xl"
+                        :class="isDark
+                            ? 'bg-gradient-to-b from-slate-900 via-slate-900/90 to-[#0c1326] border-amber-500 shadow-amber-950/20'
+                            : 'bg-white border-amber-500 shadow-amber-500/10 ring-2 ring-amber-500/20'"
+                    >
+                        <!-- Popular Floating Badge -->
+                        <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black text-xs shadow-md">
+                            {{ currentLocale === 'ar' ? '⭐ الأكثر طلباً واختياراً' : '⭐ Most Popular' }}
+                        </div>
+
+                        <div>
+                            <div class="flex items-center justify-between mb-4 mt-1">
+                                <span class="text-xs font-black px-3 py-1 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400">
+                                    {{ currentLocale === 'ar' ? 'النمو والتسويق' : 'Growth & Retention' }}
+                                </span>
+                                <span class="text-2xl">🔥</span>
+                            </div>
+                            <h3 class="text-2xl font-black text-slate-900 dark:text-white mb-2">
+                                Pro
+                            </h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 min-h-[40px] leading-relaxed mb-6">
+                                {{ currentLocale === 'ar'
+                                    ? 'إدارة الطلب + منظومة الكوبونات والتسويق الذكي: لمضاعفة ولاء الزبائن وتكرار زياراتهم وتنشيط المبيعات.'
+                                    : 'Ordering + Smart Marketing & Coupons: Boost customer loyalty and recurring visits.'
+                                }}
+                            </p>
+
+                            <!-- Direct Value Highlight -->
+                            <div class="mb-6 rounded-2xl p-3.5 border text-xs font-bold flex items-center gap-2.5"
+                                :class="isDark ? 'bg-amber-500/15 border-amber-500/30 text-amber-300' : 'bg-amber-50 border-amber-300 text-amber-950'">
+                                <span class="text-base shrink-0">📈</span>
+                                <span>{{ currentLocale === 'ar' ? 'زيادة تكرار زيارة الزبائن بنسبة 40% وتنشيط المبيعات اليومية' : '+40% recurring customer retention & active promotions' }}</span>
+                            </div>
+
+                            <!-- Features List -->
+                            <div class="space-y-3 mb-8 text-xs sm:text-sm">
+                                <div class="font-extrabold text-amber-700 dark:text-amber-400 mb-2">
+                                    {{ currentLocale === 'ar' ? 'تشمل كافة ميزات Basic، بالإضافة إلى:' : 'Everything in Basic, plus:' }}
+                                </div>
+                                <div class="flex items-start gap-2.5 text-slate-800 dark:text-slate-200 font-medium">
+                                    <span class="text-amber-500 font-black shrink-0">★</span>
+                                    <span>{{ currentLocale === 'ar' ? 'منظومة الكوبونات والعروض الترويجية الذكية المخصصة لزبائنك' : 'Smart promotional discount coupons for your guests' }}</span>
+                                </div>
+                                <div class="flex items-start gap-2.5 text-slate-800 dark:text-slate-200 font-medium">
+                                    <span class="text-amber-500 font-black shrink-0">★</span>
+                                    <span>{{ currentLocale === 'ar' ? 'أدوات تنشيط المبيعات ومكافأة الزبائن الدائمين لضمان عودتهم' : 'Sales stimulation tools & rewards to encourage repeat visits' }}</span>
+                                </div>
+                                <div class="flex items-start gap-2.5 text-slate-800 dark:text-slate-200 font-medium">
+                                    <span class="text-amber-500 font-black shrink-0">★</span>
+                                    <span>{{ currentLocale === 'ar' ? 'إدارة الصلاحيات متعددة الأدوار (كاشير، شيف المطبخ، مشرفين)' : 'Multi-role staff permission management (Cashier, Chef, Supervisor)' }}</span>
+                                </div>
+                                <div class="flex items-start gap-2.5 text-slate-800 dark:text-slate-200 font-medium">
+                                    <span class="text-amber-500 font-black shrink-0">★</span>
+                                    <span>{{ currentLocale === 'ar' ? 'تقارير تسويقية مباشرة للأصناف الأكثر جذباً وفعالية الخصومات' : 'Live promotional impact analytics & top dishes breakdown' }}</span>
+                                </div>
+                                <div class="flex items-start gap-2.5 text-slate-800 dark:text-slate-200 font-medium">
+                                    <span class="text-amber-500 font-black shrink-0">★</span>
+                                    <span>{{ currentLocale === 'ar' ? 'أولوية في الدعم الفني وتدريب طاقم المطعم على الاستخدام' : 'Priority customer support and team onboarding guidance' }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CTA Button -->
+                        <Link
+                            href="/consultation"
+                            class="w-full text-center py-3.5 px-6 rounded-2xl font-black text-sm bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-lg shadow-amber-500/25 hover:brightness-105 active:scale-95 transition-all block cursor-pointer"
+                        >
+                            {{ currentLocale === 'ar' ? 'اختر باقة Pro الأكثر طلباً' : 'Choose Pro Plan' }}
+                        </Link>
+                    </div>
+
+                    <!-- 3. PACKAGE MAX (FULL AI ECOSYSTEM) -->
+                    <div
+                        class="rounded-3xl border p-7 sm:p-8 flex flex-col justify-between transition-all duration-300 relative"
+                        :class="isDark
+                            ? 'bg-slate-900/60 border-slate-800 hover:border-slate-700 hover:bg-slate-900/80'
+                            : 'bg-stone-50/70 border-slate-200 hover:border-blue-300 hover:bg-white shadow-xs hover:shadow-md'"
+                    >
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="text-xs font-black px-3 py-1 rounded-full bg-blue-500/15 text-blue-700 dark:text-blue-400">
+                                    {{ currentLocale === 'ar' ? 'المنظومة الكاملة الذكية' : 'Enterprise AI' }}
+                                </span>
+                                <span class="text-2xl">🤖</span>
+                            </div>
+                            <h3 class="text-2xl font-black text-slate-900 dark:text-white mb-2">
+                                Max
+                            </h3>
+                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 min-h-[40px] leading-relaxed mb-6">
+                                {{ currentLocale === 'ar'
+                                    ? 'كامل الخدمات والأتمتة الذكية: لأصحاب المطابخ الكبرى والسلاسل الراغبين في أقصى كفاءة ومضاعفة الفاتورة بالذكاء الاصطناعي.'
+                                    : 'Complete Full-Stack AI Ecosystem: Built for high-volume restaurants & chains seeking peak efficiency.'
+                                }}
+                            </p>
+
+                            <!-- Direct Value Highlight -->
+                            <div class="mb-6 rounded-2xl p-3.5 border text-xs font-bold flex items-center gap-2.5"
+                                :class="isDark ? 'bg-blue-500/10 border-blue-500/20 text-blue-300' : 'bg-blue-50 border-blue-200 text-blue-900'">
+                                <span class="text-base shrink-0">🚀</span>
+                                <span>{{ currentLocale === 'ar' ? 'رفع متوسط قيمة الفاتورة حتى 25% وأتمتة تشغيلية شاملة' : '+25% average check size increase with full automation' }}</span>
+                            </div>
+
+                            <!-- Features List -->
+                            <div class="space-y-3 mb-8 text-xs sm:text-sm">
+                                <div class="font-extrabold text-blue-700 dark:text-blue-400 mb-2">
+                                    {{ currentLocale === 'ar' ? 'تشمل كافة ميزات Pro، بالإضافة إلى:' : 'Everything in Pro, plus:' }}
+                                </div>
+                                <div class="flex items-start gap-2.5 text-slate-800 dark:text-slate-200 font-medium">
+                                    <span class="text-blue-500 font-black shrink-0">✦</span>
+                                    <span>{{ currentLocale === 'ar' ? 'الويتر الذكي بالذكاء الاصطناعي: محرك توصيات ذكي لزيادة مبيعات كل طلب (Upselling)' : 'AI Digital Waiter: Smart recommendations engine boosting order totals' }}</span>
+                                </div>
+                                <div class="flex items-start gap-2.5 text-slate-800 dark:text-slate-200 font-medium">
+                                    <span class="text-blue-500 font-black shrink-0">✦</span>
+                                    <span>{{ currentLocale === 'ar' ? 'منظومة شاشات المطبخ المتعددة: توجيه تلقائي للأصناف بحسب أقسام التحضير' : 'Multi-station kitchen routing: Directing items to specific prep stations' }}</span>
+                                </div>
+                                <div class="flex items-start gap-2.5 text-slate-800 dark:text-slate-200 font-medium">
+                                    <span class="text-blue-500 font-black shrink-0">✦</span>
+                                    <span>{{ currentLocale === 'ar' ? 'لوحة تحليلات استراتيجية حية: مراقبة الأرباح وساعات الذروة وسرعة التحضير لحظياً' : 'Strategic executive analytics: Profit trends, peak hours & prep speed' }}</span>
+                                </div>
+                                <div class="flex items-start gap-2.5 text-slate-800 dark:text-slate-200 font-medium">
+                                    <span class="text-blue-500 font-black shrink-0">✦</span>
+                                    <span>{{ currentLocale === 'ar' ? 'تخصيص كامل لهوية علامتك التجارية وتصميم المنيو بما يناسب فخامة مطعمك' : 'Full custom branding tailored precisely to your restaurant identity' }}</span>
+                                </div>
+                                <div class="flex items-start gap-2.5 text-slate-800 dark:text-slate-200 font-medium">
+                                    <span class="text-blue-500 font-black shrink-0">✦</span>
+                                    <span>{{ currentLocale === 'ar' ? 'مدير حساب مخصص واستشارات تقنية دورية لتحسين كفاءة التشغيل' : 'Dedicated account manager & continuous operational consulting' }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CTA Button -->
+                        <Link
+                            href="/consultation"
+                            class="w-full text-center py-3.5 px-6 rounded-2xl font-bold text-sm border-2 transition-all cursor-pointer block"
+                            :class="isDark
+                                ? 'border-blue-500/40 hover:border-blue-400 bg-blue-500/10 text-blue-300 hover:bg-blue-500/20'
+                                : 'border-blue-300 hover:border-blue-500 bg-blue-50 text-blue-900 hover:bg-blue-100 shadow-xs'"
+                        >
+                            {{ currentLocale === 'ar' ? 'احجز باقة Max المتكاملة' : 'Book Max Plan' }}
+                        </Link>
+                    </div>
+
+                </div>
+
+                <!-- Bottom Assurance Note -->
+                <div class="mt-12 text-center text-xs sm:text-sm text-slate-500 dark:text-slate-400 flex flex-wrap items-center justify-center gap-6">
+                    <span class="inline-flex items-center gap-1.5 font-bold">
+                        <span class="text-emerald-500">✓</span>
+                        {{ currentLocale === 'ar' ? 'صفر عمولة مبيعات (أرباحك 100% لك)' : '0% Sales Commission (Keep 100% of Revenue)' }}
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 font-bold">
+                        <span class="text-emerald-500">✓</span>
+                        {{ currentLocale === 'ar' ? 'تجربة مجانية 14 يوماً مع تدريب كامل لطاقمك' : '14-Day Free Trial With Full Staff Onboarding' }}
+                    </span>
+                    <span class="inline-flex items-center gap-1.5 font-bold">
+                        <span class="text-emerald-500">✓</span>
+                        {{ currentLocale === 'ar' ? 'إلغاء أو ترقية في أي وقت دون التزامات معقدة' : 'Upgrade or Cancel Anytime Without Lock-in' }}
+                    </span>
+                </div>
             </div>
         </section>
 
