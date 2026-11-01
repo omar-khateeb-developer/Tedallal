@@ -746,6 +746,10 @@ onUnmounted(() => {
                         <a href="#roi-calculator" class="hover:text-amber-400 transition-colors">{{ t.nav.roiCalculator }}</a>
                         <a href="#comparison" class="hover:text-amber-400 transition-colors">{{ t.nav.comparison }}</a>
                         <a href="#faqs" class="hover:text-amber-400 transition-colors">{{ t.nav.faqs }}</a>
+                        <Link href="/consultation" class="text-amber-400 font-bold hover:text-amber-300 transition-colors inline-flex items-center gap-1 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20">
+                            <span>📋</span>
+                            <span>{{ currentLocale === 'ar' ? 'استمارة المتطلبات' : 'Assessment' }}</span>
+                        </Link>
                     </nav>
 
                     <!-- Language, Currency & Theme Controls + Auth CTAs -->
@@ -986,6 +990,9 @@ onUnmounted(() => {
                 <a @click="isMobileMenuOpen = false" href="#roi-calculator" class="block font-medium py-1.5" :class="isDark ? 'text-slate-200' : 'text-slate-700'">{{ t.nav.roiCalculator }}</a>
                 <a @click="isMobileMenuOpen = false" href="#comparison" class="block font-medium py-1.5" :class="isDark ? 'text-slate-200' : 'text-slate-700'">{{ t.nav.comparison }}</a>
                 <a @click="isMobileMenuOpen = false" href="#faqs" class="block font-medium py-1.5" :class="isDark ? 'text-slate-200' : 'text-slate-700'">{{ t.nav.faqs }}</a>
+                <Link @click="isMobileMenuOpen = false" href="/consultation" class="block font-bold py-2 text-amber-400 bg-amber-500/10 px-3 rounded-xl border border-amber-500/20">
+                    📋 {{ currentLocale === 'ar' ? 'استمارة متطلبات مطعمك (دراسة ما قبل البيع)' : 'Restaurant Assessment Form' }}
+                </Link>
 
                 <div class="pt-4 border-t flex flex-col gap-3" :class="isDark ? 'border-white/10' : 'border-slate-100'">
                     <template v-if="$page.props.auth?.user">
@@ -1296,6 +1303,19 @@ onUnmounted(() => {
                             </span>
                             <span>{{ currentLocale === 'ar' ? 'شاهد كيف توفر في 90 ثانية' : 'See How You Save in 90 Seconds' }}</span>
                         </a>
+
+                        <!-- Pre-sales Assessment CTA -->
+                        <Link
+                            href="/consultation"
+                            class="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-4 rounded-2xl border font-bold text-sm sm:text-base transition-all backdrop-blur-md shadow-lg group cursor-pointer"
+                            :class="isDark
+                                ? 'bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 text-amber-300 hover:border-amber-400'
+                                : 'bg-amber-50 hover:bg-amber-100/80 border-amber-300 text-amber-900 shadow-xs'"
+                        >
+                            <span class="group-hover:scale-110 transition-transform">📋</span>
+                            <span>{{ currentLocale === 'ar' ? 'صمّم بنية مطعمك (استمارة المتطلبات)' : 'Build Your Restaurant Blueprint' }}</span>
+                            <span class="text-xs transition-transform group-hover:-translate-x-1">←</span>
+                        </Link>
                     </div>
 
                     <!-- Micro Trust Badges -->

@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Web\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Web\Admin\TablePrintController;
+use App\Http\Controllers\Web\ConsultationController;
 use App\Http\Controllers\Web\CustomerController;
 use App\Http\Controllers\Web\StaffController;
 use Illuminate\Foundation\Application;
@@ -26,6 +27,11 @@ Route::get('/', function (\Illuminate\Http\Request $request) {
         'detectedCountry' => $detectedCountry ? strtoupper(trim($detectedCountry)) : null,
     ]);
 })->name('welcome');
+
+// Pre-sale Consultation & Strategic Assessment (استمارة ما قبل البيع وتقييم متطلبات المطعم)
+Route::get('/consultation', [ConsultationController::class, 'index'])->name('consultation.index');
+Route::post('/consultation', [ConsultationController::class, 'store'])->name('consultation.store');
+Route::redirect('/assessment', '/consultation');
 
 Route::get('/t/{token}', [CustomerController::class, 'table'])->name('customer.menu');
 Route::get('/t/{token}/cart', [CustomerController::class, 'cart'])->name('customer.cart');
