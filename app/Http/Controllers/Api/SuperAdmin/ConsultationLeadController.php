@@ -68,3 +68,4 @@ class ConsultationLeadController extends ApiController
         return $this->success(['message' => 'تم حذف طلب الاستشارة بنجاح']);
     }
 }
+

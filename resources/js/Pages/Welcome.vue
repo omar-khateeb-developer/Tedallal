@@ -148,6 +148,7 @@ const supportedArabCurrencies: Record<string, CountryCurrencyConfig> = {
 
 const currentCountryCode = ref('SY');
 const isCurrencyMenuOpen = ref(false);
+const isMoreMenuOpen = ref(false);
 
 const currentCurrency = computed(() => {
     return supportedArabCurrencies[currentCountryCode.value] || supportedArabCurrencies.SY;
@@ -575,6 +576,9 @@ function handleGlobalClick(e: MouseEvent) {
     if (!target.closest('[data-currency-dropdown]')) {
         isCurrencyMenuOpen.value = false;
     }
+    if (!target.closest('[data-more-nav-dropdown]')) {
+        isMoreMenuOpen.value = false;
+    }
 }
 
 onMounted(async () => {
@@ -703,13 +707,13 @@ onUnmounted(() => {
             class="sticky top-0 z-50 backdrop-blur-xl border-b transition-all duration-300"
             :class="isDark ? 'bg-[#070b14]/80 border-white/5 shadow-none' : 'bg-white/90 border-slate-200/90 shadow-xs'"
         >
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex items-center justify-between h-20">
+            <div class="max-w-[1550px] w-full mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-20 gap-2 xl:gap-4">
 
                     <!-- Brand Logo -->
-                    <div class="flex items-center gap-3">
-                        <Link href="/" class="flex items-center gap-3 group">
-                            <div class="relative w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 p-[2px] shadow-lg shadow-amber-500/20 group-hover:shadow-amber-500/40 transition-all duration-300">
+                    <div class="flex items-center gap-3 shrink-0">
+                        <Link href="/" class="flex items-center gap-2.5 sm:gap-3 group">
+                            <div class="relative w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 p-[2px] shadow-lg shadow-amber-500/20 group-hover:shadow-amber-500/40 transition-all duration-300">
                                 <div class="w-full h-full bg-[#0b101d] rounded-2xl flex items-center justify-center overflow-hidden">
                                     <img
                                         src="/images/tedallal-brand-logo.jpg"
@@ -721,85 +725,147 @@ onUnmounted(() => {
                             </div>
                             <div class="flex flex-col">
                                 <div class="flex items-center gap-2">
-                                    <span class="text-2xl font-bold tracking-tight bg-gradient-to-r from-amber-400 via-amber-200 to-amber-500 bg-clip-text text-transparent">
+                                    <span class="text-xl sm:text-2xl font-bold tracking-tight bg-gradient-to-r from-amber-400 via-amber-200 to-amber-500 bg-clip-text text-transparent">
                                         {{ currentLocale === 'ar' ? 'تدلّل' : 'Tedallal' }}
                                     </span>
                                     <span class="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
                                         {{ currentLocale === 'ar' ? 'Tedallal' : 'Platform' }}
                                     </span>
                                 </div>
-                                <span class="text-[11px] text-slate-400 font-medium">{{ t.nav.brandSubtitle }}</span>
+                                <span class="hidden 2xl:inline text-[11px] text-slate-400 font-medium truncate max-w-[210px]">{{ t.nav.brandSubtitle }}</span>
                             </div>
                         </Link>
                     </div>
 
                     <!-- Desktop Nav Links -->
-                    <nav class="hidden lg:flex items-center gap-5 xl:gap-6 text-sm font-medium text-slate-300">
-                        <a href="#how-it-works" class="hover:text-amber-400 transition-colors">{{ t.nav.howItWorks }}</a>
-                        <a href="#solutions" class="hover:text-amber-400 transition-colors">{{ t.nav.solutions }}</a>
-                        <a href="#interactive-demo" class="hover:text-amber-400 transition-colors flex items-center gap-1.5">
+                    <nav class="hidden lg:flex items-center gap-2.5 xl:gap-4 2xl:gap-5 text-xs xl:text-sm font-semibold text-slate-300 whitespace-nowrap">
+                        <a href="#how-it-works" class="hover:text-amber-400 transition-colors whitespace-nowrap">{{ t.nav.howItWorks }}</a>
+                        <a href="#interactive-demo" class="hover:text-amber-400 transition-colors flex items-center gap-1.5 whitespace-nowrap">
                             <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
                             {{ t.nav.interactiveDemo }}
                         </a>
-                        <a href="#features" class="hover:text-amber-400 transition-colors">{{ t.nav.features }}</a>
-                        <a href="#directory" class="hover:text-amber-400 transition-colors">{{ t.nav.directory }}</a>
-                        <a href="#roi-calculator" class="hover:text-amber-400 transition-colors">{{ t.nav.roiCalculator }}</a>
-                        <a href="#comparison" class="hover:text-amber-400 transition-colors">{{ t.nav.comparison }}</a>
-                        <a href="#pricing" class="hover:text-amber-400 transition-colors font-bold">{{ currentLocale === 'ar' ? 'الباقات والأسعار' : 'Pricing' }}</a>
-                        <a href="#faqs" class="hover:text-amber-400 transition-colors">{{ t.nav.faqs }}</a>
-                        <Link href="/consultation" class="text-amber-400 font-bold hover:text-amber-300 transition-colors inline-flex items-center gap-1 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20">
+                        <a href="#features" class="hover:text-amber-400 transition-colors whitespace-nowrap">{{ t.nav.features }}</a>
+                        <a href="#roi-calculator" class="hover:text-amber-400 transition-colors whitespace-nowrap">{{ currentLocale === 'ar' ? 'حاسبة الأرباح' : t.nav.roiCalculator }}</a>
+                        <a href="#pricing" class="hover:text-amber-400 transition-colors font-bold whitespace-nowrap">{{ currentLocale === 'ar' ? 'الباقات والأسعار' : 'Pricing' }}</a>
+
+                        <!-- Dropdown: المزيد -->
+                        <div class="relative" data-more-nav-dropdown>
+                            <button
+                                @click="isMoreMenuOpen = !isMoreMenuOpen"
+                                type="button"
+                                class="flex items-center gap-1 hover:text-amber-400 transition-colors cursor-pointer py-1.5 whitespace-nowrap"
+                                :class="{ 'text-amber-400 font-bold': isMoreMenuOpen }"
+                            >
+                                <span>{{ currentLocale === 'ar' ? 'المزيد' : 'More' }}</span>
+                                <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="{ 'rotate-180': isMoreMenuOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+
+                            <transition
+                                enter-active-class="transition duration-150 ease-out"
+                                enter-from-class="transform scale-95 opacity-0"
+                                enter-to-class="transform scale-100 opacity-100"
+                                leave-active-class="transition duration-100 ease-in"
+                                leave-from-class="transform scale-100 opacity-100"
+                                leave-to-class="transform scale-95 opacity-0"
+                            >
+                                <div
+                                    v-if="isMoreMenuOpen"
+                                    class="absolute mt-2 w-52 rounded-2xl shadow-2xl backdrop-blur-xl p-2 z-50 space-y-1 text-xs border"
+                                    :class="[
+                                        currentLocale === 'ar' ? 'right-0' : 'left-0',
+                                        isDark ? 'bg-slate-900/95 border-slate-700/80 text-slate-200' : 'bg-white border-slate-200 text-slate-800 shadow-xl'
+                                    ]"
+                                >
+                                    <a
+                                        href="#solutions"
+                                        @click="isMoreMenuOpen = false"
+                                        class="flex items-center gap-2.5 px-3 py-2 rounded-xl transition-colors hover:bg-amber-500/10 hover:text-amber-400"
+                                    >
+                                        <span class="text-base">🏢</span>
+                                        <span class="font-medium whitespace-nowrap">{{ t.nav.solutions }}</span>
+                                    </a>
+                                    <a
+                                        href="#directory"
+                                        @click="isMoreMenuOpen = false"
+                                        class="flex items-center gap-2.5 px-3 py-2 rounded-xl transition-colors hover:bg-amber-500/10 hover:text-amber-400"
+                                    >
+                                        <span class="text-base">📖</span>
+                                        <span class="font-medium whitespace-nowrap">{{ t.nav.directory }}</span>
+                                    </a>
+                                    <a
+                                        href="#comparison"
+                                        @click="isMoreMenuOpen = false"
+                                        class="flex items-center gap-2.5 px-3 py-2 rounded-xl transition-colors hover:bg-amber-500/10 hover:text-amber-400"
+                                    >
+                                        <span class="text-base">⚖️</span>
+                                        <span class="font-medium whitespace-nowrap">{{ t.nav.comparison }}</span>
+                                    </a>
+                                    <a
+                                        href="#faqs"
+                                        @click="isMoreMenuOpen = false"
+                                        class="flex items-center gap-2.5 px-3 py-2 rounded-xl transition-colors hover:bg-amber-500/10 hover:text-amber-400"
+                                    >
+                                        <span class="text-base">❓</span>
+                                        <span class="font-medium whitespace-nowrap">{{ t.nav.faqs }}</span>
+                                    </a>
+                                </div>
+                            </transition>
+                        </div>
+
+                        <!-- Standout Assessment CTA -->
+                        <Link
+                            href="/consultation"
+                            class="text-amber-400 font-bold hover:text-amber-300 hover:bg-amber-500/20 transition-all inline-flex items-center gap-1.5 bg-amber-500/10 px-2.5 xl:px-3 py-1.5 rounded-xl border border-amber-500/30 whitespace-nowrap shadow-xs"
+                        >
                             <span>📋</span>
                             <span>{{ currentLocale === 'ar' ? 'استمارة المتطلبات' : 'Assessment' }}</span>
                         </Link>
                     </nav>
 
                     <!-- Language, Currency & Theme Controls + Auth CTAs -->
-                    <div class="hidden sm:flex items-center gap-3">
+                    <div class="hidden sm:flex items-center gap-2 xl:gap-2.5 shrink-0">
                         <!-- Theme Toggle Button (Light / Dark) -->
                         <button
                             id="theme-toggle-btn"
                             @click="toggleTheme"
                             type="button"
-                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition-all shadow-sm border cursor-pointer select-none"
+                            class="p-2 rounded-xl transition-all shadow-sm border cursor-pointer select-none shrink-0"
                             :class="isDark
-                                ? 'bg-slate-900/90 hover:bg-slate-800 border-slate-700/80 hover:border-amber-500/50 text-slate-200'
+                                ? 'bg-slate-900/90 hover:bg-slate-800 border-slate-700/80 hover:border-amber-500/50 text-amber-400'
                                 : 'bg-white hover:bg-slate-100 border-slate-200 hover:border-amber-500/50 text-slate-700 shadow-xs'"
                             :title="isDark ? (currentLocale === 'ar' ? 'التبديل إلى الوضع الفاتح' : 'Switch to Light Mode') : (currentLocale === 'ar' ? 'التبديل إلى الوضع الداكن' : 'Switch to Dark Mode')"
+                            :aria-label="isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
                         >
-                            <span v-if="isDark" class="flex items-center gap-1.5">
-                                <svg class="h-4 w-4 text-amber-400 transition-transform duration-300 hover:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                                </svg>
-                                <span class="text-xs font-bold text-amber-300">{{ currentLocale === 'ar' ? 'فاتح' : 'Light' }}</span>
-                            </span>
-                            <span v-else class="flex items-center gap-1.5">
-                                <svg class="h-4 w-4 text-slate-700 transition-transform duration-300 hover:-rotate-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                                </svg>
-                                <span class="text-xs font-bold text-slate-700">{{ currentLocale === 'ar' ? 'داكن' : 'Dark' }}</span>
-                            </span>
+                            <svg v-if="isDark" class="h-4 w-4 text-amber-400 transition-transform duration-300 hover:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                            <svg v-else class="h-4 w-4 text-slate-700 transition-transform duration-300 hover:-rotate-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                            </svg>
                         </button>
 
                         <!-- Language Switcher Toggle -->
                         <button
                             @click="toggleLocale"
                             type="button"
-                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all shadow-sm cursor-pointer"
+                            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border text-xs font-semibold transition-all shadow-sm cursor-pointer whitespace-nowrap shrink-0"
                             :class="isDark
                                 ? 'bg-slate-900/90 hover:bg-slate-800 border-slate-700/80 hover:border-amber-500/50 text-slate-200'
                                 : 'bg-white hover:bg-slate-100 border-slate-200 hover:border-amber-500/50 text-slate-700 shadow-xs'"
                             :title="currentLocale === 'ar' ? 'Switch to English' : 'التحويل إلى العربية'"
                         >
-                            <span class="text-sm">🌐</span>
-                            <span class="font-bold text-amber-500">{{ currentLocale === 'ar' ? 'English' : 'العربية' }}</span>
+                            <span class="text-xs">🌐</span>
+                            <span class="font-bold text-amber-500">{{ currentLocale === 'ar' ? 'EN' : 'عربي' }}</span>
                         </button>
 
                         <!-- Arab Currency Switcher Dropdown -->
-                        <div class="relative" data-currency-dropdown>
+                        <div class="relative shrink-0" data-currency-dropdown>
                             <button
                                 @click="isCurrencyMenuOpen = !isCurrencyMenuOpen"
                                 type="button"
-                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all shadow-sm cursor-pointer"
+                                class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold transition-all shadow-sm cursor-pointer whitespace-nowrap"
                                 :class="isDark
                                     ? 'bg-slate-900/90 hover:bg-slate-800 border-slate-700/80 hover:border-amber-500/50 text-slate-200'
                                     : 'bg-white hover:bg-slate-100 border-slate-200 hover:border-amber-500/50 text-slate-700 shadow-xs'"
@@ -862,7 +928,7 @@ onUnmounted(() => {
                         <template v-if="$page.props.auth?.user">
                             <Link
                                 :href="route('dashboard')"
-                                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                                class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-bold text-xs shadow-md shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all whitespace-nowrap shrink-0"
                             >
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
@@ -873,17 +939,17 @@ onUnmounted(() => {
                         <template v-else>
                             <Link
                                 :href="route('login')"
-                                class="text-xs font-semibold px-3 py-2 rounded-xl transition-all"
+                                class="text-xs font-semibold px-2.5 py-1.5 rounded-xl transition-all whitespace-nowrap shrink-0"
                                 :class="isDark ? 'text-slate-300 hover:text-white hover:bg-white/5' : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'"
                             >
                                 {{ t.nav.signIn }}
                             </Link>
                             <button
                                 @click="isDemoModalOpen = true"
-                                class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 hover:shadow-amber-500/35 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+                                class="hidden xl:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-bold text-xs shadow-md shadow-amber-500/20 hover:shadow-amber-500/35 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer whitespace-nowrap shrink-0"
                             >
                                 <span>{{ t.nav.bookDemo }}</span>
-                                <svg class="w-3.5 h-3.5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-3 h-3 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
                                 </svg>
                             </button>

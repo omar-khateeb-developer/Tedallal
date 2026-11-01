@@ -412,3 +412,4 @@ onMounted(fetchLeads);
         </div>
     </AuthenticatedLayout>
 </template>
+
