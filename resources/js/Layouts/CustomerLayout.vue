@@ -25,11 +25,14 @@ onMounted(() => {
             ></div>
             <div class="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
                 <div class="flex items-center gap-3 min-w-0">
-                    <img v-if="logo" :src="logo" class="h-10 w-10 object-contain rounded-lg border border-stone-100 dark:border-slate-800 shrink-0" alt="Restaurant Logo" />
+                    <img v-if="logo" :src="logo" class="h-10 w-10 object-contain rounded-xl border border-stone-200/80 dark:border-slate-800 shrink-0 bg-white dark:bg-slate-900 shadow-2xs" alt="Restaurant Logo" />
+                    <div v-else-if="navbarImage" class="h-10 w-10 rounded-xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-lg shrink-0 shadow-2xs">
+                        🍽️
+                    </div>
                     <div class="min-w-0">
-                        <p class="text-xs font-semibold text-stone-500 dark:text-amber-400/90 tracking-wide">تدلّل</p>
                         <slot name="title">
-                            <h1 class="text-lg font-bold text-stone-900 dark:text-white truncate">{{ title }}</h1>
+                            <p class="text-[11px] font-semibold text-stone-400 dark:text-amber-400/90 tracking-wide leading-none mb-1">تدلّل</p>
+                            <h1 class="text-base sm:text-lg font-bold text-stone-900 dark:text-white truncate">{{ title }}</h1>
                         </slot>
                     </div>
                 </div>

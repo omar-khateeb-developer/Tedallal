@@ -5,7 +5,12 @@ import { onMounted, onUnmounted, ref, computed } from 'vue';
 import axios from 'axios';
 
 const props = defineProps<{
-    restaurant: { currency: string; navbar_image?: string | null };
+    restaurant: {
+        name: string;
+        currency: string;
+        navbar_image?: string | null;
+        logo?: string | null;
+    };
     table: { name: string };
     orderNumber: string;
     publicToken: string;
@@ -103,7 +108,20 @@ const currentStepIndex = computed(() => {
 </script>
 
 <template>
-    <CustomerLayout title="حالة الطلب" :navbar-image="restaurant.navbar_image">
+    <CustomerLayout :navbar-image="restaurant.navbar_image" :logo="restaurant.logo">
+        <template #title>
+            <div class="flex flex-col min-w-0">
+                <h1 class="text-base sm:text-lg font-black text-stone-900 dark:text-white truncate leading-tight">
+                    {{ restaurant.name }}
+                </h1>
+                <p class="text-xs font-semibold text-stone-500 dark:text-amber-400/90 flex items-center gap-1.5 mt-0.5 truncate">
+                    <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+                    <span>متابعة حالة الطلب</span>
+                    <span class="text-stone-300 dark:text-slate-700">·</span>
+                    <span>{{ table.name }}</span>
+                </p>
+            </div>
+        </template>
         <div v-if="!order" class="py-12 flex flex-col items-center justify-center text-stone-500">
             <svg class="h-8 w-8 animate-spin text-amber-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -146,6 +164,13 @@ const currentStepIndex = computed(() => {
             <div class="rounded-3xl bg-white dark:bg-[#0a0f1d] p-6 shadow-xs ring-1 ring-stone-100 dark:ring-slate-800 text-center relative overflow-hidden transition-colors">
                 <div class="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-amber-50 dark:bg-amber-950/20 opacity-50"></div>
                 <div class="absolute -left-4 -bottom-4 h-16 w-16 rounded-full bg-stone-50 dark:bg-slate-900/30 opacity-50"></div>
+
+                <div class="mb-2 relative z-10">
+                    <span class="inline-flex items-center gap-1.5 text-xs font-bold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 px-3 py-1 rounded-full border border-amber-200/60 dark:border-amber-800/50 shadow-2xs">
+                        <span>🏪</span>
+                        <span>{{ restaurant.name }}</span>
+                    </span>
+                </div>
                 
                 <p class="text-sm font-medium text-stone-500 dark:text-slate-400 relative z-10">رقم الطلب</p>
                 <p class="mt-1 text-3xl font-black tracking-wider text-stone-800 dark:text-white relative z-10">{{ orderNumber }}</p>
