@@ -75,7 +75,7 @@ final class OrderCreationService
             $discountAmount = '0.00';
             
             if ($promoCodeStr) {
-                if (empty($restaurant->features['offers'])) {
+                if (!$restaurant->hasOffersFeature()) {
                     throw ValidationException::withMessages(['promo_code' => ['نظام العروض غير مفعل في هذا المطعم.']]);
                 }
                 $promoCode = \App\Models\PromoCode::where('restaurant_id', $restaurant->id)->where('code', $promoCodeStr)->first();

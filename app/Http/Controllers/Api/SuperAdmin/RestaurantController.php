@@ -19,6 +19,8 @@ class RestaurantController extends ApiController
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'type' => 'sometimes|string|in:postpaid,prepaid',
+            'plan' => 'sometimes|string|in:basic,pro,max',
+            'subscription_days' => 'sometimes|nullable|integer|min:0|max:3650',
             'windows_count' => 'sometimes|nullable|integer|min:1|max:50',
             'tables_count' => 'sometimes|nullable|integer|min:0|max:200',
             'phone' => 'nullable|string|max:20',
@@ -29,9 +31,16 @@ class RestaurantController extends ApiController
             'manager_password' => 'nullable|string|min:6',
         ]);
 
+        $subscriptionExpiresAt = null;
+        if (!empty($validated['subscription_days']) && (int)$validated['subscription_days'] > 0) {
+            $subscriptionExpiresAt = now()->addDays((int)$validated['subscription_days']);
+        }
+
         $restaurantData = [
             'name' => $validated['name'],
             'type' => $validated['type'] ?? 'postpaid',
+            'plan' => $validated['plan'] ?? 'basic',
+            'subscription_expires_at' => $subscriptionExpiresAt,
             'windows_count' => ($validated['type'] ?? 'postpaid') === 'prepaid' ? (int) ($validated['windows_count'] ?? 1) : 1,
             'phone' => $validated['phone'] ?? null,
             'address' => $validated['address'] ?? null,
@@ -79,6 +88,9 @@ class RestaurantController extends ApiController
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
             'type' => 'sometimes|required|string|in:postpaid,prepaid',
+            'plan' => 'sometimes|required|string|in:basic,pro,max',
+            'subscription_expires_at' => 'sometimes|nullable|date',
+            'extend_days' => 'sometimes|nullable|integer|min:1|max:3650',
             'windows_count' => 'sometimes|nullable|integer|min:1|max:50',
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:1000',
@@ -86,6 +98,14 @@ class RestaurantController extends ApiController
             'status' => 'sometimes|required|string|in:active,inactive',
             'features' => 'sometimes|nullable|array',
         ]);
+
+        if (!empty($validated['extend_days'])) {
+            $base = ($restaurant->subscription_expires_at && $restaurant->subscription_expires_at->isFuture())
+                ? $restaurant->subscription_expires_at
+                : now();
+            $validated['subscription_expires_at'] = $base->copy()->addDays((int) $validated['extend_days']);
+            unset($validated['extend_days']);
+        }
 
         // Merge features with existing ones instead of replacing
         if (isset($validated['features'])) {

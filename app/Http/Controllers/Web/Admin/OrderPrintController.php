@@ -32,7 +32,7 @@ class OrderPrintController extends Controller
         $wheelUrl = null;
 
         // Only generate lucky wheel QR if offers feature is enabled and restaurant has active coupons
-        if (!empty($restaurant->features['offers'])) {
+        if ($restaurant->hasOffersFeature()) {
             $hasActiveOffers = PromoCode::where('restaurant_id', $restaurant->id)
                 ->where('is_active', true)
                 ->where('is_single_use', false)

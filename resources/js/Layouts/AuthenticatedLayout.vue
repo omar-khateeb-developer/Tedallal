@@ -61,6 +61,10 @@ onMounted(() => {
 <template>
     <div>
         <div class="min-h-screen bg-slate-50 dark:bg-[#060913] text-slate-900 dark:text-slate-100 transition-colors duration-300" dir="rtl">
+            <!-- Expiration Banner if subscription expired -->
+            <div v-if="restaurant?.is_expired" class="bg-rose-600 text-white text-xs sm:text-sm font-bold py-2.5 px-4 text-center shadow-inner flex items-center justify-center gap-2">
+                <span>⚠️ تنبيه: انتهت صلاحية اشتراك المطعم ({{ restaurant.name }}). يرجى التواصل مع إدارة تدلّل لتجديد الاشتراك ومواصلة العمل بكامل الميزات.</span>
+            </div>
             <nav
                 class="relative z-40 border-b border-white/10 bg-white/80 dark:bg-[#0a0f1d]/90 bg-cover bg-center shadow-xs dark:border-slate-800 backdrop-blur-md transition-colors"
                 :style="restaurant?.navbar_image ? `background-image: url('${restaurant.navbar_image}')` : ''"
@@ -100,6 +104,25 @@ onMounted(() => {
                                             <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
                                             <span>دفع لاحق</span>
                                             <bdi class="text-[10px] font-mono opacity-85">(Postpaid)</bdi>
+                                        </span>
+
+                                        <!-- Plan Badge -->
+                                        <span
+                                            v-if="restaurant.plan_label"
+                                            class="hidden md:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-xl text-xs font-bold border shadow-2xs whitespace-nowrap self-start sm:self-auto"
+                                            :class="{
+                                                'bg-slate-500/10 border-slate-500/30 text-slate-700 dark:text-slate-300': restaurant.plan === 'basic',
+                                                'bg-amber-500/15 border-amber-500/30 text-amber-700 dark:text-amber-300': restaurant.plan === 'pro',
+                                                'bg-purple-500/15 border-purple-500/30 text-purple-700 dark:text-purple-300': restaurant.plan === 'max',
+                                            }"
+                                            title="باقة الاشتراك الحالية"
+                                        >
+                                            <span class="h-1.5 w-1.5 rounded-full" :class="{
+                                                'bg-slate-400': restaurant.plan === 'basic',
+                                                'bg-amber-500': restaurant.plan === 'pro',
+                                                'bg-purple-500': restaurant.plan === 'max',
+                                            }"></span>
+                                            <span>{{ restaurant.plan_label }}</span>
                                         </span>
                                     </div>
 
@@ -238,20 +261,26 @@ onMounted(() => {
                                             <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate">
                                                 {{ user?.email }}
                                             </div>
-                                            <div v-if="restaurant" class="mt-2 pt-2 border-t border-slate-200/50 dark:border-slate-800/50 flex items-center justify-between text-[11px]">
-                                                <span class="text-slate-600 dark:text-slate-300 font-semibold truncate">{{ restaurant.name }}</span>
-                                                <span
-                                                    v-if="restaurant.type === 'prepaid'"
-                                                    class="text-[10px] font-bold text-amber-600 dark:text-amber-400 shrink-0"
-                                                >
-                                                    دفع مسبق
-                                                </span>
-                                                <span
-                                                    v-else
-                                                    class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 shrink-0"
-                                                >
-                                                    دفع لاحق
-                                                </span>
+                                            <div v-if="restaurant" class="mt-2 pt-2 border-t border-slate-200/50 dark:border-slate-800/50 flex flex-col gap-1 text-[11px]">
+                                                <div class="flex items-center justify-between">
+                                                    <span class="text-slate-600 dark:text-slate-300 font-semibold truncate">{{ restaurant.name }}</span>
+                                                    <span
+                                                        class="text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0"
+                                                        :class="{
+                                                            'bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-300': restaurant.plan === 'basic',
+                                                            'bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-300': restaurant.plan === 'pro',
+                                                            'bg-purple-100 text-purple-900 dark:bg-purple-950/60 dark:text-purple-300': restaurant.plan === 'max',
+                                                        }"
+                                                    >
+                                                        {{ restaurant.plan_label || 'الأساسية' }}
+                                                    </span>
+                                                </div>
+                                                <div class="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400">
+                                                    <span>{{ restaurant.type === 'prepaid' ? 'دفع مسبق' : 'دفع لاحق' }}</span>
+                                                    <span v-if="restaurant.is_expired" class="text-rose-600 font-bold">⚠️ منتهي</span>
+                                                    <span v-else-if="restaurant.days_remaining !== null" class="text-emerald-600 font-bold">باقي {{ restaurant.days_remaining }} يوم</span>
+                                                    <span v-else class="text-blue-600 font-bold">♾️ دائم</span>
+                                                </div>
                                             </div>
                                         </div>
 

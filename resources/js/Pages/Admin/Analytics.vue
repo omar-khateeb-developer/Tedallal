@@ -184,13 +184,17 @@ const categoryChartOptions = {
                 <div class="bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-10"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" /></svg>
                 </div>
-                <h3 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">هذه الميزة غير مفعلة لمطعمك</h3>
+                <h3 class="text-2xl font-bold text-gray-800 dark:text-white mb-2">ميزة التحليلات الذكية متاحة في باقة Pro فما فوق</h3>
                 <p class="text-stone-500 dark:text-stone-400 mb-6 leading-relaxed">
-                    ميزة التقارير والتحليلات الذكية تتيح لك مراقبة مبيعاتك، أرباحك، وأداء الطاولات مع توصيات تلقائية لتحسين مبيعاتك.
+                    ميزة التقارير والتحليلات الذكية تتيح لك مراقبة مبيعاتك، أرباحك، وأداء الأصناف مع توصيات لتحسين الإيرادات. للترقية يرجى التواصل مع إدارة تدلّل.
                 </p>
-                <button class="bg-amber-600 dark:bg-amber-500 text-white dark:text-slate-950 px-8 py-3 rounded-xl font-semibold hover:bg-amber-700 dark:hover:bg-amber-400 transition shadow-lg shadow-amber-600/20">
-                    تواصل مع الإدارة لتفعيل الميزة
-                </button>
+                <a
+                    href="https://wa.me/963934578117?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%20%D8%A3%D8%B3%D8%AA%D8%A7%D8%B0%20%D8%B9%D9%85%D8%B1%D8%8C%20%D8%A3%D8%B1%D8%BA%D8%A8%20%D8%A8%D8%AA%D8%B1%D9%82%D9%8A%D8%A9%20%D8%A8%D8%A7%D9%82%D8%A9%20%D9%85%D8%B7%D8%B9%D9%85%D9%8A%20%D9%84%D8%AA%D9%81%D8%B9%D9%8A%D9%84%20%D9%85%D9%8A%D8%B2%D8%A9%20%D8%A7%D9%84%D8%AA%D8%AD%D9%84%D9%8A%D9%84%D8%A7%D8%AA%20%D8%A7%D9%84%D8%B0%D9%83%D9%8A%D8%A9"
+                    target="_blank"
+                    class="inline-flex items-center gap-2 bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-emerald-700 transition shadow-lg shadow-emerald-600/20"
+                >
+                    <span>💬 تواصل مع الإدارة للترقية الفورية</span>
+                </a>
             </div>
 
             <!-- Dashboard Content -->

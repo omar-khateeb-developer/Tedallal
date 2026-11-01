@@ -26,7 +26,7 @@ class PromoCodeController extends ApiController
 
         $isTestingMode = Setting::isPromoTestingModeEnabled();
 
-        if (empty($restaurant->features['offers'])) {
+        if (!$restaurant->hasOffersFeature()) {
             return response()->json([
                 'success' => false,
                 'message' => 'نظام العروض غير مفعل في هذا المطعم.',

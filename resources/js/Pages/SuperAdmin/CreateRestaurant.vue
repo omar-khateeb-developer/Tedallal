@@ -7,6 +7,8 @@ import axios from 'axios';
 const form = ref({
     name: '',
     type: 'postpaid',
+    plan: 'basic',
+    subscription_days: 30,
     windows_count: 1,
     tables_count: 10,
     phone: '',
@@ -33,7 +35,8 @@ const createRestaurant = async () => {
         message.value = 'تم إضافة المطعم والمدير بنجاح!';
         isSuccess.value = true;
         form.value = {
-            name: '', type: 'postpaid', windows_count: 1, tables_count: 10,
+            name: '', type: 'postpaid', plan: 'basic', subscription_days: 30,
+            windows_count: 1, tables_count: 10,
             phone: '', address: '', currency: 'SYP',
             manager_name: '', manager_email: '', manager_password: ''
         };
@@ -256,6 +259,94 @@ function fieldError(field: string): string | undefined {
                                             class="w-full rounded-xl border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 transition text-sm"
                                             placeholder="مثال: 15 (سيتم إنشاء الطاولات مع رموز الـ QR تلقائياً)"
                                         />
+                                    </div>
+                                </div>
+                            </fieldset>
+
+                            <!-- Subscription Plan & Duration Section -->
+                            <fieldset>
+                                <legend class="text-sm font-bold text-emerald-700 border-b border-emerald-100 pb-2 mb-4 w-full flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6H2.25m0 0H3m-1.5 0h.008v.008H1.5V6Zm19.5 0H21a.75.75 0 0 1-.75-.75V4.5m0 0h1.5m-1.5 0h.008v.008H21V4.5Zm-16.5 6.75h15m-15 4.5h15" />
+                                    </svg>
+                                    باقة الاشتراك وفترة الصلاحية
+                                </legend>
+
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-bold text-gray-800 mb-2">اختر باقة المطعم <span class="text-red-500">*</span></label>
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                            <!-- Basic -->
+                                            <button
+                                                type="button"
+                                                @click="form.plan = 'basic'"
+                                                :class="[
+                                                    'p-3.5 rounded-xl border-2 text-right transition-all cursor-pointer flex flex-col justify-between',
+                                                    form.plan === 'basic'
+                                                        ? 'border-slate-800 bg-slate-50 ring-2 ring-slate-800/10'
+                                                        : 'border-gray-200 hover:border-gray-300 bg-white'
+                                                ]"
+                                            >
+                                                <div class="flex items-center justify-between mb-2">
+                                                    <span class="font-bold text-sm text-slate-900">الأساسية (Basic)</span>
+                                                    <span class="text-xs px-2 py-0.5 rounded-md font-bold bg-slate-200 text-slate-800">إدارة الطلب</span>
+                                                </div>
+                                                <p class="text-xs text-gray-500">QR منيو، كاشير، شاشة مطبخ KDS، تقارير مبيعات.</p>
+                                            </button>
+
+                                            <!-- Pro -->
+                                            <button
+                                                type="button"
+                                                @click="form.plan = 'pro'"
+                                                :class="[
+                                                    'p-3.5 rounded-xl border-2 text-right transition-all cursor-pointer flex flex-col justify-between',
+                                                    form.plan === 'pro'
+                                                        ? 'border-amber-500 bg-amber-50/70 ring-2 ring-amber-500/20'
+                                                        : 'border-gray-200 hover:border-gray-300 bg-white'
+                                                ]"
+                                            >
+                                                <div class="flex items-center justify-between mb-2">
+                                                    <span class="font-bold text-sm text-amber-950">المتقدمة (Pro)</span>
+                                                    <span class="text-xs px-2 py-0.5 rounded-md font-bold bg-amber-200 text-amber-900">الأكثر طلباً</span>
+                                                </div>
+                                                <p class="text-xs text-gray-500">كل مزايا Basic + الكوبونات والعروض + التحليلات المتقدمة.</p>
+                                            </button>
+
+                                            <!-- Max -->
+                                            <button
+                                                type="button"
+                                                @click="form.plan = 'max'"
+                                                :class="[
+                                                    'p-3.5 rounded-xl border-2 text-right transition-all cursor-pointer flex flex-col justify-between',
+                                                    form.plan === 'max'
+                                                        ? 'border-purple-600 bg-purple-50/70 ring-2 ring-purple-600/20'
+                                                        : 'border-gray-200 hover:border-gray-300 bg-white'
+                                                ]"
+                                            >
+                                                <div class="flex items-center justify-between mb-2">
+                                                    <span class="font-bold text-sm text-purple-950">الشاملة (Max)</span>
+                                                    <span class="text-xs px-2 py-0.5 rounded-md font-bold bg-purple-200 text-purple-900">ذكاء اصطناعي</span>
+                                                </div>
+                                                <p class="text-xs text-gray-500">كل مزايا Pro + الويتر الذكي (AI Waiter) + هوية مخصصة بالكامل.</p>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label for="subscription-duration" class="block text-sm font-medium text-gray-700 mb-1">مدة الاشتراك المبدئية</label>
+                                        <select
+                                            id="subscription-duration"
+                                            v-model.number="form.subscription_days"
+                                            class="w-full rounded-xl border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 transition text-sm font-semibold"
+                                        >
+                                            <option :value="14">تجربة مجانية (14 يوماً)</option>
+                                            <option :value="30">شهر واحد (30 يوماً)</option>
+                                            <option :value="90">3 أشهر (ربع سنوي)</option>
+                                            <option :value="180">6 أشهر (نصف سنوي)</option>
+                                            <option :value="365">سنة كاملة (365 يوماً)</option>
+                                            <option :value="0">اشتراك مفتوح / غير محدد المدة</option>
+                                        </select>
+                                        <p class="text-[11px] text-gray-500 mt-1">يمكنك دائماً تمديد أو تجديد صلاحية الاشتراك بنقرة واحدة من لوحة التحكم.</p>
                                     </div>
                                 </div>
                             </fieldset>

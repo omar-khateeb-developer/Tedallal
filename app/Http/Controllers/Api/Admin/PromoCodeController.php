@@ -14,7 +14,7 @@ class PromoCodeController extends ApiController
     {
         $restaurant = auth()->user()->restaurant;
         
-        if (empty($restaurant->features['offers'])) {
+        if (!$restaurant->hasOffersFeature()) {
             return $this->error('Feature Locked', 403);
         }
 
@@ -48,7 +48,7 @@ class PromoCodeController extends ApiController
     {
         $restaurant = auth()->user()->restaurant;
         
-        if (empty($restaurant->features['offers'])) {
+        if (!$restaurant->hasOffersFeature()) {
             return $this->error('Feature Locked', 403);
         }
 

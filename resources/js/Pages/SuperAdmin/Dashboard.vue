@@ -17,6 +17,8 @@ const showCreateForm = ref(false);
 const form = ref({
     name: '',
     type: 'postpaid',
+    plan: 'basic',
+    subscription_days: 30,
     windows_count: 1,
     tables_count: 10,
     phone: '',
@@ -68,7 +70,7 @@ const toggleCreateForm = async () => {
 
 const resetForm = () => {
     form.value = {
-        name: '', type: 'postpaid', windows_count: 1, tables_count: 10,
+        name: '', type: 'postpaid', plan: 'basic', subscription_days: 30, windows_count: 1, tables_count: 10,
         phone: '', address: '', currency: 'SYP',
         manager_name: '', manager_email: '', manager_password: ''
     };
@@ -139,6 +141,24 @@ const toggleFeature = async (restaurant: any, featureName: string) => {
         await fetchRestaurants();
     } catch (e) {
         console.error(`Failed to toggle ${featureName}`);
+    }
+};
+
+const changePlan = async (restaurant: any, newPlan: string) => {
+    try {
+        await axios.patch(`/api/super-admin/restaurants/${restaurant.id}`, { plan: newPlan });
+        await fetchRestaurants();
+    } catch (e) {
+        console.error('Failed to change plan');
+    }
+};
+
+const extendSubscription = async (restaurant: any, days: number) => {
+    try {
+        await axios.patch(`/api/super-admin/restaurants/${restaurant.id}`, { extend_days: days });
+        await fetchRestaurants();
+    } catch (e) {
+        console.error('Failed to extend subscription');
     }
 };
 
@@ -779,6 +799,93 @@ onMounted(() => {
                                             </div>
                                         </fieldset>
 
+                                        <!-- Subscription Plan & Duration Section -->
+                                        <fieldset>
+                                            <legend class="text-sm font-bold text-emerald-700 border-b border-emerald-100 pb-2 mb-4 w-full flex items-center gap-2">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6H2.25m0 0H3m-1.5 0h.008v.008H1.5V6Zm19.5 0H21a.75.75 0 0 1-.75-.75V4.5m0 0h1.5m-1.5 0h.008v.008H21V4.5Zm-16.5 6.75h15m-15 4.5h15" />
+                                                </svg>
+                                                باقة الاشتراك وفترة الصلاحية
+                                            </legend>
+
+                                            <div class="space-y-4">
+                                                <div>
+                                                    <label class="block text-sm font-bold text-gray-800 mb-2">اختر باقة المطعم <span class="text-red-500">*</span></label>
+                                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                                        <!-- Basic -->
+                                                        <button
+                                                            type="button"
+                                                            @click="form.plan = 'basic'"
+                                                            :class="[
+                                                                'p-3 rounded-xl border-2 text-right transition-all cursor-pointer flex flex-col justify-between',
+                                                                form.plan === 'basic'
+                                                                    ? 'border-slate-800 bg-slate-50 ring-2 ring-slate-800/10'
+                                                                    : 'border-gray-200 hover:border-gray-300 bg-white'
+                                                            ]"
+                                                        >
+                                                            <div class="flex items-center justify-between mb-1">
+                                                                <span class="font-bold text-xs text-slate-900">الأساسية (Basic)</span>
+                                                                <span class="text-[10px] px-1.5 py-0.2 rounded font-bold bg-slate-200 text-slate-800">إدارة الطلب</span>
+                                                            </div>
+                                                            <p class="text-[11px] text-gray-500">QR منيو، كاشير، شاشة مطبخ KDS، تقارير مبيعات.</p>
+                                                        </button>
+
+                                                        <!-- Pro -->
+                                                        <button
+                                                            type="button"
+                                                            @click="form.plan = 'pro'"
+                                                            :class="[
+                                                                'p-3 rounded-xl border-2 text-right transition-all cursor-pointer flex flex-col justify-between',
+                                                                form.plan === 'pro'
+                                                                    ? 'border-amber-500 bg-amber-50/70 ring-2 ring-amber-500/20'
+                                                                    : 'border-gray-200 hover:border-gray-300 bg-white'
+                                                            ]"
+                                                        >
+                                                            <div class="flex items-center justify-between mb-1">
+                                                                <span class="font-bold text-xs text-amber-950">المتقدمة (Pro)</span>
+                                                                <span class="text-[10px] px-1.5 py-0.2 rounded font-bold bg-amber-200 text-amber-900">الأكثر طلباً</span>
+                                                            </div>
+                                                            <p class="text-[11px] text-gray-500">كل مزايا Basic + الكوبونات والعروض + التحليلات المتقدمة.</p>
+                                                        </button>
+
+                                                        <!-- Max -->
+                                                        <button
+                                                            type="button"
+                                                            @click="form.plan = 'max'"
+                                                            :class="[
+                                                                'p-3 rounded-xl border-2 text-right transition-all cursor-pointer flex flex-col justify-between',
+                                                                form.plan === 'max'
+                                                                    ? 'border-purple-600 bg-purple-50/70 ring-2 ring-purple-600/20'
+                                                                    : 'border-gray-200 hover:border-gray-300 bg-white'
+                                                            ]"
+                                                        >
+                                                            <div class="flex items-center justify-between mb-1">
+                                                                <span class="font-bold text-xs text-purple-950">الشاملة (Max)</span>
+                                                                <span class="text-[10px] px-1.5 py-0.2 rounded font-bold bg-purple-200 text-purple-900">ذكاء اصطناعي</span>
+                                                            </div>
+                                                            <p class="text-[11px] text-gray-500">كل مزايا Pro + الويتر الذكي (AI Waiter) + هوية مخصصة بالكامل.</p>
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <div>
+                                                    <label for="sa-subscription-duration" class="block text-sm font-medium text-gray-700 mb-1">مدة الاشتراك المبدئية</label>
+                                                    <select
+                                                        id="sa-subscription-duration"
+                                                        v-model.number="form.subscription_days"
+                                                        class="w-full rounded-xl border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 transition text-sm font-semibold"
+                                                    >
+                                                        <option :value="14">تجربة مجانية (14 يوماً)</option>
+                                                        <option :value="30">شهر واحد (30 يوماً)</option>
+                                                        <option :value="90">3 أشهر (ربع سنوي)</option>
+                                                        <option :value="180">6 أشهر (نصف سنوي)</option>
+                                                        <option :value="365">سنة كاملة (365 يوماً)</option>
+                                                        <option :value="0">اشتراك مفتوح / غير محدد المدة</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </fieldset>
+
                                         <!-- Manager Section -->
                                         <fieldset>
                                             <legend class="text-sm font-bold text-blue-700 border-b border-blue-100 pb-2 mb-4 w-full flex items-center gap-2">
@@ -887,6 +994,8 @@ onMounted(() => {
                                 <tr class="bg-gray-100">
                                     <th class="p-3 border">الاسم</th>
                                     <th class="p-3 border text-center">نوع النظام</th>
+                                    <th class="p-3 border text-center">الباقة الحالية</th>
+                                    <th class="p-3 border text-center">الاشتراك والصلاحية</th>
                                     <th class="p-3 border">الحالة</th>
                                     <th class="p-3 border">الميزات الإضافية</th>
                                     <th class="p-3 border">الهاتف</th>
@@ -925,6 +1034,64 @@ onMounted(() => {
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
                                                 </svg>
                                             </button>
+                                        </div>
+                                    </td>
+                                    <td class="p-3 border text-center">
+                                        <select
+                                            :value="restaurant.plan || 'basic'"
+                                            @change="changePlan(restaurant, ($event.target as HTMLSelectElement).value)"
+                                            class="text-xs font-bold rounded-lg px-2.5 py-1 border shadow-2xs transition cursor-pointer"
+                                            :class="{
+                                                'bg-slate-100 text-slate-800 border-slate-300': (restaurant.plan || 'basic') === 'basic',
+                                                'bg-amber-100 text-amber-900 border-amber-400': restaurant.plan === 'pro',
+                                                'bg-purple-100 text-purple-900 border-purple-400': restaurant.plan === 'max',
+                                            }"
+                                        >
+                                            <option value="basic">الأساسية (Basic)</option>
+                                            <option value="pro">المتقدمة (Pro)</option>
+                                            <option value="max">الشاملة (Max)</option>
+                                        </select>
+                                    </td>
+                                    <td class="p-3 border text-center">
+                                        <div class="flex flex-col items-center gap-1">
+                                            <span
+                                                v-if="restaurant.is_expired"
+                                                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-300"
+                                                title="انتهت فترة الاشتراك"
+                                            >
+                                                <span>⚠️ منتهي</span>
+                                            </span>
+                                            <span
+                                                v-else-if="restaurant.days_remaining !== null"
+                                                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold"
+                                                :class="restaurant.days_remaining <= 7 ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-emerald-100 text-emerald-900 border border-emerald-300'"
+                                                :title="`ينتهي في: ${restaurant.subscription_expires_at || ''}`"
+                                            >
+                                                <span>باقي {{ restaurant.days_remaining }} يوم</span>
+                                            </span>
+                                            <span
+                                                v-else
+                                                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-900 border border-blue-300"
+                                            >
+                                                <span>♾️ مفتوح / دائم</span>
+                                            </span>
+
+                                            <div class="flex items-center gap-1 mt-1 text-[11px]">
+                                                <button
+                                                    @click="extendSubscription(restaurant, 30)"
+                                                    class="px-1.5 py-0.5 rounded bg-gray-100 hover:bg-emerald-100 hover:text-emerald-800 text-gray-600 font-semibold border transition text-[10px]"
+                                                    title="تمديد 30 يوماً إضافية"
+                                                >
+                                                    +30 يوم
+                                                </button>
+                                                <button
+                                                    @click="extendSubscription(restaurant, 365)"
+                                                    class="px-1.5 py-0.5 rounded bg-gray-100 hover:bg-purple-100 hover:text-purple-800 text-gray-600 font-semibold border transition text-[10px]"
+                                                    title="تمديد سنة كاملة"
+                                                >
+                                                    +سنة
+                                                </button>
+                                            </div>
                                         </div>
                                     </td>
                                     <td class="p-3 border text-center">

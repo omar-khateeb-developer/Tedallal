@@ -7,6 +7,18 @@ const userRole = computed(() => (page.props.auth as any).user.role);
 const userPermissions = computed(() => (page.props.auth as any).user.permissions || []);
 const isSuperAdmin = computed(() => userRole.value === 'super_admin');
 const isAdmin = computed(() => userRole.value === 'admin');
+const restaurant = computed(() => (page.props.auth as any).restaurant);
+
+const isFeatureLocked = (href: string) => {
+    if (!restaurant.value) return false;
+    if (href === 'admin.analytics') {
+        return !restaurant.value.features?.analytics;
+    }
+    if (href === 'admin.offers') {
+        return !restaurant.value.features?.offers;
+    }
+    return false;
+};
 
 const allLinks = [
     { href: 'admin.dashboard', label: 'لوحة التحكم', roles: ['admin', 'supervisor'] },
@@ -38,12 +50,19 @@ const links = computed(() => allLinks.filter(link => {
                 v-for="link in links"
                 :key="link.href"
                 :href="route(link.href)"
-                class="shrink-0 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all duration-300"
+                class="shrink-0 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all duration-300 inline-flex items-center gap-1.5"
                 :class="route().current(link.href)
                     ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/30'
                     : 'text-slate-600 dark:text-slate-300 bg-transparent hover:bg-slate-50 hover:text-slate-900 dark:hover:bg-slate-800/70 dark:hover:text-white'"
             >
-                {{ link.label }}
+                <span>{{ link.label }}</span>
+                <span
+                    v-if="isFeatureLocked(link.href)"
+                    class="text-[10px] px-1.5 py-0.5 rounded font-extrabold bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 tracking-wider shadow-2xs"
+                    title="ميزة حصرية لباقة Pro و Max"
+                >
+                    PRO 🔒
+                </span>
             </Link>
         </nav>
     </div>

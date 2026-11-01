@@ -15,7 +15,7 @@ class AnalyticsController extends ApiController
     {
         $restaurant = Auth::user()->restaurant;
 
-        if (!$restaurant->features || empty($restaurant->features['analytics'])) {
+        if (!$restaurant->hasAnalyticsFeature()) {
             return $this->error('Feature Locked', 403);
         }
 

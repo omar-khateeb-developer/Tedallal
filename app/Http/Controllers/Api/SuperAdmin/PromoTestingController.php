@@ -57,7 +57,7 @@ class PromoTestingController extends ApiController
         $cartTotal = $request->filled('cart_total') ? (float)$request->cart_total : 100.0;
         $currency = $restaurant->currency ?? 'SYP';
 
-        $hasOffersFeature = !empty($restaurant->features['offers']);
+        $hasOffersFeature = $restaurant->hasOffersFeature();
 
         $promo = PromoCode::where('restaurant_id', $restaurant->id)
             ->where('code', trim($request->code))
