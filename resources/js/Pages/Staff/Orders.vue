@@ -342,13 +342,6 @@ const columns = computed(() => {
     if (isPrepaid.value) {
         return [
             { 
-                id: 'pending', 
-                title: 'بانتظار الكاشير 💳', 
-                subtitle: 'تأكيد الدفع',
-                bg: 'bg-amber-50/60 dark:bg-amber-950/25', 
-                border: 'border-amber-200 dark:border-amber-900/40' 
-            },
-            { 
                 id: 'accepted', 
                 title: 'طابور النوافذ ⏳', 
                 subtitle: 'مدفوع - جاهز لاستلام النافذة',
@@ -380,6 +373,10 @@ const columns = computed(() => {
     ];
 });
 
+const hasVisibleOrders = computed(() => {
+    return orders.value.some(o => columns.value.some(col => col.id === o.status));
+});
+
 const getColumnOrders = (status: string) => {
     let list = orders.value.filter(o => o.status === status);
     if (isPrepaid.value && filterMyWindowOnly.value) {
@@ -397,16 +394,23 @@ useRestaurantOrders(restaurantId.value, {
         if (!exists) {
             orders.value.unshift(newOrder as Order);
             expandedOrderIds.value.add(newOrder.id);
-            // 🔔 إطلاق التنبيه الصوتي والمرئي
-            alertNewOrder(newOrder as Order);
+            // في نظام الدفع المسبق لا ننبّه الشيف إلا إذا كان الطلب مدفوعاً بالفعل
+            if (!isPrepaid.value || newOrder.status !== 'pending') {
+                alertNewOrder(newOrder as Order);
+            }
         }
     },
     onOrderUpdated: (updatedOrder) => {
         const index = orders.value.findIndex(o => o.id === updatedOrder.id);
+        const prevStatus = index !== -1 ? orders.value[index].status : null;
         if (index !== -1) {
             orders.value[index] = updatedOrder as Order;
         } else {
             orders.value.unshift(updatedOrder as Order);
+        }
+        // 🔔 عند دفع الزبون للكاشير وتحول الطلب من معلق إلى مدفوع في نظام الدفع المسبق، نطلق التنبيه للشيف!
+        if (isPrepaid.value && prevStatus === 'pending' && updatedOrder.status === 'accepted') {
+            alertNewOrder(updatedOrder as Order);
         }
     }
 });
@@ -499,14 +503,14 @@ useRestaurantOrders(restaurantId.value, {
             <div class="mx-auto max-w-[1400px] px-4 h-full flex flex-col">
                 <AdminNav class="mb-4" />
                 
-                <div v-if="orders.length === 0" class="rounded-2xl bg-white dark:bg-[#0a0f1d] p-12 text-center text-gray-500 dark:text-gray-400 shadow-xs border border-dashed border-gray-300 dark:border-slate-800 mt-4 flex flex-col items-center justify-center min-h-[300px]">
+                <div v-if="!hasVisibleOrders" class="rounded-2xl bg-white dark:bg-[#0a0f1d] p-12 text-center text-gray-500 dark:text-gray-400 shadow-xs border border-dashed border-gray-300 dark:border-slate-800 mt-4 flex flex-col items-center justify-center min-h-[300px]">
                     <svg class="w-16 h-16 text-gray-300 dark:text-slate-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                     <p class="text-lg font-medium text-stone-700 dark:text-stone-300">لا يوجد طلبات نشطة حالياً</p>
                     <p class="text-sm opacity-70">عند استلام طلب جديد سيظهر هنا تلقائياً.</p>
                 </div>
 
                 <!-- Kanban Board Grid -->
-                <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-start h-full">
+                <div v-else :class="['grid grid-cols-1 items-start h-full gap-6', columns.length === 3 ? 'md:grid-cols-3' : 'md:grid-cols-2 lg:grid-cols-4']">
                     
                     <div 
                         v-for="col in columns" 

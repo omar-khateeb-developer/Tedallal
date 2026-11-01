@@ -90,7 +90,7 @@ const emit = defineEmits<{
             class="fixed inset-0 z-[60] flex items-end justify-center bg-black/60 backdrop-blur-xs sm:items-center"
             @click.self="emit('close')"
         >
-            <div class="w-full max-w-lg rounded-t-3xl bg-white dark:bg-[#0a0f1d] p-6 shadow-2xl sm:rounded-3xl border-t sm:border border-stone-200/80 dark:border-slate-800 transition-colors max-h-[90vh] overflow-y-auto" dir="rtl">
+            <div class="w-full max-w-lg rounded-t-3xl bg-white dark:bg-[#0a0f1d] p-6 shadow-2xl sm:rounded-3xl border-t sm:border border-stone-200/80 dark:border-slate-800 transition-colors max-h-[90vh] overflow-y-auto scrollbar-hide" dir="rtl">
                 <div class="flex items-center justify-between pb-3 border-b border-stone-100 dark:border-slate-800">
                     <div>
                         <h3 class="text-xl font-bold text-stone-900 dark:text-white">تأكيد وإرسال الطلب</h3>
@@ -268,3 +268,8 @@ const emit = defineEmits<{
         </div>
     </Teleport>
 </template>
+
+<style scoped>
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
