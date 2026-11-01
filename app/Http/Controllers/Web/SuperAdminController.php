@@ -22,4 +22,9 @@ class SuperAdminController extends Controller
     {
         return Inertia::render('SuperAdmin/Users');
     }
+
+    public function leads(): Response
+    {
+        return Inertia::render('SuperAdmin/Leads');
+    }
 }

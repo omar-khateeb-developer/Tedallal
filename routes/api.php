@@ -107,5 +107,10 @@ Route::prefix('super-admin')->middleware(['auth:sanctum', EnsureUserHasRole::cla
     Route::post('promo-testing/toggle', [\App\Http\Controllers\Api\SuperAdmin\PromoTestingController::class, 'toggle']);
     Route::post('promo-testing/diagnose', [\App\Http\Controllers\Api\SuperAdmin\PromoTestingController::class, 'diagnose']);
     Route::post('promo-testing/force-activate', [\App\Http\Controllers\Api\SuperAdmin\PromoTestingController::class, 'forceActivate']);
+
+    // إدارة طلبات الاستشارة والعملاء المحتملين (Leads CRM)
+    Route::get('leads', [\App\Http\Controllers\Api\SuperAdmin\ConsultationLeadController::class, 'index']);
+    Route::patch('leads/{lead}', [\App\Http\Controllers\Api\SuperAdmin\ConsultationLeadController::class, 'update']);
+    Route::delete('leads/{lead}', [\App\Http\Controllers\Api\SuperAdmin\ConsultationLeadController::class, 'destroy']);
 });
 

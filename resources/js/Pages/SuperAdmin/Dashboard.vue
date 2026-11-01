@@ -313,10 +313,22 @@ const forceActivateFromDashboard = async () => {
     }
 };
 
+const leadsStats = ref<any>(null);
+
+const fetchLeadsStats = async () => {
+    try {
+        const response = await axios.get('/api/super-admin/leads');
+        leadsStats.value = response.data.stats;
+    } catch (e) {
+        console.error('Failed to fetch leads stats');
+    }
+};
+
 onMounted(() => {
     fetchStats();
     fetchRestaurants();
     fetchPromoTestingStatus();
+    fetchLeadsStats();
     if (canToggleMaintenance.value) {
         fetchMaintenanceStatus();
     }
@@ -570,32 +582,50 @@ onMounted(() => {
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900" dir="rtl">
                         <!-- Stats Grid -->
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                            <div class="bg-amber-50 p-6 rounded-2xl border border-amber-100 flex items-center justify-between">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                            <div class="bg-amber-50 p-5 rounded-2xl border border-amber-100 flex items-center justify-between">
                                 <div>
-                                    <p class="text-sm text-amber-800 font-semibold mb-1">إجمالي المطاعم</p>
-                                    <p class="text-3xl font-bold text-amber-600">{{ stats.total_restaurants }}</p>
+                                    <p class="text-xs text-amber-800 font-semibold mb-1">إجمالي المطاعم</p>
+                                    <p class="text-2xl font-black text-amber-600">{{ stats.total_restaurants }}</p>
                                 </div>
-                                <div class="bg-amber-200 text-amber-700 p-3 rounded-full">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 0 0 3.75.614m-16.5 0a3.004 3.004 0 0 1-.621-4.72l1.189-1.19A1.5 1.5 0 0 1 5.378 3h13.243a1.5 1.5 0 0 1 1.06.44l1.19 1.189a3 3 0 0 1-.621 4.72M6.75 18h3.75a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 0-.75-.75H6.75a.75.75 0 0 0-.75.75v3.75c0 .414.336.75.75.75Z" /></svg>
+                                <div class="bg-amber-200 text-amber-700 p-2.5 rounded-full">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 0 0 3.75.614m-16.5 0a3.004 3.004 0 0 1-.621-4.72l1.189-1.19A1.5 1.5 0 0 1 5.378 3h13.243a1.5 1.5 0 0 1 1.06.44l1.19 1.189a3 3 0 0 1-.621 4.72M6.75 18h3.75a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 0-.75-.75H6.75a.75.75 0 0 0-.75.75v3.75c0 .414.336.75.75.75Z" /></svg>
                                 </div>
                             </div>
-                            <div class="bg-green-50 p-6 rounded-2xl border border-green-100 flex items-center justify-between">
+                            <div class="bg-green-50 p-5 rounded-2xl border border-green-100 flex items-center justify-between">
                                 <div>
-                                    <p class="text-sm text-green-800 font-semibold mb-1">المطاعم النشطة</p>
-                                    <p class="text-3xl font-bold text-green-600">{{ stats.active_restaurants }}</p>
+                                    <p class="text-xs text-green-800 font-semibold mb-1">المطاعم النشطة</p>
+                                    <p class="text-2xl font-black text-green-600">{{ stats.active_restaurants }}</p>
                                 </div>
-                                <div class="bg-green-200 text-green-700 p-3 rounded-full">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                                <div class="bg-green-200 text-green-700 p-2.5 rounded-full">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
                                 </div>
                             </div>
-                            <Link :href="route('super_admin.users')" class="bg-blue-50 p-6 rounded-2xl border border-blue-100 flex items-center justify-between hover:bg-blue-100 transition-colors">
+                            <Link :href="route('super_admin.users')" class="bg-blue-50 p-5 rounded-2xl border border-blue-100 flex items-center justify-between hover:bg-blue-100 transition-colors">
                                 <div>
-                                    <p class="text-sm text-blue-800 font-semibold mb-1">إجمالي المستخدمين (إدارة)</p>
-                                    <p class="text-3xl font-bold text-blue-600">{{ stats.total_users }}</p>
+                                    <p class="text-xs text-blue-800 font-semibold mb-1">المستخدمين (إدارة)</p>
+                                    <p class="text-2xl font-black text-blue-600">{{ stats.total_users }}</p>
                                 </div>
-                                <div class="bg-blue-200 text-blue-700 p-3 rounded-full">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" /></svg>
+                                <div class="bg-blue-200 text-blue-700 p-2.5 rounded-full">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" /></svg>
+                                </div>
+                            </Link>
+
+                            <!-- Leads CRM Card -->
+                            <Link :href="route('super_admin.leads')" class="bg-gradient-to-br from-amber-50 to-orange-50 p-5 rounded-2xl border-2 border-amber-300 flex items-center justify-between hover:border-amber-400 hover:shadow-md transition-all group">
+                                <div>
+                                    <div class="flex items-center gap-1.5 mb-1">
+                                        <p class="text-xs text-amber-900 font-bold">طلبات الاستشارة (Leads)</p>
+                                        <span v-if="leadsStats?.new > 0" class="text-[10px] px-1.5 py-0.2 rounded-full font-bold bg-rose-500 text-white animate-pulse">
+                                            {{ leadsStats.new }} جديد
+                                        </span>
+                                    </div>
+                                    <p class="text-2xl font-black text-amber-700">
+                                        {{ leadsStats?.total ?? '0' }}
+                                    </p>
+                                </div>
+                                <div class="bg-amber-200 text-amber-900 p-2.5 rounded-2xl group-hover:scale-110 transition-transform">
+                                    <span class="text-xl">📋</span>
                                 </div>
                             </Link>
                         </div>
@@ -604,6 +634,15 @@ onMounted(() => {
                         <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
                             <h3 class="text-lg font-bold text-gray-800">قائمة المطاعم في النظام</h3>
                             <div class="flex items-center gap-2">
+                                <Link
+                                    :href="route('super_admin.leads')"
+                                    class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 border border-amber-400 text-amber-900 bg-amber-100 hover:bg-amber-200 shadow-2xs"
+                                >
+                                    <span>📋 متابعة طلبات الاستشارة (Leads)</span>
+                                    <span v-if="leadsStats?.new > 0" class="bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                                        {{ leadsStats.new }}
+                                    </span>
+                                </Link>
                                 <Link
                                     :href="route('super_admin.restaurants.create')"
                                     class="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-xs sm:text-sm transition-all duration-200 border border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100"

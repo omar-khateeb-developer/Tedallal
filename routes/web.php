@@ -79,6 +79,7 @@ Route::middleware(['auth', 'verified', 'role:super_admin'])->prefix('super-admin
     Route::get('/dashboard', [\App\Http\Controllers\Web\SuperAdminController::class, 'index'])->name('dashboard');
     Route::get('/restaurants/create', [\App\Http\Controllers\Web\SuperAdminController::class, 'createRestaurant'])->name('restaurants.create');
     Route::get('/users', [\App\Http\Controllers\Web\SuperAdminController::class, 'users'])->name('users');
+    Route::get('/leads', [\App\Http\Controllers\Web\SuperAdminController::class, 'leads'])->name('leads');
 });
 
 Route::get('/dashboard', function () {
