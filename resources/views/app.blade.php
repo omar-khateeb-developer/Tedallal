@@ -20,22 +20,22 @@
         <meta property="og:site_name" content="تدلّل | Tedallal">
         <meta property="og:title" content="تدلّل | المنظومة السحابية الذكية لإدارة ونمو المطاعم">
         <meta property="og:description" content="منظومة متكاملة لأتمتة صالة ومطبخ المطعم: طلب ذاتي عبر الباركود، شاشات مطبخ KDS، وإيقاف نزيف العمولات لزيادة أرباحك فورياً.">
-        <meta property="og:image" content="{{ asset('images/tedallal-og-banner.jpg') }}?v=3">
-        <meta property="og:image:secure_url" content="{{ asset('images/tedallal-og-banner.jpg') }}?v=3">
+        <meta property="og:image" content="{{ asset('images/tedallal-social-card.jpg') }}">
+        <meta property="og:image:secure_url" content="{{ asset('images/tedallal-social-card.jpg') }}">
         <meta property="og:image:type" content="image/jpeg">
         <meta property="og:image:width" content="1200">
         <meta property="og:image:height" content="630">
         <meta property="og:image:alt" content="تدلّل - المنظومة السحابية لأتمتة ونمو المطاعم">
         <meta property="og:locale" content="ar_AR">
-        <link rel="image_src" href="{{ asset('images/tedallal-og-banner.jpg') }}?v=3">
-        <meta itemprop="image" content="{{ asset('images/tedallal-og-banner.jpg') }}?v=3">
+        <link rel="image_src" href="{{ asset('images/tedallal-social-card.jpg') }}">
+        <meta itemprop="image" content="{{ asset('images/tedallal-social-card.jpg') }}">
 
         <!-- Twitter / X -->
         <meta name="twitter:card" content="summary_large_image">
         <meta name="twitter:url" content="{{ url()->current() }}">
         <meta name="twitter:title" content="تدلّل | المنظومة السحابية الذكية لإدارة ونمو المطاعم">
         <meta name="twitter:description" content="منظومة متكاملة لأتمتة صالة ومطبخ المطعم: طلب ذاتي عبر الباركود، شاشات مطبخ KDS، ومضاعفة الأرباح بدون عمولات وسيطة.">
-        <meta name="twitter:image" content="{{ asset('images/tedallal-og-banner.jpg') }}?v=3">
+        <meta name="twitter:image" content="{{ asset('images/tedallal-social-card.jpg') }}">
 
         <!-- Favicon -->
         <link rel="icon" type="image/svg+xml" href="/favicon.svg">
