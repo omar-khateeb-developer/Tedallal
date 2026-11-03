@@ -501,10 +501,6 @@ export const translations: Record<Locale, LandingTranslation> = {
                     q: 'ماذا يحدث إذا تضرر كود الـ QR على إحدى الطاولات؟',
                     a: 'بكل تأكيد، تتيح لوحة تحكم المطعم إعادة توليد رمز الـ QR للطاولة بنقرة زر واحدة بشكل فوري وطباعته مجدداً، مع إبقاء سجل الطلبات والمبيعات التاريخية سليماً دون أي تأثر.',
                 },
-                {
-                    q: 'هل يدعم النظام تشغيل فروع متعددة للمطعم؟',
-                    a: 'نعم بكل سهولة، تتيح المنصة إدارة جميع فروع مطعمك من مكان واحد، مع تخصيص المنيو والأسعار لكل فرع، ولوحة تحكم مركزية للمالك لمتابعة أداء ومبيعات الفروع لحظة بلحظة.',
-                },
             ],
         },
         modal: {
@@ -783,10 +779,6 @@ export const translations: Record<Locale, LandingTranslation> = {
                 {
                     q: 'What happens if a QR code is damaged or a table is rearranged?',
                     a: 'Restaurant administrators can regenerate unique table QR codes with a single click inside the admin dashboard and reprint them immediately without interrupting historical sales data.',
-                },
-                {
-                    q: 'Can we manage multiple restaurant branches under one account?',
-                    a: 'Yes! Tedallal allows you to oversee all your branches from a central dashboard, customize individual menus and pricing per branch, and track live performance anytime.',
                 },
             ],
         },
