@@ -151,6 +151,13 @@ function toggleFeature(featureId: string) {
 }
 
 // Validations
+const hasAttemptedSubmit = ref(false);
+const touchedFields = ref({
+    name: false,
+    restaurant_name: false,
+    phone: false,
+});
+
 const isStep1Valid = computed(() => {
     return !!form.value.service_type && !!form.value.payment_model;
 });
@@ -166,6 +173,51 @@ const isStep3Valid = computed(() => {
         form.value.phone.trim().length >= 7
     );
 });
+
+const isNameMissing = computed(() => {
+    return (hasAttemptedSubmit.value || touchedFields.value.name) && form.value.name.trim().length < 2;
+});
+
+const isRestaurantMissing = computed(() => {
+    return (hasAttemptedSubmit.value || touchedFields.value.restaurant_name) && form.value.restaurant_name.trim().length < 2;
+});
+
+const isPhoneMissing = computed(() => {
+    return (hasAttemptedSubmit.value || touchedFields.value.phone) && form.value.phone.trim().length < 7;
+});
+
+function markFieldTouched(field: 'name' | 'restaurant_name' | 'phone') {
+    touchedFields.value[field] = true;
+}
+
+function onFieldInput() {
+    if (errorMessage.value && isStep3Valid.value) {
+        errorMessage.value = '';
+    }
+}
+
+function getInputClasses(field: 'name' | 'restaurant_name' | 'phone') {
+    const isMissing =
+        field === 'name'
+            ? isNameMissing.value
+            : field === 'restaurant_name'
+            ? isRestaurantMissing.value
+            : isPhoneMissing.value;
+
+    if (isMissing) {
+        return 'border-2 border-stone-700 bg-stone-200 text-stone-950 placeholder:text-stone-700 ring-2 ring-red-400/40 shadow-inner dark:border-stone-400 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-300 dark:ring-red-500/40';
+    }
+
+    const value = form.value[field];
+    const isFilled =
+        field === 'phone' ? value.trim().length >= 7 : value.trim().length >= 2;
+
+    if (isFilled) {
+        return 'border border-emerald-500/50 bg-stone-50 text-stone-900 placeholder:text-stone-400 focus:border-amber-500 focus:bg-white focus:ring-2 focus:ring-amber-500/20 dark:border-emerald-500/50 dark:bg-slate-900 dark:text-white dark:placeholder:text-slate-500';
+    }
+
+    return 'border border-stone-400 bg-stone-100 text-stone-900 placeholder:text-stone-500 focus:border-amber-500 focus:bg-white focus:ring-2 focus:ring-amber-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:placeholder:text-slate-500';
+}
 
 function nextStep() {
     errorMessage.value = '';
@@ -186,6 +238,7 @@ function nextStep() {
 
 function prevStep() {
     errorMessage.value = '';
+    hasAttemptedSubmit.value = false;
     if (currentStep.value > 1) {
         currentStep.value--;
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -194,6 +247,7 @@ function prevStep() {
 
 // Submission
 async function submitConsultation() {
+    hasAttemptedSubmit.value = true;
     if (!isStep3Valid.value) {
         errorMessage.value = 'يرجى كتابة اسمك الكريم، اسم المطعم، ورقم الهاتف بدقة للمتابعة.';
         return;
@@ -572,27 +626,47 @@ const directWhatsappUrl = computed(() => {
                 <div class="rounded-3xl border border-stone-200 bg-white p-5 sm:p-7 shadow-xs dark:border-slate-800 dark:bg-[#0a0f1d] space-y-4">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-bold text-stone-800 dark:text-slate-200 mb-1.5">
-                                اسمك الكريم / المسؤول: <span class="text-red-500">*</span>
-                            </label>
+                            <div class="flex items-center justify-between mb-1.5">
+                                <label class="block text-xs font-bold text-stone-800 dark:text-slate-200">
+                                    اسمك الكريم / المسؤول: <span class="text-red-500">*</span>
+                                </label>
+                                <span v-if="isNameMissing" class="text-[11px] font-bold text-red-600 dark:text-red-400">
+                                    مطلوب تعبئته *
+                                </span>
+                            </div>
                             <input
                                 v-model="form.name"
                                 type="text"
                                 placeholder="مثال: عمر خطيب"
-                                class="w-full rounded-xl border border-stone-300 bg-stone-50 px-3.5 py-3 text-sm font-bold text-stone-900 placeholder:text-stone-400 focus:border-amber-500 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-amber-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:placeholder:text-slate-500"
+                                @blur="markFieldTouched('name')"
+                                @input="onFieldInput"
+                                :class="[
+                                    'w-full rounded-xl px-3.5 py-3 text-sm font-bold transition-all focus:outline-hidden focus:ring-2',
+                                    getInputClasses('name')
+                                ]"
                                 required
                             />
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-stone-800 dark:text-slate-200 mb-1.5">
-                                اسم المطعم / العلامة التجارية: <span class="text-red-500">*</span>
-                            </label>
+                            <div class="flex items-center justify-between mb-1.5">
+                                <label class="block text-xs font-bold text-stone-800 dark:text-slate-200">
+                                    اسم المطعم / العلامة التجارية: <span class="text-red-500">*</span>
+                                </label>
+                                <span v-if="isRestaurantMissing" class="text-[11px] font-bold text-red-600 dark:text-red-400">
+                                    مطلوب تعبئته *
+                                </span>
+                            </div>
                             <input
                                 v-model="form.restaurant_name"
                                 type="text"
                                 placeholder="مثال: مطعم بيت حلب"
-                                class="w-full rounded-xl border border-stone-300 bg-stone-50 px-3.5 py-3 text-sm font-bold text-stone-900 placeholder:text-stone-400 focus:border-amber-500 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-amber-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:placeholder:text-slate-500"
+                                @blur="markFieldTouched('restaurant_name')"
+                                @input="onFieldInput"
+                                :class="[
+                                    'w-full rounded-xl px-3.5 py-3 text-sm font-bold transition-all focus:outline-hidden focus:ring-2',
+                                    getInputClasses('restaurant_name')
+                                ]"
                                 required
                             />
                         </div>
@@ -600,15 +674,25 @@ const directWhatsappUrl = computed(() => {
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-bold text-stone-800 dark:text-slate-200 mb-1.5">
-                                رقم الواتساب / الهاتف: <span class="text-red-500">*</span>
-                            </label>
+                            <div class="flex items-center justify-between mb-1.5">
+                                <label class="block text-xs font-bold text-stone-800 dark:text-slate-200">
+                                    رقم الواتساب / الهاتف: <span class="text-red-500">*</span>
+                                </label>
+                                <span v-if="isPhoneMissing" class="text-[11px] font-bold text-red-600 dark:text-red-400">
+                                    مطلوب تعبئته *
+                                </span>
+                            </div>
                             <input
                                 v-model="form.phone"
                                 type="tel"
                                 placeholder="مثال: +963 991 234 567"
                                 dir="ltr"
-                                class="w-full rounded-xl border border-stone-300 bg-stone-50 px-3.5 py-3 text-sm font-bold text-stone-900 placeholder:text-stone-400 focus:border-amber-500 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-amber-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-white text-right dark:placeholder:text-slate-500"
+                                @blur="markFieldTouched('phone')"
+                                @input="onFieldInput"
+                                :class="[
+                                    'w-full rounded-xl px-3.5 py-3 text-sm font-bold text-right transition-all focus:outline-hidden focus:ring-2',
+                                    getInputClasses('phone')
+                                ]"
                                 required
                             />
                         </div>
