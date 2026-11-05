@@ -687,35 +687,28 @@ onUnmounted(() => {
     <div
         :dir="currentLocale === 'ar' ? 'rtl' : 'ltr'"
         :class="[
-            currentLocale === 'ar' ? 'font-sans' : 'font-sans font-english',
+            currentLocale === 'ar' ? 'font-tajawal' : 'font-sans font-english',
             isDark ? 'dark-mode-theme' : 'light-mode-theme'
         ]"
-        class="min-h-screen bg-[#fbfaf8] dark:bg-[#0c0e14] text-slate-900 dark:text-[#f8fafc] selection:bg-amber-500 selection:text-slate-950 antialiased overflow-x-hidden relative transition-colors duration-300"
+        class="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#1a1a1a] via-[#0d0d0d] to-[#050505] text-[#f8fafc] selection:bg-[#BF953F] selection:text-black antialiased overflow-x-hidden relative"
     >
-        <!-- Refined Luxury Background & Subtle Architectural Grid (No Neon AI Orbs) -->
+        <!-- Physical Texture (The Carved Feel): Inline SVG Noise / Grain Pattern Overlay -->
+        <div
+            class="fixed inset-0 pointer-events-none z-50 opacity-[0.038] mix-blend-overlay"
+            style="background-image: url('data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.85\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E');"
+        ></div>
+
+        <!-- Ambient Atmospheric Deep Gold & Obsidian Spotlight Layer -->
         <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-            <!-- Top Subtle Warm Champagne Spotlight -->
-            <div
-                class="absolute -top-32 left-1/2 -translate-x-1/2 w-[1100px] h-[520px] rounded-full transition-opacity duration-1000 opacity-70"
-                :class="isDark
-                    ? 'bg-[radial-gradient(ellipse_at_top,rgba(212,175,55,0.07),transparent_70%)]'
-                    : 'bg-[radial-gradient(ellipse_at_top,rgba(212,175,55,0.12),transparent_70%)]'"
-            ></div>
-            <!-- Ultra-fine Architectural Grid with Radial Vignette -->
-            <div
-                class="absolute inset-0 transition-opacity duration-700"
-                :class="isDark
-                    ? 'bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]'
-                    : 'bg-[linear-gradient(to_right,rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]'"
-            ></div>
+            <div class="absolute -top-40 left-1/2 -translate-x-1/2 w-[1200px] h-[600px] rounded-full bg-[radial-gradient(ellipse_at_top,rgba(212,175,55,0.08),transparent_70%)] blur-3xl"></div>
+            <div class="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.012)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.012)_1px,transparent_1px)] bg-[size:5rem_5rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
         </div>
 
         <!-- ========================================================================= -->
         <!-- TOP NAVBAR -->
         <!-- ========================================================================= -->
         <header
-            class="sticky top-0 z-50 backdrop-blur-xl border-b transition-all duration-300"
-            :class="isDark ? 'bg-[#0c0e14]/85 border-white/[0.07] shadow-none' : 'bg-[#fbfaf8]/90 border-stone-200/90 shadow-xs'"
+            class="sticky top-0 z-40 backdrop-blur-2xl border-b border-white/5 bg-[#0a0a0a]/85 shadow-[0_10px_35px_rgba(0,0,0,0.8)] transition-all duration-500"
         >
             <div class="max-w-[1550px] w-full mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between h-20 gap-2 xl:gap-4">
@@ -1093,48 +1086,42 @@ onUnmounted(() => {
         </header>
 
         <!-- ========================================================================= -->
-        <!-- BESPOKE HERO SECTION: DARK LUXURY GLASSMORPHISM (ASYMMETRICAL DEPTH) -->
+        <!-- BESPOKE HERO SECTION: CARVED DIGITAL LUXURY (ASYMMETRICAL DEPTH) -->
         <!-- ========================================================================= -->
         <section
             dir="rtl"
-            class="relative py-20 lg:py-32 px-6 sm:px-12 lg:px-20 overflow-hidden z-10 bg-[#0a0a0a]"
+            class="relative py-32 px-6 sm:px-12 lg:px-24 overflow-hidden z-10"
         >
-            <!-- Atmospheric Gold & Obsidian Ambient Light Grazing -->
-            <div class="absolute inset-0 pointer-events-none overflow-hidden">
-                <div class="absolute top-0 right-1/4 w-[750px] h-[550px] rounded-full bg-[radial-gradient(ellipse_at_top,rgba(191,149,63,0.08),transparent_70%)] blur-3xl"></div>
-                <div class="absolute bottom-10 left-10 w-[600px] h-[600px] rounded-full bg-[radial-gradient(ellipse_at_center,rgba(191,149,63,0.05),transparent_70%)] blur-3xl"></div>
-            </div>
+            <div class="max-w-[1600px] mx-auto relative z-10">
 
-            <div class="max-w-[1550px] mx-auto relative z-10">
+                <!-- Asymmetrical Volumetric Hero Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-24 items-center">
 
-                <!-- Asymmetrical Hero Grid -->
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+                    <!-- Right Column: Royal Editorial Typography & Carved Glass Command (Col-span 7) -->
+                    <div class="lg:col-span-7 space-y-10 text-start">
 
-                    <!-- Right Column: Royal Editorial Typography & Brass Action (Col-span 7) -->
-                    <div class="lg:col-span-7 space-y-8 text-start">
-
-                        <!-- Royal Crown & Architectural Monogram Plaque -->
-                        <div class="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white/5 backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] transition-all duration-500 hover:border-[#bf953f]/40 hover:shadow-[0_0_30px_rgba(191,149,63,0.15)]">
-                            <svg class="w-4 h-4 text-[#bf953f]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <!-- Floating Carved Plaque: Royal Monogram with Glowing Gold Pseudo-border -->
+                        <div class="relative inline-flex items-center gap-3.5 px-6 py-2.5 rounded-full bg-black/40 backdrop-blur-xl border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_20px_40px_rgba(0,0,0,0.5)] before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/50 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm transition-all duration-500 hover:before:from-[#D4AF37]/80 hover:shadow-[0_0_30px_rgba(212,175,55,0.15)]">
+                            <svg class="w-4 h-4 text-[#D4AF37]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z"/>
-                                <circle cx="12" cy="18" r="1" fill="#bf953f"/>
+                                <circle cx="12" cy="18" r="1" fill="#D4AF37"/>
                             </svg>
-                            <span class="text-xs sm:text-sm font-semibold tracking-wider text-stone-200">
+                            <span class="text-xs sm:text-sm font-semibold tracking-widest text-[#FCF6BA]">
                                 {{ currentLocale === 'ar' ? 'مَنْظُومَةُ تَدَلَّلْ السَّحَابِيَّة • لِأَرْقَى الْمَطَاعِمِ وَالْفَنَادِقِ' : 'TEDALLAL BESPOKE RESTAURANT CLOUD' }}
                             </span>
-                            <span class="w-1.5 h-1.5 rounded-full bg-[#bf953f] animate-pulse"></span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-pulse"></span>
                         </div>
 
-                        <!-- Architectural Executive State Switcher (Traditional vs Smart Platform) -->
+                        <!-- Architectural Executive State Switcher (Carved Glass with Glowing Border) -->
                         <div class="flex items-center gap-2">
-                            <div class="inline-flex items-center p-1.5 rounded-2xl bg-white/5 backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] transition-all duration-500">
+                            <div class="relative inline-flex items-center p-2 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_20px_40px_rgba(0,0,0,0.5)] before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/35 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm transition-all duration-500">
                                 <button
                                     @click="setHeroMode('traditional', true)"
                                     type="button"
                                     :class="heroMode === 'traditional'
-                                        ? 'bg-rose-950/60 text-rose-300 border border-rose-500/40 font-bold shadow-md'
+                                        ? 'bg-rose-950/70 text-rose-200 border border-rose-500/50 font-bold shadow-lg'
                                         : 'text-stone-400 hover:text-rose-300 border border-transparent font-medium'"
-                                    class="relative flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm transition-all duration-500 cursor-pointer"
+                                    class="relative flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-xs sm:text-sm transition-all duration-500 cursor-pointer"
                                 >
                                     <span class="w-2 h-2 rounded-full" :class="heroMode === 'traditional' ? 'bg-rose-500' : 'bg-stone-500/40'"></span>
                                     <span>{{ currentLocale === 'ar' ? 'النمط التقليدي (هدر وعمولات)' : 'Legacy Model (Profit Bleed)' }}</span>
@@ -1144,34 +1131,34 @@ onUnmounted(() => {
                                     @click="setHeroMode('smart', true)"
                                     type="button"
                                     :class="heroMode === 'smart'
-                                        ? 'bg-gradient-to-r from-[#bf953f] via-[#fcf6ba] to-[#b38728] text-[#0a0a0a] font-bold shadow-lg shadow-[#bf953f]/25'
-                                        : 'text-stone-400 hover:text-[#bf953f] border border-transparent font-medium'"
-                                    class="relative flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm transition-all duration-500 cursor-pointer"
+                                        ? 'bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] text-black font-extrabold shadow-xl shadow-[#D4AF37]/25'
+                                        : 'text-stone-400 hover:text-[#FCF6BA] border border-transparent font-medium'"
+                                    class="relative flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-xs sm:text-sm transition-all duration-500 cursor-pointer"
                                 >
-                                    <span class="w-2 h-2 rounded-full" :class="heroMode === 'smart' ? 'bg-[#0a0a0a]' : 'bg-[#bf953f]/40'"></span>
+                                    <span class="w-2 h-2 rounded-full" :class="heroMode === 'smart' ? 'bg-black' : 'bg-[#D4AF37]/50'"></span>
                                     <span>{{ currentLocale === 'ar' ? 'منظومة تدلّل الذكية (تحكم كامل)' : 'With Smart Platform (Total Control)' }}</span>
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Editorial Royal Headline with Amiri Serif & Full Diacritics -->
-                        <div class="space-y-4">
-                            <h1 class="font-serif text-3xl sm:text-5xl lg:text-6xl font-normal tracking-tight leading-[1.25] text-white">
+                        <!-- Massive Royal Headline: Typography As Art (Amiri Serif & Metallic Gold Gradient) -->
+                        <div class="space-y-6">
+                            <h1 class="font-serif text-4xl sm:text-6xl lg:text-7xl xl:text-8xl font-normal tracking-tight leading-[1.15] text-white">
                                 <template v-if="heroMode === 'traditional'">
                                     <span class="text-stone-300 block">مَطْبَخٌ مُزْدَحِمٌ، مَبِيعَاتٌ تَتَصَاعَدُ..</span>
-                                    <span class="text-rose-400 block mt-3 font-serif font-bold text-4xl sm:text-6xl lg:text-7xl">
+                                    <span class="text-rose-400 block mt-4 font-serif font-bold text-5xl sm:text-7xl lg:text-8xl xl:text-9xl">
                                         وَأَرْبَاحُكَ الْحَقِيقِيَّةُ تَتَبَخَّرُ بَيْنَ التَّطْبِيقَاتِ وَالْهَدْرِ!
                                     </span>
                                 </template>
                                 <template v-else>
-                                    <span class="text-[#f5f3ef] block">مَطْبَخٌ مُنَظَّمٌ كَالسَّاعَةِ، طَلَبَاتٌ مُبَاشِرَةٌ..</span>
-                                    <span class="block mt-4 bg-gradient-to-r from-[#bf953f] via-[#fcf6ba] to-[#b38728] text-transparent bg-clip-text font-serif text-4xl sm:text-6xl lg:text-7xl font-bold">
+                                    <span class="text-stone-200 block">مَطْبَخٌ مُنَظَّمٌ كَالسَّاعَةِ، طَلَبَاتٌ مُبَاشِرَةٌ..</span>
+                                    <span class="block mt-4 bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-transparent font-serif font-bold text-5xl sm:text-7xl lg:text-8xl xl:text-9xl">
                                         وَكُلُّ قِرْشٍ مِنْ أَرْبَاحِكَ يَدْخُلُ جَيْبَكَ بِالْكَامِلِ!
                                     </span>
                                 </template>
                             </h1>
 
-                            <p class="font-sans font-normal text-base sm:text-lg text-stone-300 max-w-2xl leading-relaxed">
+                            <p class="font-tajawal font-normal text-base sm:text-xl text-stone-300 max-w-2xl leading-relaxed">
                                 <template v-if="heroMode === 'traditional'">
                                     {{ currentLocale === 'ar'
                                         ? 'عمولات وساطة تلتهم 25% من إيراداتك، أخطاء متكررة في تذاكر المطبخ، ومخزون يتسرب يومياً دون رقابة دقيقة.'
@@ -1187,96 +1174,96 @@ onUnmounted(() => {
                             </p>
                         </div>
 
-                        <!-- Action Controls: Brushed Gold Button & Frosted Glass Secondary -->
-                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
-                            <!-- Primary CTA: Brushed Gold -->
+                        <!-- Action Controls: Brushed Gold CTA & Carved Frosted Glass Actions -->
+                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-5 pt-3">
+                            <!-- Primary CTA: Brushed Metallic Gold -->
                             <button
                                 @click="isDemoModalOpen = true"
                                 type="button"
-                                class="relative group overflow-hidden px-10 py-4 sm:py-4.5 rounded-2xl bg-gradient-to-r from-[#bf953f] via-[#fcf6ba] to-[#b38728] text-[#0a0a0a] font-bold text-base shadow-[0_10px_35px_rgba(191,149,63,0.3)] hover:shadow-[0_15px_45px_rgba(191,149,63,0.45)] transition-all duration-500 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer flex items-center justify-center gap-3"
+                                class="relative group overflow-hidden px-10 py-5 rounded-2xl bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] text-black font-extrabold text-base shadow-[0_12px_40px_rgba(212,175,55,0.35)] hover:shadow-[0_18px_50px_rgba(212,175,55,0.5)] transition-all duration-500 hover:-translate-y-1 active:translate-y-0 cursor-pointer flex items-center justify-center gap-3"
                             >
                                 <span>{{ currentLocale === 'ar' ? 'ابدأ بتأمين أرباحك وتجربة النظام' : 'Start Securing Your Profits Free' }}</span>
-                                <span class="text-xs px-2.5 py-0.5 rounded-md font-extrabold bg-[#0a0a0a]/15 text-[#0a0a0a]">
+                                <span class="text-xs px-2.5 py-0.5 rounded-md font-black bg-black/15 text-black">
                                     14 {{ currentLocale === 'ar' ? 'يوماً تجربة' : 'Days Free' }}
                                 </span>
                             </button>
 
-                            <!-- Secondary CTA: Ultra-Premium Glass -->
+                            <!-- Secondary CTA: Carved Dark Glass with Pseudo Glowing Gold Border -->
                             <a
                                 href="#features-bespoke"
-                                class="px-8 py-4 sm:py-4.5 rounded-2xl bg-white/5 backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] text-stone-200 hover:text-white hover:border-[#bf953f]/40 hover:shadow-[0_0_30px_rgba(191,149,63,0.15)] transition-all duration-500 flex items-center justify-center gap-2.5 text-sm font-semibold cursor-pointer"
+                                class="relative px-8 py-5 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/5 text-stone-200 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_20px_40px_rgba(0,0,0,0.5)] before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/35 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm transition-all duration-500 hover:before:from-[#D4AF37]/75 hover:shadow-[0_0_30px_rgba(212,175,55,0.2)] hover:-translate-y-0.5 flex items-center justify-center gap-3 text-sm font-semibold cursor-pointer"
                             >
-                                <span class="w-5 h-5 rounded-full bg-[#bf953f]/20 text-[#bf953f] flex items-center justify-center text-xs">
+                                <span class="w-5 h-5 rounded-full bg-[#D4AF37]/20 text-[#FCF6BA] flex items-center justify-center text-xs">
                                     ▶
                                 </span>
                                 <span>{{ currentLocale === 'ar' ? 'استكشف المزايا المعمارية' : 'Explore Architecture' }}</span>
                             </a>
 
-                            <!-- Pre-sales Link -->
+                            <!-- Pre-sales Consultation -->
                             <Link
                                 href="/consultation"
-                                class="px-6 py-4 rounded-2xl text-stone-300 hover:text-[#bf953f] transition-all duration-500 text-sm font-semibold flex items-center justify-center gap-2 group cursor-pointer"
+                                class="px-6 py-5 rounded-2xl text-stone-300 hover:text-[#FCF6BA] transition-all duration-500 text-sm font-semibold flex items-center justify-center gap-2 group cursor-pointer"
                             >
                                 <span>{{ currentLocale === 'ar' ? 'دراسة متطلبات مطعمك' : 'Request Consultation' }}</span>
                                 <span class="text-xs rtl:rotate-180 group-hover:translate-x-[-4px] rtl:group-hover:translate-x-1 transition-transform duration-500">→</span>
                             </Link>
                         </div>
 
-                        <!-- Micro Metrics Trio with Dark Frosted Glass -->
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
+                        <!-- Micro Metrics Trio: Carved Glass Floating Cards -->
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 pt-4">
                             <!-- Metric 1 -->
-                            <div class="p-5 rounded-2xl bg-white/5 backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] transition-all duration-500 hover:border-[#bf953f]/40 hover:shadow-[0_0_30px_rgba(191,149,63,0.15)] flex flex-col items-center justify-center text-center">
+                            <div class="relative p-6 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_20px_40px_rgba(0,0,0,0.5)] before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/40 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm transition-all duration-500 hover:before:from-[#D4AF37]/80 hover:shadow-[0_0_35px_rgba(212,175,55,0.2)] hover:-translate-y-1 flex flex-col items-center justify-center text-center">
                                 <span class="text-xs text-stone-400 font-medium mb-1">{{ currentLocale === 'ar' ? 'عمولة وسيط' : 'Intermediary Cut' }}</span>
-                                <span class="font-serif text-3xl font-bold bg-gradient-to-r from-[#bf953f] via-[#fcf6ba] to-[#b38728] text-transparent bg-clip-text" dir="ltr">0%</span>
-                                <span class="text-[11px] font-bold text-emerald-400 mt-1">{{ currentLocale === 'ar' ? 'أرباحك كاملة 100% لك' : '100% direct revenue' }}</span>
+                                <span class="font-serif text-3xl font-bold bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-transparent" dir="ltr">0%</span>
+                                <span class="text-[11px] font-bold text-emerald-400 mt-1.5">{{ currentLocale === 'ar' ? 'أرباحك كاملة 100% لك' : '100% direct revenue' }}</span>
                             </div>
 
                             <!-- Metric 2 -->
-                            <div class="p-5 rounded-2xl bg-white/5 backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] transition-all duration-500 hover:border-[#bf953f]/40 hover:shadow-[0_0_30px_rgba(191,149,63,0.15)] flex flex-col items-center justify-center text-center">
+                            <div class="relative p-6 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_20px_40px_rgba(0,0,0,0.5)] before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/40 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm transition-all duration-500 hover:before:from-[#D4AF37]/80 hover:shadow-[0_0_35px_rgba(212,175,55,0.2)] hover:-translate-y-1 flex flex-col items-center justify-center text-center">
                                 <span class="text-xs text-stone-400 font-medium mb-1">{{ currentLocale === 'ar' ? 'ضبط التكاليف' : 'Cost Control' }}</span>
-                                <span class="font-serif text-2xl font-bold text-[#fcf6ba]">{{ currentLocale === 'ar' ? 'فوري ولحظي' : 'Real-Time' }}</span>
-                                <span class="text-[11px] font-bold text-stone-300 mt-1">{{ currentLocale === 'ar' ? 'ربط المطبخ بالوصفات آلياً' : 'Recipe-level inventory sync' }}</span>
+                                <span class="font-serif text-2xl font-bold text-[#FCF6BA]">{{ currentLocale === 'ar' ? 'فوري ولحظي' : 'Real-Time' }}</span>
+                                <span class="text-[11px] font-bold text-stone-300 mt-1.5">{{ currentLocale === 'ar' ? 'ربط المطبخ بالوصفات آلياً' : 'Recipe-level inventory sync' }}</span>
                             </div>
 
                             <!-- Metric 3 -->
-                            <div class="p-5 rounded-2xl bg-white/5 backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] transition-all duration-500 hover:border-[#bf953f]/40 hover:shadow-[0_0_30px_rgba(191,149,63,0.15)] flex flex-col items-center justify-center text-center">
+                            <div class="relative p-6 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_20px_40px_rgba(0,0,0,0.5)] before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/40 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm transition-all duration-500 hover:before:from-[#D4AF37]/80 hover:shadow-[0_0_35px_rgba(212,175,55,0.2)] hover:-translate-y-1 flex flex-col items-center justify-center text-center">
                                 <span class="text-xs text-stone-400 font-medium mb-1">{{ currentLocale === 'ar' ? 'النتيجة' : 'Bottom-Line Growth' }}</span>
-                                <span class="font-serif text-2xl font-bold text-[#fcf6ba]">{{ currentLocale === 'ar' ? 'مضاعفة صافي الأرباح' : '+100% Margin Boost' }}</span>
-                                <span class="text-[11px] font-bold text-[#bf953f] mt-1">{{ currentLocale === 'ar' ? 'نمو وسيطرة مالية كاملة' : 'Total operational command' }}</span>
+                                <span class="font-serif text-2xl font-bold text-[#FCF6BA]">{{ currentLocale === 'ar' ? 'مضاعفة صافي الأرباح' : '+100% Margin Boost' }}</span>
+                                <span class="text-[11px] font-bold text-[#D4AF37] mt-1.5">{{ currentLocale === 'ar' ? 'نمو وسيطرة مالية كاملة' : 'Total operational command' }}</span>
                             </div>
                         </div>
 
                     </div>
 
-                    <!-- Left Column: Asymmetrical Overlapping Dimensional Monolith (Col-span 5) -->
-                    <div class="lg:col-span-5 relative mt-10 lg:mt-0">
+                    <!-- Left Column: Asymmetrical Overlapping Carved Glass Monolith (Col-span 5) -->
+                    <div class="lg:col-span-5 relative mt-12 lg:mt-0">
 
-                        <!-- Main Glass Frame with Michelin-Star Ambient Viewport -->
-                        <div class="relative rounded-3xl p-3 bg-white/5 backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_30px_70px_rgba(0,0,0,0.9)] overflow-hidden transition-all duration-500 hover:border-[#bf953f]/30">
-                            <div class="relative h-[380px] sm:h-[480px] rounded-2xl overflow-hidden group">
+                        <!-- Main Carved Viewport Monolith with Deep Glowing Gold Border -->
+                        <div class="relative p-3.5 rounded-3xl bg-black/40 backdrop-blur-xl border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_30px_70px_rgba(0,0,0,0.85)] before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/50 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm transition-all duration-500 hover:before:from-[#D4AF37]/80">
+                            <div class="relative h-[420px] sm:h-[500px] rounded-2xl overflow-hidden group">
                                 <img
                                     src="/images/tedallal-luxury-hero-bg.jpg"
                                     alt="بيئة عمل تدلّل الفاخرة"
-                                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 filter brightness-[0.9] contrast-[1.1]"
+                                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 filter brightness-[0.92] contrast-[1.1]"
                                     onerror="this.src='/images/tedallal-luxury-saas-mockup.jpg'"
                                 />
-                                <div class="absolute inset-0 bg-gradient-to-t from-[#0a0a0a]/90 via-[#0a0a0a]/30 to-transparent"></div>
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent"></div>
 
-                                <!-- Ambient Lighting Badge inside the Image -->
-                                <div class="absolute top-4 start-4 flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-black/60 backdrop-blur-xl border border-white/10 text-stone-200 text-xs font-medium">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-[#bf953f] animate-pulse"></span>
+                                <!-- Architectural Plaque Inside the Viewport -->
+                                <div class="absolute top-5 start-5 flex items-center gap-2 px-4 py-2 rounded-xl bg-black/65 backdrop-blur-xl border border-white/10 text-stone-200 text-xs font-medium">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-pulse"></span>
                                     <span>{{ currentLocale === 'ar' ? 'أجواء ضيافة راقية • أتمتة صامتة' : 'Fine Dining Ambiance • Silent Automation' }}</span>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Floating Glass Element 1: Asymmetrical Overlap Top-Right (-mt-12 -mr-6 lg:-mr-10) -->
-                        <div class="absolute -top-8 -right-4 sm:-right-8 z-20 w-64 p-5 rounded-2xl bg-white/5 backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_20px_45px_rgba(0,0,0,0.85)] transition-all duration-500 hover:border-[#bf953f]/40 hover:shadow-[0_0_30px_rgba(191,149,63,0.15)] hover:-translate-y-1">
+                        <!-- Floating Overlap Monolith 1: Asymmetrical Top-Right (-mt-12 -mr-8 lg:-mr-12 z-20) -->
+                        <div class="absolute -top-10 -right-4 sm:-right-8 lg:-right-12 z-20 w-72 p-6 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_25px_50px_rgba(0,0,0,0.8)] before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/60 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm transition-all duration-500 hover:before:from-[#D4AF37]/90 hover:shadow-[0_0_35px_rgba(212,175,55,0.25)] hover:-translate-y-1">
                             <div class="flex items-center justify-between mb-2">
                                 <span class="text-xs text-stone-300 font-semibold">{{ currentLocale === 'ar' ? 'نسبة استبقاء الإيراد' : 'Revenue Retained' }}</span>
                                 <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
                             </div>
-                            <div class="font-serif text-3xl font-bold bg-gradient-to-r from-[#bf953f] via-[#fcf6ba] to-[#b38728] text-transparent bg-clip-text" dir="ltr">
+                            <div class="font-serif text-3xl font-bold bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-transparent" dir="ltr">
                                 100% Direct
                             </div>
                             <div class="text-[11px] text-stone-400 mt-1">
@@ -1284,15 +1271,15 @@ onUnmounted(() => {
                             </div>
                         </div>
 
-                        <!-- Floating Glass Element 2: Asymmetrical Overlap Bottom-Left (-mb-10 -ml-4 sm:-ml-8) -->
-                        <div class="absolute -bottom-8 -left-4 sm:-left-8 z-30 w-72 p-5 rounded-2xl bg-white/5 backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_20px_45px_rgba(0,0,0,0.85)] transition-all duration-500 hover:border-[#bf953f]/40 hover:shadow-[0_0_30px_rgba(191,149,63,0.15)] hover:-translate-y-1">
-                            <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-xl bg-gradient-to-r from-[#bf953f]/20 to-[#b38728]/10 border border-[#bf953f]/30 flex items-center justify-center text-[#fcf6ba] font-bold text-xs shrink-0">
+                        <!-- Floating Overlap Monolith 2: Asymmetrical Bottom-Left (-mb-10 -ml-6 sm:-ml-10 z-30) -->
+                        <div class="absolute -bottom-10 -left-4 sm:-left-8 lg:-left-10 z-30 w-80 p-6 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_25px_50px_rgba(0,0,0,0.8)] before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/60 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm transition-all duration-500 hover:before:from-[#D4AF37]/90 hover:shadow-[0_0_35px_rgba(212,175,55,0.25)] hover:-translate-y-1">
+                            <div class="flex items-center gap-3.5">
+                                <div class="w-12 h-12 rounded-xl bg-gradient-to-r from-[#BF953F]/25 to-[#B38728]/15 border border-[#BF953F]/40 flex items-center justify-center text-[#FCF6BA] font-bold text-sm shrink-0">
                                     VIP
                                 </div>
                                 <div class="text-start">
                                     <div class="text-xs font-bold text-white">{{ currentLocale === 'ar' ? 'طاولة 07 الملكية • إرسال فوري' : 'Royal Table 07 • Live KDS Sync' }}</div>
-                                    <div class="text-[11px] text-[#bf953f] mt-0.5">{{ currentLocale === 'ar' ? 'منيو الباركود التفاعلي • 0 أخطاء' : 'Branded QR Menu • Zero Wait' }}</div>
+                                    <div class="text-[11px] text-[#FCF6BA] mt-0.5">{{ currentLocale === 'ar' ? 'منيو الباركود التفاعلي • 0 أخطاء' : 'Branded QR Menu • Zero Wait' }}</div>
                                 </div>
                             </div>
                         </div>
@@ -1305,27 +1292,27 @@ onUnmounted(() => {
         </section>
 
         <!-- ========================================================================= -->
-        <!-- BESPOKE TOP FEATURES: SCULPTURAL GLASS ARCHITECTURE (NON-GRID) -->
+        <!-- BESPOKE TOP FEATURES: CARVED SCULPTURAL ARCHITECTURE (NON-GRID) -->
         <!-- ========================================================================= -->
         <section
             id="features-bespoke"
             dir="rtl"
-            class="py-24 lg:py-36 px-6 sm:px-12 lg:px-20 relative z-10 bg-[#0e0e0e] border-t border-white/5"
+            class="py-32 lg:py-44 px-6 sm:px-12 lg:px-24 relative z-10 border-t border-white/5"
         >
-            <div class="max-w-[1550px] mx-auto">
+            <div class="max-w-[1600px] mx-auto">
 
-                <!-- Section Editorial Header -->
-                <div class="max-w-3xl mb-20 space-y-4 text-start">
-                    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 backdrop-blur-2xl border border-white/10 text-[#bf953f] text-xs font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]">
-                        <span class="w-1.5 h-1.5 rounded-full bg-[#bf953f] animate-pulse"></span>
+                <!-- Section Editorial Header (Typography As Art) -->
+                <div class="max-w-3xl mb-24 space-y-5 text-start">
+                    <div class="relative inline-flex items-center gap-2.5 px-4.5 py-1.5 rounded-full bg-black/40 backdrop-blur-xl border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_20px_40px_rgba(0,0,0,0.5)] before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/50 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm text-[#FCF6BA] text-xs font-semibold">
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-pulse"></span>
                         <span>{{ currentLocale === 'ar' ? 'هَنْدَسَةُ الضِّيَافَةِ الرَّقْمِيَّة • ARCHITECTURAL COMMAND' : 'BESPOKE PLATFORM ARCHITECTURE' }}</span>
                     </div>
 
-                    <h2 class="font-serif text-3xl sm:text-5xl lg:text-6xl font-normal tracking-tight text-white leading-[1.25]">
+                    <h2 class="font-serif text-4xl sm:text-6xl lg:text-7xl font-normal tracking-tight text-white leading-[1.2]">
                         {{ currentLocale === 'ar' ? 'أركان المنظومة المصممة يدوياً لرواد الضيافة الفاخرة' : 'Bespoke Pillars for Elite Restaurant Operations' }}
                     </h2>
 
-                    <p class="font-sans text-base text-stone-300 leading-relaxed max-w-2xl">
+                    <p class="font-tajawal text-base sm:text-lg text-stone-300 leading-relaxed max-w-2xl">
                         {{ currentLocale === 'ar'
                             ? 'نرفض القوالب البرمجية المكررة. بنينا كل تفصيلة في تدلّل لتجسيد الفخامة البصرية ودقة الأتمتة اللحظية لصالتك ومطبخك.'
                             : 'Rejecting generic SaaS templates. Every element is crafted to unify visual majesty with real-time operational precision.'
@@ -1334,16 +1321,16 @@ onUnmounted(() => {
                 </div>
 
                 <!-- Asymmetrical Sculptural Composition with Overlapping Monoliths -->
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
 
-                    <!-- Monolith 1: Grand Tall Glass Structure (Col-span 7) -->
-                    <div class="lg:col-span-7 rounded-3xl p-8 sm:p-12 bg-white/5 backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15),0_30px_70px_rgba(0,0,0,0.8)] relative overflow-hidden transition-all duration-500 hover:border-[#bf953f]/40 hover:shadow-[0_0_35px_rgba(191,149,63,0.15)] group">
+                    <!-- Monolith 1: Grand Tall Carved Glass Structure (Col-span 7) -->
+                    <div class="lg:col-span-7 relative p-10 sm:p-14 rounded-3xl bg-black/40 backdrop-blur-xl border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_30px_70px_rgba(0,0,0,0.7)] before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/50 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm transition-all duration-500 hover:before:from-[#D4AF37]/85 hover:shadow-[0_0_40px_rgba(212,175,55,0.25)] hover:-translate-y-1 group text-start overflow-hidden">
                         <!-- Top Ambient Golden Shimmer -->
-                        <div class="absolute top-0 right-0 w-80 h-80 bg-[radial-gradient(ellipse_at_top_right,rgba(191,149,63,0.08),transparent_70%)] pointer-events-none"></div>
+                        <div class="absolute top-0 right-0 w-96 h-96 bg-[radial-gradient(ellipse_at_top_right,rgba(212,175,55,0.08),transparent_70%)] pointer-events-none"></div>
 
-                        <div class="space-y-6 relative z-10 text-start">
+                        <div class="space-y-7 relative z-10">
                             <!-- Minimalist Gold Wireframe Icon -->
-                            <div class="w-16 h-16 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] flex items-center justify-center text-[#bf953f] transition-all duration-500 group-hover:scale-105 group-hover:border-[#bf953f]/40">
+                            <div class="w-16 h-16 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] flex items-center justify-center text-[#D4AF37] transition-all duration-500 group-hover:scale-105">
                                 <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                                     <rect x="3" y="3" width="7" height="7" rx="1.5" />
                                     <rect x="14" y="3" width="7" height="7" rx="1.5" />
@@ -1355,17 +1342,17 @@ onUnmounted(() => {
                             </div>
 
                             <div class="flex items-center gap-3">
-                                <span class="px-3 py-1 rounded-full text-xs font-bold bg-[#bf953f]/15 text-[#fcf6ba] border border-[#bf953f]/30">
+                                <span class="px-3.5 py-1 rounded-full text-xs font-bold bg-[#BF953F]/20 text-[#FCF6BA] border border-[#BF953F]/40">
                                     {{ currentLocale === 'ar' ? 'باقة Max الحصرية' : 'Max Plan Signature' }}
                                 </span>
                                 <span class="text-xs text-stone-400 font-medium">Zero App Downloads Required</span>
                             </div>
 
-                            <h3 class="font-serif text-2xl sm:text-4xl font-normal text-white group-hover:text-[#fcf6ba] transition-colors duration-500">
+                            <h3 class="font-serif text-3xl sm:text-4xl lg:text-5xl font-normal text-white group-hover:text-[#FCF6BA] transition-colors duration-500">
                                 {{ currentLocale === 'ar' ? 'منيو الباركود التفاعلي — فخامة بصرية وشعار مخصص في قلب الـ QR' : 'Interactive QR Dining & Centerpiece Logo Customization' }}
                             </h3>
 
-                            <p class="font-sans text-sm sm:text-base text-stone-300 leading-relaxed max-w-xl">
+                            <p class="font-tajawal text-base text-stone-300 leading-relaxed max-w-xl">
                                 {{ currentLocale === 'ar'
                                     ? 'يتيح لضيوفك استعراض الأطباق بصور عالية الدقة فائقة الوضوح، والطلب المباشر من طاولتهم دون تنزيل أي تطبيق. يتضمن ميزة دمج شعار مطعمك الذهبي في منتصف الباركود مع دعم متعدد العملات واللغات.'
                                     : 'Empowers patrons to explore high-res dishes and order directly from their table with zero app installs. Embeds your bespoke gold restaurant emblem in the QR center.'
@@ -1373,20 +1360,20 @@ onUnmounted(() => {
                             </p>
 
                             <!-- Interactive VIP Floor Ticket Preview -->
-                            <div class="pt-6 border-t border-white/10 flex flex-wrap items-center justify-between gap-4">
+                            <div class="pt-8 border-t border-white/10 flex flex-wrap items-center justify-between gap-4">
                                 <div class="flex items-center gap-3.5">
-                                    <div class="w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-[#bf953f] font-bold text-xs">
+                                    <div class="w-12 h-12 rounded-xl bg-black/40 border border-white/10 flex items-center justify-center text-[#D4AF37] font-bold text-xs">
                                         QR
                                     </div>
                                     <div class="text-start">
                                         <div class="text-xs font-bold text-white">{{ currentLocale === 'ar' ? 'طلب فوري من الطاولة • دقة 100%' : 'Instant Table Order • 100% Accuracy' }}</div>
-                                        <div class="text-[11px] text-stone-400">{{ currentLocale === 'ar' ? 'توفير 40% من وقت النادل لكل دورة طاولة' : 'Saves 40% waiter time per table turn' }}</div>
+                                        <div class="text-[11px] text-stone-400 mt-0.5">{{ currentLocale === 'ar' ? 'توفير 40% من وقت النادل لكل دورة طاولة' : 'Saves 40% waiter time per table turn' }}</div>
                                     </div>
                                 </div>
 
                                 <button
                                     @click="isDemoModalOpen = true"
-                                    class="text-xs font-semibold text-[#bf953f] flex items-center gap-1.5 transition-all duration-500 hover:text-[#fcf6ba] group-hover:translate-x-[-4px] rtl:group-hover:translate-x-1"
+                                    class="text-xs font-bold text-[#FCF6BA] flex items-center gap-1.5 transition-all duration-500 hover:text-white group-hover:translate-x-[-4px] rtl:group-hover:translate-x-1"
                                 >
                                     <span>{{ currentLocale === 'ar' ? 'شاهد تجربة الطاولات' : 'Inspect Table Demo' }}</span>
                                     <span class="rtl:rotate-180">→</span>
@@ -1395,14 +1382,14 @@ onUnmounted(() => {
                         </div>
                     </div>
 
-                    <!-- Monolith 2: Elevated Offset Glass Card (Col-span 5 with -mt-6 overlap on lg) -->
-                    <div class="lg:col-span-5 lg:-mt-6 rounded-3xl p-8 sm:p-10 bg-white/5 backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15),0_30px_70px_rgba(0,0,0,0.8)] relative overflow-hidden transition-all duration-500 hover:border-[#bf953f]/40 hover:shadow-[0_0_35px_rgba(191,149,63,0.15)] group text-start">
+                    <!-- Monolith 2: Elevated Offset Carved Glass Card (Col-span 5 with -mt-10 overlap on lg) -->
+                    <div class="lg:col-span-5 lg:-mt-10 relative p-8 sm:p-12 rounded-3xl bg-black/40 backdrop-blur-xl border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_30px_70px_rgba(0,0,0,0.7)] before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/50 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm transition-all duration-500 hover:before:from-[#D4AF37]/85 hover:shadow-[0_0_40px_rgba(212,175,55,0.25)] hover:-translate-y-1 group text-start overflow-hidden">
                         <!-- Top Ambient Golden Shimmer -->
-                        <div class="absolute top-0 right-0 w-60 h-60 bg-[radial-gradient(ellipse_at_top_right,rgba(191,149,63,0.06),transparent_70%)] pointer-events-none"></div>
+                        <div class="absolute top-0 right-0 w-64 h-64 bg-[radial-gradient(ellipse_at_top_right,rgba(212,175,55,0.07),transparent_70%)] pointer-events-none"></div>
 
-                        <div class="space-y-5 relative z-10">
+                        <div class="space-y-6 relative z-10">
                             <!-- Minimalist Gold Wireframe Icon -->
-                            <div class="w-14 h-14 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] flex items-center justify-center text-[#bf953f] transition-all duration-500 group-hover:scale-105 group-hover:border-[#bf953f]/40">
+                            <div class="w-14 h-14 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] flex items-center justify-center text-[#D4AF37] transition-all duration-500 group-hover:scale-105">
                                 <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                                     <rect x="2" y="3" width="20" height="14" rx="2" />
                                     <line x1="8" y1="21" x2="16" y2="21" />
@@ -1411,15 +1398,15 @@ onUnmounted(() => {
                                 </svg>
                             </div>
 
-                            <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-white/5 text-[#fcf6ba] border border-white/10">
+                            <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-white/5 text-[#FCF6BA] border border-white/10">
                                 {{ currentLocale === 'ar' ? 'تنظيم المطبخ اللحظي' : 'Cloud KDS Routing' }}
                             </span>
 
-                            <h3 class="font-serif text-2xl sm:text-3xl font-normal text-white group-hover:text-[#fcf6ba] transition-colors duration-500">
+                            <h3 class="font-serif text-2xl sm:text-3xl font-normal text-white group-hover:text-[#FCF6BA] transition-colors duration-500">
                                 {{ currentLocale === 'ar' ? 'شاشات المطبخ الذكية (Multi-KDS)' : 'Multi-Station Cloud KDS Displays' }}
                             </h3>
 
-                            <p class="font-sans text-xs sm:text-sm text-stone-300 leading-relaxed">
+                            <p class="font-tajawal text-xs sm:text-sm text-stone-300 leading-relaxed">
                                 {{ currentLocale === 'ar'
                                     ? 'توجيه آلي وفوري للطلبات بين خطوط التحضير (مشاوي، بار، سلطات) مع مؤقتات لونية تقضي تماماً على التذاكر الورقية وتمنع تأخير الأطباق.'
                                     : 'Real-time automatic routing across preparation lines (Grill, Bar, Pastry) with color-coded timers eliminating paper ticket chaos.'
@@ -1427,21 +1414,21 @@ onUnmounted(() => {
                             </p>
 
                             <!-- Mini Preparation Benchmark Widget -->
-                            <div class="pt-5 border-t border-white/10 flex items-center justify-between text-xs">
+                            <div class="pt-6 border-t border-white/10 flex items-center justify-between text-xs">
                                 <span class="text-stone-400">{{ currentLocale === 'ar' ? 'مؤقت التحضير المعياري' : 'Prep Benchmark' }}</span>
-                                <span class="font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">08:30 دقيقة</span>
+                                <span class="font-mono font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-md border border-emerald-500/25">08:30 دقيقة</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Monolith 3: Panoramic Horizontal Glass Plinth (Col-span 12 underneath, bridging both) -->
-                    <div class="lg:col-span-12 rounded-3xl p-8 sm:p-12 bg-white/5 backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15),0_30px_70px_rgba(0,0,0,0.8)] relative overflow-hidden transition-all duration-500 hover:border-[#bf953f]/40 hover:shadow-[0_0_35px_rgba(191,149,63,0.15)] group">
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center text-start relative z-10">
+                    <!-- Monolith 3: Panoramic Horizontal Carved Glass Plinth (Col-span 12 underneath, bridging both) -->
+                    <div class="lg:col-span-12 relative p-10 sm:p-14 rounded-3xl bg-black/40 backdrop-blur-xl border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_30px_70px_rgba(0,0,0,0.7)] before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/50 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm transition-all duration-500 hover:before:from-[#D4AF37]/85 hover:shadow-[0_0_40px_rgba(212,175,55,0.25)] hover:-translate-y-1 group overflow-hidden">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center text-start relative z-10">
 
                             <!-- Left Sub-Wing: Financial Analytics & Zero Cut -->
-                            <div class="space-y-4">
-                                <div class="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-[#bf953f]">
-                                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <div class="space-y-5">
+                                <div class="w-14 h-14 rounded-xl bg-black/40 border border-white/10 flex items-center justify-center text-[#D4AF37]">
+                                    <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
                                         <circle cx="12" cy="12" r="10" stroke-dasharray="2 2" />
                                     </svg>
@@ -1449,10 +1436,10 @@ onUnmounted(() => {
                                 <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
                                     {{ currentLocale === 'ar' ? 'حماية الإيراد الكامل' : '100% Margin Retention' }}
                                 </span>
-                                <h4 class="font-serif text-xl sm:text-2xl font-normal text-white">
+                                <h4 class="font-serif text-2xl sm:text-3xl font-normal text-white">
                                     {{ currentLocale === 'ar' ? 'صفر عمولة وسيطة 0% — كل قرش يدخل حسابك' : 'Zero 0% Commission — Retain All Profits' }}
                                 </h4>
-                                <p class="font-sans text-xs sm:text-sm text-stone-300 leading-relaxed">
+                                <p class="font-tajawal text-sm text-stone-300 leading-relaxed">
                                     {{ currentLocale === 'ar'
                                         ? 'احتفظ بكامل أرباحك بدون استنزاف تطبيقات التوصيل (15%-25%). تقارير محاسبية فورية مع جرد آلي للمخزون يربط كل وجبة بمكوناتها بدقة الغرام.'
                                         : 'Retain 100% of receipts without delivery app cuts. Real-time CPA reports and automated recipe-level inventory tracking.'
@@ -1461,19 +1448,19 @@ onUnmounted(() => {
                             </div>
 
                             <!-- Right Sub-Wing: AI Smart Waiter Upselling -->
-                            <div class="space-y-4 lg:border-s lg:border-white/10 lg:ps-10">
-                                <div class="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-[#bf953f]">
-                                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <div class="space-y-5 lg:border-s lg:border-white/10 lg:ps-12">
+                                <div class="w-14 h-14 rounded-xl bg-black/40 border border-white/10 flex items-center justify-center text-[#D4AF37]">
+                                    <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6.4-4.8-6.4 4.8 2.4-7.2-6-4.8h7.6z" />
                                     </svg>
                                 </div>
-                                <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-[#bf953f]/15 text-[#fcf6ba] border border-[#bf953f]/30">
+                                <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-[#BF953F]/20 text-[#FCF6BA] border border-[#BF953F]/40">
                                     {{ currentLocale === 'ar' ? 'زيادة المبيعات آلياً' : 'Automated Upselling AI' }}
                                 </span>
-                                <h4 class="font-serif text-xl sm:text-2xl font-normal text-white">
+                                <h4 class="font-serif text-2xl sm:text-3xl font-normal text-white">
                                     {{ currentLocale === 'ar' ? 'النادل الذكي — زيادة متوسط الفاتورة بنسبة 28%' : 'AI Concierge — +28% Average Ticket Growth' }}
                                 </h4>
-                                <p class="font-sans text-xs sm:text-sm text-stone-300 leading-relaxed">
+                                <p class="font-tajawal text-sm text-stone-300 leading-relaxed">
                                     {{ currentLocale === 'ar'
                                         ? 'محرك اقتراحات نخبوي يقترح الأطباق الجانبية والمشروبات المتناغمة بأسلوب راقٍ وتوقيت نفسي مثالي، لرفع قيمة الفاتورة دون أي إلحاح.'
                                         : 'An intelligent recommendation engine presenting complementary pairings and desserts at the exact psychological moment.'
