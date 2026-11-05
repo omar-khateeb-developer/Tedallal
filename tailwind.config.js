@@ -14,9 +14,10 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Cairo', 'Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['Tajawal', 'Cairo', 'Figtree', ...defaultTheme.fontFamily.sans],
                 serif: ['Amiri', ...defaultTheme.fontFamily.serif],
                 display: ['Cinzel', ...defaultTheme.fontFamily.serif],
+                tajawal: ['Tajawal', 'sans-serif'],
             },
             colors: {
                 luxury: {

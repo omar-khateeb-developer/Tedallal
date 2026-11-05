@@ -1092,344 +1092,400 @@ onUnmounted(() => {
             </div>
         </header>
 
-        <!-- ============================================================== -->
-        <!-- HERO SECTION: INTERACTIVE ARCHITECTURAL BEFORE/AFTER EXPERIENCE -->
-        <!-- ============================================================== -->
-        <section class="relative pt-8 pb-20 lg:pt-14 lg:pb-24 overflow-hidden z-10 transition-colors duration-500">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                <div class="text-center max-w-4xl mx-auto space-y-7">
+        <!-- ========================================================================= -->
+        <!-- BESPOKE HERO SECTION: DARK LUXURY GLASSMORPHISM (ASYMMETRICAL DEPTH) -->
+        <!-- ========================================================================= -->
+        <section
+            dir="rtl"
+            class="relative py-20 lg:py-32 px-6 sm:px-12 lg:px-20 overflow-hidden z-10 bg-[#0a0a0a]"
+        >
+            <!-- Atmospheric Gold & Obsidian Ambient Light Grazing -->
+            <div class="absolute inset-0 pointer-events-none overflow-hidden">
+                <div class="absolute top-0 right-1/4 w-[750px] h-[550px] rounded-full bg-[radial-gradient(ellipse_at_top,rgba(191,149,63,0.08),transparent_70%)] blur-3xl"></div>
+                <div class="absolute bottom-10 left-10 w-[600px] h-[600px] rounded-full bg-[radial-gradient(ellipse_at_center,rgba(191,149,63,0.05),transparent_70%)] blur-3xl"></div>
+            </div>
 
-                    <!-- Top Centered Interactive Mode Switcher (Architectural Executive Switcher) -->
-                    <div class="flex flex-col items-center justify-center gap-2">
-                        <div
-                            class="inline-flex items-center p-1.5 rounded-2xl border shadow-sm backdrop-blur-md relative z-20 transition-all duration-300"
-                            :class="isDark ? 'bg-[#121623]/95 border-white/[0.08]' : 'bg-white border-stone-200 shadow-xs'"
-                        >
-                            <!-- Traditional Pill Option -->
-                            <button
-                                @click="setHeroMode('traditional', true)"
-                                type="button"
-                                :class="heroMode === 'traditional'
-                                    ? (isDark ? 'bg-rose-950/40 text-rose-300 border-rose-500/40 font-bold' : 'bg-rose-50 text-rose-800 border-rose-300 font-bold')
-                                    : (isDark ? 'text-stone-400 hover:text-rose-300 hover:bg-white/5 border-transparent font-medium' : 'text-stone-500 hover:text-rose-700 hover:bg-stone-50 border-transparent font-medium')"
-                                class="relative flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm border transition-all duration-200 cursor-pointer"
-                            >
-                                <span class="w-2 h-2 rounded-full" :class="heroMode === 'traditional' ? 'bg-rose-500' : 'bg-stone-500/40'"></span>
-                                <span>{{ currentLocale === 'ar' ? 'النمط التقليدي (هدر وعمولات)' : 'Traditional Legacy (Profit Bleed)' }}</span>
-                            </button>
+            <div class="max-w-[1550px] mx-auto relative z-10">
 
-                            <!-- Smart Platform Pill Option -->
-                            <button
-                                @click="setHeroMode('smart', true)"
-                                type="button"
-                                :class="heroMode === 'smart'
-                                    ? 'bg-[#d4af37] text-slate-950 font-black shadow-sm border-amber-300/40'
-                                    : (isDark ? 'text-stone-400 hover:text-amber-300 hover:bg-white/5 border-transparent font-medium' : 'text-stone-500 hover:text-amber-800 hover:bg-stone-50 border-transparent font-medium')"
-                                class="relative flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm border transition-all duration-200 cursor-pointer"
-                            >
-                                <span class="w-2 h-2 rounded-full" :class="heroMode === 'smart' ? 'bg-slate-950' : 'bg-amber-500/40'"></span>
-                                <span>{{ currentLocale === 'ar' ? 'منظومة تدلّل الذكية (تحكم كامل)' : 'With Smart Platform (Total Control)' }}</span>
-                            </button>
+                <!-- Asymmetrical Hero Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+
+                    <!-- Right Column: Royal Editorial Typography & Brass Action (Col-span 7) -->
+                    <div class="lg:col-span-7 space-y-8 text-start">
+
+                        <!-- Royal Crown & Architectural Monogram Plaque -->
+                        <div class="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white/5 backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] transition-all duration-500 hover:border-[#bf953f]/40 hover:shadow-[0_0_30px_rgba(191,149,63,0.15)]">
+                            <svg class="w-4 h-4 text-[#bf953f]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z"/>
+                                <circle cx="12" cy="18" r="1" fill="#bf953f"/>
+                            </svg>
+                            <span class="text-xs sm:text-sm font-semibold tracking-wider text-stone-200">
+                                {{ currentLocale === 'ar' ? 'مَنْظُومَةُ تَدَلَّلْ السَّحَابِيَّة • لِأَرْقَى الْمَطَاعِمِ وَالْفَنَادِقِ' : 'TEDALLAL BESPOKE RESTAURANT CLOUD' }}
+                            </span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-[#bf953f] animate-pulse"></span>
                         </div>
-                    </div>
 
-                    <!-- Dynamic State Container with Zero Layout Shift -->
-                    <div class="min-h-[500px] sm:min-h-[420px] lg:min-h-[380px] flex flex-col justify-center">
-                        <Transition name="hero-mode" mode="out-in">
-                            <div :key="heroMode" class="space-y-6">
-
-                                <!-- State Dynamic Badge -->
-                                <div class="flex justify-center">
-                                    <div
-                                        class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold shadow-xs backdrop-blur-sm transition-all border"
-                                        :class="heroMode === 'traditional'
-                                            ? (isDark ? 'bg-rose-950/30 border-rose-500/30 text-rose-300' : 'bg-rose-50 border-rose-200 text-rose-700')
-                                            : (isDark ? 'bg-amber-500/10 border-amber-500/25 text-amber-300' : 'bg-amber-50 border-amber-200 text-amber-800')"
-                                    >
-                                        <span class="w-1.5 h-1.5 rounded-full" :class="heroMode === 'traditional' ? 'bg-rose-500' : 'bg-amber-500'"></span>
-                                        <span>
-                                            {{ heroMode === 'traditional'
-                                                ? (currentLocale === 'ar' ? 'تشغيل يدوي بطيء وهدر مستمر في الإيراد' : 'Operational Chaos & Profit Leaks')
-                                                : (currentLocale === 'ar' ? 'المنظومة السحابية الحصرية لأتمتة الصالة والمطبخ' : 'Total Financial & Operational Command')
-                                            }}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <!-- Dynamic H1 Headline -->
-                                <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.2] sm:leading-[1.2]">
-                                    <template v-if="heroMode === 'traditional'">
-                                        <span :class="isDark ? 'text-white' : 'text-slate-900'">{{ currentLocale === 'ar' ? 'مطبخ مزدحم، مبيعات تتصاعد..' : 'Crowded kitchen, surging sales..' }}</span>
-                                        <span class="text-rose-500 dark:text-rose-400 block mt-2 font-black">
-                                            {{ currentLocale === 'ar' ? 'وأرباحك الحقيقية تتبخر بين التطبيقات والهدر!' : 'yet your true profits vanish between delivery apps and waste!' }}
-                                        </span>
-                                    </template>
-                                    <template v-else>
-                                        <span :class="isDark ? 'text-[#f8fafc]' : 'text-slate-900'">{{ currentLocale === 'ar' ? 'مطبخ منظم كالساعة، طلبات مباشرة..' : 'Clockwork kitchen, direct orders..' }}</span>
-                                        <span class="text-[#c59b27] dark:text-[#d4af37] block mt-2 font-black">
-                                            {{ currentLocale === 'ar' ? 'وكل قرش من أرباحك يدخل جيبك بالكامل!' : 'and every single cent of profit goes directly into your pocket!' }}
-                                        </span>
-                                    </template>
-                                </h1>
-
-                                <!-- Dynamic Sub-headline -->
-                                <p
-                                    class="text-base sm:text-xl max-w-3xl mx-auto font-normal leading-relaxed"
-                                    :class="isDark ? 'text-slate-300' : 'text-slate-600'"
+                        <!-- Architectural Executive State Switcher (Traditional vs Smart Platform) -->
+                        <div class="flex items-center gap-2">
+                            <div class="inline-flex items-center p-1.5 rounded-2xl bg-white/5 backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] transition-all duration-500">
+                                <button
+                                    @click="setHeroMode('traditional', true)"
+                                    type="button"
+                                    :class="heroMode === 'traditional'
+                                        ? 'bg-rose-950/60 text-rose-300 border border-rose-500/40 font-bold shadow-md'
+                                        : 'text-stone-400 hover:text-rose-300 border border-transparent font-medium'"
+                                    class="relative flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm transition-all duration-500 cursor-pointer"
                                 >
-                                    <template v-if="heroMode === 'traditional'">
-                                        {{ currentLocale === 'ar'
-                                            ? 'عمولات تلتهم 25% من إيراداتك، أخطاء طلبات يومية، ومخزون يتسرب دون حسيب أو رقيب.'
-                                            : 'Third-party delivery apps eating 25% of your revenue, daily kitchen ticket errors, and inventory leaking unchecked.'
-                                        }}
-                                    </template>
-                                    <template v-else>
-                                        {{ currentLocale === 'ar'
-                                            ? 'نظام سحابي ذكي يوقف نزيف العمولات، يربط الصالة بالمطبخ لحظياً، ويحميك من أي تسريب مالي بدقة 100%.'
-                                            : 'Intelligent cloud ecosystem that eliminates app commissions, links floor to kitchen instantly, and prevents leakages with 100% precision.'
-                                        }}
-                                    </template>
-                                </p>
+                                    <span class="w-2 h-2 rounded-full" :class="heroMode === 'traditional' ? 'bg-rose-500' : 'bg-stone-500/40'"></span>
+                                    <span>{{ currentLocale === 'ar' ? 'النمط التقليدي (هدر وعمولات)' : 'Legacy Model (Profit Bleed)' }}</span>
+                                </button>
 
-                                <!-- Micro-Metrics Cards (3 Cards) -->
-                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4 max-w-3xl mx-auto pt-2">
-                                    <template v-if="heroMode === 'traditional'">
-                                        <!-- Card 1 -->
-                                        <div
-                                            class="rounded-2xl p-4 sm:p-5 backdrop-blur-md flex flex-col items-center justify-center text-center transition-all border shadow-lg"
-                                            :class="isDark ? 'bg-slate-900/80 border-rose-500/25 shadow-rose-950/30' : 'bg-white border-rose-200 shadow-sm'"
-                                        >
-                                            <div class="text-xs sm:text-sm font-semibold mb-1" :class="isDark ? 'text-slate-400' : 'text-slate-500'">
-                                                {{ currentLocale === 'ar' ? 'عمولات تطبيقات' : 'App Commissions' }}
-                                            </div>
-                                            <div class="text-3xl sm:text-4xl font-black font-mono tracking-tight" :class="isDark ? 'text-rose-400' : 'text-rose-600'" dir="ltr">
-                                                -25%
-                                            </div>
-                                            <div
-                                                class="mt-2 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border"
-                                                :class="isDark ? 'text-rose-300/90 bg-rose-500/10 border-rose-500/20' : 'text-rose-700 bg-rose-50 border-rose-200'"
-                                            >
-                                                {{ currentLocale === 'ar' ? 'اقتطاع إجباري من الإيراد' : 'Mandatory revenue cut' }}
-                                            </div>
-                                        </div>
-
-                                        <!-- Card 2 -->
-                                        <div
-                                            class="rounded-2xl p-4 sm:p-5 backdrop-blur-md flex flex-col items-center justify-center text-center transition-all border shadow-lg"
-                                            :class="isDark ? 'bg-slate-900/80 border-rose-500/25 shadow-rose-950/30' : 'bg-white border-rose-200 shadow-sm'"
-                                        >
-                                            <div class="text-xs sm:text-sm font-semibold mb-1" :class="isDark ? 'text-slate-400' : 'text-slate-500'">
-                                                {{ currentLocale === 'ar' ? 'فاقد وهدر مواد' : 'Kitchen Food Waste' }}
-                                            </div>
-                                            <div class="text-3xl sm:text-4xl font-black font-mono tracking-tight" :class="isDark ? 'text-rose-400' : 'text-rose-600'" dir="ltr">
-                                                -15%
-                                            </div>
-                                            <div
-                                                class="mt-2 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border"
-                                                :class="isDark ? 'text-rose-300/90 bg-rose-500/10 border-rose-500/20' : 'text-rose-700 bg-rose-50 border-rose-200'"
-                                            >
-                                                {{ currentLocale === 'ar' ? 'أخطاء وسوء تقدير تكلفة' : 'Ticket errors & food loss' }}
-                                            </div>
-                                        </div>
-
-                                        <!-- Card 3 -->
-                                        <div
-                                            class="rounded-2xl p-4 sm:p-5 backdrop-blur-md flex flex-col items-center justify-center text-center transition-all border shadow-lg"
-                                            :class="isDark ? 'bg-slate-900/80 border-rose-500/25 shadow-rose-950/30' : 'bg-white border-rose-200 shadow-sm'"
-                                        >
-                                            <div class="text-xs sm:text-sm font-semibold mb-1" :class="isDark ? 'text-slate-400' : 'text-slate-500'">
-                                                {{ currentLocale === 'ar' ? 'شعور صاحب المطعم' : 'Owner Sentiment' }}
-                                            </div>
-                                            <div class="text-xl sm:text-2xl font-black mt-1" :class="isDark ? 'text-rose-300' : 'text-rose-700'">
-                                                {{ currentLocale === 'ar' ? 'مجهود بلا عائد' : 'Effort Zero Return' }}
-                                            </div>
-                                            <div
-                                                class="mt-2 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border"
-                                                :class="isDark ? 'text-rose-300/90 bg-rose-500/10 border-rose-500/20' : 'text-rose-700 bg-rose-50 border-rose-200'"
-                                            >
-                                                {{ currentLocale === 'ar' ? 'إرهاق وضياع للهوامش' : 'Exhaustion & lost margins' }}
-                                            </div>
-                                        </div>
-                                    </template>
-
-                                    <template v-else>
-                                        <!-- Card 1 -->
-                                        <div
-                                            class="rounded-xl p-4 sm:p-5 flex flex-col items-center justify-center text-center transition-all border shadow-xs"
-                                            :class="isDark ? 'bg-[#121623] border-white/[0.08]' : 'bg-white border-stone-200 shadow-xs'"
-                                        >
-                                            <div class="text-xs sm:text-sm font-semibold mb-1" :class="isDark ? 'text-stone-400' : 'text-stone-500'">
-                                                {{ currentLocale === 'ar' ? 'عمولة وسيط' : 'Intermediary Cut' }}
-                                            </div>
-                                            <div class="text-3xl sm:text-4xl font-black font-mono tracking-tight text-emerald-500" dir="ltr">
-                                                0%
-                                            </div>
-                                            <div
-                                                class="mt-2 text-[11px] font-bold px-2.5 py-0.5 rounded-md border"
-                                                :class="isDark ? 'text-emerald-300 bg-emerald-500/10 border-emerald-500/20' : 'text-emerald-800 bg-emerald-50 border-emerald-200'"
-                                            >
-                                                {{ currentLocale === 'ar' ? 'أرباحك كاملة 100% لك' : '100% direct revenue retained' }}
-                                            </div>
-                                        </div>
-
-                                        <!-- Card 2 -->
-                                        <div
-                                            class="rounded-xl p-4 sm:p-5 flex flex-col items-center justify-center text-center transition-all border shadow-xs"
-                                            :class="isDark ? 'bg-[#121623] border-white/[0.08]' : 'bg-white border-stone-200 shadow-xs'"
-                                        >
-                                            <div class="text-xs sm:text-sm font-semibold mb-1" :class="isDark ? 'text-stone-400' : 'text-stone-500'">
-                                                {{ currentLocale === 'ar' ? 'ضبط التكاليف' : 'Cost & Stock Control' }}
-                                            </div>
-                                            <div class="text-xl sm:text-2xl font-black mt-1 text-[#d4af37]">
-                                                {{ currentLocale === 'ar' ? 'فوري ولحظي' : 'Real-Time Live' }}
-                                            </div>
-                                            <div
-                                                class="mt-2 text-[11px] font-bold px-2.5 py-0.5 rounded-md border"
-                                                :class="isDark ? 'text-amber-300 bg-amber-500/10 border-amber-500/20' : 'text-amber-800 bg-amber-50 border-amber-200'"
-                                            >
-                                                {{ currentLocale === 'ar' ? 'ربط المطبخ بالوصفات آلياً' : 'Automated kitchen & recipe sync' }}
-                                            </div>
-                                        </div>
-
-                                        <!-- Card 3 -->
-                                        <div
-                                            class="rounded-xl p-4 sm:p-5 flex flex-col items-center justify-center text-center transition-all border shadow-xs"
-                                            :class="isDark ? 'bg-[#121623] border-white/[0.08]' : 'bg-white border-stone-200 shadow-xs'"
-                                        >
-                                            <div class="text-xs sm:text-sm font-semibold mb-1" :class="isDark ? 'text-stone-400' : 'text-stone-500'">
-                                                {{ currentLocale === 'ar' ? 'النتيجة' : 'Bottom-Line Result' }}
-                                            </div>
-                                            <div class="text-xl sm:text-2xl font-black mt-1 text-[#d4af37]">
-                                                {{ currentLocale === 'ar' ? 'مضاعفة صافي الأرباح' : '+100% Profit Boost' }}
-                                            </div>
-                                            <div
-                                                class="mt-2 text-[11px] font-bold px-2.5 py-0.5 rounded-md border"
-                                                :class="isDark ? 'text-amber-300 bg-amber-500/10 border-amber-500/20' : 'text-amber-800 bg-amber-50 border-amber-200'"
-                                            >
-                                                {{ currentLocale === 'ar' ? 'نمو وسيطرة مالية 100%' : 'High margin & complete control' }}
-                                            </div>
-                                        </div>
-                                    </template>
-                                </div>
-
+                                <button
+                                    @click="setHeroMode('smart', true)"
+                                    type="button"
+                                    :class="heroMode === 'smart'
+                                        ? 'bg-gradient-to-r from-[#bf953f] via-[#fcf6ba] to-[#b38728] text-[#0a0a0a] font-bold shadow-lg shadow-[#bf953f]/25'
+                                        : 'text-stone-400 hover:text-[#bf953f] border border-transparent font-medium'"
+                                    class="relative flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm transition-all duration-500 cursor-pointer"
+                                >
+                                    <span class="w-2 h-2 rounded-full" :class="heroMode === 'smart' ? 'bg-[#0a0a0a]' : 'bg-[#bf953f]/40'"></span>
+                                    <span>{{ currentLocale === 'ar' ? 'منظومة تدلّل الذكية (تحكم كامل)' : 'With Smart Platform (Total Control)' }}</span>
+                                </button>
                             </div>
-                        </Transition>
-                    </div>
+                        </div>
 
-                    <!-- CTAs -->
-                    <div class="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-2">
-                        <!-- Primary CTA -->
-                        <button
-                            @click="isDemoModalOpen = true"
-                            type="button"
-                            :class="heroMode === 'traditional'
-                                ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-md'
-                                : 'bg-[#d4af37] hover:bg-[#e2bd46] text-slate-950 font-black shadow-md shadow-amber-950/15'"
-                            class="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-3.5 rounded-xl font-black text-base hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer"
-                        >
-                            <span>{{ currentLocale === 'ar' ? 'ابدأ بتأمين أرباحك وتجربة النظام' : 'Start Securing Your Profits Free' }}</span>
-                            <span
-                                class="text-xs px-2.5 py-0.5 rounded-md font-bold"
-                                :class="heroMode === 'traditional' ? 'bg-black/25 text-white' : 'bg-black/10 text-slate-950'"
+                        <!-- Editorial Royal Headline with Amiri Serif & Full Diacritics -->
+                        <div class="space-y-4">
+                            <h1 class="font-serif text-3xl sm:text-5xl lg:text-6xl font-normal tracking-tight leading-[1.25] text-white">
+                                <template v-if="heroMode === 'traditional'">
+                                    <span class="text-stone-300 block">مَطْبَخٌ مُزْدَحِمٌ، مَبِيعَاتٌ تَتَصَاعَدُ..</span>
+                                    <span class="text-rose-400 block mt-3 font-serif font-bold text-4xl sm:text-6xl lg:text-7xl">
+                                        وَأَرْبَاحُكَ الْحَقِيقِيَّةُ تَتَبَخَّرُ بَيْنَ التَّطْبِيقَاتِ وَالْهَدْرِ!
+                                    </span>
+                                </template>
+                                <template v-else>
+                                    <span class="text-[#f5f3ef] block">مَطْبَخٌ مُنَظَّمٌ كَالسَّاعَةِ، طَلَبَاتٌ مُبَاشِرَةٌ..</span>
+                                    <span class="block mt-4 bg-gradient-to-r from-[#bf953f] via-[#fcf6ba] to-[#b38728] text-transparent bg-clip-text font-serif text-4xl sm:text-6xl lg:text-7xl font-bold">
+                                        وَكُلُّ قِرْشٍ مِنْ أَرْبَاحِكَ يَدْخُلُ جَيْبَكَ بِالْكَامِلِ!
+                                    </span>
+                                </template>
+                            </h1>
+
+                            <p class="font-sans font-normal text-base sm:text-lg text-stone-300 max-w-2xl leading-relaxed">
+                                <template v-if="heroMode === 'traditional'">
+                                    {{ currentLocale === 'ar'
+                                        ? 'عمولات وساطة تلتهم 25% من إيراداتك، أخطاء متكررة في تذاكر المطبخ، ومخزون يتسرب يومياً دون رقابة دقيقة.'
+                                        : 'Intermediary apps cutting 25% of your revenue, recurring kitchen ticket mistakes, and unaccounted daily stock loss.'
+                                    }}
+                                </template>
+                                <template v-else>
+                                    {{ currentLocale === 'ar'
+                                        ? 'نظام سحابي نخبوي يوقف استنزاف العمولات، يربط الصالة بالمطبخ لحظياً بهندسة دقيقة، ويمنحك سيطرة تشغيلية ومالية بنسبة 100%.'
+                                        : 'A bespoke cloud architecture eliminating app cuts, connecting floor to kitchen instantly, and providing 100% financial and operational control.'
+                                    }}
+                                </template>
+                            </p>
+                        </div>
+
+                        <!-- Action Controls: Brushed Gold Button & Frosted Glass Secondary -->
+                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
+                            <!-- Primary CTA: Brushed Gold -->
+                            <button
+                                @click="isDemoModalOpen = true"
+                                type="button"
+                                class="relative group overflow-hidden px-10 py-4 sm:py-4.5 rounded-2xl bg-gradient-to-r from-[#bf953f] via-[#fcf6ba] to-[#b38728] text-[#0a0a0a] font-bold text-base shadow-[0_10px_35px_rgba(191,149,63,0.3)] hover:shadow-[0_15px_45px_rgba(191,149,63,0.45)] transition-all duration-500 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer flex items-center justify-center gap-3"
                             >
-                                14 {{ currentLocale === 'ar' ? 'يوماً تجربة مجانية' : 'Days Free' }}
-                            </span>
-                        </button>
+                                <span>{{ currentLocale === 'ar' ? 'ابدأ بتأمين أرباحك وتجربة النظام' : 'Start Securing Your Profits Free' }}</span>
+                                <span class="text-xs px-2.5 py-0.5 rounded-md font-extrabold bg-[#0a0a0a]/15 text-[#0a0a0a]">
+                                    14 {{ currentLocale === 'ar' ? 'يوماً تجربة' : 'Days Free' }}
+                                </span>
+                            </button>
 
-                        <!-- Secondary CTA -->
-                        <a
-                            href="#how-it-works"
-                            class="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-xl border font-bold text-sm sm:text-base transition-all shadow-xs cursor-pointer"
-                            :class="isDark
-                                ? 'bg-[#121623] hover:bg-[#181d2e] border-white/[0.1] text-stone-200'
-                                : 'bg-white hover:bg-stone-50 border-stone-300 text-stone-800 shadow-xs'"
-                        >
-                            <span class="w-6 h-6 rounded-full bg-amber-500/15 text-amber-500 dark:text-amber-400 flex items-center justify-center text-xs font-bold">
-                                ▶
-                            </span>
-                            <span>{{ currentLocale === 'ar' ? 'شاهد كيف توفر في 90 ثانية' : 'See How You Save in 90 Seconds' }}</span>
-                        </a>
+                            <!-- Secondary CTA: Ultra-Premium Glass -->
+                            <a
+                                href="#features-bespoke"
+                                class="px-8 py-4 sm:py-4.5 rounded-2xl bg-white/5 backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] text-stone-200 hover:text-white hover:border-[#bf953f]/40 hover:shadow-[0_0_30px_rgba(191,149,63,0.15)] transition-all duration-500 flex items-center justify-center gap-2.5 text-sm font-semibold cursor-pointer"
+                            >
+                                <span class="w-5 h-5 rounded-full bg-[#bf953f]/20 text-[#bf953f] flex items-center justify-center text-xs">
+                                    ▶
+                                </span>
+                                <span>{{ currentLocale === 'ar' ? 'استكشف المزايا المعمارية' : 'Explore Architecture' }}</span>
+                            </a>
 
-                        <!-- Pre-sales Assessment CTA -->
-                        <Link
-                            href="/consultation"
-                            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl border font-bold text-sm sm:text-base transition-all shadow-xs cursor-pointer"
-                            :class="isDark
-                                ? 'bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 text-amber-300'
-                                : 'bg-amber-50 hover:bg-amber-100/70 border-amber-300 text-amber-900 shadow-xs'"
-                        >
-                            <span>{{ currentLocale === 'ar' ? 'دراسة متطلبات مطعمك' : 'Build Your Restaurant Blueprint' }}</span>
-                            <span class="text-xs rtl:rotate-180">→</span>
-                        </Link>
+                            <!-- Pre-sales Link -->
+                            <Link
+                                href="/consultation"
+                                class="px-6 py-4 rounded-2xl text-stone-300 hover:text-[#bf953f] transition-all duration-500 text-sm font-semibold flex items-center justify-center gap-2 group cursor-pointer"
+                            >
+                                <span>{{ currentLocale === 'ar' ? 'دراسة متطلبات مطعمك' : 'Request Consultation' }}</span>
+                                <span class="text-xs rtl:rotate-180 group-hover:translate-x-[-4px] rtl:group-hover:translate-x-1 transition-transform duration-500">→</span>
+                            </Link>
+                        </div>
+
+                        <!-- Micro Metrics Trio with Dark Frosted Glass -->
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
+                            <!-- Metric 1 -->
+                            <div class="p-5 rounded-2xl bg-white/5 backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] transition-all duration-500 hover:border-[#bf953f]/40 hover:shadow-[0_0_30px_rgba(191,149,63,0.15)] flex flex-col items-center justify-center text-center">
+                                <span class="text-xs text-stone-400 font-medium mb-1">{{ currentLocale === 'ar' ? 'عمولة وسيط' : 'Intermediary Cut' }}</span>
+                                <span class="font-serif text-3xl font-bold bg-gradient-to-r from-[#bf953f] via-[#fcf6ba] to-[#b38728] text-transparent bg-clip-text" dir="ltr">0%</span>
+                                <span class="text-[11px] font-bold text-emerald-400 mt-1">{{ currentLocale === 'ar' ? 'أرباحك كاملة 100% لك' : '100% direct revenue' }}</span>
+                            </div>
+
+                            <!-- Metric 2 -->
+                            <div class="p-5 rounded-2xl bg-white/5 backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] transition-all duration-500 hover:border-[#bf953f]/40 hover:shadow-[0_0_30px_rgba(191,149,63,0.15)] flex flex-col items-center justify-center text-center">
+                                <span class="text-xs text-stone-400 font-medium mb-1">{{ currentLocale === 'ar' ? 'ضبط التكاليف' : 'Cost Control' }}</span>
+                                <span class="font-serif text-2xl font-bold text-[#fcf6ba]">{{ currentLocale === 'ar' ? 'فوري ولحظي' : 'Real-Time' }}</span>
+                                <span class="text-[11px] font-bold text-stone-300 mt-1">{{ currentLocale === 'ar' ? 'ربط المطبخ بالوصفات آلياً' : 'Recipe-level inventory sync' }}</span>
+                            </div>
+
+                            <!-- Metric 3 -->
+                            <div class="p-5 rounded-2xl bg-white/5 backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] transition-all duration-500 hover:border-[#bf953f]/40 hover:shadow-[0_0_30px_rgba(191,149,63,0.15)] flex flex-col items-center justify-center text-center">
+                                <span class="text-xs text-stone-400 font-medium mb-1">{{ currentLocale === 'ar' ? 'النتيجة' : 'Bottom-Line Growth' }}</span>
+                                <span class="font-serif text-2xl font-bold text-[#fcf6ba]">{{ currentLocale === 'ar' ? 'مضاعفة صافي الأرباح' : '+100% Margin Boost' }}</span>
+                                <span class="text-[11px] font-bold text-[#bf953f] mt-1">{{ currentLocale === 'ar' ? 'نمو وسيطرة مالية كاملة' : 'Total operational command' }}</span>
+                            </div>
+                        </div>
+
                     </div>
 
-                    <!-- Micro Trust Badges -->
-                    <div
-                        class="pt-4 flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-xs sm:text-sm"
-                        :class="isDark ? 'text-slate-400' : 'text-slate-600'"
-                    >
-                        <div class="flex items-center gap-2">
-                            <span class="text-emerald-500 font-bold">✓</span>
-                            <span>{{ currentLocale === 'ar' ? 'بدون تحميل أي تطبيق للزبائن' : 'Zero App Downloads for Customers' }}</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="text-emerald-500 font-bold">✓</span>
-                            <span>{{ currentLocale === 'ar' ? 'شاشات مطبخ KDS وربط مباشر' : 'Real-Time Cloud KDS Kitchen Screens' }}</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="text-emerald-500 font-bold">✓</span>
-                            <span>{{ currentLocale === 'ar' ? 'صفر عمولة 0% (أرباحك لك بالكامل)' : '0% Sales Commission (Keep 100%)' }}</span>
-                        </div>
-                    </div>
+                    <!-- Left Column: Asymmetrical Overlapping Dimensional Monolith (Col-span 5) -->
+                    <div class="lg:col-span-5 relative mt-10 lg:mt-0">
 
-                    <!-- Bespoke Architectural Showcase: High-End Hospitality Reality -->
-                    <div class="pt-10 max-w-5xl mx-auto">
-                        <div
-                            class="relative rounded-3xl p-2.5 sm:p-3 overflow-hidden shadow-2xl transition-all duration-500 border fluted-texture-dark"
-                            :class="isDark ? 'bg-[#121623] border-amber-500/25 shadow-black/80' : 'bg-white border-stone-300 shadow-stone-300/40'"
-                        >
-                            <!-- Image Frame with Deep Tactile Shadows -->
-                            <div class="relative h-[280px] sm:h-[420px] lg:h-[480px] rounded-2xl overflow-hidden group">
+                        <!-- Main Glass Frame with Michelin-Star Ambient Viewport -->
+                        <div class="relative rounded-3xl p-3 bg-white/5 backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_30px_70px_rgba(0,0,0,0.9)] overflow-hidden transition-all duration-500 hover:border-[#bf953f]/30">
+                            <div class="relative h-[380px] sm:h-[480px] rounded-2xl overflow-hidden group">
                                 <img
-                                    src="/images/tedallal-luxury-restaurant-facade.jpg"
-                                    alt="واجهة تدلّل المعمارية الفاخرة"
-                                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 filter brightness-[0.95] contrast-[1.05]"
+                                    src="/images/tedallal-luxury-hero-bg.jpg"
+                                    alt="بيئة عمل تدلّل الفاخرة"
+                                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 filter brightness-[0.9] contrast-[1.1]"
+                                    onerror="this.src='/images/tedallal-luxury-saas-mockup.jpg'"
                                 />
-                                <!-- Ambient Deep Gradient -->
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent"></div>
+                                <div class="absolute inset-0 bg-gradient-to-t from-[#0a0a0a]/90 via-[#0a0a0a]/30 to-transparent"></div>
 
-                                <!-- Architectural Plaque / Badge -->
-                                <div class="absolute top-4 sm:top-6 start-4 sm:start-6 flex items-center gap-2 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl backdrop-blur-md bg-black/65 border border-amber-500/40 text-amber-300 text-xs sm:text-sm font-bold shadow-lg">
-                                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-                                    <span>هندسة الضيافة الفاخرة — مخصصة لعلامتك التجارية</span>
-                                </div>
-
-                                <!-- Floating Live Interactive Floor Toast inside the Photo -->
-                                <div class="absolute bottom-4 sm:bottom-6 start-4 sm:start-6 end-4 sm:end-6 flex flex-col sm:flex-row items-center justify-between gap-4 p-4 sm:p-5 rounded-2xl backdrop-blur-xl bg-black/80 border border-amber-500/30 text-white shadow-2xl">
-                                    <div class="flex items-center gap-3.5 text-start">
-                                        <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-xl shrink-0">
-                                            🏛️
-                                        </div>
-                                        <div>
-                                            <div class="font-bold text-sm sm:text-base text-amber-200">هوية معمارية تليق بأرقى المطاعم والكافيهات</div>
-                                            <div class="text-xs sm:text-sm text-stone-300">منيو رقمي فاخر، أتمتة صالة ومطبخ فورية، وصفر عمولات وسيطة</div>
-                                        </div>
-                                    </div>
-
-                                    <div class="flex items-center gap-2 shrink-0">
-                                        <button
-                                            @click="isDemoModalOpen = true"
-                                            class="brass-button px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black tracking-wide"
-                                        >
-                                            احجز استشارتك الميدانية
-                                        </button>
-                                    </div>
+                                <!-- Ambient Lighting Badge inside the Image -->
+                                <div class="absolute top-4 start-4 flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-black/60 backdrop-blur-xl border border-white/10 text-stone-200 text-xs font-medium">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-[#bf953f] animate-pulse"></span>
+                                    <span>{{ currentLocale === 'ar' ? 'أجواء ضيافة راقية • أتمتة صامتة' : 'Fine Dining Ambiance • Silent Automation' }}</span>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- Floating Glass Element 1: Asymmetrical Overlap Top-Right (-mt-12 -mr-6 lg:-mr-10) -->
+                        <div class="absolute -top-8 -right-4 sm:-right-8 z-20 w-64 p-5 rounded-2xl bg-white/5 backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_20px_45px_rgba(0,0,0,0.85)] transition-all duration-500 hover:border-[#bf953f]/40 hover:shadow-[0_0_30px_rgba(191,149,63,0.15)] hover:-translate-y-1">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs text-stone-300 font-semibold">{{ currentLocale === 'ar' ? 'نسبة استبقاء الإيراد' : 'Revenue Retained' }}</span>
+                                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                            </div>
+                            <div class="font-serif text-3xl font-bold bg-gradient-to-r from-[#bf953f] via-[#fcf6ba] to-[#b38728] text-transparent bg-clip-text" dir="ltr">
+                                100% Direct
+                            </div>
+                            <div class="text-[11px] text-stone-400 mt-1">
+                                {{ currentLocale === 'ar' ? 'بدون أي عمولة وسيط (0%)' : 'Zero 3rd-party commission' }}
+                            </div>
+                        </div>
+
+                        <!-- Floating Glass Element 2: Asymmetrical Overlap Bottom-Left (-mb-10 -ml-4 sm:-ml-8) -->
+                        <div class="absolute -bottom-8 -left-4 sm:-left-8 z-30 w-72 p-5 rounded-2xl bg-white/5 backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_20px_45px_rgba(0,0,0,0.85)] transition-all duration-500 hover:border-[#bf953f]/40 hover:shadow-[0_0_30px_rgba(191,149,63,0.15)] hover:-translate-y-1">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-gradient-to-r from-[#bf953f]/20 to-[#b38728]/10 border border-[#bf953f]/30 flex items-center justify-center text-[#fcf6ba] font-bold text-xs shrink-0">
+                                    VIP
+                                </div>
+                                <div class="text-start">
+                                    <div class="text-xs font-bold text-white">{{ currentLocale === 'ar' ? 'طاولة 07 الملكية • إرسال فوري' : 'Royal Table 07 • Live KDS Sync' }}</div>
+                                    <div class="text-[11px] text-[#bf953f] mt-0.5">{{ currentLocale === 'ar' ? 'منيو الباركود التفاعلي • 0 أخطاء' : 'Branded QR Menu • Zero Wait' }}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ========================================================================= -->
+        <!-- BESPOKE TOP FEATURES: SCULPTURAL GLASS ARCHITECTURE (NON-GRID) -->
+        <!-- ========================================================================= -->
+        <section
+            id="features-bespoke"
+            dir="rtl"
+            class="py-24 lg:py-36 px-6 sm:px-12 lg:px-20 relative z-10 bg-[#0e0e0e] border-t border-white/5"
+        >
+            <div class="max-w-[1550px] mx-auto">
+
+                <!-- Section Editorial Header -->
+                <div class="max-w-3xl mb-20 space-y-4 text-start">
+                    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 backdrop-blur-2xl border border-white/10 text-[#bf953f] text-xs font-semibold shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]">
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#bf953f] animate-pulse"></span>
+                        <span>{{ currentLocale === 'ar' ? 'هَنْدَسَةُ الضِّيَافَةِ الرَّقْمِيَّة • ARCHITECTURAL COMMAND' : 'BESPOKE PLATFORM ARCHITECTURE' }}</span>
+                    </div>
+
+                    <h2 class="font-serif text-3xl sm:text-5xl lg:text-6xl font-normal tracking-tight text-white leading-[1.25]">
+                        {{ currentLocale === 'ar' ? 'أركان المنظومة المصممة يدوياً لرواد الضيافة الفاخرة' : 'Bespoke Pillars for Elite Restaurant Operations' }}
+                    </h2>
+
+                    <p class="font-sans text-base text-stone-300 leading-relaxed max-w-2xl">
+                        {{ currentLocale === 'ar'
+                            ? 'نرفض القوالب البرمجية المكررة. بنينا كل تفصيلة في تدلّل لتجسيد الفخامة البصرية ودقة الأتمتة اللحظية لصالتك ومطبخك.'
+                            : 'Rejecting generic SaaS templates. Every element is crafted to unify visual majesty with real-time operational precision.'
+                        }}
+                    </p>
+                </div>
+
+                <!-- Asymmetrical Sculptural Composition with Overlapping Monoliths -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+                    <!-- Monolith 1: Grand Tall Glass Structure (Col-span 7) -->
+                    <div class="lg:col-span-7 rounded-3xl p-8 sm:p-12 bg-white/5 backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15),0_30px_70px_rgba(0,0,0,0.8)] relative overflow-hidden transition-all duration-500 hover:border-[#bf953f]/40 hover:shadow-[0_0_35px_rgba(191,149,63,0.15)] group">
+                        <!-- Top Ambient Golden Shimmer -->
+                        <div class="absolute top-0 right-0 w-80 h-80 bg-[radial-gradient(ellipse_at_top_right,rgba(191,149,63,0.08),transparent_70%)] pointer-events-none"></div>
+
+                        <div class="space-y-6 relative z-10 text-start">
+                            <!-- Minimalist Gold Wireframe Icon -->
+                            <div class="w-16 h-16 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] flex items-center justify-center text-[#bf953f] transition-all duration-500 group-hover:scale-105 group-hover:border-[#bf953f]/40">
+                                <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                                    <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                                    <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                                    <path d="M14 14h3v3h-3z" />
+                                    <path d="M20 14v3h-3" />
+                                    <path d="M14 20h6" />
+                                </svg>
+                            </div>
+
+                            <div class="flex items-center gap-3">
+                                <span class="px-3 py-1 rounded-full text-xs font-bold bg-[#bf953f]/15 text-[#fcf6ba] border border-[#bf953f]/30">
+                                    {{ currentLocale === 'ar' ? 'باقة Max الحصرية' : 'Max Plan Signature' }}
+                                </span>
+                                <span class="text-xs text-stone-400 font-medium">Zero App Downloads Required</span>
+                            </div>
+
+                            <h3 class="font-serif text-2xl sm:text-4xl font-normal text-white group-hover:text-[#fcf6ba] transition-colors duration-500">
+                                {{ currentLocale === 'ar' ? 'منيو الباركود التفاعلي — فخامة بصرية وشعار مخصص في قلب الـ QR' : 'Interactive QR Dining & Centerpiece Logo Customization' }}
+                            </h3>
+
+                            <p class="font-sans text-sm sm:text-base text-stone-300 leading-relaxed max-w-xl">
+                                {{ currentLocale === 'ar'
+                                    ? 'يتيح لضيوفك استعراض الأطباق بصور عالية الدقة فائقة الوضوح، والطلب المباشر من طاولتهم دون تنزيل أي تطبيق. يتضمن ميزة دمج شعار مطعمك الذهبي في منتصف الباركود مع دعم متعدد العملات واللغات.'
+                                    : 'Empowers patrons to explore high-res dishes and order directly from their table with zero app installs. Embeds your bespoke gold restaurant emblem in the QR center.'
+                                }}
+                            </p>
+
+                            <!-- Interactive VIP Floor Ticket Preview -->
+                            <div class="pt-6 border-t border-white/10 flex flex-wrap items-center justify-between gap-4">
+                                <div class="flex items-center gap-3.5">
+                                    <div class="w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-[#bf953f] font-bold text-xs">
+                                        QR
+                                    </div>
+                                    <div class="text-start">
+                                        <div class="text-xs font-bold text-white">{{ currentLocale === 'ar' ? 'طلب فوري من الطاولة • دقة 100%' : 'Instant Table Order • 100% Accuracy' }}</div>
+                                        <div class="text-[11px] text-stone-400">{{ currentLocale === 'ar' ? 'توفير 40% من وقت النادل لكل دورة طاولة' : 'Saves 40% waiter time per table turn' }}</div>
+                                    </div>
+                                </div>
+
+                                <button
+                                    @click="isDemoModalOpen = true"
+                                    class="text-xs font-semibold text-[#bf953f] flex items-center gap-1.5 transition-all duration-500 hover:text-[#fcf6ba] group-hover:translate-x-[-4px] rtl:group-hover:translate-x-1"
+                                >
+                                    <span>{{ currentLocale === 'ar' ? 'شاهد تجربة الطاولات' : 'Inspect Table Demo' }}</span>
+                                    <span class="rtl:rotate-180">→</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Monolith 2: Elevated Offset Glass Card (Col-span 5 with -mt-6 overlap on lg) -->
+                    <div class="lg:col-span-5 lg:-mt-6 rounded-3xl p-8 sm:p-10 bg-white/5 backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15),0_30px_70px_rgba(0,0,0,0.8)] relative overflow-hidden transition-all duration-500 hover:border-[#bf953f]/40 hover:shadow-[0_0_35px_rgba(191,149,63,0.15)] group text-start">
+                        <!-- Top Ambient Golden Shimmer -->
+                        <div class="absolute top-0 right-0 w-60 h-60 bg-[radial-gradient(ellipse_at_top_right,rgba(191,149,63,0.06),transparent_70%)] pointer-events-none"></div>
+
+                        <div class="space-y-5 relative z-10">
+                            <!-- Minimalist Gold Wireframe Icon -->
+                            <div class="w-14 h-14 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] flex items-center justify-center text-[#bf953f] transition-all duration-500 group-hover:scale-105 group-hover:border-[#bf953f]/40">
+                                <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="2" y="3" width="20" height="14" rx="2" />
+                                    <line x1="8" y1="21" x2="16" y2="21" />
+                                    <line x1="12" y1="17" x2="12" y2="21" />
+                                    <path d="M6 8h4m-4 3h8" />
+                                </svg>
+                            </div>
+
+                            <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-white/5 text-[#fcf6ba] border border-white/10">
+                                {{ currentLocale === 'ar' ? 'تنظيم المطبخ اللحظي' : 'Cloud KDS Routing' }}
+                            </span>
+
+                            <h3 class="font-serif text-2xl sm:text-3xl font-normal text-white group-hover:text-[#fcf6ba] transition-colors duration-500">
+                                {{ currentLocale === 'ar' ? 'شاشات المطبخ الذكية (Multi-KDS)' : 'Multi-Station Cloud KDS Displays' }}
+                            </h3>
+
+                            <p class="font-sans text-xs sm:text-sm text-stone-300 leading-relaxed">
+                                {{ currentLocale === 'ar'
+                                    ? 'توجيه آلي وفوري للطلبات بين خطوط التحضير (مشاوي، بار، سلطات) مع مؤقتات لونية تقضي تماماً على التذاكر الورقية وتمنع تأخير الأطباق.'
+                                    : 'Real-time automatic routing across preparation lines (Grill, Bar, Pastry) with color-coded timers eliminating paper ticket chaos.'
+                                }}
+                            </p>
+
+                            <!-- Mini Preparation Benchmark Widget -->
+                            <div class="pt-5 border-t border-white/10 flex items-center justify-between text-xs">
+                                <span class="text-stone-400">{{ currentLocale === 'ar' ? 'مؤقت التحضير المعياري' : 'Prep Benchmark' }}</span>
+                                <span class="font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20">08:30 دقيقة</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Monolith 3: Panoramic Horizontal Glass Plinth (Col-span 12 underneath, bridging both) -->
+                    <div class="lg:col-span-12 rounded-3xl p-8 sm:p-12 bg-white/5 backdrop-blur-2xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15),0_30px_70px_rgba(0,0,0,0.8)] relative overflow-hidden transition-all duration-500 hover:border-[#bf953f]/40 hover:shadow-[0_0_35px_rgba(191,149,63,0.15)] group">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center text-start relative z-10">
+
+                            <!-- Left Sub-Wing: Financial Analytics & Zero Cut -->
+                            <div class="space-y-4">
+                                <div class="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-[#bf953f]">
+                                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                                        <circle cx="12" cy="12" r="10" stroke-dasharray="2 2" />
+                                    </svg>
+                                </div>
+                                <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
+                                    {{ currentLocale === 'ar' ? 'حماية الإيراد الكامل' : '100% Margin Retention' }}
+                                </span>
+                                <h4 class="font-serif text-xl sm:text-2xl font-normal text-white">
+                                    {{ currentLocale === 'ar' ? 'صفر عمولة وسيطة 0% — كل قرش يدخل حسابك' : 'Zero 0% Commission — Retain All Profits' }}
+                                </h4>
+                                <p class="font-sans text-xs sm:text-sm text-stone-300 leading-relaxed">
+                                    {{ currentLocale === 'ar'
+                                        ? 'احتفظ بكامل أرباحك بدون استنزاف تطبيقات التوصيل (15%-25%). تقارير محاسبية فورية مع جرد آلي للمخزون يربط كل وجبة بمكوناتها بدقة الغرام.'
+                                        : 'Retain 100% of receipts without delivery app cuts. Real-time CPA reports and automated recipe-level inventory tracking.'
+                                    }}
+                                </p>
+                            </div>
+
+                            <!-- Right Sub-Wing: AI Smart Waiter Upselling -->
+                            <div class="space-y-4 lg:border-s lg:border-white/10 lg:ps-10">
+                                <div class="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-[#bf953f]">
+                                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6.4-4.8-6.4 4.8 2.4-7.2-6-4.8h7.6z" />
+                                    </svg>
+                                </div>
+                                <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-[#bf953f]/15 text-[#fcf6ba] border border-[#bf953f]/30">
+                                    {{ currentLocale === 'ar' ? 'زيادة المبيعات آلياً' : 'Automated Upselling AI' }}
+                                </span>
+                                <h4 class="font-serif text-xl sm:text-2xl font-normal text-white">
+                                    {{ currentLocale === 'ar' ? 'النادل الذكي — زيادة متوسط الفاتورة بنسبة 28%' : 'AI Concierge — +28% Average Ticket Growth' }}
+                                </h4>
+                                <p class="font-sans text-xs sm:text-sm text-stone-300 leading-relaxed">
+                                    {{ currentLocale === 'ar'
+                                        ? 'محرك اقتراحات نخبوي يقترح الأطباق الجانبية والمشروبات المتناغمة بأسلوب راقٍ وتوقيت نفسي مثالي، لرفع قيمة الفاتورة دون أي إلحاح.'
+                                        : 'An intelligent recommendation engine presenting complementary pairings and desserts at the exact psychological moment.'
+                                    }}
+                                </p>
+                            </div>
+
                         </div>
                     </div>
 
                 </div>
+
             </div>
         </section>
 

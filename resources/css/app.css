@@ -41,13 +41,46 @@ html.dark ::-webkit-scrollbar-thumb:hover {
    Bespoke Luxury Hospitality Styles (Anti-AI Tactile Aesthetic)
    ========================================================================= */
 
-/* 1. Brushed Brass & Matte Gold Metallic Finishes */
+/* 1. Brushed Gold Metallic Finishes & Glassmorphism Directives */
+.royal-gold-text {
+    background: linear-gradient(to right, #bf953f 0%, #fcf6ba 50%, #b38728 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.royal-gold-button {
+    background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 50%, #b38728 100%);
+    color: #0a0a0a;
+    font-weight: 800;
+    box-shadow: 0 10px 30px -5px rgba(191, 149, 63, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.7);
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.royal-gold-button:hover {
+    box-shadow: 0 15px 45px -5px rgba(191, 149, 63, 0.5), inset 0 1px 2px rgba(255, 255, 255, 0.9);
+    transform: translateY(-2px);
+}
+
+.glass-luxury-panel {
+    background-color: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.15), 0 20px 50px -10px rgba(0, 0, 0, 0.75);
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-luxury-panel:hover {
+    border-color: rgba(191, 149, 63, 0.4);
+    box-shadow: inset 0 1px 2px 0 rgba(255, 255, 255, 0.25), 0 0 30px rgba(191, 149, 63, 0.15), 0 25px 60px -10px rgba(0, 0, 0, 0.85);
+}
+
 .brass-button {
     background: linear-gradient(135deg, #dfbc47 0%, #aa820a 50%, #e6ca65 100%);
     box-shadow: 0 4px 14px -1px rgba(170, 130, 10, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4);
     color: #0b0d13;
     font-weight: 800;
-    transition: all 0.25s ease;
+    transition: all 0.5s ease;
 }
 
 .brass-button:hover {
