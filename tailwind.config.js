@@ -14,7 +14,22 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['Cairo', 'Figtree', ...defaultTheme.fontFamily.sans],
+                serif: ['Amiri', ...defaultTheme.fontFamily.serif],
+                display: ['Cinzel', ...defaultTheme.fontFamily.serif],
+            },
+            colors: {
+                luxury: {
+                    gold: '#d4af37',
+                    'gold-light': '#f5e7b2',
+                    'gold-dark': '#9b7d23',
+                    charcoal: '#0b0d13',
+                    surface: '#12151f',
+                    elevated: '#171b26',
+                    ivory: '#fcfbf9',
+                    'ivory-dark': '#f4f1ea',
+                    travertine: '#f6f3eb',
+                },
             },
         },
     },

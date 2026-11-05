@@ -34,16 +34,58 @@ final class QrCodeService
     public function buildRawPng(RestaurantTable $table): string
     {
         $url = $table->publicUrl();
+        $logoPath = $this->resolveRestaurantLogoPath($table);
 
         return (new Builder(
             writer: new PngWriter,
             data: $url,
             encoding: new Encoding('UTF-8'),
             errorCorrectionLevel: ErrorCorrectionLevel::High,
-            size: 300,
-            margin: 10,
+            size: 360,
+            margin: 12,
             roundBlockSizeMode: RoundBlockSizeMode::Margin,
+            logoPath: $logoPath ?? '',
+            logoResizeToWidth: $logoPath ? 72 : null,
+            logoPunchoutBackground: (bool) $logoPath,
         ))->build()->getString();
+    }
+
+    private function resolveRestaurantLogoPath(?RestaurantTable $table): ?string
+    {
+        if (! $table) {
+            return null;
+        }
+
+        $table->loadMissing('restaurant');
+        $restaurant = $table->restaurant;
+
+        if (! $restaurant) {
+            return null;
+        }
+
+        // Max tier or explicit custom_branding feature entitlement
+        $hasCustomBranding = $restaurant->isMax() || ($restaurant->effective_features['custom_branding'] ?? false);
+        if (! $hasCustomBranding || ! $restaurant->logo) {
+            return null;
+        }
+
+        $relative = ltrim($restaurant->logo, '/');
+
+        // Check public_path
+        $publicCandidate = public_path($relative);
+        if (file_exists($publicCandidate) && is_file($publicCandidate)) {
+            return $publicCandidate;
+        }
+
+        // Check storage/app/public
+        if (str_starts_with($relative, 'storage/')) {
+            $storageCandidate = storage_path('app/public/' . substr($relative, 8));
+            if (file_exists($storageCandidate) && is_file($storageCandidate)) {
+                return $storageCandidate;
+            }
+        }
+
+        return null;
     }
 
     public function generateBase64ForUrl(string $url, int $size = 200): string

@@ -690,14 +690,24 @@ onUnmounted(() => {
             currentLocale === 'ar' ? 'font-sans' : 'font-sans font-english',
             isDark ? 'dark-mode-theme' : 'light-mode-theme'
         ]"
-        class="min-h-screen bg-slate-50 dark:bg-[#070b14] text-slate-900 dark:text-slate-100 selection:bg-amber-500 selection:text-slate-950 antialiased overflow-x-hidden relative transition-colors duration-300"
+        class="min-h-screen bg-[#fbfaf8] dark:bg-[#0c0e14] text-slate-900 dark:text-[#f8fafc] selection:bg-amber-500 selection:text-slate-950 antialiased overflow-x-hidden relative transition-colors duration-300"
     >
-        <!-- Ambient Glow Effects & Mesh Gradients -->
-        <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden ambient-glow-layer">
-            <div class="absolute -top-40 right-1/4 w-[600px] h-[600px] rounded-full blur-[140px] transition-colors duration-700" :class="isDark ? 'bg-amber-500/10' : 'bg-amber-500/15'"></div>
-            <div class="absolute top-[35%] -left-32 w-[500px] h-[500px] rounded-full blur-[130px] transition-colors duration-700" :class="isDark ? 'bg-orange-600/10' : 'bg-orange-500/10'"></div>
-            <div class="absolute bottom-1/4 right-10 w-[550px] h-[550px] rounded-full blur-[150px] transition-colors duration-700" :class="isDark ? 'bg-emerald-600/10' : 'bg-emerald-500/10'"></div>
-            <div class="absolute inset-0 bg-radial-mesh [background-size:28px_28px] transition-opacity duration-500" :class="isDark ? 'bg-[radial-gradient(#1e293b_1px,transparent_1px)] opacity-30' : 'bg-[radial-gradient(#94a3b8_1.2px,transparent_1.2px)] opacity-25'"></div>
+        <!-- Refined Luxury Background & Subtle Architectural Grid (No Neon AI Orbs) -->
+        <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+            <!-- Top Subtle Warm Champagne Spotlight -->
+            <div
+                class="absolute -top-32 left-1/2 -translate-x-1/2 w-[1100px] h-[520px] rounded-full transition-opacity duration-1000 opacity-70"
+                :class="isDark
+                    ? 'bg-[radial-gradient(ellipse_at_top,rgba(212,175,55,0.07),transparent_70%)]'
+                    : 'bg-[radial-gradient(ellipse_at_top,rgba(212,175,55,0.12),transparent_70%)]'"
+            ></div>
+            <!-- Ultra-fine Architectural Grid with Radial Vignette -->
+            <div
+                class="absolute inset-0 transition-opacity duration-700"
+                :class="isDark
+                    ? 'bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]'
+                    : 'bg-[linear-gradient(to_right,rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]'"
+            ></div>
         </div>
 
         <!-- ========================================================================= -->
@@ -705,7 +715,7 @@ onUnmounted(() => {
         <!-- ========================================================================= -->
         <header
             class="sticky top-0 z-50 backdrop-blur-xl border-b transition-all duration-300"
-            :class="isDark ? 'bg-[#070b14]/80 border-white/5 shadow-none' : 'bg-white/90 border-slate-200/90 shadow-xs'"
+            :class="isDark ? 'bg-[#0c0e14]/85 border-white/[0.07] shadow-none' : 'bg-[#fbfaf8]/90 border-stone-200/90 shadow-xs'"
         >
             <div class="max-w-[1550px] w-full mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between h-20 gap-2 xl:gap-4">
@@ -713,26 +723,24 @@ onUnmounted(() => {
                     <!-- Brand Logo -->
                     <div class="flex items-center gap-3 shrink-0">
                         <Link href="/" class="flex items-center gap-2.5 sm:gap-3 group">
-                            <div class="relative w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 p-[2px] shadow-lg shadow-amber-500/20 group-hover:shadow-amber-500/40 transition-all duration-300">
-                                <div class="w-full h-full bg-[#0b101d] rounded-2xl flex items-center justify-center overflow-hidden">
-                                    <img
-                                        src="/images/tedallal-brand-logo.jpg"
-                                        alt="Tedallal"
-                                        class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                                        onerror="this.src='/images/logo.jpg'"
-                                    />
-                                </div>
+                            <div class="relative w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-white dark:bg-[#131722] border border-amber-500/25 dark:border-amber-500/35 p-1.5 shadow-sm group-hover:border-amber-500/60 transition-all duration-300 flex items-center justify-center">
+                                <img
+                                    src="/images/tedallal-golden-crop.png"
+                                    alt="تدلّل"
+                                    class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                                    onerror="this.src='/images/tedallal-golden-logo.png'"
+                                />
                             </div>
                             <div class="flex flex-col">
                                 <div class="flex items-center gap-2">
-                                    <span class="text-xl sm:text-2xl font-bold tracking-tight bg-gradient-to-r from-amber-400 via-amber-200 to-amber-500 bg-clip-text text-transparent">
-                                        {{ currentLocale === 'ar' ? 'تدلّل' : 'Tedallal' }}
+                                    <span class="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-[#f8fafc]">
+                                        {{ currentLocale === 'ar' ? 'تدلّـل' : 'Tedallal' }}
                                     </span>
-                                    <span class="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                                        {{ currentLocale === 'ar' ? 'Tedallal' : 'Platform' }}
+                                    <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                                        {{ currentLocale === 'ar' ? 'تِـك' : 'Tech' }}
                                     </span>
                                 </div>
-                                <span class="hidden 2xl:inline text-[11px] text-slate-400 font-medium truncate max-w-[210px]">{{ t.nav.brandSubtitle }}</span>
+                                <span class="hidden 2xl:inline text-[11px] text-stone-500 dark:text-stone-400 font-medium truncate max-w-[220px]">المنظومة السحابية لأتمتة المطاعم</span>
                             </div>
                         </Link>
                     </div>
@@ -1084,48 +1092,30 @@ onUnmounted(() => {
             </div>
         </header>
 
-        <!-- ========================================================================= -->
-        <!-- HERO SECTION: INTERACTIVE BEFORE/AFTER TOGGLE EXPERIENCE -->
-        <!-- ========================================================================= -->
-        <section class="relative pt-8 pb-20 lg:pt-16 lg:pb-28 overflow-hidden z-10 transition-colors duration-700">
-            <!-- Dynamic Ambient Atmosphere Glow based on Mode -->
-            <div
-                class="pointer-events-none absolute top-1/4 left-1/2 -translate-x-1/2 w-full max-w-5xl h-[450px] rounded-full blur-[140px] transition-all duration-1000 -z-10"
-                :class="heroMode === 'traditional'
-                    ? (isDark ? 'bg-rose-950/30' : 'bg-rose-200/40')
-                    : (isDark ? 'bg-emerald-950/25' : 'bg-emerald-200/40')"
-            ></div>
-
-            <!-- Soft Emerald Glow Flash Overlay (Triggers on Auto-Switch & Manual Switch to Smart) -->
-            <div
-                class="pointer-events-none absolute inset-0 z-0 transition-opacity duration-700 ease-out"
-                :class="isEmeraldFlashing ? 'opacity-100' : 'opacity-0'"
-            >
-                <div class="absolute inset-0 bg-radial-gradient from-emerald-500/20 via-teal-500/10 to-transparent blur-3xl"></div>
-                <div class="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[750px] h-[400px] bg-emerald-400/15 rounded-full blur-[120px] animate-pulse"></div>
-            </div>
-
+        <!-- ============================================================== -->
+        <!-- HERO SECTION: INTERACTIVE ARCHITECTURAL BEFORE/AFTER EXPERIENCE -->
+        <!-- ============================================================== -->
+        <section class="relative pt-8 pb-20 lg:pt-14 lg:pb-24 overflow-hidden z-10 transition-colors duration-500">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 <div class="text-center max-w-4xl mx-auto space-y-7">
 
-                    <!-- Top Centered Interactive Mode Switcher (Pill Switcher) -->
+                    <!-- Top Centered Interactive Mode Switcher (Architectural Executive Switcher) -->
                     <div class="flex flex-col items-center justify-center gap-2">
                         <div
-                            class="inline-flex items-center p-1.5 rounded-full border shadow-2xl backdrop-blur-xl relative z-20 transition-colors"
-                            :class="isDark ? 'bg-slate-900/90 border-white/10' : 'bg-white/95 border-slate-200/90 shadow-md'"
+                            class="inline-flex items-center p-1.5 rounded-2xl border shadow-sm backdrop-blur-md relative z-20 transition-all duration-300"
+                            :class="isDark ? 'bg-[#121623]/95 border-white/[0.08]' : 'bg-white border-stone-200 shadow-xs'"
                         >
                             <!-- Traditional Pill Option -->
                             <button
                                 @click="setHeroMode('traditional', true)"
                                 type="button"
                                 :class="heroMode === 'traditional'
-                                    ? (isDark ? 'bg-rose-500/20 text-rose-200 border-rose-500/50 shadow-lg shadow-rose-950/60 font-black' : 'bg-rose-50 text-rose-700 border-rose-300 shadow-sm font-black')
-                                    : (isDark ? 'text-slate-400 hover:text-rose-300 hover:bg-white/5 border-transparent font-medium' : 'text-slate-500 hover:text-rose-600 hover:bg-slate-50 border-transparent font-medium')"
-                                class="relative flex items-center gap-2 px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm border transition-all duration-300 cursor-pointer"
+                                    ? (isDark ? 'bg-rose-950/40 text-rose-300 border-rose-500/40 font-bold' : 'bg-rose-50 text-rose-800 border-rose-300 font-bold')
+                                    : (isDark ? 'text-stone-400 hover:text-rose-300 hover:bg-white/5 border-transparent font-medium' : 'text-stone-500 hover:text-rose-700 hover:bg-stone-50 border-transparent font-medium')"
+                                class="relative flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm border transition-all duration-200 cursor-pointer"
                             >
-                                <span class="text-sm sm:text-base">⚠️</span>
-                                <span>{{ currentLocale === 'ar' ? 'الوضع التقليدي (نزيف الأرباح)' : 'Traditional Legacy (Profit Bleed)' }}</span>
-                                <span v-if="heroMode === 'traditional'" class="w-2 h-2 rounded-full" :class="isDark ? 'bg-rose-500 animate-pulse' : 'bg-rose-600 animate-pulse'"></span>
+                                <span class="w-2 h-2 rounded-full" :class="heroMode === 'traditional' ? 'bg-rose-500' : 'bg-stone-500/40'"></span>
+                                <span>{{ currentLocale === 'ar' ? 'النمط التقليدي (هدر وعمولات)' : 'Traditional Legacy (Profit Bleed)' }}</span>
                             </button>
 
                             <!-- Smart Platform Pill Option -->
@@ -1133,45 +1123,34 @@ onUnmounted(() => {
                                 @click="setHeroMode('smart', true)"
                                 type="button"
                                 :class="heroMode === 'smart'
-                                    ? 'bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-400 text-slate-950 font-black shadow-lg shadow-emerald-500/30 border-emerald-300/40'
-                                    : (isDark ? 'text-slate-400 hover:text-emerald-300 hover:bg-white/5 border-transparent font-medium' : 'text-slate-500 hover:text-emerald-700 hover:bg-slate-50 border-transparent font-medium')"
-                                class="relative flex items-center gap-2 px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm border transition-all duration-300 cursor-pointer"
+                                    ? 'bg-[#d4af37] text-slate-950 font-black shadow-sm border-amber-300/40'
+                                    : (isDark ? 'text-stone-400 hover:text-amber-300 hover:bg-white/5 border-transparent font-medium' : 'text-stone-500 hover:text-amber-800 hover:bg-stone-50 border-transparent font-medium')"
+                                class="relative flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm border transition-all duration-200 cursor-pointer"
                             >
-                                <span class="text-sm sm:text-base">✨</span>
-                                <span>{{ currentLocale === 'ar' ? 'مع المنظومة الذكية (التحكم الكامل)' : 'With Smart Platform (Total Control)' }}</span>
-                                <span v-if="heroMode === 'smart'" class="w-2 h-2 rounded-full bg-slate-950 animate-ping"></span>
+                                <span class="w-2 h-2 rounded-full" :class="heroMode === 'smart' ? 'bg-slate-950' : 'bg-amber-500/40'"></span>
+                                <span>{{ currentLocale === 'ar' ? 'منظومة تدلّل الذكية (تحكم كامل)' : 'With Smart Platform (Total Control)' }}</span>
                             </button>
                         </div>
                     </div>
 
                     <!-- Dynamic State Container with Zero Layout Shift -->
-                    <div class="min-h-[520px] sm:min-h-[440px] lg:min-h-[400px] flex flex-col justify-center">
+                    <div class="min-h-[500px] sm:min-h-[420px] lg:min-h-[380px] flex flex-col justify-center">
                         <Transition name="hero-mode" mode="out-in">
                             <div :key="heroMode" class="space-y-6">
 
                                 <!-- State Dynamic Badge -->
                                 <div class="flex justify-center">
                                     <div
-                                        class="inline-flex items-center gap-2.5 px-4 py-2 rounded-full text-xs sm:text-sm font-bold shadow-lg backdrop-blur-md transition-all border"
+                                        class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold shadow-xs backdrop-blur-sm transition-all border"
                                         :class="heroMode === 'traditional'
-                                            ? (isDark ? 'bg-rose-500/10 border-rose-500/30 text-rose-300 shadow-rose-950/40' : 'bg-rose-50 border-rose-200 text-rose-700 shadow-rose-100')
-                                            : (isDark ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300 shadow-emerald-950/40' : 'bg-emerald-50 border-emerald-200 text-emerald-800 shadow-emerald-100')"
+                                            ? (isDark ? 'bg-rose-950/30 border-rose-500/30 text-rose-300' : 'bg-rose-50 border-rose-200 text-rose-700')
+                                            : (isDark ? 'bg-amber-500/10 border-amber-500/25 text-amber-300' : 'bg-amber-50 border-amber-200 text-amber-800')"
                                     >
-                                        <span class="relative flex h-2.5 w-2.5">
-                                            <span
-                                                class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
-                                                :class="heroMode === 'traditional' ? (isDark ? 'bg-rose-400' : 'bg-rose-500') : (isDark ? 'bg-emerald-400' : 'bg-emerald-500')"
-                                            ></span>
-                                            <span
-                                                class="relative inline-flex rounded-full h-2.5 w-2.5"
-                                                :class="heroMode === 'traditional' ? (isDark ? 'bg-rose-500' : 'bg-rose-600') : (isDark ? 'bg-emerald-500' : 'bg-emerald-600')"
-                                            ></span>
-                                        </span>
-                                        <span class="text-sm">{{ heroMode === 'traditional' ? '⚠️' : '✨' }}</span>
+                                        <span class="w-1.5 h-1.5 rounded-full" :class="heroMode === 'traditional' ? 'bg-rose-500' : 'bg-amber-500'"></span>
                                         <span>
                                             {{ heroMode === 'traditional'
-                                                ? (currentLocale === 'ar' ? 'فوضى تشغيلية وهدر مستمر' : 'Operational Chaos & Profit Leaks')
-                                                : (currentLocale === 'ar' ? 'السيطرة المالية والتشغيلية الكاملة' : 'Total Financial & Operational Command')
+                                                ? (currentLocale === 'ar' ? 'تشغيل يدوي بطيء وهدر مستمر في الإيراد' : 'Operational Chaos & Profit Leaks')
+                                                : (currentLocale === 'ar' ? 'المنظومة السحابية الحصرية لأتمتة الصالة والمطبخ' : 'Total Financial & Operational Command')
                                             }}
                                         </span>
                                     </div>
@@ -1181,13 +1160,13 @@ onUnmounted(() => {
                                 <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.2] sm:leading-[1.2]">
                                     <template v-if="heroMode === 'traditional'">
                                         <span :class="isDark ? 'text-white' : 'text-slate-900'">{{ currentLocale === 'ar' ? 'مطبخ مزدحم، مبيعات تتصاعد..' : 'Crowded kitchen, surging sales..' }}</span>
-                                        <span class="bg-gradient-to-r from-rose-500 via-red-600 to-rose-500 dark:from-rose-400 dark:via-red-500 dark:to-rose-300 bg-clip-text text-transparent block mt-2">
+                                        <span class="text-rose-500 dark:text-rose-400 block mt-2 font-black">
                                             {{ currentLocale === 'ar' ? 'وأرباحك الحقيقية تتبخر بين التطبيقات والهدر!' : 'yet your true profits vanish between delivery apps and waste!' }}
                                         </span>
                                     </template>
                                     <template v-else>
-                                        <span :class="isDark ? 'text-white' : 'text-slate-900'">{{ currentLocale === 'ar' ? 'مطبخ منظم كالساعة، طلبات مباشرة..' : 'Clockwork kitchen, direct orders..' }}</span>
-                                        <span class="bg-gradient-to-r from-emerald-600 via-teal-600 to-amber-600 dark:from-emerald-300 dark:via-teal-300 dark:to-amber-300 bg-clip-text text-transparent block mt-2">
+                                        <span :class="isDark ? 'text-[#f8fafc]' : 'text-slate-900'">{{ currentLocale === 'ar' ? 'مطبخ منظم كالساعة، طلبات مباشرة..' : 'Clockwork kitchen, direct orders..' }}</span>
+                                        <span class="text-[#c59b27] dark:text-[#d4af37] block mt-2 font-black">
                                             {{ currentLocale === 'ar' ? 'وكل قرش من أرباحك يدخل جيبك بالكامل!' : 'and every single cent of profit goes directly into your pocket!' }}
                                         </span>
                                     </template>
@@ -1276,18 +1255,18 @@ onUnmounted(() => {
                                     <template v-else>
                                         <!-- Card 1 -->
                                         <div
-                                            class="rounded-2xl p-4 sm:p-5 backdrop-blur-md flex flex-col items-center justify-center text-center transition-all border shadow-lg"
-                                            :class="isDark ? 'bg-slate-900/80 border-emerald-500/30 shadow-emerald-950/30' : 'bg-white border-emerald-200 shadow-sm'"
+                                            class="rounded-xl p-4 sm:p-5 flex flex-col items-center justify-center text-center transition-all border shadow-xs"
+                                            :class="isDark ? 'bg-[#121623] border-white/[0.08]' : 'bg-white border-stone-200 shadow-xs'"
                                         >
-                                            <div class="text-xs sm:text-sm font-semibold mb-1" :class="isDark ? 'text-slate-400' : 'text-slate-500'">
+                                            <div class="text-xs sm:text-sm font-semibold mb-1" :class="isDark ? 'text-stone-400' : 'text-stone-500'">
                                                 {{ currentLocale === 'ar' ? 'عمولة وسيط' : 'Intermediary Cut' }}
                                             </div>
-                                            <div class="text-3xl sm:text-4xl font-black font-mono tracking-tight" :class="isDark ? 'text-emerald-400' : 'text-emerald-600'" dir="ltr">
+                                            <div class="text-3xl sm:text-4xl font-black font-mono tracking-tight text-emerald-500" dir="ltr">
                                                 0%
                                             </div>
                                             <div
-                                                class="mt-2 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border"
-                                                :class="isDark ? 'text-emerald-300/90 bg-emerald-500/10 border-emerald-500/20' : 'text-emerald-800 bg-emerald-50 border-emerald-200'"
+                                                class="mt-2 text-[11px] font-bold px-2.5 py-0.5 rounded-md border"
+                                                :class="isDark ? 'text-emerald-300 bg-emerald-500/10 border-emerald-500/20' : 'text-emerald-800 bg-emerald-50 border-emerald-200'"
                                             >
                                                 {{ currentLocale === 'ar' ? 'أرباحك كاملة 100% لك' : '100% direct revenue retained' }}
                                             </div>
@@ -1295,18 +1274,18 @@ onUnmounted(() => {
 
                                         <!-- Card 2 -->
                                         <div
-                                            class="rounded-2xl p-4 sm:p-5 backdrop-blur-md flex flex-col items-center justify-center text-center transition-all border shadow-lg"
-                                            :class="isDark ? 'bg-slate-900/80 border-teal-500/30 shadow-teal-950/30' : 'bg-white border-teal-200 shadow-sm'"
+                                            class="rounded-xl p-4 sm:p-5 flex flex-col items-center justify-center text-center transition-all border shadow-xs"
+                                            :class="isDark ? 'bg-[#121623] border-white/[0.08]' : 'bg-white border-stone-200 shadow-xs'"
                                         >
-                                            <div class="text-xs sm:text-sm font-semibold mb-1" :class="isDark ? 'text-slate-400' : 'text-slate-500'">
+                                            <div class="text-xs sm:text-sm font-semibold mb-1" :class="isDark ? 'text-stone-400' : 'text-stone-500'">
                                                 {{ currentLocale === 'ar' ? 'ضبط التكاليف' : 'Cost & Stock Control' }}
                                             </div>
-                                            <div class="text-xl sm:text-2xl font-black mt-1" :class="isDark ? 'text-teal-300' : 'text-teal-700'">
+                                            <div class="text-xl sm:text-2xl font-black mt-1 text-[#d4af37]">
                                                 {{ currentLocale === 'ar' ? 'فوري ولحظي' : 'Real-Time Live' }}
                                             </div>
                                             <div
-                                                class="mt-2 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border"
-                                                :class="isDark ? 'text-teal-300/90 bg-teal-500/10 border-teal-500/20' : 'text-teal-800 bg-teal-50 border-teal-200'"
+                                                class="mt-2 text-[11px] font-bold px-2.5 py-0.5 rounded-md border"
+                                                :class="isDark ? 'text-amber-300 bg-amber-500/10 border-amber-500/20' : 'text-amber-800 bg-amber-50 border-amber-200'"
                                             >
                                                 {{ currentLocale === 'ar' ? 'ربط المطبخ بالوصفات آلياً' : 'Automated kitchen & recipe sync' }}
                                             </div>
@@ -1314,18 +1293,18 @@ onUnmounted(() => {
 
                                         <!-- Card 3 -->
                                         <div
-                                            class="rounded-2xl p-4 sm:p-5 backdrop-blur-md flex flex-col items-center justify-center text-center transition-all border shadow-lg"
-                                            :class="isDark ? 'bg-slate-900/80 border-amber-500/30 shadow-amber-950/30' : 'bg-white border-amber-200 shadow-sm'"
+                                            class="rounded-xl p-4 sm:p-5 flex flex-col items-center justify-center text-center transition-all border shadow-xs"
+                                            :class="isDark ? 'bg-[#121623] border-white/[0.08]' : 'bg-white border-stone-200 shadow-xs'"
                                         >
-                                            <div class="text-xs sm:text-sm font-semibold mb-1" :class="isDark ? 'text-slate-400' : 'text-slate-500'">
+                                            <div class="text-xs sm:text-sm font-semibold mb-1" :class="isDark ? 'text-stone-400' : 'text-stone-500'">
                                                 {{ currentLocale === 'ar' ? 'النتيجة' : 'Bottom-Line Result' }}
                                             </div>
-                                            <div class="text-xl sm:text-2xl font-black mt-1" :class="isDark ? 'text-amber-300' : 'text-amber-700'">
+                                            <div class="text-xl sm:text-2xl font-black mt-1 text-[#d4af37]">
                                                 {{ currentLocale === 'ar' ? 'مضاعفة صافي الأرباح' : '+100% Profit Boost' }}
                                             </div>
                                             <div
-                                                class="mt-2 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border"
-                                                :class="isDark ? 'text-amber-300/90 bg-amber-500/10 border-amber-500/20' : 'text-amber-800 bg-amber-50 border-amber-200'"
+                                                class="mt-2 text-[11px] font-bold px-2.5 py-0.5 rounded-md border"
+                                                :class="isDark ? 'text-amber-300 bg-amber-500/10 border-amber-500/20' : 'text-amber-800 bg-amber-50 border-amber-200'"
                                             >
                                                 {{ currentLocale === 'ar' ? 'نمو وسيطرة مالية 100%' : 'High margin & complete control' }}
                                             </div>
@@ -1338,35 +1317,34 @@ onUnmounted(() => {
                     </div>
 
                     <!-- CTAs -->
-                    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+                    <div class="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-2">
                         <!-- Primary CTA -->
                         <button
                             @click="isDemoModalOpen = true"
                             type="button"
                             :class="heroMode === 'traditional'
-                                ? 'bg-gradient-to-r from-rose-500 via-red-500 to-rose-600 text-white shadow-xl shadow-rose-500/25 hover:shadow-rose-500/40'
-                                : 'bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-400 text-slate-950 shadow-xl shadow-emerald-500/30 hover:shadow-emerald-500/50'"
-                            class="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl font-extrabold text-base hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer group"
+                                ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-md'
+                                : 'bg-[#d4af37] hover:bg-[#e2bd46] text-slate-950 font-black shadow-md shadow-amber-950/15'"
+                            class="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-3.5 rounded-xl font-black text-base hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer"
                         >
-                            <span class="group-hover:scale-110 transition-transform">🛡️</span>
-                            <span>{{ currentLocale === 'ar' ? 'ابدأ بتأمين أرباحك مجاناً' : 'Start Securing Your Profits Free' }}</span>
+                            <span>{{ currentLocale === 'ar' ? 'ابدأ بتأمين أرباحك وتجربة النظام' : 'Start Securing Your Profits Free' }}</span>
                             <span
-                                class="text-xs px-2.5 py-0.5 rounded-full"
-                                :class="heroMode === 'traditional' ? 'bg-black/25 text-white' : 'bg-black/10 text-slate-950 font-black'"
+                                class="text-xs px-2.5 py-0.5 rounded-md font-bold"
+                                :class="heroMode === 'traditional' ? 'bg-black/25 text-white' : 'bg-black/10 text-slate-950'"
                             >
-                                14 {{ currentLocale === 'ar' ? 'يوماً تجربة' : 'Days Free' }}
+                                14 {{ currentLocale === 'ar' ? 'يوماً تجربة مجانية' : 'Days Free' }}
                             </span>
                         </button>
 
                         <!-- Secondary CTA -->
                         <a
                             href="#how-it-works"
-                            class="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl border font-bold text-base transition-all backdrop-blur-md shadow-lg group cursor-pointer"
+                            class="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-xl border font-bold text-sm sm:text-base transition-all shadow-xs cursor-pointer"
                             :class="isDark
-                                ? 'bg-slate-900/90 hover:bg-slate-800/90 border-slate-700 hover:border-emerald-500/50 text-white'
-                                : 'bg-white hover:bg-slate-50 border-slate-300 hover:border-emerald-500/60 text-slate-800 shadow-xs'"
+                                ? 'bg-[#121623] hover:bg-[#181d2e] border-white/[0.1] text-stone-200'
+                                : 'bg-white hover:bg-stone-50 border-stone-300 text-stone-800 shadow-xs'"
                         >
-                            <span class="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-500 dark:text-emerald-400 flex items-center justify-center text-xs group-hover:scale-110 transition-transform font-bold">
+                            <span class="w-6 h-6 rounded-full bg-amber-500/15 text-amber-500 dark:text-amber-400 flex items-center justify-center text-xs font-bold">
                                 ▶
                             </span>
                             <span>{{ currentLocale === 'ar' ? 'شاهد كيف توفر في 90 ثانية' : 'See How You Save in 90 Seconds' }}</span>
@@ -1375,14 +1353,13 @@ onUnmounted(() => {
                         <!-- Pre-sales Assessment CTA -->
                         <Link
                             href="/consultation"
-                            class="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-7 py-4 rounded-2xl border font-bold text-sm sm:text-base transition-all backdrop-blur-md shadow-lg group cursor-pointer"
+                            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl border font-bold text-sm sm:text-base transition-all shadow-xs cursor-pointer"
                             :class="isDark
-                                ? 'bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 text-amber-300 hover:border-amber-400'
-                                : 'bg-amber-50 hover:bg-amber-100/80 border-amber-300 text-amber-900 shadow-xs'"
+                                ? 'bg-amber-500/10 hover:bg-amber-500/20 border-amber-500/30 text-amber-300'
+                                : 'bg-amber-50 hover:bg-amber-100/70 border-amber-300 text-amber-900 shadow-xs'"
                         >
-                            <span class="group-hover:scale-110 transition-transform">📋</span>
-                            <span>{{ currentLocale === 'ar' ? 'صمّم بنية مطعمك (استمارة المتطلبات)' : 'Build Your Restaurant Blueprint' }}</span>
-                            <span class="text-xs transition-transform group-hover:-translate-x-1">←</span>
+                            <span>{{ currentLocale === 'ar' ? 'دراسة متطلبات مطعمك' : 'Build Your Restaurant Blueprint' }}</span>
+                            <span class="text-xs rtl:rotate-180">→</span>
                         </Link>
                     </div>
 
@@ -1402,6 +1379,53 @@ onUnmounted(() => {
                         <div class="flex items-center gap-2">
                             <span class="text-emerald-500 font-bold">✓</span>
                             <span>{{ currentLocale === 'ar' ? 'صفر عمولة 0% (أرباحك لك بالكامل)' : '0% Sales Commission (Keep 100%)' }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Bespoke Architectural Showcase: High-End Hospitality Reality -->
+                    <div class="pt-10 max-w-5xl mx-auto">
+                        <div
+                            class="relative rounded-3xl p-2.5 sm:p-3 overflow-hidden shadow-2xl transition-all duration-500 border fluted-texture-dark"
+                            :class="isDark ? 'bg-[#121623] border-amber-500/25 shadow-black/80' : 'bg-white border-stone-300 shadow-stone-300/40'"
+                        >
+                            <!-- Image Frame with Deep Tactile Shadows -->
+                            <div class="relative h-[280px] sm:h-[420px] lg:h-[480px] rounded-2xl overflow-hidden group">
+                                <img
+                                    src="/images/tedallal-luxury-restaurant-facade.jpg"
+                                    alt="واجهة تدلّل المعمارية الفاخرة"
+                                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 filter brightness-[0.95] contrast-[1.05]"
+                                />
+                                <!-- Ambient Deep Gradient -->
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent"></div>
+
+                                <!-- Architectural Plaque / Badge -->
+                                <div class="absolute top-4 sm:top-6 start-4 sm:start-6 flex items-center gap-2 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl backdrop-blur-md bg-black/65 border border-amber-500/40 text-amber-300 text-xs sm:text-sm font-bold shadow-lg">
+                                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                                    <span>هندسة الضيافة الفاخرة — مخصصة لعلامتك التجارية</span>
+                                </div>
+
+                                <!-- Floating Live Interactive Floor Toast inside the Photo -->
+                                <div class="absolute bottom-4 sm:bottom-6 start-4 sm:start-6 end-4 sm:end-6 flex flex-col sm:flex-row items-center justify-between gap-4 p-4 sm:p-5 rounded-2xl backdrop-blur-xl bg-black/80 border border-amber-500/30 text-white shadow-2xl">
+                                    <div class="flex items-center gap-3.5 text-start">
+                                        <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-xl shrink-0">
+                                            🏛️
+                                        </div>
+                                        <div>
+                                            <div class="font-bold text-sm sm:text-base text-amber-200">هوية معمارية تليق بأرقى المطاعم والكافيهات</div>
+                                            <div class="text-xs sm:text-sm text-stone-300">منيو رقمي فاخر، أتمتة صالة ومطبخ فورية، وصفر عمولات وسيطة</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-center gap-2 shrink-0">
+                                        <button
+                                            @click="isDemoModalOpen = true"
+                                            class="brass-button px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black tracking-wide"
+                                        >
+                                            احجز استشارتك الميدانية
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -1449,9 +1473,9 @@ onUnmounted(() => {
                             <button
                                 @click="selectedOperatingMode = 'postpaid'"
                                 type="button"
-                                class="px-5 py-3 rounded-xl font-extrabold text-xs sm:text-sm transition-all duration-300 flex items-center gap-2.5 whitespace-nowrap cursor-pointer"
+                                class="px-5 py-2.5 rounded-xl font-extrabold text-xs sm:text-sm transition-all duration-300 flex items-center gap-2.5 whitespace-nowrap cursor-pointer"
                                 :class="selectedOperatingMode === 'postpaid'
-                                    ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-lg shadow-amber-500/25 scale-[1.02]'
+                                    ? 'bg-[#d4af37] text-slate-950 shadow-md font-black scale-[1.01]'
                                     : (isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-white/5' : 'text-slate-600 hover:text-slate-900 hover:bg-white/80 font-bold')"
                             >
                                 <span class="text-base sm:text-lg">🍽️</span>
@@ -1461,9 +1485,9 @@ onUnmounted(() => {
                             <button
                                 @click="selectedOperatingMode = 'prepaid'"
                                 type="button"
-                                class="px-5 py-3 rounded-xl font-extrabold text-xs sm:text-sm transition-all duration-300 flex items-center gap-2.5 whitespace-nowrap cursor-pointer"
+                                class="px-5 py-2.5 rounded-xl font-extrabold text-xs sm:text-sm transition-all duration-300 flex items-center gap-2.5 whitespace-nowrap cursor-pointer"
                                 :class="selectedOperatingMode === 'prepaid'
-                                    ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-slate-950 shadow-lg shadow-orange-500/25 scale-[1.02]'
+                                    ? 'bg-[#d4af37] text-slate-950 shadow-md font-black scale-[1.01]'
                                     : (isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-white/5' : 'text-slate-600 hover:text-slate-900 hover:bg-white/80 font-bold')"
                             >
                                 <span class="text-base sm:text-lg">⚡</span>
@@ -1477,16 +1501,16 @@ onUnmounted(() => {
                 <transition mode="out-in" enter-active-class="transition duration-300 ease-out" enter-from-class="opacity-0 -translate-y-2" enter-to-class="opacity-100 translate-y-0" leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0">
                     <div
                         :key="selectedOperatingMode"
-                        class="max-w-3xl mx-auto mb-14 p-5 rounded-3xl border shadow-xl flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-start transition-all"
+                        class="max-w-3xl mx-auto mb-14 p-5 rounded-2xl border shadow-sm flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-start transition-all"
                         :class="selectedOperatingMode === 'prepaid'
-                            ? (isDark ? 'bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-orange-500/10 border-orange-500/30' : 'bg-gradient-to-r from-orange-50/90 via-amber-50/70 to-orange-50/90 border-orange-200/90 shadow-sm')
-                            : (isDark ? 'bg-gradient-to-r from-amber-500/10 via-yellow-500/10 to-amber-500/10 border-amber-500/30' : 'bg-gradient-to-r from-amber-50/90 via-yellow-50/70 to-amber-50/90 border-amber-200/90 shadow-sm')"
+                            ? (isDark ? 'bg-[#121623] border-amber-500/30' : 'bg-[#fcfbf9] border-stone-200 shadow-xs')
+                            : (isDark ? 'bg-[#121623] border-amber-500/30' : 'bg-[#fcfbf9] border-stone-200 shadow-xs')"
                     >
                         <div
-                            class="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0 shadow-lg"
+                            class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0 shadow-xs"
                             :class="selectedOperatingMode === 'prepaid'
-                                ? (isDark ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'bg-orange-100 text-orange-700 border border-orange-200')
-                                : (isDark ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-amber-100 text-amber-800 border border-amber-200')"
+                                ? (isDark ? 'bg-amber-500/10 text-amber-400 border border-amber-500/25' : 'bg-amber-50 text-amber-800 border border-amber-200')
+                                : (isDark ? 'bg-amber-500/10 text-amber-400 border border-amber-500/25' : 'bg-amber-50 text-amber-800 border border-amber-200')"
                         >
                             {{ selectedOperatingMode === 'prepaid' ? '⚡' : '🍽️' }}
                         </div>

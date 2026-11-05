@@ -104,12 +104,15 @@
     <div class="grid">
         @foreach ($tables as $table)
             <article class="card">
+                @if ($restaurant->logo)
+                    <img src="{{ $restaurant->logo }}" alt="{{ $restaurant->name }}" class="restaurant-logo" style="max-height: 44px; max-width: 130px; margin: 0 auto 8px; object-fit: contain; display: block;">
+                @endif
                 <p class="restaurant-name">{{ $restaurant->name }}</p>
                 <h2 class="table-name">{{ $table['name'] }}</h2>
                 <div class="qr">
                     <img src="data:image/png;base64,{{ $table['qr_base64'] }}" alt="QR {{ $table['name'] }}">
                 </div>
-                <p class="instruction">امسح للطلب</p>
+                <p class="instruction">امسح للطلب مباشرة</p>
                 <p class="url">{{ $table['public_url'] }}</p>
             </article>
         @endforeach

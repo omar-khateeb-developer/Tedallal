@@ -33,6 +33,81 @@ html.dark ::-webkit-scrollbar-thumb:hover {
 
 /* Selection highlight in amber tone */
 ::selection {
-    background-color: rgba(245, 158, 11, 0.35);
+    background-color: rgba(212, 175, 55, 0.35);
     color: inherit;
+}
+
+/* =========================================================================
+   Bespoke Luxury Hospitality Styles (Anti-AI Tactile Aesthetic)
+   ========================================================================= */
+
+/* 1. Brushed Brass & Matte Gold Metallic Finishes */
+.brass-button {
+    background: linear-gradient(135deg, #dfbc47 0%, #aa820a 50%, #e6ca65 100%);
+    box-shadow: 0 4px 14px -1px rgba(170, 130, 10, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    color: #0b0d13;
+    font-weight: 800;
+    transition: all 0.25s ease;
+}
+
+.brass-button:hover {
+    background: linear-gradient(135deg, #e8cf78 0%, #c49622 50%, #f0da88 100%);
+    box-shadow: 0 6px 20px -1px rgba(170, 130, 10, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    transform: translateY(-1px);
+}
+
+.brass-border {
+    border-color: rgba(212, 175, 55, 0.3);
+}
+
+.brass-border-subtle {
+    border-color: rgba(212, 175, 55, 0.16);
+}
+
+.brass-text {
+    background: linear-gradient(135deg, #e5c468 0%, #c59b27 60%, #f3dba0 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* 2. Fluted Architectural Ribbing (Travertine / Stone Texture) */
+.fluted-texture-dark {
+    background-image: repeating-linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.02) 0px,
+        rgba(255, 255, 255, 0.02) 1px,
+        transparent 1px,
+        transparent 16px
+    );
+}
+
+.fluted-texture-light {
+    background-image: repeating-linear-gradient(
+        90deg,
+        rgba(0, 0, 0, 0.025) 0px,
+        rgba(0, 0, 0, 0.025) 1px,
+        transparent 1px,
+        transparent 16px
+    );
+}
+
+/* 3. Tactile Card Surfaces (Stone / Artisanal Heavy Paper) */
+.luxury-card-dark {
+    background-color: #12151f;
+    border: 1px solid rgba(212, 175, 55, 0.22);
+    box-shadow: 0 14px 34px -10px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.luxury-card-light {
+    background-color: #ffffff;
+    border: 1px solid #e7e2d6;
+    box-shadow: 0 14px 34px -10px rgba(180, 160, 120, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+/* 4. Elegant Parametric Mashrabiya Accent Lines */
+.mashrabiya-divider {
+    background-image: radial-gradient(circle, rgba(212, 175, 55, 0.5) 1px, transparent 1px);
+    background-size: 8px 8px;
+    height: 8px;
+    opacity: 0.4;
 }
