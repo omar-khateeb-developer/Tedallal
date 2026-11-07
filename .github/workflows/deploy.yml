@@ -15,27 +15,27 @@ jobs:
       - name: 1. Checkout Application Code
         uses: actions/checkout@v4
 
-      - name: 2. Setup Node.js Environment
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
-
-      - name: 3. Compile Frontend Assets (Vite / Vue)
-        run: |
-          npm ci
-          npm run build
-
-      - name: 4. Setup PHP 8.4 Environment
+      - name: 2. Setup PHP 8.4 Environment
         uses: shivammathur/setup-php@v2
         with:
           php-version: "8.4"
           extensions: mbstring, xml, ctype, iconv, intl, pdo_mysql, bcmath, redis
           coverage: none
 
-      - name: 5. Install Composer Production Dependencies
+      - name: 3. Install Composer Production Dependencies
         run: |
           composer install --no-dev --prefer-dist --optimize-autoloader --no-progress --no-interaction
+
+      - name: 4. Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: 5. Compile Frontend Assets (Vite / Vue)
+        run: |
+          npm ci
+          npm run build
 
       - name: 6. Prepare Clean Release Artifact
         run: |
