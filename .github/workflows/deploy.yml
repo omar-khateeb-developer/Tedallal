@@ -17,9 +17,24 @@ jobs:
           SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
           HOST: ${{ secrets.VPS_HOST }}
           USER: ${{ secrets.VPS_USERNAME }}
-          PORT: ${{ secrets.VPS_PORT || 22 }}
+          PORT: ${{ secrets.VPS_PORT }}
         run: |
+          TARGET_HOST="${HOST:-194.163.44.154}"
+          TARGET_USER="${USER:-deployer}"
+          TARGET_PORT="${PORT:-22}"
+
+          echo "Target Host: $TARGET_HOST"
+          echo "Target User: $TARGET_USER"
+          echo "Target Port: $TARGET_PORT"
+          echo "Key length: ${#SSH_KEY}"
+
+          if [ ${#SSH_KEY} -lt 50 ]; then
+            echo "::error::VPS_SSH_KEY secret is missing or too short! Please verify GitHub Secrets."
+            exit 1
+          fi
+
           mkdir -p ~/.ssh
-          printf "%s\n" "$SSH_KEY" > ~/.ssh/id_ed25519
+          printf "%s\n" "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh -v -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 -p ${PORT:-22} "${USER}@${HOST}" "bash /var/www/tedallal/deploy.sh"
+
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 -p "$TARGET_PORT" "${TARGET_USER}@${TARGET_HOST}" "bash /var/www/tedallal/deploy.sh"
