@@ -37,6 +37,23 @@ Route::get('/t/{token}', [CustomerController::class, 'table'])->name('customer.m
 Route::get('/t/{token}/cart', [CustomerController::class, 'cart'])->name('customer.cart');
 Route::get('/t/{token}/orders/{orderNumber}', [CustomerController::class, 'order'])->name('customer.order');
 
+Route::get('/wheel-error-log', function () {
+    $logFile = storage_path('logs/laravel.log');
+    if (!file_exists($logFile)) {
+        return response()->json(['error' => 'Log file not found at ' . $logFile]);
+    }
+    $lines = file($logFile);
+    $errors = [];
+    foreach ($lines as $line) {
+        if (str_contains($line, 'production.ERROR:')) {
+            $errors[] = trim(substr($line, 0, 300));
+        }
+    }
+    return response()->json([
+        'last_errors' => array_slice($errors, -5),
+    ]);
+});
+
 // Lucky Wheel routes (Marketing Gamification)
 Route::get('/wheel-demo', fn() => redirect()->route('wheel.show', ['token' => 'demo']))->name('wheel.demo');
 Route::get('/wheel/{token}', [\App\Http\Controllers\Web\WheelController::class, 'show'])->name('wheel.show');
