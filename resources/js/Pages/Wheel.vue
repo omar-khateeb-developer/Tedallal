@@ -311,16 +311,15 @@ async function spinWheel() {
     const numSlices = props.slices.length;
     const sliceAngle = (2 * Math.PI) / numSlices;
 
-    // Start rotating immediately for responsive zero-lag feel
-    const launchStartTime = performance.now();
     let currentSliceTracker = Math.floor(currentAngle / sliceAngle);
 
-    // Launch API call in background while wheel spins
+    // Track API call state
     let apiCompleted = false;
     let wonIndex = 0;
     let wonVoucherData: Voucher | null = null;
 
-    const spinPromise = axios.post(`/wheel/${props.token}/spin`)
+    // Send API spin request
+    axios.post(`/wheel/${props.token}/spin`)
         .then(res => {
             const data = res.data;
             wonIndex = data.won_index !== undefined ? data.won_index : 0;
@@ -329,70 +328,99 @@ async function spinWheel() {
         })
         .catch(err => {
             isSpinning.value = false;
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
             errorMessage.value = err.response?.data?.message || 'حدث خطأ أثناء تدوير العجلة، يرجى المحاولة ثانية.';
         });
 
-    // Compute target angle: Top pointer is at 12 o'clock (-Math.PI / 2 or 3*Math.PI/2)
-    // To align slice at wonIndex with top pointer:
-    // currentAngle + (wonIndex + 0.5) * sliceAngle = 3 * Math.PI / 2 (mod 2*PI)
-    // targetAngle = 3 * Math.PI / 2 - (wonIndex + 0.5) * sliceAngle
-    const spinDuration = 5200; // 5.2 seconds of authentic mechanical suspense
-    let finalTargetAngle = currentAngle;
+    const spinStartTime = performance.now();
+    let lastTime = spinStartTime;
+
+    // Animation phases:
+    // 'spinning': High-speed rotation while waiting for API
+    // 'decelerating': Smooth glide with friction directly onto winning slice
+    let phase: 'spinning' | 'decelerating' = 'spinning';
+    let decelStartTime = 0;
+    const decelDuration = 4600; // 4.6 seconds of luxury deceleration
+    let decelStartAngle = 0;
+    let totalDecelDistance = 0;
+
+    const freeSpinSpeed = 26; // High angular velocity (rad/s) ~ 4.1 rev/s
 
     const animate = (time: number) => {
         if (!isSpinning.value) return;
 
-        const elapsed = time - launchStartTime;
+        const dt = Math.min((time - lastTime) / 1000, 0.05);
+        lastTime = time;
 
-        // If API finished, set the final precision target angle once
-        if (apiCompleted && finalTargetAngle === currentAngle) {
-            const baseRotations = 6 * 2 * Math.PI; // 6 full rotations
-            const targetMod = (3 * Math.PI / 2 - (wonIndex + 0.5) * sliceAngle);
-            const currentMod = currentAngle % (2 * Math.PI);
-            const diff = ((targetMod - currentMod) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
-            // Slight organic random offset within slice (±15% of slice)
-            const organicJitter = (Math.random() - 0.5) * (sliceAngle * 0.28);
-            finalTargetAngle = currentAngle + baseRotations + diff + organicJitter;
+        if (phase === 'spinning') {
+            // Instant, exhilarating rotation on the very first frame!
+            currentAngle += freeSpinSpeed * dt;
+            lightBulbState.value = Math.floor(time / 100) % 2;
+
+            const elapsed = time - spinStartTime;
+            // When API has responded and at least 500ms of free-spin elapsed
+            if (apiCompleted && elapsed >= 500) {
+                phase = 'decelerating';
+                decelStartTime = time;
+                decelStartAngle = currentAngle;
+
+                // 12 o'clock pointer is at 3*PI/2 (270 deg)
+                const targetPointerAngle = 3 * Math.PI / 2;
+                const sliceCenter = (wonIndex + 0.5) * sliceAngle;
+                // Add tiny organic jitter within slice (±18% of slice) for authentic mechanical feel
+                const jitter = (Math.random() - 0.5) * (sliceAngle * 0.36);
+                const desiredFinalMod = ((targetPointerAngle - sliceCenter + jitter) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+
+                const currentMod = ((decelStartAngle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+                let forwardDistance = (desiredFinalMod - currentMod) % (2 * Math.PI);
+                if (forwardDistance < 0) forwardDistance += 2 * Math.PI;
+
+                // 5 full rotations during deceleration
+                const extraFullTurns = 5 * (2 * Math.PI);
+                totalDecelDistance = extraFullTurns + forwardDistance;
+            }
+        } else if (phase === 'decelerating') {
+            const decelElapsed = time - decelStartTime;
+            const progress = Math.min(decelElapsed / decelDuration, 1);
+
+            // Quartic ease-out curve: starts at speed, gradually glides to a stop
+            const easeOutProgress = 1 - Math.pow(1 - progress, 4);
+
+            currentAngle = decelStartAngle + totalDecelDistance * easeOutProgress;
+
+            // Lights slow down with the wheel
+            lightBulbState.value = Math.floor(time / (100 + progress * 250)) % 2;
+
+            if (progress >= 1) {
+                // Settle firmly on target angle
+                currentAngle = decelStartAngle + totalDecelDistance;
+                drawWheel(currentAngle);
+                isSpinning.value = false;
+                hasWon.value = true;
+                voucher.value = wonVoucherData;
+                playFanfareSound();
+                triggerConfetti();
+                return;
+            }
         }
 
-        const progress = Math.min(elapsed / spinDuration, 1);
-
-        // Quintic Deceleration Curve: starts explosive, decelerates with realistic inertia
-        const easeOutQuint = 1 - Math.pow(1 - progress, 5);
-
-        if (finalTargetAngle !== currentAngle) {
-            currentAngle = currentAngle + (finalTargetAngle - currentAngle) * 0.055 * (1 - progress * 0.85);
-        } else {
-            // Constant acceleration while awaiting network response
-            currentAngle += 0.22;
-        }
-
-        // Ticking audio and needle deflection on crossing slice dividers
+        // Mechanical Ticking audio & Needle Deflection on slice borders
         const newTracker = Math.floor(currentAngle / sliceAngle);
         if (newTracker !== currentSliceTracker) {
             currentSliceTracker = newTracker;
-            const velocityPitch = Math.max(0.7, 1.4 - progress * 0.6);
-            playTickSound(velocityPitch);
+            const speedFactor = phase === 'spinning' ? 1.0 : Math.max(0, 1 - (time - decelStartTime) / decelDuration);
+            const pitch = Math.max(0.7, 0.75 + speedFactor * 0.65);
+            playTickSound(pitch);
 
             // Needle mechanical wobble
-            pointerDeflection.value = -22;
+            pointerDeflection.value = -Math.max(6, 22 * speedFactor);
             setTimeout(() => {
                 pointerDeflection.value = 0;
-            }, 55);
+            }, 45);
         }
 
         drawWheel(currentAngle);
-
-        if (progress < 1 || !apiCompleted) {
-            animationFrameId = requestAnimationFrame(animate);
-        } else {
-            // Land squarely on winning slice
-            isSpinning.value = false;
-            voucher.value = wonVoucherData;
-            hasWon.value = true;
-            playFanfareSound();
-            triggerConfetti();
-        }
+        animationFrameId = requestAnimationFrame(animate);
     };
 
     animationFrameId = requestAnimationFrame(animate);
@@ -418,6 +446,7 @@ async function resetDemoSpin() {
         hasWon.value = false;
         voucher.value = null;
         errorMessage.value = null;
+        drawWheel(currentAngle);
         return;
     }
 
@@ -426,6 +455,7 @@ async function resetDemoSpin() {
         hasWon.value = false;
         voucher.value = null;
         errorMessage.value = null;
+        drawWheel(currentAngle);
     } catch {
         router.reload();
     }
@@ -647,10 +677,10 @@ onUnmounted(() => {
                             <span class="font-serif font-black text-xs mt-0.5">دَوّرْ!</span>
                         </template>
 
-                        <!-- Spinning State -->
+                        <!-- Spinning State: Golden Crown with subtle pulse (No Gear) -->
                         <template v-else-if="isSpinning">
-                            <span class="inline-block animate-spin text-xl">⚙️</span>
-                            <span class="text-[10px] font-bold mt-0.5">جاري...</span>
+                            <span class="text-xl animate-pulse">👑</span>
+                            <span class="text-[9px] font-bold mt-0.5 text-black/90">حظاً موفقاً</span>
                         </template>
 
                         <!-- Already Claimed State -->
@@ -678,8 +708,8 @@ onUnmounted(() => {
                         >
                             <span v-if="!isSpinning">🎁 اضغط لتدوير عجلة الحظ</span>
                             <span v-else class="flex items-center gap-2">
-                                <span class="animate-spin">🌀</span>
-                                <span>العجلة تدور... نتمنى لك حظاً سعيداً!</span>
+                                <span class="animate-pulse text-lg">✨</span>
+                                <span>العجلة تدور الآن... حظاً موفقاً!</span>
                             </span>
                         </button>
 
