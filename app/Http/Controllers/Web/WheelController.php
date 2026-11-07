@@ -285,8 +285,13 @@ class WheelController extends Controller
         $restaurant = Restaurant::first();
         $currency = $this->normalizeCurrency($restaurant?->currency ?? 'ل.س');
 
-        $firstTable = $restaurant ? RestaurantTable::where('restaurant_id', $restaurant->id)->first() : null;
-        $menuUrl = $firstTable ? route('customer.menu', ['token' => $firstTable->public_token]) : null;
+        $firstTable = null;
+        try {
+            $firstTable = $restaurant ? RestaurantTable::withoutGlobalScopes()->where('restaurant_id', $restaurant->id)->first() : null;
+        } catch (\Throwable $e) {
+            // Silently fallback if table query is unresolvable
+        }
+        $menuUrl = ($firstTable && $firstTable->public_token) ? route('customer.menu', ['token' => $firstTable->public_token]) : null;
 
         return Inertia::render('Wheel', [
             'token' => 'demo',

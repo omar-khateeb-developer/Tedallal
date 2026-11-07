@@ -239,10 +239,12 @@ async function submitOrder() {
 }
 
 function formatPrice(price: string | number) {
-    const num = parseFloat(String(price));
-    const formattedNum = isNaN(num) ? price : (num % 1 === 0 ? String(Math.round(num)) : num.toFixed(2).replace(/\.00$/, ''));
+    if (price === null || price === undefined) return '0 ل.س';
+    const cleanStr = String(price).replace(/,/g, '');
+    const num = parseFloat(cleanStr);
+    const intVal = isNaN(num) ? 0 : Math.round(num);
     const curr = (!props.restaurant.currency || props.restaurant.currency.toUpperCase() === 'SYP') ? 'ل.س' : props.restaurant.currency;
-    return `${formattedNum} ${curr}`;
+    return `${intVal} ${curr}`;
 }
 
 watch(cartOpen, (isOpen) => {

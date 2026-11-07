@@ -193,7 +193,7 @@
                     @endif
                 </td>
                 <td class="text-center">{{ $item->quantity }}</td>
-                <td class="text-left" dir="ltr">{{ number_format($item->subtotal, 2) }}</td>
+                <td class="text-left" dir="ltr">{{ (int) round((float) $item->subtotal) }}</td>
             </tr>
             @endforeach
         </tbody>
@@ -204,7 +204,7 @@
     <div class="totals">
         <div class="total-row">
             <span>الإجمالي:</span>
-            <span dir="ltr">{{ number_format($order->total, 2) }} {{ $restaurant->currency }}</span>
+            <span dir="ltr">{{ (int) round((float) $order->total) }} {{ $restaurant->currency }}</span>
         </div>
     </div>
 

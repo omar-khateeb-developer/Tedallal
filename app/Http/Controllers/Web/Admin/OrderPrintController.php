@@ -31,27 +31,18 @@ class OrderPrintController extends Controller
         $wheelQrBase64 = null;
         $wheelUrl = null;
 
-        // Only generate lucky wheel QR if offers feature is enabled and restaurant has active coupons
-        if ($restaurant->hasOffersFeature()) {
-            $hasActiveOffers = PromoCode::where('restaurant_id', $restaurant->id)
-                ->where('is_active', true)
-                ->where('is_single_use', false)
-                ->exists();
-
-            if ($hasActiveOffers) {
-                $wheelToken = $order->wheelToken;
-                if (!$wheelToken) {
-                    $wheelToken = $order->wheelToken()->create([
-                        'restaurant_id' => $restaurant->id,
-                        'token' => Str::random(32),
-                        'expires_at' => now()->addDays(14),
-                    ]);
-                }
-
-                $wheelUrl = url("/wheel/{$wheelToken->token}");
-                $wheelQrBase64 = $this->qrCodeService->generateBase64ForUrl($wheelUrl, 180);
-            }
+        // Generate unique lucky wheel QR code printed on invoice (always available for customer visit)
+        $wheelToken = $order->wheelToken;
+        if (!$wheelToken) {
+            $wheelToken = $order->wheelToken()->create([
+                'restaurant_id' => $restaurant->id,
+                'token' => Str::random(32),
+                'expires_at' => now()->addDays(14),
+            ]);
         }
+
+        $wheelUrl = url("/wheel/{$wheelToken->token}");
+        $wheelQrBase64 = $this->qrCodeService->generateBase64ForUrl($wheelUrl, 180);
 
         return view('admin.orders.print-invoice', [
             'restaurant' => $restaurant,

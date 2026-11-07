@@ -35,11 +35,21 @@ const order = ref<{
 
 let pollTimer: ReturnType<typeof setInterval> | null = null;
 
+const shortOrderNumber = computed(() => {
+    if (!props.orderNumber) return '';
+    const parts = props.orderNumber.split('-');
+    const last = parts[parts.length - 1];
+    const num = parseInt(last, 10);
+    return isNaN(num) ? props.orderNumber : String(num);
+});
+
 function formatPrice(price: string | number) {
-    const num = parseFloat(String(price));
-    const formatted = isNaN(num) ? price : (num % 1 === 0 ? String(Math.round(num)) : num.toFixed(2).replace(/\.00$/, ''));
+    if (price === null || price === undefined) return '0 ل.س';
+    const cleanStr = String(price).replace(/,/g, '');
+    const num = parseFloat(cleanStr);
+    const intVal = isNaN(num) ? 0 : Math.round(num);
     const curr = (!props.restaurant.currency || props.restaurant.currency.toUpperCase() === 'SYP') ? 'ل.س' : props.restaurant.currency;
-    return `${formatted} ${curr}`;
+    return `${intVal} ${curr}`;
 }
 
 async function loadOrder() {
@@ -146,6 +156,19 @@ const currentStepIndex = computed(() => {
         </div>
 
         <div v-else class="space-y-5 pb-20">
+            <!-- بطاقة رقم الطلب المختصر المميز لهذا اليوم (مخصصة ليقولها الزبون للكاشير عند الدفع) -->
+            <div class="rounded-3xl bg-gradient-to-br from-amber-500/25 via-amber-500/10 to-stone-50 dark:from-amber-500/20 dark:via-[#0f172a] dark:to-[#0a0f1d] p-6 text-center border-2 border-amber-500/60 shadow-xl relative overflow-hidden">
+                <div class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-500/20 text-amber-900 dark:text-amber-200 text-xs font-black mb-1">
+                    <span>📢</span>
+                    <span>رقم طلبك اليوم (اذكره للكاشير عند الدفع)</span>
+                </div>
+                <div class="text-6xl sm:text-7xl font-black text-amber-600 dark:text-amber-400 font-mono tracking-tight my-2">
+                    #{{ shortOrderNumber }}
+                </div>
+                <p class="text-xs font-medium text-stone-500 dark:text-slate-400">
+                    كود الطلب الكامل: <span class="font-mono font-bold text-stone-700 dark:text-slate-200">{{ orderNumber }}</span>
+                </p>
+            </div>
             <!-- إشعار الدفع للكاشير في حال المطعم دفع مسبق والطلب بانتظار الدفع -->
             <div v-if="isPrepaid && order.status === 'pending'" class="rounded-3xl bg-amber-500/10 border-2 border-amber-500/40 p-6 text-center shadow-lg relative overflow-hidden">
                 <div class="text-3xl mb-2">💳</div>
@@ -250,34 +273,6 @@ const currentStepIndex = computed(() => {
                             </p>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- Lucky Wheel Gamification Card -->
-            <div v-if="wheelToken" class="rounded-3xl bg-gradient-to-br from-amber-500/15 via-[#111827] to-[#0b0f19] p-5 border-2 border-amber-500/40 shadow-xl transition-all">
-                <div class="flex items-center justify-between gap-4">
-                    <div class="flex items-center gap-3.5 text-start">
-                        <div class="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-2xl shadow-inner shrink-0">
-                            🎡
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-sm text-white flex items-center gap-1.5">
-                                <span>عجلة الحظ والهدايا</span>
-                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300">هدية زيارتك القادمة</span>
-                            </h4>
-                            <p class="text-xs text-stone-300 dark:text-slate-300 mt-0.5 leading-relaxed">
-                                {{ isWheelClaimed ? 'لقد ربحت كود خصم لزيارتك القادمة!' : 'لديك لفة مجانية لربح خصم حصري لزيارتك القادمة!' }}
-                            </p>
-                        </div>
-                    </div>
-                    <a
-                        :href="`/wheel/${wheelToken}`"
-                        target="_blank"
-                        class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 font-black text-xs shadow-md hover:scale-105 active:scale-95 transition whitespace-nowrap shrink-0 flex items-center gap-1.5"
-                    >
-                        <span>{{ isWheelClaimed ? 'عرض هديتي' : 'دَوّرْ واربح' }}</span>
-                        <span>🎁</span>
-                    </a>
                 </div>
             </div>
 
