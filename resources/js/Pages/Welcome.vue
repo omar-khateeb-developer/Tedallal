@@ -688,9 +688,9 @@ onUnmounted(() => {
         :dir="currentLocale === 'ar' ? 'rtl' : 'ltr'"
         :class="[
             currentLocale === 'ar' ? 'font-tajawal' : 'font-sans font-english',
-            isDark ? 'dark-mode-theme' : 'light-mode-theme'
+            isDark ? 'dark-mode-theme bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#1a1a1a] via-[#0d0d0d] to-[#050505] text-[#f8fafc]' : 'light-mode-theme bg-white text-[#0f172a]'
         ]"
-        class="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#1a1a1a] via-[#0d0d0d] to-[#050505] text-[#f8fafc] selection:bg-[#BF953F] selection:text-black antialiased overflow-x-hidden relative"
+        class="min-h-screen selection:bg-[#BF953F] selection:text-black antialiased overflow-x-hidden relative transition-colors duration-500"
     >
         <!-- Physical Texture (The Carved Feel): Inline SVG Noise / Grain Pattern Overlay -->
         <div
@@ -1089,28 +1089,38 @@ onUnmounted(() => {
         <!-- HERO SECTION: CINEMATIC FULL-SCREEN BACKGROUND + CENTERED ROYAL CONTENT -->
         <!-- ========================================================================= -->
         <section
+            id="hero-luxury"
             dir="rtl"
             class="relative min-h-screen flex flex-col items-center justify-center overflow-hidden z-10"
         >
-            <!-- Full-Screen Cinematic Background (Clean Architectural Interior, No Watermarks) -->
+            <!-- Full-Screen Luminous Luxury Architectural Interior -->
             <div class="absolute inset-0 z-0">
                 <img
-                    src="/images/luxury-restaurant-hero-bg.jpg?v=2"
+                    src="/images/luxury-restaurant-hero-bg.jpg?v=4"
                     alt="Luxury Restaurant Interior"
                     class="w-full h-full object-cover object-center"
                     onerror="this.src='/images/tedallal-luxury-hero-bg.jpg'"
                 />
-                <!-- Layered dark overlay: heavy bottom, light top for crisp text readability -->
-                <div class="absolute inset-0 bg-gradient-to-b from-black/75 via-black/60 to-black/95"></div>
-                <!-- Warm gold ambient glow at center -->
-                <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(212,175,55,0.06),transparent_65%)] pointer-events-none"></div>
+                <!-- Balanced Luxury Vignette: Reveals the high crystal chandeliers and arched marble architecture with warm clarity -->
+                <div class="absolute inset-0 bg-gradient-to-b from-black/55 via-black/35 to-[#070b14]/95"></div>
+                <!-- Center Warm Champagne Lighting Glow -->
+                <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(212,175,55,0.12),transparent_65%)] pointer-events-none"></div>
             </div>
 
             <!-- Centered Content -->
-            <div class="relative z-10 w-full max-w-6xl mx-auto px-6 sm:px-12 py-32 flex flex-col items-center text-center">
+            <div class="relative z-10 w-full max-w-6xl mx-auto px-6 sm:px-12 py-24 flex flex-col items-center text-center">
+
+                <!-- Tedallal Bespoke Gold Cutout Logo Emblem (شعار تدلل الذهبي المُفرّغ في المنتصف) -->
+                <div class="mb-5 flex flex-col items-center select-none group">
+                    <img
+                        src="/images/tedallal-golden-logo-pure.png"
+                        alt="تدلل - Tedallal Bespoke Luxury Hospitality"
+                        class="h-16 sm:h-20 lg:h-24 w-auto object-contain filter drop-shadow-[0_8px_25px_rgba(212,175,55,0.5)] group-hover:scale-105 group-hover:drop-shadow-[0_12px_35px_rgba(212,175,55,0.7)] transition-all duration-500"
+                    />
+                </div>
 
                 <!-- Royal Badge -->
-                <div class="relative inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-black/50 backdrop-blur-xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] mb-10 before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/40 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm">
+                <div class="relative inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-black/50 backdrop-blur-xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] mb-8 before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/40 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm">
                     <svg class="w-4 h-4 text-[#D4AF37]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z"/>
                         <circle cx="12" cy="18" r="1" fill="#D4AF37"/>
@@ -1147,24 +1157,28 @@ onUnmounted(() => {
                     </button>
                 </div>
 
-                <!-- Massive Royal Headline: Centered, Typography As Art -->
+                <!-- Massive Royal Headline: Centered, Typography As Art with Crisp Contours -->
                 <Transition name="hero-mode" mode="out-in">
                     <div :key="heroMode" class="space-y-6 max-w-5xl mx-auto">
                         <h1 class="font-serif font-normal text-white">
                             <template v-if="heroMode === 'traditional'">
-                                <span class="block text-2xl sm:text-4xl lg:text-5xl text-stone-300 leading-relaxed">
-                                    مَطْبَخٌ مُزْدَحِمٌ، مَبِيعَاتٌ تَتَصَاعَدُ..
+                                <span class="block text-2xl sm:text-4xl lg:text-5xl text-stone-100 leading-relaxed font-bold drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] [text-shadow:_0_2px_10px_rgba(0,0,0,0.9),_0_0_1px_rgba(0,0,0,0.9)]">
+                                    <span class="inline-block">مَطْبَخٌ مُزْدَحِمٌ،</span>
+                                    <span class="inline-block">مَبِيعَاتٌ تَتَصَاعَدُ..</span>
                                 </span>
-                                <span class="block mt-4 sm:mt-6 text-3xl sm:text-5xl lg:text-6xl font-bold text-rose-400 leading-[1.6] sm:leading-[1.7] py-1">
-                                    وَأَرْبَاحُكَ الْحَقِيقِيَّةُ تَتَبَخَّرُ بَيْنَ التَّطْبِيقَاتِ وَالْهَدْرِ!
+                                <span class="block mt-4 sm:mt-6 text-3xl sm:text-5xl lg:text-6xl font-extrabold text-rose-400 leading-[1.8] sm:leading-[1.9] lg:leading-[2.0] py-2 drop-shadow-[0_4px_24px_rgba(244,63,94,0.35)] [text-shadow:_0_2px_12px_rgba(0,0,0,0.95),_0_0_1px_rgba(0,0,0,0.95)]">
+                                    <span class="inline-block">وَأَرْبَاحُكَ الْحَقِيقِيَّةُ</span>
+                                    <span class="inline-block">تَتَبَخَّرُ بَيْنَ التَّطْبِيقَاتِ وَالْهَدْرِ!</span>
                                 </span>
                             </template>
                             <template v-else>
-                                <span class="block text-2xl sm:text-4xl lg:text-5xl text-stone-200 leading-relaxed">
-                                    مَطْبَخٌ مُنَظَّمٌ كَالسَّاعَةِ، طَلَبَاتٌ مُبَاشِرَةٌ..
+                                <span class="block text-2xl sm:text-4xl lg:text-5xl text-white leading-relaxed font-bold drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] [text-shadow:_0_2px_10px_rgba(0,0,0,0.95),_0_0_1px_rgba(255,255,255,0.4)]">
+                                    <span class="inline-block">مَطْبَخٌ مُنَظَّمٌ كَالسَّاعَةِ،</span>
+                                    <span class="inline-block">طَلَبَاتٌ مُبَاشِرَةٌ..</span>
                                 </span>
-                                <span class="block mt-4 sm:mt-6 text-3xl sm:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-transparent leading-[1.6] sm:leading-[1.7] py-1">
-                                    وَكُلُّ قِرْشٍ مِنْ أَرْبَاحِكَ يَدْخُلُ جَيْبَكَ بِالْكَامِلِ!
+                                <span class="block mt-4 sm:mt-6 text-3xl sm:text-5xl lg:text-6xl font-black bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-transparent leading-[1.8] sm:leading-[1.9] lg:leading-[2.0] py-2 filter drop-shadow-[0_4px_20px_rgba(0,0,0,0.95)] drop-shadow-[0_0_30px_rgba(212,175,55,0.45)]">
+                                    <span class="inline-block">وَكُلُّ قِرْشٍ مِنْ أَرْبَاحِكَ</span>
+                                    <span class="inline-block">يَدْخُلُ جَيْبَكَ بِالْكَامِلِ!</span>
                                 </span>
                             </template>
                         </h1>
@@ -1281,7 +1295,7 @@ onUnmounted(() => {
                         <span>{{ currentLocale === 'ar' ? 'هَنْدَسَةُ الضِّيَافَةِ الرَّقْمِيَّة • ARCHITECTURAL COMMAND' : 'BESPOKE PLATFORM ARCHITECTURE' }}</span>
                     </div>
 
-                    <h2 class="font-serif text-4xl sm:text-6xl lg:text-7xl font-normal tracking-tight text-white leading-[1.2]">
+                    <h2 class="font-serif text-3xl sm:text-5xl lg:text-6xl font-bold tracking-normal text-transparent bg-clip-text bg-gradient-to-r from-white via-[#FCF6BA] to-[#D4AF37] leading-[1.4] py-1">
                         {{ currentLocale === 'ar' ? 'أركان المنظومة المصممة يدوياً لرواد الضيافة الفاخرة' : 'Bespoke Pillars for Elite Restaurant Operations' }}
                     </h2>
 
@@ -4553,6 +4567,9 @@ onUnmounted(() => {
    ========================================================================= */
 .light-mode-theme {
     color-scheme: light;
+    background-color: #ffffff !important;
+    background-image: none !important;
+    color: #0f172a !important;
 }
 
 .light-mode-theme,
@@ -4580,7 +4597,7 @@ onUnmounted(() => {
     color: #b45309 !important;
 }
 
-/* Main section alternating backgrounds in Light Mode */
+/* Main section alternating backgrounds in Light Mode - Luminous and Revealing */
 .light-mode-theme section {
     border-top-color: #e2e8f0 !important;
 }
@@ -4589,6 +4606,11 @@ onUnmounted(() => {
 .light-mode-theme section#features,
 .light-mode-theme section#roi-calculator {
     background-color: #ffffff !important;
+}
+
+.light-mode-theme section#features-bespoke {
+    background-color: #f8fafc !important;
+    border-top-color: #e2e8f0 !important;
 }
 
 .light-mode-theme section#solutions,
@@ -4605,6 +4627,63 @@ onUnmounted(() => {
 .light-mode-theme h4:not([class*="text-transparent"]):not([class*="bg-clip-text"]),
 .light-mode-theme h5:not([class*="text-transparent"]):not([class*="bg-clip-text"]) {
     color: #0f172a !important;
+}
+
+/* Hero section remains the royal fine-dining showcase with luminous backdrop in both themes */
+.light-mode-theme #hero-luxury h1,
+.light-mode-theme #hero-luxury h1 span {
+    color: #ffffff !important;
+}
+
+.light-mode-theme #hero-luxury .text-transparent {
+    color: transparent !important;
+}
+
+/* Bespoke features in Light Mode: Crisp Luminous Cards with Deep Slate & Gold Typography */
+.light-mode-theme #features-bespoke h2 {
+    color: #0f172a !important;
+    background: none !important;
+    -webkit-background-clip: unset !important;
+    -webkit-text-fill-color: #0f172a !important;
+}
+
+.light-mode-theme #features-bespoke p {
+    color: #475569 !important;
+}
+
+.light-mode-theme #features-bespoke .bg-black\/40,
+.light-mode-theme #features-bespoke .lg\:col-span-7,
+.light-mode-theme #features-bespoke .lg\:col-span-5 {
+    background-color: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.05), 0 0 0 1px rgba(226, 232, 240, 0.7) !important;
+}
+
+.light-mode-theme #features-bespoke h3 {
+    color: #0f172a !important;
+}
+
+.light-mode-theme #features-bespoke h4 {
+    color: #1e293b !important;
+}
+
+.light-mode-theme #features-bespoke .text-stone-300,
+.light-mode-theme #features-bespoke .text-stone-400 {
+    color: #64748b !important;
+}
+
+.light-mode-theme #features-bespoke .text-white {
+    color: #0f172a !important;
+}
+
+.light-mode-theme #features-bespoke .border-white\/5,
+.light-mode-theme #features-bespoke .border-white\/10 {
+    border-color: #e2e8f0 !important;
+}
+
+.light-mode-theme #features-bespoke .bg-black\/60,
+.light-mode-theme #features-bespoke .bg-black\/50 {
+    background-color: #f1f5f9 !important;
 }
 
 .light-mode-theme .text-slate-300 {

@@ -466,8 +466,23 @@ async function resetDemoSpin() {
 // Helper formatting functions for Syrian currency without decimals and professional wording
 function formatSliceLabel(label: string): string {
     if (!label) return '';
-    let clean = label.trim().replace(/SYP/gi, 'ل.س');
+    let clean = label.trim();
+    // Normalize SYP or syp to ل.س
+    clean = clean.replace(/SYP/gi, 'ل.س');
+    // Remove .00 decimals (Syrian currency has no decimals)
     clean = clean.replace(/(\d+)\.00(?!\d)/g, '$1');
+
+    // If slice label is like "25 ل.س" or "25.00" or "SYP 25", ensure it has "خصم" prefix
+    if (/^\d+\s*ل\.س$/.test(clean)) {
+        return `خصم ${clean}`;
+    }
+    if (/^\d+$/.test(clean)) {
+        return `خصم ${clean} ل.س`;
+    }
+    // If it starts with "خصم بقيمة ", on the tight wheel slice shorten to "خصم "
+    if (clean.startsWith('خصم بقيمة ')) {
+        return `خصم ${clean.substring(10).trim()}`;
+    }
     return clean;
 }
 
@@ -475,18 +490,28 @@ function formatVoucherDisplay(text?: string | null): string {
     if (!text) return 'خصم خاص';
     let clean = text.trim();
 
-    // Replace SYP or syp with ل.س
+    // Standardize SYP to ل.س
     clean = clean.replace(/SYP/gi, 'ل.س');
-
-    // Remove .00 or trailing zero decimals e.g. 25.00 -> 25
+    // Remove trailing .00
     clean = clean.replace(/(\d+)\.00(?!\d)/g, '$1');
+
+    // Percentage check (e.g., "15%" or "خصم 15%")
+    const pctMatch = clean.match(/(\d+)\s*%/);
+    if (pctMatch) {
+        return `خصم بقيمة ${pctMatch[1]}%`;
+    }
+
+    // Number + Currency or amount check (e.g., "25 ل.س", "25", "خصم 25 ل.س")
+    const numMatch = clean.match(/(\d+)/);
+    if (numMatch && (clean.includes('ل.س') || clean.includes('خصم') || !isNaN(Number(clean)))) {
+        return `خصم بقيمة ${numMatch[1]} ل.س`;
+    }
 
     if (clean.startsWith('خصم بقيمة ')) {
         return clean;
     }
     if (clean.startsWith('خصم ')) {
-        const rest = clean.substring(4).trim();
-        return `خصم بقيمة ${rest}`;
+        return `خصم بقيمة ${clean.substring(4).trim()}`;
     }
 
     return `خصم بقيمة ${clean}`;

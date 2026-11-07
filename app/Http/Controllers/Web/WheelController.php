@@ -403,10 +403,10 @@ class WheelController extends Controller
         $cleanCurrency = $this->normalizeCurrency($currency);
 
         if ($type === 'percentage') {
-            return "خصم {$formattedNum}%";
+            return "خصم بقيمة {$formattedNum}%";
         }
 
-        return "خصم {$formattedNum} {$cleanCurrency}";
+        return "خصم بقيمة {$formattedNum} {$cleanCurrency}";
     }
 
     private function normalizeCurrency(?string $currency): string
