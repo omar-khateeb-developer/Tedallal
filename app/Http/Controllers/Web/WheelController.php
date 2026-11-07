@@ -109,6 +109,12 @@ class WheelController extends Controller
 
         $cleanCurrency = $this->normalizeCurrency($restaurant->currency);
 
+        $table = $wheelToken->order?->table;
+        $menuUrl = $table?->public_token ? route('customer.menu', ['token' => $table->public_token]) : null;
+        $orderUrl = ($table?->public_token && $wheelToken->order?->order_number)
+            ? route('customer.order', ['token' => $table->public_token, 'orderNumber' => $wheelToken->order->order_number])
+            : null;
+
         return Inertia::render('Wheel', [
             'token' => $token,
             'is_demo' => false,
@@ -116,6 +122,8 @@ class WheelController extends Controller
                 'name' => $restaurant->name,
                 'logo' => $restaurant->logo,
                 'currency' => $cleanCurrency,
+                'menu_url' => $menuUrl,
+                'order_url' => $orderUrl,
             ],
             'order_number' => $wheelToken->order?->order_number,
             'is_claimed' => $isClaimed,
@@ -276,6 +284,9 @@ class WheelController extends Controller
         $restaurant = Restaurant::first();
         $currency = $this->normalizeCurrency($restaurant?->currency ?? 'ل.س');
 
+        $firstTable = $restaurant ? RestaurantTable::where('restaurant_id', $restaurant->id)->first() : null;
+        $menuUrl = $firstTable ? route('customer.menu', ['token' => $firstTable->public_token]) : null;
+
         return Inertia::render('Wheel', [
             'token' => 'demo',
             'is_demo' => true,
@@ -283,6 +294,8 @@ class WheelController extends Controller
                 'name' => $restaurant?->name ?? 'مطعم تدلّل الفاخر',
                 'logo' => $restaurant?->logo ?? '/images/tedallal-golden-crop.png',
                 'currency' => $currency,
+                'menu_url' => $menuUrl,
+                'order_url' => null,
             ],
             'order_number' => 'DEMO-88',
             'is_claimed' => false,

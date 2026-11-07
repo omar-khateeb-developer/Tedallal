@@ -28,6 +28,13 @@ const discountAmount = ref('0.00');
 const validatingPromo = ref(false);
 const promoError = ref('');
 
+function formatPrice(price: string | number) {
+    const num = parseFloat(String(price));
+    const formatted = isNaN(num) ? price : (num % 1 === 0 ? String(Math.round(num)) : num.toFixed(2).replace(/\.00$/, ''));
+    const curr = (!props.restaurant.currency || props.restaurant.currency.toUpperCase() === 'SYP') ? 'ل.س' : props.restaurant.currency;
+    return `${formatted} ${curr}`;
+}
+
 async function loadCart() {
     loading.value = true;
     try {
@@ -120,7 +127,7 @@ onMounted(loadCart);
                     <div>
                         <h3 class="font-bold text-stone-900 dark:text-white">{{ item.menu_item.name }}</h3>
                         <p class="text-sm font-black text-amber-700 dark:text-amber-400 mt-0.5">
-                            {{ item.menu_item.price }} {{ restaurant.currency }}
+                            {{ formatPrice(item.menu_item.price) }}
                         </p>
                     </div>
                     <div class="flex items-center gap-1.5 bg-stone-50 dark:bg-slate-800/80 border border-stone-200 dark:border-slate-700 rounded-full p-0.5 shadow-2xs">
@@ -187,15 +194,15 @@ onMounted(loadCart);
             <div class="rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/60 p-4 space-y-2 transition-colors">
                 <div class="flex justify-between text-sm text-stone-600 dark:text-slate-300" v-if="appliedPromoCode">
                     <span>المجموع الفرعي</span>
-                    <span>{{ subtotal }} {{ restaurant.currency }}</span>
+                    <span>{{ formatPrice(subtotal) }}</span>
                 </div>
                 <div class="flex justify-between text-sm text-green-600 dark:text-green-400" v-if="appliedPromoCode">
                     <span>الخصم</span>
-                    <span>- {{ discountAmount }} {{ restaurant.currency }}</span>
+                    <span>- {{ formatPrice(discountAmount) }}</span>
                 </div>
                 <div class="flex justify-between text-lg font-bold border-t border-amber-200/50 dark:border-amber-800/50 pt-2 text-stone-900 dark:text-white" :class="{'mt-2': appliedPromoCode}">
                     <span>الإجمالي</span>
-                    <span class="text-amber-600 dark:text-amber-400 font-black">{{ Math.max(0, parseFloat(subtotal) - parseFloat(discountAmount)).toFixed(2) }} {{ restaurant.currency }}</span>
+                    <span class="text-amber-600 dark:text-amber-400 font-black">{{ formatPrice(Math.max(0, parseFloat(subtotal) - parseFloat(discountAmount))) }}</span>
                 </div>
             </div>
 

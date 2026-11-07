@@ -35,6 +35,13 @@ const order = ref<{
 
 let pollTimer: ReturnType<typeof setInterval> | null = null;
 
+function formatPrice(price: string | number) {
+    const num = parseFloat(String(price));
+    const formatted = isNaN(num) ? price : (num % 1 === 0 ? String(Math.round(num)) : num.toFixed(2).replace(/\.00$/, ''));
+    const curr = (!props.restaurant.currency || props.restaurant.currency.toUpperCase() === 'SYP') ? 'ل.س' : props.restaurant.currency;
+    return `${formatted} ${curr}`;
+}
+
 async function loadOrder() {
     try {
         const headers: Record<string, string> = {};
@@ -284,7 +291,7 @@ const currentStepIndex = computed(() => {
                                 <span class="flex h-6 w-6 items-center justify-center rounded-md bg-stone-100 dark:bg-slate-800 font-bold text-stone-600 dark:text-slate-300">{{ item.quantity }}</span>
                                 <span class="font-medium text-stone-800 dark:text-slate-200">{{ item.item_name_snapshot }}</span>
                             </div>
-                            <span class="font-semibold text-stone-600 dark:text-slate-300">{{ item.subtotal }} {{ restaurant.currency }}</span>
+                            <span class="font-semibold text-stone-600 dark:text-slate-300">{{ formatPrice(item.subtotal) }}</span>
                         </div>
                         <div v-if="item.note" class="mr-9 mt-1 text-xs text-amber-700 dark:text-amber-400 font-medium">
                             ↳ ملاحظة: {{ item.note }}
@@ -300,7 +307,7 @@ const currentStepIndex = computed(() => {
 
                 <div class="mt-4 flex justify-between rounded-2xl bg-stone-50 dark:bg-slate-900 p-4 font-bold border border-stone-100 dark:border-slate-800">
                     <span class="text-stone-600 dark:text-slate-300">المبلغ الإجمالي</span>
-                    <span class="text-amber-600 dark:text-amber-400 text-lg">{{ order.total }} {{ restaurant.currency }}</span>
+                    <span class="text-amber-600 dark:text-amber-400 text-lg">{{ formatPrice(order.total) }}</span>
                 </div>
             </div>
 

@@ -54,8 +54,14 @@ class CustomerController extends Controller
             ->select('id', 'order_number', 'status', 'total')
             ->get();
 
+        $cleanCurrency = (!$table->restaurant->currency || strtoupper($table->restaurant->currency) === 'SYP') ? 'ل.س' : $table->restaurant->currency;
+
+        $restaurantData = array_merge($table->restaurant->toArray(), [
+            'currency' => $cleanCurrency,
+        ]);
+
         return Inertia::render('Customer/Menu', [
-            'restaurant' => $table->restaurant,
+            'restaurant' => $restaurantData,
             'table' => $table,
             'categories' => $categories,
             'sessionToken' => $session->session_token,
@@ -109,8 +115,13 @@ class CustomerController extends Controller
             ]);
         }
 
+        $cleanCurrency = (!$table->restaurant->currency || strtoupper($table->restaurant->currency) === 'SYP') ? 'ل.س' : $table->restaurant->currency;
+        $restaurantData = array_merge($table->restaurant->toArray(), [
+            'currency' => $cleanCurrency,
+        ]);
+
         return Inertia::render('Customer/OrderStatus', [
-            'restaurant' => $table->restaurant,
+            'restaurant' => $restaurantData,
             'table' => $table,
             'orderNumber' => $orderNumber,
             'publicToken' => $token,

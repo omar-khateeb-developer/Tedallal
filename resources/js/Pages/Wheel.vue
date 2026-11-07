@@ -30,6 +30,8 @@ const props = defineProps<{
         name: string;
         logo: string | null;
         currency: string;
+        menu_url?: string | null;
+        order_url?: string | null;
     };
     order_number: string | null;
     is_claimed: boolean;
@@ -572,9 +574,14 @@ onUnmounted(() => {
 
         <!-- Top Navigation Bar -->
         <header class="w-full max-w-md pt-3 pb-2 flex items-center justify-between relative z-10">
-            <!-- Brand Logo & Name -->
-            <div class="flex items-center gap-3">
-                <div class="w-12 h-12 rounded-2xl bg-black/60 border border-[#D4AF37]/40 p-1 shadow-[0_0_15px_rgba(212,175,55,0.15)] flex items-center justify-center overflow-hidden shrink-0">
+            <!-- Brand Logo & Name (Clickable Link to Restaurant Menu) -->
+            <component
+                :is="restaurant.menu_url ? 'a' : 'div'"
+                :href="restaurant.menu_url || undefined"
+                class="flex items-center gap-3 group transition-transform active:scale-95"
+                :title="restaurant.menu_url ? 'العودة لقائمة طعام المطعم' : restaurant.name"
+            >
+                <div class="w-12 h-12 rounded-2xl bg-black/60 border border-[#D4AF37]/40 p-1 shadow-[0_0_15px_rgba(212,175,55,0.15)] flex items-center justify-center overflow-hidden shrink-0 group-hover:border-[#D4AF37] transition">
                     <img
                         :src="restaurant.logo || '/images/tedallal-golden-crop.png'"
                         :alt="restaurant.name"
@@ -583,9 +590,12 @@ onUnmounted(() => {
                     />
                 </div>
                 <div class="flex flex-col text-start">
-                    <h1 class="text-base sm:text-lg font-bold font-serif text-white tracking-tight leading-tight">
-                        {{ restaurant.name }}
-                    </h1>
+                    <div class="flex items-center gap-1.5">
+                        <h1 class="text-base sm:text-lg font-bold font-serif text-white tracking-tight leading-tight group-hover:text-[#FCF6BA] transition">
+                            {{ restaurant.name }}
+                        </h1>
+                        <span v-if="restaurant.menu_url" class="text-xs text-[#D4AF37] opacity-80 group-hover:opacity-100 transition-opacity">↗</span>
+                    </div>
                     <div class="flex items-center gap-2 mt-0.5">
                         <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#D4AF37]/15 text-[#FCF6BA] border border-[#D4AF37]/30">
                             ✨ عجلة الحظ والهدايا
@@ -595,7 +605,7 @@ onUnmounted(() => {
                         </span>
                     </div>
                 </div>
-            </div>
+            </component>
 
             <!-- Controls (Sound Toggle & Demo Indicator) -->
             <div class="flex items-center gap-2">
@@ -778,21 +788,30 @@ onUnmounted(() => {
                                 </div>
                             </div>
 
-                            <!-- Action Buttons: Share & Save -->
+                            <!-- Action Buttons: Return to Menu & Copy Code -->
                             <div class="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-white/10">
-                                <button
-                                    @click="shareVoucherWhatsApp"
-                                    type="button"
-                                    class="py-2.5 px-3 rounded-xl bg-[#25D366]/20 hover:bg-[#25D366]/30 text-[#25D366] border border-[#25D366]/40 text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer"
+                                <a
+                                    v-if="restaurant.menu_url"
+                                    :href="restaurant.menu_url"
+                                    class="py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#D4AF37]/25 via-[#FCF6BA]/20 to-[#D4AF37]/25 hover:from-[#D4AF37]/35 hover:to-[#D4AF37]/35 text-[#FCF6BA] border border-[#D4AF37]/50 text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-95"
                                 >
-                                    <span>📲 مشاركة بواتساب</span>
+                                    <span>🍽️ تصفح قائمة الطعام</span>
+                                </a>
+                                <button
+                                    v-else
+                                    @click="copyCode"
+                                    type="button"
+                                    class="py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/10 text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer active:scale-95"
+                                >
+                                    <span>📋 {{ copied ? 'تم النسخ ✓' : 'حفظ الكود' }}</span>
                                 </button>
+
                                 <button
                                     @click="copyCode"
                                     type="button"
-                                    class="py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/10 text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer"
+                                    class="py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/10 text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer active:scale-95"
                                 >
-                                    <span>📋 {{ copied ? 'تم النسخ ✓' : 'حفظ الكود' }}</span>
+                                    <span>📋 {{ copied ? 'تم النسخ ✓' : 'نسخ كود الخصم' }}</span>
                                 </button>
                             </div>
                         </div>

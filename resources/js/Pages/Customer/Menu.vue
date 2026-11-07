@@ -34,6 +34,7 @@ const props = defineProps<{
     };
     table: { name: string; public_token: string };
     categories: Category[];
+    sessionToken?: string;
     openCart?: boolean;
     activeOrders?: {
         id: number;
@@ -233,8 +234,11 @@ async function submitOrder() {
     }
 }
 
-function formatPrice(price: string) {
-    return `${price} ${props.restaurant.currency}`;
+function formatPrice(price: string | number) {
+    const num = parseFloat(String(price));
+    const formattedNum = isNaN(num) ? price : (num % 1 === 0 ? String(Math.round(num)) : num.toFixed(2).replace(/\.00$/, ''));
+    const curr = (!props.restaurant.currency || props.restaurant.currency.toUpperCase() === 'SYP') ? 'ل.س' : props.restaurant.currency;
+    return `${formattedNum} ${curr}`;
 }
 
 watch(cartOpen, (isOpen) => {
@@ -244,6 +248,9 @@ watch(cartOpen, (isOpen) => {
 });
 
 onMounted(() => {
+    if (props.sessionToken) {
+        axios.defaults.headers.common['X-Session-Token'] = props.sessionToken;
+    }
     refreshCartSummary();
     if (props.openCart) {
         cartOpen.value = true;
@@ -490,8 +497,8 @@ onMounted(() => {
 
                     <!-- السعر الإجمالي وسهم التوسيع -->
                     <div class="flex items-center gap-2 bg-white/10 px-3.5 py-2 rounded-xl border border-white/10">
-                        <span class="font-black text-sm sm:text-base text-amber-400" dir="ltr">
-                            {{ cartSubtotal }} {{ restaurant.currency }}
+                        <span class="font-black text-sm sm:text-base text-amber-400">
+                            {{ formatPrice(cartSubtotal) }}
                         </span>
                         <svg class="h-4 w-4 text-stone-300 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />

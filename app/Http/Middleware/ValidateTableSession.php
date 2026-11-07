@@ -16,18 +16,17 @@ class ValidateTableSession
 
     public function handle(Request $request, Closure $next): Response
     {
-        $token = $request->cookie('tedallal_session')
-            ?? $request->header('X-Session-Token');
+        // 1. Try X-Session-Token header first (sent by current active page)
+        $headerToken = $request->header('X-Session-Token');
+        $session = $headerToken ? $this->tableSessionService->findByToken($headerToken) : null;
 
-        if (! $token) {
-            return response()->json([
-                'success' => false,
-                'message' => 'جلسة غير صالحة.',
-                'errors' => [],
-            ], 401);
+        // 2. Fallback to cookie if header is absent or did not resolve
+        if (! $session) {
+            $cookieToken = $request->cookie('tedallal_session');
+            if ($cookieToken) {
+                $session = $this->tableSessionService->findByToken($cookieToken);
+            }
         }
-
-        $session = $this->tableSessionService->findByToken($token);
 
         if (! $session) {
             return response()->json([
