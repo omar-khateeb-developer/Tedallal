@@ -1149,23 +1149,27 @@ onUnmounted(() => {
 
                 <!-- Massive Royal Headline: Centered, Typography As Art -->
                 <Transition name="hero-mode" mode="out-in">
-                    <div :key="heroMode" class="space-y-5 max-w-5xl">
-                        <h1 class="font-serif font-normal tracking-tight leading-[1.2] text-white">
+                    <div :key="heroMode" class="space-y-6 max-w-5xl mx-auto">
+                        <h1 class="font-serif font-normal text-white">
                             <template v-if="heroMode === 'traditional'">
-                                <span class="block text-3xl sm:text-5xl lg:text-6xl text-stone-300">مَطْبَخٌ مُزْدَحِمٌ، مَبِيعَاتٌ تَتَصَاعَدُ..</span>
-                                <span class="block mt-4 text-4xl sm:text-6xl lg:text-7xl font-bold text-rose-400">
+                                <span class="block text-2xl sm:text-4xl lg:text-5xl text-stone-300 leading-relaxed">
+                                    مَطْبَخٌ مُزْدَحِمٌ، مَبِيعَاتٌ تَتَصَاعَدُ..
+                                </span>
+                                <span class="block mt-4 sm:mt-6 text-3xl sm:text-5xl lg:text-6xl font-bold text-rose-400 leading-[1.6] sm:leading-[1.7] py-1">
                                     وَأَرْبَاحُكَ الْحَقِيقِيَّةُ تَتَبَخَّرُ بَيْنَ التَّطْبِيقَاتِ وَالْهَدْرِ!
                                 </span>
                             </template>
                             <template v-else>
-                                <span class="block text-3xl sm:text-5xl lg:text-6xl text-stone-200">مَطْبَخٌ مُنَظَّمٌ كَالسَّاعَةِ، طَلَبَاتٌ مُبَاشِرَةٌ..</span>
-                                <span class="block mt-4 text-4xl sm:text-6xl lg:text-7xl font-bold bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-transparent">
+                                <span class="block text-2xl sm:text-4xl lg:text-5xl text-stone-200 leading-relaxed">
+                                    مَطْبَخٌ مُنَظَّمٌ كَالسَّاعَةِ، طَلَبَاتٌ مُبَاشِرَةٌ..
+                                </span>
+                                <span class="block mt-4 sm:mt-6 text-3xl sm:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-transparent leading-[1.6] sm:leading-[1.7] py-1">
                                     وَكُلُّ قِرْشٍ مِنْ أَرْبَاحِكَ يَدْخُلُ جَيْبَكَ بِالْكَامِلِ!
                                 </span>
                             </template>
                         </h1>
 
-                        <p class="font-tajawal font-normal text-base sm:text-xl text-stone-300 max-w-2xl mx-auto leading-relaxed">
+                        <p class="font-tajawal font-normal text-base sm:text-xl text-stone-300 max-w-2xl mx-auto leading-relaxed pt-2">
                             <template v-if="heroMode === 'traditional'">
                                 {{ currentLocale === 'ar'
                                     ? 'عمولات وساطة تلتهم 25% من إيراداتك، أخطاء متكررة في تذاكر المطبخ، ومخزون يتسرب يومياً دون رقابة دقيقة.'
