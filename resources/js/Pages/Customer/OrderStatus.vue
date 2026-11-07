@@ -14,6 +14,8 @@ const props = defineProps<{
     table: { name: string };
     orderNumber: string;
     publicToken: string;
+    wheelToken?: string | null;
+    isWheelClaimed?: boolean;
 }>();
 
 const order = ref<{
@@ -235,6 +237,34 @@ const currentStepIndex = computed(() => {
                             </p>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Lucky Wheel Gamification Card -->
+            <div v-if="wheelToken" class="rounded-3xl bg-gradient-to-br from-amber-500/15 via-[#111827] to-[#0b0f19] p-5 border-2 border-amber-500/40 shadow-xl transition-all">
+                <div class="flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3.5 text-start">
+                        <div class="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-2xl shadow-inner shrink-0">
+                            🎡
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-sm text-white flex items-center gap-1.5">
+                                <span>عجلة الحظ والهدايا</span>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300">هدية زيارتك القادمة</span>
+                            </h4>
+                            <p class="text-xs text-stone-300 dark:text-slate-300 mt-0.5 leading-relaxed">
+                                {{ isWheelClaimed ? 'لقد ربحت كود خصم لزيارتك القادمة!' : 'لديك لفة مجانية لربح خصم حصري لزيارتك القادمة!' }}
+                            </p>
+                        </div>
+                    </div>
+                    <a
+                        :href="`/wheel/${wheelToken}`"
+                        target="_blank"
+                        class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 font-black text-xs shadow-md hover:scale-105 active:scale-95 transition whitespace-nowrap shrink-0 flex items-center gap-1.5"
+                    >
+                        <span>{{ isWheelClaimed ? 'عرض هديتي' : 'دَوّرْ واربح' }}</span>
+                        <span>🎁</span>
+                    </a>
                 </div>
             </div>
 

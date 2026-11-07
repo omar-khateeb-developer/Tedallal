@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\OrderWheelToken;
 use App\Models\PromoCode;
+use App\Models\Restaurant;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,18 +16,63 @@ use Inertia\Response;
 class WheelController extends Controller
 {
     /**
-     * Display the lucky wheel page for the given order token.
+     * Standard attractive slice colors (Rich jewel tones with high contrast)
      */
-    public function show(string $token): Response
+    private const SLICE_COLORS = [
+        '#D4AF37', // Royal Gold
+        '#059669', // Emerald
+        '#E11D48', // Ruby
+        '#7C3AED', // Purple
+        '#0284C7', // Sky Azure
+        '#D97706', // Warm Amber
+        '#1E293B', // Dark Obsidian
+        '#BE185D', // Magenta
+    ];
+
+    /**
+     * Default fallback rewards if restaurant has not configured custom promo codes
+     */
+    private const DEFAULT_REWARDS = [
+        ['label' => 'خصم %15', 'type' => 'percentage', 'value' => 15, 'icon' => '🔥'],
+        ['label' => 'مشروب ضيافة', 'type' => 'percentage', 'value' => 10, 'icon' => '☕'],
+        ['label' => 'خصم %20', 'type' => 'percentage', 'value' => 20, 'icon' => '🎉'],
+        ['label' => 'حلى مجاني', 'type' => 'percentage', 'value' => 12, 'icon' => '🍰'],
+        ['label' => 'خصم %10', 'type' => 'percentage', 'value' => 10, 'icon' => '⭐'],
+        ['label' => 'خصم %25', 'type' => 'percentage', 'value' => 25, 'icon' => '👑'],
+        ['label' => 'خصم %5', 'type' => 'percentage', 'value' => 5, 'icon' => '🎁'],
+        ['label' => 'مقبلات مجانية', 'type' => 'percentage', 'value' => 15, 'icon' => '🥗'],
+    ];
+
+    /**
+     * Display the lucky wheel page for the given order token or demo mode.
+     */
+    public function show(Request $request, string $token): Response
     {
+        // 1. Handle Demo Mode (Immediate interactive testing)
+        if ($token === 'demo') {
+            return $this->renderDemoWheel($request);
+        }
+
+        // 2. Fetch real wheel token
         $wheelToken = OrderWheelToken::where('token', $token)
             ->with(['restaurant', 'order', 'wonPromoCode', 'generatedPromoCode'])
             ->firstOrFail();
 
         $restaurant = $wheelToken->restaurant;
 
+        // Allow resetting token if requested by admin/developer in debug mode or query
+        if ($request->has('reset') && (auth()->check() || config('app.debug'))) {
+            $wheelToken->update([
+                'is_claimed' => false,
+                'claimed_at' => null,
+                'won_promo_code_id' => null,
+                'generated_promo_code_id' => null,
+            ]);
+            $wheelToken->refresh();
+        }
+
         $isExpired = $wheelToken->isExpired();
-        $isClaimed = $wheelToken->is_claimed;
+        $isClaimed = (bool) $wheelToken->is_claimed;
 
         $claimedVoucher = null;
         if ($isClaimed && $wheelToken->generatedPromoCode) {
@@ -45,48 +91,23 @@ class WheelController extends Controller
             ];
         }
 
-        // Active master promo codes for the wheel slices
-        $activeOffers = PromoCode::where('restaurant_id', $restaurant->id)
-            ->where('is_active', true)
-            ->where('is_single_use', false)
-            ->orderBy('id')
-            ->get();
+        // Build active slices for the wheel
+        $slices = $this->buildSlicesForRestaurant($restaurant);
 
-        $colors = [
-            '#f59e0b', '#10b981', '#3b82f6', '#ec4899',
-            '#8b5cf6', '#14b8a6', '#f97316', '#6366f1'
-        ];
-
-        // Ensure the wheel has at least 6 to 8 attractive slices by repeating active offers
-        $rawCount = $activeOffers->count();
-        $expandedOffers = collect();
-        if ($rawCount > 0 && $rawCount < 6) {
-            $repeatTimes = (int) ceil(8 / $rawCount);
-            for ($i = 0; $i < $repeatTimes; $i++) {
-                $expandedOffers = $expandedOffers->concat($activeOffers);
+        // Find winning slice index if already claimed
+        $wonSliceIndex = null;
+        if ($isClaimed && $wheelToken->won_promo_code_id) {
+            foreach ($slices as $idx => $s) {
+                if ($s['id'] === $wheelToken->won_promo_code_id) {
+                    $wonSliceIndex = $idx;
+                    break;
+                }
             }
-            $expandedOffers = $expandedOffers->take(max(6, min(8, $expandedOffers->count())));
-        } else {
-            $expandedOffers = $activeOffers;
         }
-
-        $slices = $expandedOffers->values()->map(function ($offer, $index) use ($restaurant, $colors) {
-            $discountText = $offer->discount_type === 'percentage'
-                ? "خصم %{$offer->discount_value}"
-                : "خصم {$offer->discount_value} {$restaurant->currency}";
-
-            return [
-                'id' => $offer->id,
-                'code' => $offer->code,
-                'label' => $discountText,
-                'discount_value' => (float) $offer->discount_value,
-                'discount_type' => $offer->discount_type,
-                'color' => $colors[$index % count($colors)],
-            ];
-        })->toArray();
 
         return Inertia::render('Wheel', [
             'token' => $token,
+            'is_demo' => false,
             'restaurant' => [
                 'name' => $restaurant->name,
                 'logo' => $restaurant->logo,
@@ -96,6 +117,7 @@ class WheelController extends Controller
             'is_claimed' => $isClaimed,
             'is_expired' => $isExpired,
             'claimed_voucher' => $claimedVoucher,
+            'won_slice_index' => $wonSliceIndex,
             'slices' => $slices,
         ]);
     }
@@ -105,6 +127,28 @@ class WheelController extends Controller
      */
     public function spin(Request $request, string $token): JsonResponse
     {
+        // 1. Handle Demo Spin
+        if ($token === 'demo') {
+            $slices = $this->getDefaultSlices('ل.س');
+            $winningIndex = random_int(0, count($slices) - 1);
+            $wonSlice = $slices[$winningIndex];
+
+            return response()->json([
+                'success' => true,
+                'won_id' => $wonSlice['id'],
+                'won_index' => $winningIndex,
+                'voucher' => [
+                    'code' => 'DEMO-' . strtoupper(Str::random(6)),
+                    'discount_text' => $wonSlice['label'],
+                    'starts_at' => now()->format('Y-m-d h:i A'),
+                    'expires_at' => now()->addDays(14)->format('Y-m-d'),
+                    'min_order_value' => 0,
+                    'is_demo' => true,
+                ],
+            ]);
+        }
+
+        // 2. Real Token Spin Transaction
         return DB::transaction(function () use ($token) {
             $wheelToken = OrderWheelToken::where('token', $token)
                 ->lockForUpdate()
@@ -125,21 +169,36 @@ class WheelController extends Controller
             }
 
             $restaurant = $wheelToken->restaurant;
+            $slices = $this->buildSlicesForRestaurant($restaurant);
 
-            $activeOffers = PromoCode::where('restaurant_id', $restaurant->id)
-                ->where('is_active', true)
-                ->where('is_single_use', false)
-                ->get();
-
-            if ($activeOffers->isEmpty()) {
+            if (empty($slices)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'لا توجد عروض نشطة متاحة حالياً.',
+                    'message' => 'لا توجد جوائز متاحة حالياً في العجلة.',
                 ], 422);
             }
 
-            // Pick a winning coupon
-            $wonOffer = $activeOffers->random();
+            // Pick a winning slice randomly
+            $winningIndex = random_int(0, count($slices) - 1);
+            $wonSlice = $slices[$winningIndex];
+
+            // Resolve or ensure PromoCode in database
+            $wonOffer = PromoCode::where('restaurant_id', $restaurant->id)
+                ->where('id', $wonSlice['id'])
+                ->first();
+
+            if (!$wonOffer) {
+                // If this was a default virtual slice, create a base promo code for it
+                $wonOffer = PromoCode::create([
+                    'restaurant_id' => $restaurant->id,
+                    'code' => 'BASE-' . strtoupper(Str::random(6)),
+                    'discount_type' => $wonSlice['discount_type'],
+                    'discount_value' => $wonSlice['discount_value'],
+                    'min_order_value' => 0,
+                    'is_active' => true,
+                    'is_single_use' => false,
+                ]);
+            }
 
             // Generate unique voucher code for next visit
             do {
@@ -155,7 +214,7 @@ class WheelController extends Controller
                 'code' => $uniqueCode,
                 'discount_type' => $wonOffer->discount_type,
                 'discount_value' => $wonOffer->discount_value,
-                'min_order_value' => $wonOffer->min_order_value,
+                'min_order_value' => $wonOffer->min_order_value ?? 0,
                 'is_active' => true,
                 'starts_at' => $startsAt,
                 'is_single_use' => true,
@@ -173,6 +232,7 @@ class WheelController extends Controller
             return response()->json([
                 'success' => true,
                 'won_id' => $wonOffer->id,
+                'won_index' => $winningIndex,
                 'voucher' => [
                     'code' => $generatedPromo->code,
                     'discount_text' => $wonOffer->discount_type === 'percentage'
@@ -180,9 +240,120 @@ class WheelController extends Controller
                         : "{$wonOffer->discount_value} {$restaurant->currency}",
                     'starts_at' => $startsAt->format('Y-m-d h:i A'),
                     'expires_at' => $expiresAt->format('Y-m-d'),
-                    'min_order_value' => (float) $wonOffer->min_order_value,
+                    'min_order_value' => (float) ($wonOffer->min_order_value ?? 0),
                 ],
             ]);
         });
+    }
+
+    /**
+     * Reset an order wheel token (for administrative testing).
+     */
+    public function reset(string $token): JsonResponse
+    {
+        $wheelToken = OrderWheelToken::where('token', $token)->firstOrFail();
+        $wheelToken->update([
+            'is_claimed' => false,
+            'claimed_at' => null,
+            'won_promo_code_id' => null,
+            'generated_promo_code_id' => null,
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'تمت إعادة تعيين العجلة للتجربة بنجاح']);
+    }
+
+    /**
+     * Render the wheel in demo mode.
+     */
+    private function renderDemoWheel(Request $request): Response
+    {
+        $restaurant = Restaurant::first();
+        $currency = $restaurant?->currency ?? 'ل.س';
+
+        return Inertia::render('Wheel', [
+            'token' => 'demo',
+            'is_demo' => true,
+            'restaurant' => [
+                'name' => $restaurant?->name ?? 'مطعم تدلّل الفاخر',
+                'logo' => $restaurant?->logo ?? '/images/tedallal-golden-crop.png',
+                'currency' => $currency,
+            ],
+            'order_number' => 'DEMO-88',
+            'is_claimed' => false,
+            'is_expired' => false,
+            'claimed_voucher' => null,
+            'won_slice_index' => null,
+            'slices' => $this->getDefaultSlices($currency),
+        ]);
+    }
+
+    /**
+     * Build the 8-slice wheel collection for a restaurant.
+     */
+    private function buildSlicesForRestaurant(Restaurant $restaurant): array
+    {
+        $activeOffers = PromoCode::where('restaurant_id', $restaurant->id)
+            ->where('is_active', true)
+            ->where('is_single_use', false)
+            ->orderBy('id')
+            ->get();
+
+        if ($activeOffers->isEmpty()) {
+            return $this->getDefaultSlices($restaurant->currency);
+        }
+
+        $colors = self::SLICE_COLORS;
+        $rawCount = $activeOffers->count();
+        $expandedOffers = collect();
+
+        // Ensure 8 slices by repeating if fewer than 8
+        $targetCount = 8;
+        $repeatTimes = (int) ceil($targetCount / max(1, $rawCount));
+        for ($i = 0; $i < $repeatTimes; $i++) {
+            $expandedOffers = $expandedOffers->concat($activeOffers);
+        }
+        $expandedOffers = $expandedOffers->take($targetCount);
+
+        $icons = ['🎁', '⭐', '🎉', '☕', '🍰', '👑', '🔥', '🥗'];
+
+        return $expandedOffers->values()->map(function ($offer, $index) use ($restaurant, $colors, $icons) {
+            $discountText = $offer->discount_type === 'percentage'
+                ? "خصم %{$offer->discount_value}"
+                : "خصم {$offer->discount_value} {$restaurant->currency}";
+
+            return [
+                'id' => $offer->id,
+                'code' => $offer->code,
+                'label' => $discountText,
+                'discount_value' => (float) $offer->discount_value,
+                'discount_type' => $offer->discount_type,
+                'color' => $colors[$index % count($colors)],
+                'icon' => $icons[$index % count($icons)],
+            ];
+        })->toArray();
+    }
+
+    /**
+     * Get default attractive slices with icons and colors.
+     */
+    private function getDefaultSlices(string $currency): array
+    {
+        $colors = self::SLICE_COLORS;
+        $rewards = self::DEFAULT_REWARDS;
+
+        $slices = [];
+        foreach ($rewards as $index => $reward) {
+            $slices[] = [
+                'id' => $index + 1000,
+                'code' => 'PROMO-' . ($index + 1),
+                'label' => $reward['label'],
+                'discount_value' => (float) $reward['value'],
+                'discount_type' => $reward['type'],
+                'color' => $colors[$index % count($colors)],
+                'icon' => $reward['icon'],
+            ];
+        }
+
+        return $slices;
     }
 }

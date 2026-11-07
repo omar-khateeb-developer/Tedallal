@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
-import { ref, onMounted, computed } from 'vue';
+import { Head, router } from '@inertiajs/vue3';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import axios from 'axios';
 
 interface Slice {
@@ -10,6 +10,7 @@ interface Slice {
     discount_value: number;
     discount_type: string;
     color: string;
+    icon?: string;
 }
 
 interface Voucher {
@@ -19,10 +20,12 @@ interface Voucher {
     expires_at: string | null;
     min_order_value: number;
     is_used?: boolean;
+    is_demo?: boolean;
 }
 
 const props = defineProps<{
     token: string;
+    is_demo?: boolean;
     restaurant: {
         name: string;
         logo: string | null;
@@ -32,6 +35,7 @@ const props = defineProps<{
     is_claimed: boolean;
     is_expired: boolean;
     claimed_voucher: Voucher | null;
+    won_slice_index: number | null;
     slices: Slice[];
 }>();
 
@@ -41,91 +45,178 @@ const hasWon = ref(props.is_claimed);
 const voucher = ref<Voucher | null>(props.claimed_voucher);
 const errorMessage = ref<string | null>(null);
 const copied = ref(false);
+const soundEnabled = ref(true);
+const pointerDeflection = ref(0);
+const lightBulbState = ref(0);
 
+// Physics & Animation state
 let currentAngle = 0;
 let animationFrameId: number | null = null;
+let bulbInterval: ReturnType<typeof setInterval> | null = null;
 
-// Audio context for sound effects using Web Audio API (no external files needed)
-let audioCtx: (AudioContext | null) = null;
-const getAudioContext = () => {
-    if (!audioCtx) {
-        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-        if (AudioContextClass) {
-            audioCtx = new AudioContextClass();
+// =========================================================================
+// Synthesized Web Audio API (Zero external assets required)
+// =========================================================================
+let audioCtx: AudioContext | null = null;
+
+function getAudioContext(): AudioContext | null {
+    if (!audioCtx && typeof window !== 'undefined') {
+        const AudioClass = window.AudioContext || (window as any).webkitAudioContext;
+        if (AudioClass) {
+            audioCtx = new AudioClass();
         }
     }
     if (audioCtx && audioCtx.state === 'suspended') {
         audioCtx.resume();
     }
     return audioCtx;
-};
+}
 
-const playTickSound = () => {
+function playTickSound(pitchMultiplier = 1.0) {
+    if (!soundEnabled.value) return;
     try {
         const ctx = getAudioContext();
         if (!ctx) return;
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
+
         osc.type = 'triangle';
-        osc.frequency.setValueAtTime(600, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.04);
-        gain.gain.setValueAtTime(0.15, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.04);
+        const baseFreq = 520 * pitchMultiplier;
+        osc.frequency.setValueAtTime(baseFreq, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(120, ctx.currentTime + 0.035);
+
+        gain.gain.setValueAtTime(0.12, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.005, ctx.currentTime + 0.035);
+
         osc.connect(gain);
         gain.connect(ctx.destination);
         osc.start();
-        osc.stop(ctx.currentTime + 0.04);
+        osc.stop(ctx.currentTime + 0.035);
     } catch {
-        // Audio error ignored
+        // Audio error gracefully ignored
     }
-};
+}
 
-const playFanfareSound = () => {
+function playFanfareSound() {
+    if (!soundEnabled.value) return;
     try {
         const ctx = getAudioContext();
         if (!ctx) return;
-        const notes = [261.63, 329.63, 392.00, 523.25];
-        notes.forEach((freq, idx) => {
+        const chord = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99]; // C Major Royal Arpeggio
+        chord.forEach((freq, idx) => {
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.1);
-            gain.gain.setValueAtTime(0, ctx.currentTime + idx * 0.1);
-            gain.gain.linearRampToValueAtTime(0.25, ctx.currentTime + idx * 0.1 + 0.05);
-            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.1 + 0.4);
+
+            const startTime = ctx.currentTime + idx * 0.08;
+            osc.frequency.setValueAtTime(freq, startTime);
+
+            gain.gain.setValueAtTime(0, startTime);
+            gain.gain.linearRampToValueAtTime(0.2, startTime + 0.04);
+            gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.8);
+
             osc.connect(gain);
             gain.connect(ctx.destination);
-            osc.start(ctx.currentTime + idx * 0.1);
-            osc.stop(ctx.currentTime + idx * 0.1 + 0.4);
+            osc.start(startTime);
+            osc.stop(startTime + 0.85);
         });
     } catch {
-        // Audio error ignored
+        // Audio error gracefully ignored
     }
-};
+}
 
-// Canvas Drawing
-const drawWheel = (angle: number) => {
+// =========================================================================
+// Ultra-Crisp Canvas Wheel Drawing (Retina / High-DPI Display Scaled)
+// =========================================================================
+function drawWheel(angle: number) {
     const canvas = canvasRef.value;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const size = canvas.width;
-    const center = size / 2;
-    const radius = center - 16;
+    const dpr = window.devicePixelRatio || 1;
+    const logicalSize = 360;
+    const size = logicalSize * dpr;
+
+    if (canvas.width !== size || canvas.height !== size) {
+        canvas.width = size;
+        canvas.height = size;
+    }
+
+    ctx.save();
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, logicalSize, logicalSize);
+
+    const center = logicalSize / 2;
+    const outerRadius = center - 8;
+    const wheelRadius = outerRadius - 16;
     const numSlices = props.slices.length;
-    if (numSlices === 0) return;
+    if (numSlices === 0) {
+        ctx.restore();
+        return;
+    }
 
     const sliceAngle = (2 * Math.PI) / numSlices;
 
-    ctx.clearRect(0, 0, size, size);
+    // 1. Ambient Outer Shadow & Gold Halo
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(center, center, outerRadius, 0, 2 * Math.PI);
+    ctx.shadowColor = 'rgba(212, 175, 55, 0.4)';
+    ctx.shadowBlur = 24;
+    ctx.fillStyle = '#0F0E0C';
+    ctx.fill();
+    ctx.restore();
 
-    // Outer Glow / Border
+    // 2. Outer Bezel (Brushed 3D Gold Ring with metallic border)
+    const bezelGradient = ctx.createLinearGradient(0, 0, logicalSize, logicalSize);
+    bezelGradient.addColorStop(0, '#FFF2B2');
+    bezelGradient.addColorStop(0.3, '#D4AF37');
+    bezelGradient.addColorStop(0.7, '#8C6D1F');
+    bezelGradient.addColorStop(1, '#FCF6BA');
+
+    ctx.beginPath();
+    ctx.arc(center, center, outerRadius, 0, 2 * Math.PI);
+    ctx.arc(center, center, wheelRadius, 0, 2 * Math.PI, true);
+    ctx.fillStyle = bezelGradient;
+    ctx.fill();
+
+    // Inner rim dark groove
+    ctx.beginPath();
+    ctx.arc(center, center, wheelRadius, 0, 2 * Math.PI);
+    ctx.strokeStyle = '#2A200B';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // 3. Animated Chasing LED Light Bulbs around the perimeter (24 bulbs)
+    const numBulbs = 24;
+    for (let i = 0; i < numBulbs; i++) {
+        const bulbAngle = (i * 2 * Math.PI) / numBulbs;
+        const bulbDistance = outerRadius - 8;
+        const bx = center + bulbDistance * Math.cos(bulbAngle);
+        const by = center + bulbDistance * Math.sin(bulbAngle);
+
+        const isLit = (i + lightBulbState.value) % 2 === 0;
+
+        ctx.beginPath();
+        ctx.arc(bx, by, isLit ? 3.5 : 2.5, 0, 2 * Math.PI);
+        if (isLit) {
+            ctx.fillStyle = '#FFFDE7';
+            ctx.shadowColor = '#FFD54F';
+            ctx.shadowBlur = 8;
+        } else {
+            ctx.fillStyle = '#8C6D1F';
+            ctx.shadowBlur = 0;
+        }
+        ctx.fill();
+        ctx.shadowBlur = 0;
+    }
+
+    // 4. Rotating Slices
     ctx.save();
     ctx.translate(center, center);
     ctx.rotate(angle);
 
-    // Draw Slices
     for (let i = 0; i < numSlices; i++) {
         const slice = props.slices[i];
         const start = i * sliceAngle;
@@ -133,153 +224,182 @@ const drawWheel = (angle: number) => {
 
         ctx.beginPath();
         ctx.moveTo(0, 0);
-        ctx.arc(0, 0, radius, start, end);
+        ctx.arc(0, 0, wheelRadius, start, end);
         ctx.closePath();
 
-        // Slice background
-        ctx.fillStyle = slice.color;
+        // Slice background with subtle radial depth
+        const sliceGrad = ctx.createRadialGradient(0, 0, 20, 0, 0, wheelRadius);
+        sliceGrad.addColorStop(0, slice.color);
+        sliceGrad.addColorStop(1, shadeColor(slice.color, -25));
+        ctx.fillStyle = sliceGrad;
         ctx.fill();
 
-        // Slice borders
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
-        ctx.lineWidth = 2;
+        // Slice separator line
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.28)';
+        ctx.lineWidth = 1.8;
         ctx.stroke();
 
-        // Draw Slice Text
+        // Edge golden stud at separator
+        const studX = (wheelRadius - 4) * Math.cos(start);
+        const studY = (wheelRadius - 4) * Math.sin(start);
+        ctx.beginPath();
+        ctx.arc(studX, studY, 2, 0, 2 * Math.PI);
+        ctx.fillStyle = '#FCF6BA';
+        ctx.fill();
+
+        // Text & Icon Rendering inside slice
         ctx.save();
         ctx.rotate(start + sliceAngle / 2);
         ctx.textAlign = 'right';
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 15px "Tajawal", sans-serif';
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-        ctx.shadowBlur = 4;
-        ctx.fillText(slice.label, radius - 24, 5);
+        ctx.textBaseline = 'middle';
+
+        // Prize Text
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 13px "Tajawal", "Cairo", sans-serif';
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+        ctx.shadowBlur = 5;
+
+        const iconStr = slice.icon ? `${slice.icon} ` : '';
+        ctx.fillText(`${iconStr}${slice.label}`, wheelRadius - 16, 0);
+
         ctx.restore();
     }
 
-    // Outer Rim
-    ctx.restore();
+    ctx.restore(); // Restore center rotation
 
+    // 5. Golden Center Inner Hub Outline
     ctx.beginPath();
-    ctx.arc(center, center, radius, 0, 2 * Math.PI);
-    ctx.strokeStyle = '#f59e0b';
-    ctx.lineWidth = 8;
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.arc(center, center, radius + 5, 0, 2 * Math.PI);
-    ctx.strokeStyle = '#78350f';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Golden decorative dots around the rim
-    const numDots = numSlices * 3;
-    for (let i = 0; i < numDots; i++) {
-        const dotAngle = (i * 2 * Math.PI) / numDots;
-        const dotX = center + (radius + 2) * Math.cos(dotAngle);
-        const dotY = center + (radius + 2) * Math.sin(dotAngle);
-        ctx.beginPath();
-        ctx.arc(dotX, dotY, 2.5, 0, 2 * Math.PI);
-        ctx.fillStyle = '#fef08a';
-        ctx.fill();
-    }
-
-    // Center Hub
-    ctx.beginPath();
-    ctx.arc(center, center, 28, 0, 2 * Math.PI);
-    ctx.fillStyle = '#1e293b';
+    ctx.arc(center, center, 42, 0, 2 * Math.PI);
+    ctx.fillStyle = '#1A1814';
     ctx.fill();
-    ctx.strokeStyle = '#f59e0b';
+    ctx.strokeStyle = bezelGradient;
     ctx.lineWidth = 4;
     ctx.stroke();
 
-    ctx.beginPath();
-    ctx.arc(center, center, 8, 0, 2 * Math.PI);
-    ctx.fillStyle = '#fbbf24';
-    ctx.fill();
-};
+    ctx.restore(); // Restore global canvas scale
+}
 
-onMounted(() => {
-    drawWheel(0);
-});
+// Helper to darken hex colors for radial slice gradient
+function shadeColor(color: string, percent: number): string {
+    let num = parseInt(color.replace('#', ''), 16);
+    let r = (num >> 16) + percent;
+    let b = ((num >> 8) & 0x00ff) + percent;
+    let g = (num & 0x0000ff) + percent;
+    return (
+        '#' +
+        (
+            0x1000000 +
+            (r < 255 ? (r < 1 ? 0 : r) : 255) * 0x10000 +
+            (b < 255 ? (b < 1 ? 0 : b) : 255) * 0x100 +
+            (g < 255 ? (g < 1 ? 0 : g) : 255)
+        )
+            .toString(16)
+            .slice(1)
+    );
+}
 
-// Spin Logic
-const spinWheel = async () => {
+// =========================================================================
+// Real-time Physics Engine: Instant-Launch + Deceleration Easing
+// =========================================================================
+async function spinWheel() {
     if (isSpinning.value || hasWon.value || props.is_expired || props.slices.length === 0) return;
 
     errorMessage.value = null;
     isSpinning.value = true;
     getAudioContext();
 
-    try {
-        const response = await axios.post(`/wheel/${props.token}/spin`);
-        const { won_id, voucher: wonVoucher } = response.data;
+    const numSlices = props.slices.length;
+    const sliceAngle = (2 * Math.PI) / numSlices;
 
-        // Find all matching slice indices for won_id
-        const matchingIndices = props.slices
-            .map((s, idx) => (s.id === won_id ? idx : -1))
-            .filter((idx) => idx !== -1);
-        const targetIndex = matchingIndices.length > 0
-            ? matchingIndices[Math.floor(Math.random() * matchingIndices.length)]
-            : 0;
+    // Start rotating immediately for responsive zero-lag feel
+    const launchStartTime = performance.now();
+    let currentSliceTracker = Math.floor(currentAngle / sliceAngle);
 
-        // Calculate stop angle so the pointer at top (3 * PI / 2 or 270 deg) points to target slice
-        const numSlices = props.slices.length;
-        const sliceAngle = (2 * Math.PI) / numSlices;
+    // Launch API call in background while wheel spins
+    let apiCompleted = false;
+    let wonIndex = 0;
+    let wonVoucherData: Voucher | null = null;
 
-        // In standard canvas: 0 is right (3 o'clock). Top pointer is at -PI/2 (or 3*PI/2, 12 o'clock).
-        // A slice at index i spans [i * sliceAngle, (i+1) * sliceAngle].
-        // Its center is (i + 0.5) * sliceAngle.
-        // We want (centerAngle + finalAngle) mod 2PI = 3*PI / 2.
-        // So finalAngle = 3*PI/2 - centerAngle.
-        const centerAngle = (targetIndex + 0.5) * sliceAngle;
-        const baseTarget = (3 * Math.PI) / 2 - centerAngle;
+    const spinPromise = axios.post(`/wheel/${props.token}/spin`)
+        .then(res => {
+            const data = res.data;
+            wonIndex = data.won_index !== undefined ? data.won_index : 0;
+            wonVoucherData = data.voucher;
+            apiCompleted = true;
+        })
+        .catch(err => {
+            isSpinning.value = false;
+            errorMessage.value = err.response?.data?.message || 'حدث خطأ أثناء تدوير العجلة، يرجى المحاولة ثانية.';
+        });
 
-        // Add 5 to 7 full rotations for realistic spin
-        const extraRotations = 6 * 2 * Math.PI;
-        const startAngle = currentAngle % (2 * Math.PI);
-        const finalAngle = startAngle + extraRotations + (baseTarget - (startAngle % (2 * Math.PI)) + 4 * Math.PI) % (2 * Math.PI);
+    // Compute target angle: Top pointer is at 12 o'clock (-Math.PI / 2 or 3*Math.PI/2)
+    // To align slice at wonIndex with top pointer:
+    // currentAngle + (wonIndex + 0.5) * sliceAngle = 3 * Math.PI / 2 (mod 2*PI)
+    // targetAngle = 3 * Math.PI / 2 - (wonIndex + 0.5) * sliceAngle
+    const spinDuration = 5200; // 5.2 seconds of authentic mechanical suspense
+    let finalTargetAngle = currentAngle;
 
-        const duration = 4500; // 4.5 seconds
-        const startTime = performance.now();
-        let lastTickAngle = startAngle;
+    const animate = (time: number) => {
+        if (!isSpinning.value) return;
 
-        const animate = (time: number) => {
-            const elapsed = time - startTime;
-            const progress = Math.min(elapsed / duration, 1);
+        const elapsed = time - launchStartTime;
 
-            // Ease out cubic deceleration
-            const easeOut = 1 - Math.pow(1 - progress, 3);
-            currentAngle = startAngle + (finalAngle - startAngle) * easeOut;
+        // If API finished, set the final precision target angle once
+        if (apiCompleted && finalTargetAngle === currentAngle) {
+            const baseRotations = 6 * 2 * Math.PI; // 6 full rotations
+            const targetMod = (3 * Math.PI / 2 - (wonIndex + 0.5) * sliceAngle);
+            const currentMod = currentAngle % (2 * Math.PI);
+            const diff = ((targetMod - currentMod) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+            // Slight organic random offset within slice (±15% of slice)
+            const organicJitter = (Math.random() - 0.5) * (sliceAngle * 0.28);
+            finalTargetAngle = currentAngle + baseRotations + diff + organicJitter;
+        }
 
-            // Trigger tick sound on crossing slices
-            if (currentAngle - lastTickAngle >= sliceAngle) {
-                playTickSound();
-                lastTickAngle = currentAngle;
-            }
+        const progress = Math.min(elapsed / spinDuration, 1);
 
-            drawWheel(currentAngle);
+        // Quintic Deceleration Curve: starts explosive, decelerates with realistic inertia
+        const easeOutQuint = 1 - Math.pow(1 - progress, 5);
 
-            if (progress < 1) {
-                animationFrameId = requestAnimationFrame(animate);
-            } else {
-                isSpinning.value = false;
-                voucher.value = wonVoucher;
-                hasWon.value = true;
-                playFanfareSound();
-                triggerConfetti();
-            }
-        };
+        if (finalTargetAngle !== currentAngle) {
+            currentAngle = currentAngle + (finalTargetAngle - currentAngle) * 0.055 * (1 - progress * 0.85);
+        } else {
+            // Constant acceleration while awaiting network response
+            currentAngle += 0.22;
+        }
 
-        animationFrameId = requestAnimationFrame(animate);
-    } catch (err: any) {
-        isSpinning.value = false;
-        errorMessage.value = err.response?.data?.message || 'حدث خطأ أثناء تدوير العجلة، يرجى المحاولة ثانية.';
-    }
-};
+        // Ticking audio and needle deflection on crossing slice dividers
+        const newTracker = Math.floor(currentAngle / sliceAngle);
+        if (newTracker !== currentSliceTracker) {
+            currentSliceTracker = newTracker;
+            const velocityPitch = Math.max(0.7, 1.4 - progress * 0.6);
+            playTickSound(velocityPitch);
+
+            // Needle mechanical wobble
+            pointerDeflection.value = -22;
+            setTimeout(() => {
+                pointerDeflection.value = 0;
+            }, 55);
+        }
+
+        drawWheel(currentAngle);
+
+        if (progress < 1 || !apiCompleted) {
+            animationFrameId = requestAnimationFrame(animate);
+        } else {
+            // Land squarely on winning slice
+            isSpinning.value = false;
+            voucher.value = wonVoucherData;
+            hasWon.value = true;
+            playFanfareSound();
+            triggerConfetti();
+        }
+    };
+
+    animationFrameId = requestAnimationFrame(animate);
+}
 
 // Copy voucher code
-const copyCode = async () => {
+async function copyCode() {
     if (!voucher.value?.code) return;
     try {
         await navigator.clipboard.writeText(voucher.value.code);
@@ -288,14 +408,41 @@ const copyCode = async () => {
             copied.value = false;
         }, 2500);
     } catch {
-        // Fallback
         copied.value = true;
     }
-};
+}
+
+// Reset for Demo or Testing
+async function resetDemoSpin() {
+    if (props.is_demo) {
+        hasWon.value = false;
+        voucher.value = null;
+        errorMessage.value = null;
+        return;
+    }
+
+    try {
+        await axios.post(`/wheel/${props.token}/reset`);
+        hasWon.value = false;
+        voucher.value = null;
+        errorMessage.value = null;
+    } catch {
+        router.reload();
+    }
+}
+
+// Share via WhatsApp
+function shareVoucherWhatsApp() {
+    if (!voucher.value?.code) return;
+    const msg = encodeURIComponent(
+        `🎉 لقد ربحت للتو ${voucher.value.discount_text} في ${props.restaurant.name} عبر عجلة الحظ الذكية! استخدم كود الخصم: ${voucher.value.code}`
+    );
+    window.open(`https://wa.me/?text=${msg}`, '_blank');
+}
 
 // Confetti burst on win
-const triggerConfetti = () => {
-    const confettiCount = 60;
+function triggerConfetti() {
+    const confettiCount = 80;
     const container = document.getElementById('confetti-container');
     if (!container) return;
 
@@ -303,176 +450,303 @@ const triggerConfetti = () => {
         const el = document.createElement('div');
         el.className = 'confetti';
         el.style.left = Math.random() * 100 + 'vw';
-        el.style.animationDelay = Math.random() * 0.5 + 's';
-        el.style.backgroundColor = ['#f59e0b', '#10b981', '#3b82f6', '#ec4899', '#8b5cf6'][Math.floor(Math.random() * 5)];
+        el.style.animationDelay = Math.random() * 0.4 + 's';
+        el.style.backgroundColor = ['#D4AF37', '#10b981', '#3b82f6', '#ec4899', '#f59e0b', '#ffffff'][
+            Math.floor(Math.random() * 6)
+        ];
         container.appendChild(el);
-        setTimeout(() => el.remove(), 3500);
+        setTimeout(() => el.remove(), 4000);
     }
-};
+}
+
+onMounted(() => {
+    // If already claimed, align wheel immediately to winning slice
+    if (props.won_slice_index !== null && props.won_slice_index !== undefined && props.slices.length > 0) {
+        const sliceAngle = (2 * Math.PI) / props.slices.length;
+        currentAngle = 3 * Math.PI / 2 - (props.won_slice_index + 0.5) * sliceAngle;
+    }
+
+    drawWheel(currentAngle);
+
+    // Alternating LED bulb flasher
+    bulbInterval = setInterval(() => {
+        lightBulbState.value = (lightBulbState.value + 1) % 2;
+        if (!isSpinning.value) {
+            drawWheel(currentAngle);
+        }
+    }, 450);
+});
+
+onUnmounted(() => {
+    if (animationFrameId) cancelAnimationFrame(animationFrameId);
+    if (bulbInterval) clearInterval(bulbInterval);
+});
 </script>
 
 <template>
-    <Head :title="`عجلة الحظ - ${restaurant.name}`" />
+    <Head :title="`عجلة الحظ التفاعلية - ${restaurant.name}`" />
 
-    <div class="min-h-screen bg-gradient-to-b from-[#0b0f19] via-[#111827] to-[#0f172a] text-white flex flex-col items-center justify-between p-4 selection:bg-amber-500 selection:text-black relative overflow-x-hidden font-sans" dir="rtl">
+    <div
+        dir="rtl"
+        class="min-h-screen bg-[#070707] text-[#F3F4F6] flex flex-col items-center justify-between p-4 selection:bg-[#D4AF37] selection:text-black relative overflow-x-hidden font-tajawal antialiased"
+    >
         <!-- Confetti container -->
         <div id="confetti-container" class="pointer-events-none fixed inset-0 overflow-hidden z-50"></div>
 
-        <!-- Header -->
-        <header class="w-full max-w-md pt-4 pb-2 text-center flex flex-col items-center">
-            <div v-if="restaurant.logo" class="w-16 h-16 rounded-full overflow-hidden mb-3 border-2 border-amber-400/40 shadow-lg shadow-amber-500/10 bg-slate-900">
-                <img :src="restaurant.logo" :alt="restaurant.name" class="w-full h-full object-cover" />
+        <!-- Atmospheric Ambient Gold Spotlight Background -->
+        <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+            <div class="absolute -top-32 left-1/2 -translate-x-1/2 w-[700px] h-[500px] rounded-full bg-[radial-gradient(ellipse_at_top,rgba(212,175,55,0.12),transparent_70%)] blur-3xl"></div>
+            <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full bg-[radial-gradient(ellipse_at_bottom,rgba(212,175,55,0.06),transparent_70%)] blur-3xl"></div>
+        </div>
+
+        <!-- Top Navigation Bar -->
+        <header class="w-full max-w-md pt-3 pb-2 flex items-center justify-between relative z-10">
+            <!-- Brand Logo & Name -->
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-2xl bg-black/60 border border-[#D4AF37]/40 p-1 shadow-[0_0_15px_rgba(212,175,55,0.15)] flex items-center justify-center overflow-hidden shrink-0">
+                    <img
+                        :src="restaurant.logo || '/images/tedallal-golden-crop.png'"
+                        :alt="restaurant.name"
+                        class="w-full h-full object-contain"
+                        onerror="this.src='/images/tedallal-golden-logo.png'"
+                    />
+                </div>
+                <div class="flex flex-col text-start">
+                    <h1 class="text-base sm:text-lg font-bold font-serif text-white tracking-tight leading-tight">
+                        {{ restaurant.name }}
+                    </h1>
+                    <div class="flex items-center gap-2 mt-0.5">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#D4AF37]/15 text-[#FCF6BA] border border-[#D4AF37]/30">
+                            ✨ عجلة الحظ والهدايا
+                        </span>
+                        <span v-if="order_number" class="text-[11px] text-[#9CA3AF] font-mono">
+                            #{{ order_number }}
+                        </span>
+                    </div>
+                </div>
             </div>
-            <h1 class="text-2xl font-black tracking-tight text-white flex items-center justify-center gap-2">
-                <span>{{ restaurant.name }}</span>
-            </h1>
-            <div class="mt-1 flex items-center gap-2">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-300 border border-amber-500/30">
-                    🎁 عجلة الحظ والهدايا
+
+            <!-- Controls (Sound Toggle & Demo Indicator) -->
+            <div class="flex items-center gap-2">
+                <span
+                    v-if="is_demo"
+                    class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40"
+                >
+                    وضع المعاينة التجريبي
                 </span>
-                <span v-if="order_number" class="text-xs text-slate-400">
-                    فاتورة طلب #{{ order_number }}
-                </span>
+
+                <button
+                    @click="soundEnabled = !soundEnabled"
+                    type="button"
+                    class="p-2.5 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 text-[#9CA3AF] hover:text-white transition-all cursor-pointer"
+                    :title="soundEnabled ? 'كتم المؤثرات الصوتية' : 'تفعيل المؤثرات الصوتية'"
+                >
+                    <span v-if="soundEnabled" class="text-xs">🔊</span>
+                    <span v-else class="text-xs">🔇</span>
+                </button>
             </div>
         </header>
 
-        <!-- Main Content -->
-        <main class="w-full max-w-md flex flex-col items-center justify-center my-auto py-2">
-            <!-- State 1: Expired -->
-            <div v-if="is_expired" class="bg-slate-900/80 border border-slate-800 rounded-3xl p-8 text-center backdrop-blur-md shadow-2xl w-full">
-                <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/10 text-red-400 flex items-center justify-center text-3xl">
+        <!-- Main Gameplay Arena -->
+        <main class="w-full max-w-md flex flex-col items-center justify-center my-auto py-2 relative z-10">
+
+            <!-- State 1: Expired Token -->
+            <div
+                v-if="is_expired"
+                class="bg-[#121212]/90 border border-red-500/30 rounded-3xl p-8 text-center backdrop-blur-xl shadow-2xl w-full"
+            >
+                <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-red-500/10 text-red-400 flex items-center justify-center text-3xl">
                     ⏳
                 </div>
-                <h2 class="text-xl font-bold text-white mb-2">عذراً، انتهت صلاحية الرابط</h2>
-                <p class="text-sm text-slate-400 leading-relaxed">
-                    انتهت صلاحية جلسة عجلة الحظ الخاصة بهذه الفاتورة. نتمنى لك حظاً سعيداً في زيارتك القادمة!
+                <h2 class="text-xl font-bold font-serif text-white mb-2">عذراً، انتهت صلاحية الرابط</h2>
+                <p class="text-sm text-[#9CA3AF] leading-relaxed">
+                    انتهت صلاحية جلسة عجلة الحظ الخاصة بهذه الفاتورة. نتمنى لك حظاً سعيداً في زيارتك القادمة لمطعمنا!
                 </p>
             </div>
 
-            <!-- State 2: No active slices -->
-            <div v-else-if="slices.length === 0" class="bg-slate-900/80 border border-slate-800 rounded-3xl p-8 text-center backdrop-blur-md shadow-2xl w-full">
-                <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-500/10 text-amber-400 flex items-center justify-center text-3xl">
-                    ✨
-                </div>
-                <h2 class="text-xl font-bold text-white mb-2">العروض قيد التحديث</h2>
-                <p class="text-sm text-slate-400 leading-relaxed">
-                    لا توجد عروض نشطة في العجلة حالياً. تفضل بمتابعة أحدث عروضنا عبر المنيو!
-                </p>
-            </div>
-
-            <!-- State 3: Wheel Game Area -->
+            <!-- State 2: Wheel Arena -->
             <div v-else class="w-full flex flex-col items-center">
-                <!-- Wheel Canvas Container -->
-                <div class="relative w-[340px] h-[340px] flex items-center justify-center my-2">
-                    <!-- Top Pointer -->
-                    <div class="absolute -top-3 z-30 flex flex-col items-center drop-shadow-[0_4px_8px_rgba(0,0,0,0.8)]">
-                        <div class="w-0 h-0 border-l-[14px] border-l-transparent border-r-[14px] border-r-transparent border-t-[28px] border-t-amber-400 filter drop-shadow"></div>
+
+                <!-- The Interactive Wheel Container -->
+                <div class="relative w-[340px] h-[340px] sm:w-[380px] sm:h-[380px] flex items-center justify-center my-3 select-none">
+
+                    <!-- Top Mechanical Ticker / Indicator Needle (With Dynamic Kickback Physics) -->
+                    <div
+                        class="absolute -top-4 z-30 flex flex-col items-center drop-shadow-[0_8px_16px_rgba(0,0,0,0.9)] transition-transform duration-75 origin-top"
+                        :style="{ transform: `rotate(${pointerDeflection}deg)` }"
+                    >
+                        <div class="w-6 h-6 rounded-full bg-gradient-to-b from-[#FFF2B2] via-[#D4AF37] to-[#8C6D1F] border-2 border-black flex items-center justify-center shadow-md">
+                            <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                        </div>
+                        <div class="w-0 h-0 border-l-[11px] border-l-transparent border-r-[11px] border-r-transparent border-t-[28px] border-t-[#D4AF37] -mt-1 filter drop-shadow"></div>
                     </div>
 
-                    <!-- Canvas Wheel -->
+                    <!-- The High-DPI Canvas Wheel -->
                     <canvas
                         ref="canvasRef"
-                        width="340"
-                        height="340"
-                        class="rounded-full shadow-[0_0_35px_rgba(245,158,11,0.25)] transition-transform duration-75 select-none"
+                        class="w-full h-full rounded-full cursor-pointer select-none"
+                        @click="spinWheel"
                     ></canvas>
 
-                    <!-- Center Spin Button -->
+                    <!-- Center 3D Spin Button Hub (Always Visible & Dimensional) -->
                     <button
-                        v-if="!hasWon"
                         @click="spinWheel"
-                        :disabled="isSpinning"
-                        class="absolute z-20 w-16 h-16 rounded-full bg-gradient-to-tr from-amber-600 via-amber-400 to-yellow-300 text-slate-950 font-black text-sm tracking-wide shadow-xl flex items-center justify-center border-2 border-white/60 active:scale-95 transition hover:scale-105 disabled:opacity-80 disabled:cursor-not-allowed group cursor-pointer"
+                        :disabled="isSpinning || hasWon"
+                        type="button"
+                        class="absolute z-20 w-20 h-20 rounded-full bg-gradient-to-br from-[#FFF2B2] via-[#D4AF37] to-[#8C6D1F] text-black font-extrabold text-sm tracking-wide shadow-[0_8px_25px_rgba(0,0,0,0.8),inset_0_2px_2px_rgba(255,255,255,0.6)] flex flex-col items-center justify-center border-4 border-[#1A1814] active:scale-95 transition-all group disabled:cursor-not-allowed"
+                        :class="[
+                            !hasWon && !isSpinning ? 'hover:scale-105 cursor-pointer' : '',
+                            hasWon ? 'opacity-95' : ''
+                        ]"
                     >
-                        <span v-if="!isSpinning" class="group-hover:animate-pulse">دَوّرْ!</span>
-                        <span v-else class="inline-block animate-spin text-lg">⚙</span>
+                        <!-- Ready to Spin State -->
+                        <template v-if="!hasWon && !isSpinning">
+                            <span class="absolute -inset-2 rounded-full border border-[#D4AF37]/50 animate-ping pointer-events-none"></span>
+                            <span class="text-base leading-none">🎡</span>
+                            <span class="font-serif font-black text-xs mt-0.5">دَوّرْ!</span>
+                        </template>
+
+                        <!-- Spinning State -->
+                        <template v-else-if="isSpinning">
+                            <span class="inline-block animate-spin text-xl">⚙️</span>
+                            <span class="text-[10px] font-bold mt-0.5">جاري...</span>
+                        </template>
+
+                        <!-- Already Claimed State -->
+                        <template v-else>
+                            <span class="text-lg">👑</span>
+                            <span class="text-[10px] font-bold">مبروك!</span>
+                        </template>
                     </button>
                 </div>
 
-                <!-- Spin instructions / Action button -->
-                <div v-if="!hasWon" class="mt-4 text-center w-full">
-                    <p class="text-sm text-amber-200/80 mb-3 font-medium">
-                        اضغط لتدوير العجلة وربح كود خصم حصري لزيارتك القادمة!
-                    </p>
-                    <button
-                        @click="spinWheel"
-                        :disabled="isSpinning"
-                        class="w-full max-w-xs py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 text-slate-950 font-extrabold text-base shadow-lg shadow-amber-500/25 hover:brightness-110 active:scale-[0.98] transition disabled:opacity-60 disabled:cursor-not-allowed"
-                    >
-                        <span v-if="!isSpinning">🎁 تدوير عجلة الحظ</span>
-                        <span v-else>العجلة تدور... بالتوفيق!</span>
-                    </button>
-                    <div v-if="errorMessage" class="mt-3 text-red-400 text-xs font-semibold bg-red-950/40 border border-red-800/50 rounded-xl p-2.5">
-                        {{ errorMessage }}
-                    </div>
-                </div>
+                <!-- Action Controls Under the Wheel -->
+                <div class="mt-4 text-center w-full max-w-sm px-2">
 
-                <!-- Won Voucher Card Modal / Section -->
-                <transition
-                    enter-active-class="transition duration-500 ease-out"
-                    enter-from-class="opacity-0 translate-y-6 scale-95"
-                    enter-to-class="opacity-100 translate-y-0 scale-100"
-                >
-                    <div v-if="hasWon && voucher" class="mt-4 w-full bg-gradient-to-b from-slate-900 via-[#131b2e] to-slate-900 border border-amber-500/40 rounded-3xl p-6 text-center shadow-2xl relative overflow-hidden backdrop-blur-md">
-                        <!-- Glow highlight -->
-                        <div class="absolute -top-10 -right-10 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
-                        <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
-
-                        <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-amber-400/20 text-amber-300 text-2xl mb-2">
-                            🎉
-                        </div>
-                        <h3 class="text-xl font-black text-white">مبروك! لقد ربحت معنا</h3>
-                        <p class="text-2xl font-black text-amber-400 my-1">
-                            {{ voucher.discount_text }}
+                    <!-- Unclaimed State: Prompt and Primary Spin CTA -->
+                    <div v-if="!hasWon" class="space-y-3">
+                        <p class="text-xs text-[#FCF6BA] font-medium leading-relaxed">
+                            اضغط لتدوير العجلة الآن واربح كود خصم حصري مضمون لزيارتك القادمة!
                         </p>
 
-                        <!-- Single-use Voucher Box -->
-                        <div class="my-4 p-4 rounded-2xl bg-black/40 border border-amber-500/30 flex flex-col items-center gap-2">
-                            <span class="text-xs text-slate-400 font-medium">كود الخصم لزيارتك القادمة:</span>
-                            <div class="flex items-center justify-center gap-3 w-full">
-                                <span class="font-mono text-2xl font-bold tracking-widest text-emerald-400 select-all" dir="ltr">
-                                    {{ voucher.code }}
-                                </span>
+                        <button
+                            @click="spinWheel"
+                            :disabled="isSpinning"
+                            type="button"
+                            class="w-full py-4 px-8 rounded-full bg-gradient-to-r from-[#e5b85c] via-[#f7d58b] to-[#d89f38] text-black font-extrabold text-base shadow-[0_4px_30px_rgba(229,184,92,0.4)] hover:shadow-[0_6px_35px_rgba(229,184,92,0.6)] hover:scale-105 active:scale-95 transition-all disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-2"
+                        >
+                            <span v-if="!isSpinning">🎁 اضغط لتدوير عجلة الحظ</span>
+                            <span v-else class="flex items-center gap-2">
+                                <span class="animate-spin">🌀</span>
+                                <span>العجلة تدور... نتمنى لك حظاً سعيداً!</span>
+                            </span>
+                        </button>
+
+                        <div
+                            v-if="errorMessage"
+                            class="text-red-400 text-xs font-semibold bg-red-950/40 border border-red-800/50 rounded-xl p-3"
+                        >
+                            {{ errorMessage }}
+                        </div>
+                    </div>
+
+                    <!-- Already Claimed Celebration / Voucher Details -->
+                    <div v-else-if="voucher" class="space-y-4">
+                        <!-- Success Banner -->
+                        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-bold">
+                            <span>✓ تم تدوير العجلة واستلام جائزتك بنجاح</span>
+                        </div>
+
+                        <!-- Ticket / Voucher Card (Bespoke Luxury Ticket Design) -->
+                        <div class="relative bg-gradient-to-b from-[#161616] via-[#111111] to-[#0A0A0A] border-2 border-[#D4AF37]/50 rounded-3xl p-6 shadow-[0_20px_50px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.1)] text-center overflow-hidden">
+                            <!-- Side Perforations / Ticket Notches -->
+                            <div class="absolute -start-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-[#070707] border-e-2 border-[#D4AF37]/50"></div>
+                            <div class="absolute -end-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-[#070707] border-s-2 border-[#D4AF37]/50"></div>
+
+                            <span class="text-3xl block mb-2">🎉</span>
+                            <h3 class="text-lg font-bold font-serif text-white">
+                                مبروك! لقد فزت بـ:
+                            </h3>
+                            <div class="font-serif text-3xl sm:text-4xl font-extrabold bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#B38728] text-transparent bg-clip-text my-2">
+                                {{ voucher.discount_text }}
+                            </div>
+
+                            <!-- Single-Use Voucher Code Container -->
+                            <div class="my-4 p-4 rounded-2xl bg-black/60 border border-dashed border-[#D4AF37]/40 flex flex-col items-center gap-2">
+                                <span class="text-xs text-[#9CA3AF] font-medium">كوبون خصم زيارتك القادمة:</span>
+                                <div class="flex items-center justify-center gap-3 w-full">
+                                    <span class="font-mono text-2xl font-black tracking-widest text-emerald-400 select-all" dir="ltr">
+                                        {{ voucher.code }}
+                                    </span>
+                                    <button
+                                        @click="copyCode"
+                                        type="button"
+                                        class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition active:scale-95 text-xs font-bold flex items-center gap-1 border border-white/10 cursor-pointer"
+                                    >
+                                        <span>{{ copied ? 'تم النسخ ✓' : 'نسخ الكود' }}</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Validity Rules -->
+                            <div class="space-y-1.5 text-xs text-[#9CA3AF] text-start bg-black/40 p-3 rounded-xl border border-white/5">
+                                <div class="flex items-center gap-2 text-[#FCF6BA]">
+                                    <span>📅</span>
+                                    <span>صالح لزيارتك القادمة ابتداءً من: {{ voucher.starts_at || 'الآن' }}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span>⏳</span>
+                                    <span>ينتهي في: {{ voucher.expires_at }} (صالح لمرة واحدة)</span>
+                                </div>
+                                <div v-if="voucher.min_order_value > 0" class="flex items-center gap-2">
+                                    <span>🛒</span>
+                                    <span>الحد الأدنى للطلب: {{ voucher.min_order_value }} {{ restaurant.currency }}</span>
+                                </div>
+                                <div v-if="voucher.is_used" class="text-red-400 font-bold mt-1 text-center">
+                                    تم استخدام هذا الكود بالفعل ✓
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons: Share & Save -->
+                            <div class="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-white/10">
+                                <button
+                                    @click="shareVoucherWhatsApp"
+                                    type="button"
+                                    class="py-2.5 px-3 rounded-xl bg-[#25D366]/20 hover:bg-[#25D366]/30 text-[#25D366] border border-[#25D366]/40 text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer"
+                                >
+                                    <span>📲 مشاركة بواتساب</span>
+                                </button>
                                 <button
                                     @click="copyCode"
-                                    class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition active:scale-95 text-xs flex items-center gap-1 border border-slate-700"
-                                    title="نسخ الكود"
+                                    type="button"
+                                    class="py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/10 text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer"
                                 >
-                                    <span>{{ copied ? 'تم النسخ ✓' : 'نسخ' }}</span>
+                                    <span>📋 {{ copied ? 'تم النسخ ✓' : 'حفظ الكود' }}</span>
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Voucher Rules & Validity -->
-                        <div class="space-y-1.5 text-xs text-slate-300 text-right bg-slate-950/40 p-3 rounded-xl border border-slate-800">
-                            <div class="flex items-center gap-2 text-amber-300 font-semibold">
-                                <span>📅</span>
-                                <span>صالح للزيارة القادمة ابتداءً من: {{ voucher.starts_at || 'قريباً' }}</span>
-                            </div>
-                            <div class="flex items-center gap-2 text-slate-400">
-                                <span>⏳</span>
-                                <span>ينتهي في: {{ voucher.expires_at }} (صالح لمرة واحدة فقط)</span>
-                            </div>
-                            <div v-if="voucher.min_order_value > 0" class="flex items-center gap-2 text-slate-400">
-                                <span>🛒</span>
-                                <span>الحد الأدنى للطلب: {{ voucher.min_order_value }} {{ restaurant.currency }}</span>
-                            </div>
-                            <div v-if="voucher.is_used" class="mt-2 text-center text-red-400 font-bold bg-red-950/30 p-1.5 rounded-lg border border-red-900/40">
-                                تم استخدام هذا الكود بالفعل ✓
-                            </div>
+                        <!-- Reset / Re-test Option for Demo or Testing -->
+                        <div class="pt-2">
+                            <button
+                                @click="resetDemoSpin"
+                                type="button"
+                                class="text-xs text-[#D4AF37] hover:text-[#FCF6BA] underline cursor-pointer"
+                            >
+                                🔄 تدوير مرة أخرى (وضع المعاينة والتدريب)
+                            </button>
                         </div>
-
-                        <p class="text-[11px] text-slate-400 mt-3">
-                            احتفظ بهذا الكود أو التقط لقطة شاشة، وقم بتطبيقه في صفحة الدفع بزيارتك القادمة.
-                        </p>
                     </div>
-                </transition>
+
+                </div>
+
             </div>
+
         </main>
 
         <!-- Footer -->
-        <footer class="w-full max-w-md pt-2 pb-3 text-center text-[11px] text-slate-500">
-            نظام تدلّل الذكي للمطاعم • تجربة طلب سهلة وممتعة
+        <footer class="w-full max-w-md pt-3 pb-3 text-center text-[11px] text-[#9CA3AF]/60 relative z-10">
+            منظومة تدلّل الذكية لأتمتة المطاعم • ضيافة فاخرة وعروض مبهجة
         </footer>
     </div>
 </template>
@@ -484,7 +758,7 @@ const triggerConfetti = () => {
         opacity: 1;
     }
     100% {
-        transform: translateY(100vh) rotate(720deg);
+        transform: translateY(105vh) rotate(720deg);
         opacity: 0;
     }
 }
@@ -495,7 +769,7 @@ const triggerConfetti = () => {
     width: 10px;
     height: 14px;
     border-radius: 2px;
-    opacity: 0.9;
-    animation: confettiFall 3s linear forwards;
+    opacity: 0.95;
+    animation: confettiFall 3.5s linear forwards;
 }
 </style>

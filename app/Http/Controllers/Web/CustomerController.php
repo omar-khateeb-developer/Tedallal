@@ -77,17 +77,29 @@ class CustomerController extends Controller
             ->firstOrFail();
 
         // Ensure the order exists and belongs to this table and restaurant
-        Order::withoutGlobalScopes()
+        $order = Order::withoutGlobalScopes()
             ->where('restaurant_id', $table->restaurant_id)
             ->where('table_id', $table->id)
             ->where('order_number', $orderNumber)
             ->firstOrFail();
+
+        // Check or generate wheel token for gamification
+        $wheelToken = $order->wheelToken;
+        if (!$wheelToken) {
+            $wheelToken = $order->wheelToken()->create([
+                'restaurant_id' => $table->restaurant_id,
+                'token' => \Illuminate\Support\Str::random(32),
+                'expires_at' => now()->addDays(14),
+            ]);
+        }
 
         return Inertia::render('Customer/OrderStatus', [
             'restaurant' => $table->restaurant,
             'table' => $table,
             'orderNumber' => $orderNumber,
             'publicToken' => $token,
+            'wheelToken' => $wheelToken->token,
+            'isWheelClaimed' => (bool) $wheelToken->is_claimed,
         ]);
     }
 }
