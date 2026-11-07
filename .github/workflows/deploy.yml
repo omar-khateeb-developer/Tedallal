@@ -42,3 +42,6 @@ jobs:
             echo "::error::Deployment failed: $LAST_ERR"
             exit 1
           fi
+
+          DIAG=$(ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -i ~/.ssh/id_ed25519 -p "$TARGET_PORT" "${TARGET_USER}@${TARGET_HOST}" "cat /var/www/tedallal/deploy.sh; echo '=== RECENT LARAVEL LOG ==='; tail -n 25 /var/www/tedallal/current/storage/logs/laravel.log 2>/dev/null; tail -n 25 /var/www/tedallal/shared/storage/logs/laravel.log 2>/dev/null" 2>&1 | tr '\r\n' ' ')
+          echo "::notice title=ServerDiagnostics::$DIAG"
