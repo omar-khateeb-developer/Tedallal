@@ -38,7 +38,10 @@ jobs:
 
           ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -i ~/.ssh/id_rsa -p "$TARGET_PORT" "${TARGET_USER}@${TARGET_HOST}" "bash /var/www/tedallal/deploy.sh" 2>&1 | tee /tmp/deploy_server.log
 
-          DEPLOY_INFO=$(ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -p "$TARGET_PORT" "${TARGET_USER}@${TARGET_HOST}" "cd /var/www/tedallal; git log -n 1 --oneline; git status --short" | tr '\r\n' ' ')
+          DEPLOY_LOG=$(cat /tmp/deploy_server.log | tr '\r\n' ' ')
+          echo "::notice title=DeployServerLog::$DEPLOY_LOG"
+
+          DEPLOY_INFO=$(ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -p "$TARGET_PORT" "${TARGET_USER}@${TARGET_HOST}" "cd /var/www/tedallal; git remote -v; git fetch origin main 2>&1" | tr '\r\n' ' ')
           echo "::notice title=DeployInfo::$DEPLOY_INFO"
 
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -p "$TARGET_PORT" "${TARGET_USER}@${TARGET_HOST}" "cd /var/www/tedallal/current 2>/dev/null || cd /var/www/tedallal; php artisan optimize:clear"
