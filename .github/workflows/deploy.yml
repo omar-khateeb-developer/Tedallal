@@ -36,13 +36,9 @@ jobs:
           cp ~/.ssh/id_rsa ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
 
-          # Push the latest commits from GitHub to the VPS bare repo
-          git remote add vps "ssh://${TARGET_USER}@${TARGET_HOST}:${TARGET_PORT}/home/${TARGET_USER}/tedallal.git"
-          GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -p $TARGET_PORT" git push vps main:main --force
+          # Update server to pull directly from public GitHub repo and run deployment engine
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -i ~/.ssh/id_rsa -p "$TARGET_PORT" "${TARGET_USER}@${TARGET_HOST}" "cd /var/www/tedallal && git remote set-url origin https://github.com/omar-khateeb-developer/Tedallal.git && git fetch origin main && git reset --hard origin/main && bash /var/www/tedallal/deploy.sh"
 
-          # Trigger server deployment script
-          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -i ~/.ssh/id_rsa -p "$TARGET_PORT" "${TARGET_USER}@${TARGET_HOST}" "bash /var/www/tedallal/deploy.sh"
-
-          # Verify git commit on server
-          DEPLOY_INFO=$(ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -p "$TARGET_PORT" "${TARGET_USER}@${TARGET_HOST}" "cd /var/www/tedallal; git log -n 1 --oneline" | tr '\r\n' ' ')
+          # Verify deployed commit on server
+          DEPLOY_INFO=$(ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -p "$TARGET_PORT" "${TARGET_USER}@${TARGET_HOST}" "cd /var/www/tedallal && git log -n 1 --oneline" | tr '\r\n' ' ')
           echo "::notice title=ServerCommit::$DEPLOY_INFO"
