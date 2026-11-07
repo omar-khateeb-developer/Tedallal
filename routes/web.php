@@ -38,6 +38,19 @@ Route::get('/t/{token}/cart', [CustomerController::class, 'cart'])->name('custom
 Route::get('/t/{token}/orders/{orderNumber}', [CustomerController::class, 'order'])->name('customer.order');
 
 // Lucky Wheel routes (Marketing Gamification)
+Route::get('/wheel-debug-error', function () {
+    try {
+        $controller = new \App\Http\Controllers\Web\WheelController();
+        return $controller->show(request(), 'demo');
+    } catch (\Throwable $e) {
+        return response()->json([
+            'message' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => collect($e->getTrace())->take(8),
+        ], 200);
+    }
+});
 Route::get('/wheel-demo', fn() => redirect()->route('wheel.show', ['token' => 'demo']))->name('wheel.demo');
 Route::get('/wheel/{token}', [\App\Http\Controllers\Web\WheelController::class, 'show'])->name('wheel.show');
 Route::post('/wheel/{token}/spin', [\App\Http\Controllers\Web\WheelController::class, 'spin'])->name('wheel.spin');
