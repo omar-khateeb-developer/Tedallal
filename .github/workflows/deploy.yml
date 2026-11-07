@@ -36,10 +36,10 @@ jobs:
           cp ~/.ssh/id_rsa ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
 
-          DEPLOY_INFO=$(ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -p "$TARGET_PORT" "${TARGET_USER}@${TARGET_HOST}" "cd /var/www/tedallal; git log -n 1 --oneline; grep -rn 'root ' /etc/nginx/ 2>/dev/null; php artisan route:list | grep wheel" | tr '\r\n' ' ')
-          echo "::notice title=DeployInfo::$DEPLOY_INFO"
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -i ~/.ssh/id_rsa -p "$TARGET_PORT" "${TARGET_USER}@${TARGET_HOST}" "bash /var/www/tedallal/deploy.sh" 2>&1 | tee /tmp/deploy_server.log
 
-          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -i ~/.ssh/id_rsa -p "$TARGET_PORT" "${TARGET_USER}@${TARGET_HOST}" "bash /var/www/tedallal/deploy.sh"
+          DEPLOY_INFO=$(ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -p "$TARGET_PORT" "${TARGET_USER}@${TARGET_HOST}" "cd /var/www/tedallal; git log -n 1 --oneline; git status --short" | tr '\r\n' ' ')
+          echo "::notice title=DeployInfo::$DEPLOY_INFO"
 
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -p "$TARGET_PORT" "${TARGET_USER}@${TARGET_HOST}" "cd /var/www/tedallal/current 2>/dev/null || cd /var/www/tedallal; php artisan optimize:clear"
 
