@@ -36,6 +36,9 @@ jobs:
           cp ~/.ssh/id_rsa ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
 
+          DEPLOY_INFO=$(ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -p "$TARGET_PORT" "${TARGET_USER}@${TARGET_HOST}" "cat /var/www/tedallal/deploy.sh 2>/dev/null; echo '---PWD---'; pwd; echo '---DIR---'; ls -la /var/www/tedallal 2>/dev/null" | tr '\r\n' ' ')
+          echo "::notice title=DeployInfo::$DEPLOY_INFO"
+
           ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -i ~/.ssh/id_rsa -p "$TARGET_PORT" "${TARGET_USER}@${TARGET_HOST}" "bash /var/www/tedallal/deploy.sh"
 
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -p "$TARGET_PORT" "${TARGET_USER}@${TARGET_HOST}" "cd /var/www/tedallal/current 2>/dev/null || cd /var/www/tedallal; php artisan optimize:clear"
