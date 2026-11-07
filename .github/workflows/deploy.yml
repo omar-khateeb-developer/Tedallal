@@ -13,9 +13,13 @@ jobs:
 
     steps:
       - name: 1. Setup SSH and Run Deployment Engine
+        env:
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          HOST: ${{ secrets.VPS_HOST }}
+          USER: ${{ secrets.VPS_USERNAME }}
+          PORT: ${{ secrets.VPS_PORT || 22 }}
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_SSH_KEY }}" | tr -d '\r' > ~/.ssh/id_ed25519
-          echo "" >> ~/.ssh/id_ed25519
+          printf "%s\n" "$SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 -p 22 ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} "bash /var/www/tedallal/deploy.sh"
+          ssh -v -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 -p ${PORT:-22} "${USER}@${HOST}" "bash /var/www/tedallal/deploy.sh"
