@@ -1119,8 +1119,8 @@ onUnmounted(() => {
                     />
                 </div>
 
-                <!-- Royal Badge -->
-                <div class="relative inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-black/50 backdrop-blur-xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] mb-8 before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/40 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm">
+                <!-- Royal Badge with Live Engine Status -->
+                <div class="relative inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-black/60 backdrop-blur-xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_10px_30px_rgba(0,0,0,0.5)] mb-8 before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/50 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm transition-all duration-500 hover:border-[#D4AF37]/40 hover:shadow-[0_0_25px_rgba(212,175,55,0.25)]">
                     <svg class="w-4 h-4 text-[#D4AF37]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z"/>
                         <circle cx="12" cy="18" r="1" fill="#D4AF37"/>
@@ -1128,7 +1128,10 @@ onUnmounted(() => {
                     <span class="text-xs sm:text-sm font-semibold tracking-widest text-[#FCF6BA]">
                         {{ currentLocale === 'ar' ? 'مَنْظُومَةُ تَدَلَّلْ السَّحَابِيَّة • لِأَرْقَى الْمَطَاعِمِ وَالْفَنَادِقِ' : 'TEDALLAL BESPOKE RESTAURANT CLOUD' }}
                     </span>
-                    <span class="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-pulse"></span>
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[10px] text-emerald-300 font-bold tracking-normal">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                        <span>{{ currentLocale === 'ar' ? 'مباشر' : 'Live' }}</span>
+                    </span>
                 </div>
 
                 <!-- Before/After Mode Switcher — centered -->
@@ -1238,12 +1241,13 @@ onUnmounted(() => {
 
                 <!-- CTA Buttons Row — centered -->
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-5 mt-10">
-                    <!-- Primary Gold CTA -->
+                    <!-- Primary Gold CTA with Shimmer Effect -->
                     <button
                         @click="isDemoModalOpen = true"
                         type="button"
                         class="relative group overflow-hidden px-10 py-4 rounded-full bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] text-black font-extrabold text-base shadow-[0_12px_40px_rgba(212,175,55,0.4)] hover:shadow-[0_18px_50px_rgba(212,175,55,0.55)] transition-all duration-500 hover:-translate-y-1 active:translate-y-0 cursor-pointer flex items-center gap-3"
                     >
+                        <div class="absolute inset-0 -translate-x-full group-hover:translate-x-full duration-1000 bg-gradient-to-r from-transparent via-white/35 to-transparent transition-transform"></div>
                         <span>{{ currentLocale === 'ar' ? 'ابدأ بتأمين أرباحك وتجربة النظام' : 'Start Securing Your Profits Free' }}</span>
                         <span class="text-xs px-2.5 py-0.5 rounded-md font-black bg-black/15">
                             14 {{ currentLocale === 'ar' ? 'يوماً تجربة' : 'Days Free' }}
