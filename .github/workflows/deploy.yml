@@ -12,13 +12,10 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - name: 1. Deploy via Server Deployment Engine
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USERNAME }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          port: 22
-          script_stop: true
-          script: |
-            /var/www/tedallal/deploy.sh
+      - name: 1. Setup SSH and Run Deployment Engine
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" | tr -d '\r' > ~/.ssh/id_ed25519
+          echo "" >> ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 -p 22 ${{ secrets.VPS_USERNAME }}@${{ secrets.VPS_HOST }} "bash /var/www/tedallal/deploy.sh"
