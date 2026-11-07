@@ -1092,18 +1092,18 @@ onUnmounted(() => {
             dir="rtl"
             class="relative min-h-screen flex flex-col items-center justify-center overflow-hidden z-10"
         >
-            <!-- Full-Screen Cinematic Background -->
+            <!-- Full-Screen Cinematic Background (Clean Architectural Interior, No Watermarks) -->
             <div class="absolute inset-0 z-0">
                 <img
-                    src="/images/tedallal-luxury-hero-bg.jpg"
-                    alt=""
+                    src="/images/luxury-restaurant-hero-bg.jpg?v=2"
+                    alt="Luxury Restaurant Interior"
                     class="w-full h-full object-cover object-center"
-                    onerror="this.src='/images/tedallal-luxury-saas-mockup.jpg'"
+                    onerror="this.src='/images/tedallal-luxury-hero-bg.jpg'"
                 />
-                <!-- Layered dark overlay: heavy bottom, light top -->
-                <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/90"></div>
-                <!-- Warm gold ambient glow at center-bottom -->
-                <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-[900px] h-[400px] bg-[radial-gradient(ellipse_at_bottom,rgba(212,175,55,0.08),transparent_70%)] pointer-events-none"></div>
+                <!-- Layered dark overlay: heavy bottom, light top for crisp text readability -->
+                <div class="absolute inset-0 bg-gradient-to-b from-black/75 via-black/60 to-black/95"></div>
+                <!-- Warm gold ambient glow at center -->
+                <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(212,175,55,0.06),transparent_65%)] pointer-events-none"></div>
             </div>
 
             <!-- Centered Content -->
