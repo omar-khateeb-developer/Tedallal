@@ -37,3 +37,8 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
 
           ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -i ~/.ssh/id_rsa -p "$TARGET_PORT" "${TARGET_USER}@${TARGET_HOST}" "bash /var/www/tedallal/deploy.sh"
+
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -p "$TARGET_PORT" "${TARGET_USER}@${TARGET_HOST}" "cd /var/www/tedallal/current 2>/dev/null || cd /var/www/tedallal; php artisan optimize:clear"
+
+          LOGS=$(ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -p "$TARGET_PORT" "${TARGET_USER}@${TARGET_HOST}" "tail -n 30 /var/www/tedallal/shared/storage/logs/laravel.log 2>/dev/null || tail -n 30 /var/www/tedallal/current/storage/logs/laravel.log 2>/dev/null || tail -n 30 /var/www/tedallal/storage/logs/laravel.log 2>/dev/null" | tr '\r\n' ' ')
+          echo "::notice title=LaravelProductionLog::$LOGS"

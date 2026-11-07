@@ -47,12 +47,13 @@ class WheelController extends Controller
     /**
      * Display the lucky wheel page for the given order token or demo mode.
      */
-    public function show(Request $request, string $token): Response
+    public function show(Request $request, string $token): mixed
     {
-        // 1. Handle Demo Mode (Immediate interactive testing)
-        if ($token === 'demo') {
-            return $this->renderDemoWheel($request);
-        }
+        try {
+            // 1. Handle Demo Mode (Immediate interactive testing)
+            if ($token === 'demo') {
+                return $this->renderDemoWheel($request);
+            }
 
         // 2. Fetch real wheel token
         $wheelToken = OrderWheelToken::where('token', $token)
@@ -133,6 +134,23 @@ class WheelController extends Controller
             'won_slice_index' => $wonSliceIndex,
             'slices' => $slices,
         ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('WheelController show error: ' . $e->getMessage(), [
+                'exception' => $e,
+            ]);
+
+            if ($token === 'demo' || $request->has('debug') || config('app.debug')) {
+                return response()->json([
+                    'status' => 'error',
+                    'class' => get_class($e),
+                    'message' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                ], 500);
+            }
+
+            throw $e;
+        }
     }
 
     /**

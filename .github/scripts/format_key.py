@@ -25,3 +25,4 @@ if len(lines) <= 1:
 path = os.path.expanduser("~/.ssh/id_rsa")
 with open(path, "w") as f:
     f.write(raw.strip() + "\n")
+
