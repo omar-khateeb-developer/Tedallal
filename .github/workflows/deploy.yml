@@ -36,15 +36,13 @@ jobs:
           cp ~/.ssh/id_rsa ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
 
-          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -i ~/.ssh/id_rsa -p "$TARGET_PORT" "${TARGET_USER}@${TARGET_HOST}" "bash /var/www/tedallal/deploy.sh" 2>&1 | tee /tmp/deploy_server.log
+          # Push the latest commits from GitHub to the VPS bare repo
+          git remote add vps "ssh://${TARGET_USER}@${TARGET_HOST}:${TARGET_PORT}/home/${TARGET_USER}/tedallal.git"
+          GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -p $TARGET_PORT" git push vps main:main --force
 
-          DEPLOY_LOG=$(cat /tmp/deploy_server.log | tr '\r\n' ' ')
-          echo "::notice title=DeployServerLog::$DEPLOY_LOG"
+          # Trigger server deployment script
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -i ~/.ssh/id_rsa -p "$TARGET_PORT" "${TARGET_USER}@${TARGET_HOST}" "bash /var/www/tedallal/deploy.sh"
 
-          DEPLOY_INFO=$(ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -p "$TARGET_PORT" "${TARGET_USER}@${TARGET_HOST}" "cd /var/www/tedallal; git remote -v; git fetch origin main 2>&1" | tr '\r\n' ' ')
-          echo "::notice title=DeployInfo::$DEPLOY_INFO"
-
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -p "$TARGET_PORT" "${TARGET_USER}@${TARGET_HOST}" "cd /var/www/tedallal/current 2>/dev/null || cd /var/www/tedallal; php artisan optimize:clear"
-
-          LOGS=$(ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -p "$TARGET_PORT" "${TARGET_USER}@${TARGET_HOST}" "tail -n 30 /var/www/tedallal/shared/storage/logs/laravel.log 2>/dev/null || tail -n 30 /var/www/tedallal/current/storage/logs/laravel.log 2>/dev/null || tail -n 30 /var/www/tedallal/storage/logs/laravel.log 2>/dev/null" | tr '\r\n' ' ')
-          echo "::notice title=LaravelProductionLog::$LOGS"
+          # Verify git commit on server
+          DEPLOY_INFO=$(ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa -p "$TARGET_PORT" "${TARGET_USER}@${TARGET_HOST}" "cd /var/www/tedallal; git log -n 1 --oneline" | tr '\r\n' ' ')
+          echo "::notice title=ServerCommit::$DEPLOY_INFO"
