@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\OrderWheelToken;
 use App\Models\PromoCode;
 use App\Models\Restaurant;
+use App\Models\RestaurantTable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;

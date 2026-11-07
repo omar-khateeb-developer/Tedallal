@@ -311,6 +311,20 @@ const currentStepIndex = computed(() => {
                 </div>
             </div>
 
+            <!-- Powered by Tedallal Brand Footer -->
+            <div class="mt-6 text-center pb-24">
+                <a
+                    href="https://tedallal.tech"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-stone-100 dark:bg-slate-800/80 hover:bg-stone-200 dark:hover:bg-slate-700 text-[11px] font-semibold text-stone-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-all shadow-xs"
+                >
+                    <span class="text-amber-500">⚡</span>
+                    <span>Powered by:</span>
+                    <span class="font-bold underline decoration-amber-500/50">www.tedallal.tech</span>
+                </a>
+            </div>
+
             <!-- Sticky Back Button -->
             <div class="fixed inset-x-0 bottom-0 z-30 bg-gradient-to-t from-stone-50 via-stone-50 to-transparent dark:from-[#060913] dark:via-[#060913] dark:to-transparent pt-8 pb-4 px-4 transition-colors">
                 <div class="mx-auto max-w-lg">

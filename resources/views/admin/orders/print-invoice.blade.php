@@ -222,6 +222,9 @@
 
     <div class="footer">
         <p>شكراً لزيارتكم! نتمنى لكم يوماً سعيداً.</p>
+        <div style="margin-top: 2.5mm; font-size: 11px; font-weight: 700; color: #555; text-align: center; letter-spacing: 0.5px;">
+            Powered by: www.tedallal.tech
+        </div>
     </div>
 </div>
 
