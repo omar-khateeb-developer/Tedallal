@@ -424,3 +424,4 @@ ddaebcf  feat(launch-assets): sales rep playbook PDF + high-res golden QR
 5. **العملة الافتراضية:** `ل.س` (SYP) — يُعرض كـ `ل.س` في الواجهة
 6. **CSRF مُعفى من:** `wheel/*/spin` و `wheel/*/reset`
 7. **لا تعبّر عن القيمة الوهمية** في عجلة الحظ — استخدم دائماً `discount_type` و `discount_value` من DB
+

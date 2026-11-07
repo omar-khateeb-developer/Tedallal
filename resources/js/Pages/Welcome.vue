@@ -1086,206 +1086,175 @@ onUnmounted(() => {
         </header>
 
         <!-- ========================================================================= -->
-        <!-- BESPOKE HERO SECTION: CARVED DIGITAL LUXURY (ASYMMETRICAL DEPTH) -->
+        <!-- HERO SECTION: CINEMATIC FULL-SCREEN BACKGROUND + CENTERED ROYAL CONTENT -->
         <!-- ========================================================================= -->
         <section
             dir="rtl"
-            class="relative py-32 px-6 sm:px-12 lg:px-24 overflow-hidden z-10"
+            class="relative min-h-screen flex flex-col items-center justify-center overflow-hidden z-10"
         >
-            <div class="max-w-[1600px] mx-auto relative z-10">
+            <!-- Full-Screen Cinematic Background -->
+            <div class="absolute inset-0 z-0">
+                <img
+                    src="/images/tedallal-luxury-hero-bg.jpg"
+                    alt=""
+                    class="w-full h-full object-cover object-center"
+                    onerror="this.src='/images/tedallal-luxury-saas-mockup.jpg'"
+                />
+                <!-- Layered dark overlay: heavy bottom, light top -->
+                <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/90"></div>
+                <!-- Warm gold ambient glow at center-bottom -->
+                <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-[900px] h-[400px] bg-[radial-gradient(ellipse_at_bottom,rgba(212,175,55,0.08),transparent_70%)] pointer-events-none"></div>
+            </div>
 
-                <!-- Asymmetrical Volumetric Hero Grid -->
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-24 items-center">
+            <!-- Centered Content -->
+            <div class="relative z-10 w-full max-w-6xl mx-auto px-6 sm:px-12 py-32 flex flex-col items-center text-center">
 
-                    <!-- Right Column: Royal Editorial Typography & Carved Glass Command (Col-span 7) -->
-                    <div class="lg:col-span-7 space-y-10 text-start">
+                <!-- Royal Badge -->
+                <div class="relative inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-black/50 backdrop-blur-xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] mb-10 before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/40 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm">
+                    <svg class="w-4 h-4 text-[#D4AF37]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z"/>
+                        <circle cx="12" cy="18" r="1" fill="#D4AF37"/>
+                    </svg>
+                    <span class="text-xs sm:text-sm font-semibold tracking-widest text-[#FCF6BA]">
+                        {{ currentLocale === 'ar' ? 'مَنْظُومَةُ تَدَلَّلْ السَّحَابِيَّة • لِأَرْقَى الْمَطَاعِمِ وَالْفَنَادِقِ' : 'TEDALLAL BESPOKE RESTAURANT CLOUD' }}
+                    </span>
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-pulse"></span>
+                </div>
 
-                        <!-- Floating Carved Plaque: Royal Monogram with Glowing Gold Pseudo-border -->
-                        <div class="relative inline-flex items-center gap-3.5 px-6 py-2.5 rounded-full bg-black/40 backdrop-blur-xl border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_20px_40px_rgba(0,0,0,0.5)] before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/50 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm transition-all duration-500 hover:before:from-[#D4AF37]/80 hover:shadow-[0_0_30px_rgba(212,175,55,0.15)]">
-                            <svg class="w-4 h-4 text-[#D4AF37]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z"/>
-                                <circle cx="12" cy="18" r="1" fill="#D4AF37"/>
-                            </svg>
-                            <span class="text-xs sm:text-sm font-semibold tracking-widest text-[#FCF6BA]">
-                                {{ currentLocale === 'ar' ? 'مَنْظُومَةُ تَدَلَّلْ السَّحَابِيَّة • لِأَرْقَى الْمَطَاعِمِ وَالْفَنَادِقِ' : 'TEDALLAL BESPOKE RESTAURANT CLOUD' }}
-                            </span>
-                            <span class="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-pulse"></span>
-                        </div>
+                <!-- Before/After Mode Switcher — centered -->
+                <div class="relative inline-flex items-center p-2 rounded-2xl bg-black/50 backdrop-blur-xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] mb-10 before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/30 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm">
+                    <button
+                        @click="setHeroMode('traditional', true)"
+                        type="button"
+                        :class="heroMode === 'traditional'
+                            ? 'bg-rose-950/70 text-rose-200 border border-rose-500/50 font-bold shadow-lg'
+                            : 'text-stone-400 hover:text-rose-300 border border-transparent font-medium'"
+                        class="relative flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm transition-all duration-500 cursor-pointer"
+                    >
+                        <span class="w-2 h-2 rounded-full" :class="heroMode === 'traditional' ? 'bg-rose-500' : 'bg-stone-500/40'"></span>
+                        <span>{{ currentLocale === 'ar' ? 'النمط التقليدي' : 'Legacy Model' }}</span>
+                    </button>
+                    <button
+                        @click="setHeroMode('smart', true)"
+                        type="button"
+                        :class="heroMode === 'smart'
+                            ? 'bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] text-black font-extrabold shadow-xl shadow-[#D4AF37]/25'
+                            : 'text-stone-400 hover:text-[#FCF6BA] border border-transparent font-medium'"
+                        class="relative flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm transition-all duration-500 cursor-pointer"
+                    >
+                        <span class="w-2 h-2 rounded-full" :class="heroMode === 'smart' ? 'bg-black' : 'bg-[#D4AF37]/50'"></span>
+                        <span>{{ currentLocale === 'ar' ? 'منظومة تدلّل (تحكم كامل)' : 'Tedallal Platform' }}</span>
+                    </button>
+                </div>
 
-                        <!-- Architectural Executive State Switcher (Carved Glass with Glowing Border) -->
-                        <div class="flex items-center gap-2">
-                            <div class="relative inline-flex items-center p-2 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_20px_40px_rgba(0,0,0,0.5)] before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/35 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm transition-all duration-500">
-                                <button
-                                    @click="setHeroMode('traditional', true)"
-                                    type="button"
-                                    :class="heroMode === 'traditional'
-                                        ? 'bg-rose-950/70 text-rose-200 border border-rose-500/50 font-bold shadow-lg'
-                                        : 'text-stone-400 hover:text-rose-300 border border-transparent font-medium'"
-                                    class="relative flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-xs sm:text-sm transition-all duration-500 cursor-pointer"
-                                >
-                                    <span class="w-2 h-2 rounded-full" :class="heroMode === 'traditional' ? 'bg-rose-500' : 'bg-stone-500/40'"></span>
-                                    <span>{{ currentLocale === 'ar' ? 'النمط التقليدي (هدر وعمولات)' : 'Legacy Model (Profit Bleed)' }}</span>
-                                </button>
-
-                                <button
-                                    @click="setHeroMode('smart', true)"
-                                    type="button"
-                                    :class="heroMode === 'smart'
-                                        ? 'bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] text-black font-extrabold shadow-xl shadow-[#D4AF37]/25'
-                                        : 'text-stone-400 hover:text-[#FCF6BA] border border-transparent font-medium'"
-                                    class="relative flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-xs sm:text-sm transition-all duration-500 cursor-pointer"
-                                >
-                                    <span class="w-2 h-2 rounded-full" :class="heroMode === 'smart' ? 'bg-black' : 'bg-[#D4AF37]/50'"></span>
-                                    <span>{{ currentLocale === 'ar' ? 'منظومة تدلّل الذكية (تحكم كامل)' : 'With Smart Platform (Total Control)' }}</span>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Massive Royal Headline: Typography As Art (Amiri Serif & Metallic Gold Gradient) -->
-                        <div class="space-y-6">
-                            <h1 class="font-serif text-4xl sm:text-6xl lg:text-7xl xl:text-8xl font-normal tracking-tight leading-[1.15] text-white">
-                                <template v-if="heroMode === 'traditional'">
-                                    <span class="text-stone-300 block">مَطْبَخٌ مُزْدَحِمٌ، مَبِيعَاتٌ تَتَصَاعَدُ..</span>
-                                    <span class="text-rose-400 block mt-4 font-serif font-bold text-5xl sm:text-7xl lg:text-8xl xl:text-9xl">
-                                        وَأَرْبَاحُكَ الْحَقِيقِيَّةُ تَتَبَخَّرُ بَيْنَ التَّطْبِيقَاتِ وَالْهَدْرِ!
-                                    </span>
-                                </template>
-                                <template v-else>
-                                    <span class="text-stone-200 block">مَطْبَخٌ مُنَظَّمٌ كَالسَّاعَةِ، طَلَبَاتٌ مُبَاشِرَةٌ..</span>
-                                    <span class="block mt-4 bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-transparent font-serif font-bold text-5xl sm:text-7xl lg:text-8xl xl:text-9xl">
-                                        وَكُلُّ قِرْشٍ مِنْ أَرْبَاحِكَ يَدْخُلُ جَيْبَكَ بِالْكَامِلِ!
-                                    </span>
-                                </template>
-                            </h1>
-
-                            <p class="font-tajawal font-normal text-base sm:text-xl text-stone-300 max-w-2xl leading-relaxed">
-                                <template v-if="heroMode === 'traditional'">
-                                    {{ currentLocale === 'ar'
-                                        ? 'عمولات وساطة تلتهم 25% من إيراداتك، أخطاء متكررة في تذاكر المطبخ، ومخزون يتسرب يومياً دون رقابة دقيقة.'
-                                        : 'Intermediary apps cutting 25% of your revenue, recurring kitchen ticket mistakes, and unaccounted daily stock loss.'
-                                    }}
-                                </template>
-                                <template v-else>
-                                    {{ currentLocale === 'ar'
-                                        ? 'نظام سحابي نخبوي يوقف استنزاف العمولات، يربط الصالة بالمطبخ لحظياً بهندسة دقيقة، ويمنحك سيطرة تشغيلية ومالية بنسبة 100%.'
-                                        : 'A bespoke cloud architecture eliminating app cuts, connecting floor to kitchen instantly, and providing 100% financial and operational control.'
-                                    }}
-                                </template>
-                            </p>
-                        </div>
-
-                        <!-- Action Controls: Brushed Gold CTA & Carved Frosted Glass Actions -->
-                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-5 pt-3">
-                            <!-- Primary CTA: Brushed Metallic Gold -->
-                            <button
-                                @click="isDemoModalOpen = true"
-                                type="button"
-                                class="relative group overflow-hidden px-10 py-5 rounded-2xl bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] text-black font-extrabold text-base shadow-[0_12px_40px_rgba(212,175,55,0.35)] hover:shadow-[0_18px_50px_rgba(212,175,55,0.5)] transition-all duration-500 hover:-translate-y-1 active:translate-y-0 cursor-pointer flex items-center justify-center gap-3"
-                            >
-                                <span>{{ currentLocale === 'ar' ? 'ابدأ بتأمين أرباحك وتجربة النظام' : 'Start Securing Your Profits Free' }}</span>
-                                <span class="text-xs px-2.5 py-0.5 rounded-md font-black bg-black/15 text-black">
-                                    14 {{ currentLocale === 'ar' ? 'يوماً تجربة' : 'Days Free' }}
+                <!-- Massive Royal Headline: Centered, Typography As Art -->
+                <Transition name="hero-mode" mode="out-in">
+                    <div :key="heroMode" class="space-y-5 max-w-5xl">
+                        <h1 class="font-serif font-normal tracking-tight leading-[1.2] text-white">
+                            <template v-if="heroMode === 'traditional'">
+                                <span class="block text-3xl sm:text-5xl lg:text-6xl text-stone-300">مَطْبَخٌ مُزْدَحِمٌ، مَبِيعَاتٌ تَتَصَاعَدُ..</span>
+                                <span class="block mt-4 text-4xl sm:text-6xl lg:text-7xl font-bold text-rose-400">
+                                    وَأَرْبَاحُكَ الْحَقِيقِيَّةُ تَتَبَخَّرُ بَيْنَ التَّطْبِيقَاتِ وَالْهَدْرِ!
                                 </span>
-                            </button>
-
-                            <!-- Secondary CTA: Carved Dark Glass with Pseudo Glowing Gold Border -->
-                            <a
-                                href="#features-bespoke"
-                                class="relative px-8 py-5 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/5 text-stone-200 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_20px_40px_rgba(0,0,0,0.5)] before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/35 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm transition-all duration-500 hover:before:from-[#D4AF37]/75 hover:shadow-[0_0_30px_rgba(212,175,55,0.2)] hover:-translate-y-0.5 flex items-center justify-center gap-3 text-sm font-semibold cursor-pointer"
-                            >
-                                <span class="w-5 h-5 rounded-full bg-[#D4AF37]/20 text-[#FCF6BA] flex items-center justify-center text-xs">
-                                    ▶
+                            </template>
+                            <template v-else>
+                                <span class="block text-3xl sm:text-5xl lg:text-6xl text-stone-200">مَطْبَخٌ مُنَظَّمٌ كَالسَّاعَةِ، طَلَبَاتٌ مُبَاشِرَةٌ..</span>
+                                <span class="block mt-4 text-4xl sm:text-6xl lg:text-7xl font-bold bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-transparent">
+                                    وَكُلُّ قِرْشٍ مِنْ أَرْبَاحِكَ يَدْخُلُ جَيْبَكَ بِالْكَامِلِ!
                                 </span>
-                                <span>{{ currentLocale === 'ar' ? 'استكشف المزايا المعمارية' : 'Explore Architecture' }}</span>
-                            </a>
+                            </template>
+                        </h1>
 
-                            <!-- Pre-sales Consultation -->
-                            <Link
-                                href="/consultation"
-                                class="px-6 py-5 rounded-2xl text-stone-300 hover:text-[#FCF6BA] transition-all duration-500 text-sm font-semibold flex items-center justify-center gap-2 group cursor-pointer"
-                            >
-                                <span>{{ currentLocale === 'ar' ? 'دراسة متطلبات مطعمك' : 'Request Consultation' }}</span>
-                                <span class="text-xs rtl:rotate-180 group-hover:translate-x-[-4px] rtl:group-hover:translate-x-1 transition-transform duration-500">→</span>
-                            </Link>
+                        <p class="font-tajawal font-normal text-base sm:text-xl text-stone-300 max-w-2xl mx-auto leading-relaxed">
+                            <template v-if="heroMode === 'traditional'">
+                                {{ currentLocale === 'ar'
+                                    ? 'عمولات وساطة تلتهم 25% من إيراداتك، أخطاء متكررة في تذاكر المطبخ، ومخزون يتسرب يومياً دون رقابة دقيقة.'
+                                    : 'Intermediary apps cutting 25% of your revenue, recurring kitchen ticket mistakes, and unaccounted daily stock loss.'
+                                }}
+                            </template>
+                            <template v-else>
+                                {{ currentLocale === 'ar'
+                                    ? 'نظام سحابي نخبوي يوقف استنزاف العمولات، يربط الصالة بالمطبخ لحظياً بهندسة دقيقة، ويمنحك سيطرة تشغيلية ومالية بنسبة 100%.'
+                                    : 'A bespoke cloud architecture eliminating app cuts, connecting floor to kitchen instantly, and providing 100% financial and operational control.'
+                                }}
+                            </template>
+                        </p>
+                    </div>
+                </Transition>
+
+                <!-- Micro Metrics Trio: 3 Carved Glass Cards — centered row -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 mt-12 w-full max-w-3xl">
+                    <!-- Metric 1: 0% Commission -->
+                    <div class="relative p-6 rounded-2xl bg-black/50 backdrop-blur-xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_20px_40px_rgba(0,0,0,0.6)] before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/40 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm transition-all duration-500 hover:before:from-[#D4AF37]/80 hover:shadow-[0_0_35px_rgba(212,175,55,0.2)] hover:-translate-y-1 flex flex-col items-center justify-center text-center">
+                        <!-- Icon -->
+                        <div class="w-9 h-9 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center mb-3">
+                            <svg class="w-5 h-5 text-[#D4AF37]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="8"/><path d="M9 15l6-6M9.5 9.5h.01M14.5 14.5h.01"/></svg>
                         </div>
-
-                        <!-- Micro Metrics Trio: Carved Glass Floating Cards -->
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 pt-4">
-                            <!-- Metric 1 -->
-                            <div class="relative p-6 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_20px_40px_rgba(0,0,0,0.5)] before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/40 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm transition-all duration-500 hover:before:from-[#D4AF37]/80 hover:shadow-[0_0_35px_rgba(212,175,55,0.2)] hover:-translate-y-1 flex flex-col items-center justify-center text-center">
-                                <span class="text-xs text-stone-400 font-medium mb-1">{{ currentLocale === 'ar' ? 'عمولة وسيط' : 'Intermediary Cut' }}</span>
-                                <span class="font-serif text-3xl font-bold bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-transparent" dir="ltr">0%</span>
-                                <span class="text-[11px] font-bold text-emerald-400 mt-1.5">{{ currentLocale === 'ar' ? 'أرباحك كاملة 100% لك' : '100% direct revenue' }}</span>
-                            </div>
-
-                            <!-- Metric 2 -->
-                            <div class="relative p-6 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_20px_40px_rgba(0,0,0,0.5)] before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/40 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm transition-all duration-500 hover:before:from-[#D4AF37]/80 hover:shadow-[0_0_35px_rgba(212,175,55,0.2)] hover:-translate-y-1 flex flex-col items-center justify-center text-center">
-                                <span class="text-xs text-stone-400 font-medium mb-1">{{ currentLocale === 'ar' ? 'ضبط التكاليف' : 'Cost Control' }}</span>
-                                <span class="font-serif text-2xl font-bold text-[#FCF6BA]">{{ currentLocale === 'ar' ? 'فوري ولحظي' : 'Real-Time' }}</span>
-                                <span class="text-[11px] font-bold text-stone-300 mt-1.5">{{ currentLocale === 'ar' ? 'ربط المطبخ بالوصفات آلياً' : 'Recipe-level inventory sync' }}</span>
-                            </div>
-
-                            <!-- Metric 3 -->
-                            <div class="relative p-6 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_20px_40px_rgba(0,0,0,0.5)] before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/40 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm transition-all duration-500 hover:before:from-[#D4AF37]/80 hover:shadow-[0_0_35px_rgba(212,175,55,0.2)] hover:-translate-y-1 flex flex-col items-center justify-center text-center">
-                                <span class="text-xs text-stone-400 font-medium mb-1">{{ currentLocale === 'ar' ? 'النتيجة' : 'Bottom-Line Growth' }}</span>
-                                <span class="font-serif text-2xl font-bold text-[#FCF6BA]">{{ currentLocale === 'ar' ? 'مضاعفة صافي الأرباح' : '+100% Margin Boost' }}</span>
-                                <span class="text-[11px] font-bold text-[#D4AF37] mt-1.5">{{ currentLocale === 'ar' ? 'نمو وسيطرة مالية كاملة' : 'Total operational command' }}</span>
-                            </div>
-                        </div>
-
+                        <span class="text-xs text-stone-400 font-medium mb-1">{{ currentLocale === 'ar' ? 'عمولة وسيط' : 'Intermediary Cut' }}</span>
+                        <span class="font-serif text-3xl font-bold bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-transparent" dir="ltr">0%</span>
+                        <span class="text-[11px] font-bold text-emerald-400 mt-1.5">{{ currentLocale === 'ar' ? 'أرباحك كاملة 100% لك' : '100% direct revenue' }}</span>
                     </div>
 
-                    <!-- Left Column: Asymmetrical Overlapping Carved Glass Monolith (Col-span 5) -->
-                    <div class="lg:col-span-5 relative mt-12 lg:mt-0">
-
-                        <!-- Main Carved Viewport Monolith with Deep Glowing Gold Border -->
-                        <div class="relative p-3.5 rounded-3xl bg-black/40 backdrop-blur-xl border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_30px_70px_rgba(0,0,0,0.85)] before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/50 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm transition-all duration-500 hover:before:from-[#D4AF37]/80">
-                            <div class="relative h-[420px] sm:h-[500px] rounded-2xl overflow-hidden group">
-                                <img
-                                    src="/images/tedallal-luxury-hero-bg.jpg"
-                                    alt="بيئة عمل تدلّل الفاخرة"
-                                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 filter brightness-[0.92] contrast-[1.1]"
-                                    onerror="this.src='/images/tedallal-luxury-saas-mockup.jpg'"
-                                />
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent"></div>
-
-                                <!-- Architectural Plaque Inside the Viewport -->
-                                <div class="absolute top-5 start-5 flex items-center gap-2 px-4 py-2 rounded-xl bg-black/65 backdrop-blur-xl border border-white/10 text-stone-200 text-xs font-medium">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-pulse"></span>
-                                    <span>{{ currentLocale === 'ar' ? 'أجواء ضيافة راقية • أتمتة صامتة' : 'Fine Dining Ambiance • Silent Automation' }}</span>
-                                </div>
-                            </div>
+                    <!-- Metric 2: Real-Time Cost -->
+                    <div class="relative p-6 rounded-2xl bg-black/50 backdrop-blur-xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_20px_40px_rgba(0,0,0,0.6)] before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/40 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm transition-all duration-500 hover:before:from-[#D4AF37]/80 hover:shadow-[0_0_35px_rgba(212,175,55,0.2)] hover:-translate-y-1 flex flex-col items-center justify-center text-center">
+                        <!-- Icon -->
+                        <div class="w-9 h-9 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center mb-3">
+                            <svg class="w-5 h-5 text-[#D4AF37]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20V10M6 20V14M18 20V4"/></svg>
                         </div>
-
-                        <!-- Floating Overlap Monolith 1: Asymmetrical Top-Right (-mt-12 -mr-8 lg:-mr-12 z-20) -->
-                        <div class="absolute -top-10 -right-4 sm:-right-8 lg:-right-12 z-20 w-72 p-6 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_25px_50px_rgba(0,0,0,0.8)] before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/60 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm transition-all duration-500 hover:before:from-[#D4AF37]/90 hover:shadow-[0_0_35px_rgba(212,175,55,0.25)] hover:-translate-y-1">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="text-xs text-stone-300 font-semibold">{{ currentLocale === 'ar' ? 'نسبة استبقاء الإيراد' : 'Revenue Retained' }}</span>
-                                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                            </div>
-                            <div class="font-serif text-3xl font-bold bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-transparent" dir="ltr">
-                                100% Direct
-                            </div>
-                            <div class="text-[11px] text-stone-400 mt-1">
-                                {{ currentLocale === 'ar' ? 'بدون أي عمولة وسيط (0%)' : 'Zero 3rd-party commission' }}
-                            </div>
-                        </div>
-
-                        <!-- Floating Overlap Monolith 2: Asymmetrical Bottom-Left (-mb-10 -ml-6 sm:-ml-10 z-30) -->
-                        <div class="absolute -bottom-10 -left-4 sm:-left-8 lg:-left-10 z-30 w-80 p-6 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_25px_50px_rgba(0,0,0,0.8)] before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/60 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm transition-all duration-500 hover:before:from-[#D4AF37]/90 hover:shadow-[0_0_35px_rgba(212,175,55,0.25)] hover:-translate-y-1">
-                            <div class="flex items-center gap-3.5">
-                                <div class="w-12 h-12 rounded-xl bg-gradient-to-r from-[#BF953F]/25 to-[#B38728]/15 border border-[#BF953F]/40 flex items-center justify-center text-[#FCF6BA] font-bold text-sm shrink-0">
-                                    VIP
-                                </div>
-                                <div class="text-start">
-                                    <div class="text-xs font-bold text-white">{{ currentLocale === 'ar' ? 'طاولة 07 الملكية • إرسال فوري' : 'Royal Table 07 • Live KDS Sync' }}</div>
-                                    <div class="text-[11px] text-[#FCF6BA] mt-0.5">{{ currentLocale === 'ar' ? 'منيو الباركود التفاعلي • 0 أخطاء' : 'Branded QR Menu • Zero Wait' }}</div>
-                                </div>
-                            </div>
-                        </div>
-
+                        <span class="text-xs text-stone-400 font-medium mb-1">{{ currentLocale === 'ar' ? 'ضبط التكاليف' : 'Cost Control' }}</span>
+                        <span class="font-serif text-2xl font-bold text-[#FCF6BA]">{{ currentLocale === 'ar' ? 'فوري ولحظي' : 'Real-Time' }}</span>
+                        <span class="text-[11px] font-bold text-stone-300 mt-1.5">{{ currentLocale === 'ar' ? 'ربط المطبخ بالوصفات آلياً' : 'Recipe-level inventory sync' }}</span>
                     </div>
 
+                    <!-- Metric 3: Profit Growth -->
+                    <div class="relative p-6 rounded-2xl bg-black/50 backdrop-blur-xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_20px_40px_rgba(0,0,0,0.6)] before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/40 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm transition-all duration-500 hover:before:from-[#D4AF37]/80 hover:shadow-[0_0_35px_rgba(212,175,55,0.2)] hover:-translate-y-1 flex flex-col items-center justify-center text-center">
+                        <!-- Icon -->
+                        <div class="w-9 h-9 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center mb-3">
+                            <svg class="w-5 h-5 text-[#D4AF37]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22,7 13.5,15.5 8.5,10.5 2,17"/><polyline points="16,7 22,7 22,13"/></svg>
+                        </div>
+                        <span class="text-xs text-stone-400 font-medium mb-1">{{ currentLocale === 'ar' ? 'النتيجة' : 'Bottom-Line Growth' }}</span>
+                        <span class="font-serif text-2xl font-bold text-[#FCF6BA]">{{ currentLocale === 'ar' ? 'مضاعفة صافي الأرباح' : '+100% Margin Boost' }}</span>
+                        <span class="text-[11px] font-bold text-[#D4AF37] mt-1.5">{{ currentLocale === 'ar' ? 'نمو وسيطرة مالية كاملة' : 'Total operational command' }}</span>
+                    </div>
+                </div>
+
+                <!-- CTA Buttons Row — centered -->
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-5 mt-10">
+                    <!-- Primary Gold CTA -->
+                    <button
+                        @click="isDemoModalOpen = true"
+                        type="button"
+                        class="relative group overflow-hidden px-10 py-4 rounded-full bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] text-black font-extrabold text-base shadow-[0_12px_40px_rgba(212,175,55,0.4)] hover:shadow-[0_18px_50px_rgba(212,175,55,0.55)] transition-all duration-500 hover:-translate-y-1 active:translate-y-0 cursor-pointer flex items-center gap-3"
+                    >
+                        <span>{{ currentLocale === 'ar' ? 'ابدأ بتأمين أرباحك وتجربة النظام' : 'Start Securing Your Profits Free' }}</span>
+                        <span class="text-xs px-2.5 py-0.5 rounded-md font-black bg-black/15">
+                            14 {{ currentLocale === 'ar' ? 'يوماً تجربة' : 'Days Free' }}
+                        </span>
+                    </button>
+
+                    <!-- Secondary Glass CTA -->
+                    <a
+                        href="#features-bespoke"
+                        class="relative px-8 py-4 rounded-full bg-black/40 backdrop-blur-xl border border-white/20 text-stone-200 hover:border-[#D4AF37]/50 hover:text-[#FCF6BA] hover:shadow-[0_0_30px_rgba(212,175,55,0.15)] transition-all duration-500 flex items-center gap-3 text-sm font-semibold cursor-pointer"
+                    >
+                        <span>{{ currentLocale === 'ar' ? 'استكشف المزايا' : 'Explore Features' }}</span>
+                        <span class="text-xs rtl:rotate-180">→</span>
+                    </a>
+
+                    <!-- Consultation link -->
+                    <Link
+                        href="/consultation"
+                        class="text-stone-400 hover:text-[#FCF6BA] transition-all duration-500 text-sm font-semibold flex items-center gap-2 group cursor-pointer"
+                    >
+                        <span>{{ currentLocale === 'ar' ? 'دراسة متطلبات مطعمك' : 'Request Consultation' }}</span>
+                        <span class="text-xs rtl:rotate-180 group-hover:translate-x-[-4px] rtl:group-hover:translate-x-1 transition-transform duration-500">→</span>
+                    </Link>
+                </div>
+
+                <!-- Scroll hint -->
+                <div class="mt-16 flex flex-col items-center gap-2 text-stone-500 animate-bounce">
+                    <span class="text-xs font-medium tracking-widest">{{ currentLocale === 'ar' ? 'اكتشف المزيد' : 'EXPLORE' }}</span>
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
                 </div>
 
             </div>
