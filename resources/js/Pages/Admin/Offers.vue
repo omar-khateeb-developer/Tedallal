@@ -120,21 +120,39 @@ const deleteOffer = async (id: number) => {
             <!-- Active State -->
             <div v-else class="space-y-6">
                 <!-- Wheel Marketing System Banner -->
-                <div class="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/30 rounded-2xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                    <div class="flex items-start gap-3.5">
-                        <div class="w-12 h-12 rounded-xl bg-amber-500/20 text-amber-500 dark:text-amber-400 flex items-center justify-center text-2xl shrink-0">
-                            🎁
+                <div class="border border-amber-500/30 rounded-2xl overflow-hidden">
+                    <!-- Header -->
+                    <div class="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <div class="flex items-start gap-3.5">
+                            <div class="w-12 h-12 rounded-xl bg-amber-500/20 text-amber-500 dark:text-amber-400 flex items-center justify-center text-2xl shrink-0">
+                                🎡
+                            </div>
+                            <div>
+                                <h4 class="text-base font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                                    <span>عجلة الحظ — كيف تعمل؟</span>
+                                    <span class="bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-[11px] px-2 py-0.5 rounded-full font-bold">مفعلة تلقائياً</span>
+                                </h4>
+                                <p class="text-xs text-stone-600 dark:text-slate-400 mt-1 leading-relaxed">
+                                    عند إتمام أي طلب، يحصل الزبون على رابط يتيح له تدوير عجلة الحظ مرة واحدة والفوز بكوبون لزيارته القادمة.
+                                </p>
+                            </div>
                         </div>
-                        <div>
-                            <h4 class="text-base font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                                <span>عجلة الحظ الترويجية على الفواتير</span>
-                                <span class="bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-[11px] px-2 py-0.5 rounded-full font-bold">
-                                    مفعلة وتُطبع تلقائياً
-                                </span>
-                            </h4>
-                            <p class="text-xs text-stone-600 dark:text-slate-400 mt-1 leading-relaxed">
-                                يتم طباعة رمز QR مميز في أسفل فاتورة الزبون المطبوعة. عند مسحه، يدور الزبون عجلة الحظ ويربح كوبوناً من الكوبونات النشطة أعلاه، ويتم توليد كود مخصص فريد صالح لزيارته القادمة ويُبطل فور استخدامه لمرة واحدة.
-                            </p>
+                        <a href="/wheel/demo" target="_blank"
+                           class="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-700 dark:text-amber-300 text-sm font-semibold transition-colors">
+                            <span>🎲</span>
+                            <span>معاينة العجلة</span>
+                        </a>
+                    </div>
+
+                    <!-- IMPORTANT: What the customer sees -->
+                    <div class="bg-blue-50 dark:bg-blue-950/20 border-t border-blue-200 dark:border-blue-800/40 px-5 py-3.5">
+                        <div class="flex items-start gap-2.5">
+                            <span class="text-blue-500 dark:text-blue-400 mt-0.5 shrink-0">ℹ️</span>
+                            <div class="text-xs text-blue-700 dark:text-blue-300 leading-relaxed">
+                                <span class="font-bold">ما يراه الزبون على العجلة:</span>
+                                القيمة الحقيقية للخصم فقط (مثال: <span class="font-mono font-bold">خصم 15%</span> أو <span class="font-mono font-bold">خصم 5000 ل.س</span>) — وليس كود الكوبون.
+                                هذا يضمن الشفافية التامة مع الزبون بغض النظر عن اسم الكوبون الذي تختاره.
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -195,11 +213,17 @@ const deleteOffer = async (id: number) => {
                 <div v-if="activeTab === 'master'" class="space-y-6">
                     <!-- Add New Offer -->
                     <div class="bg-white dark:bg-[#0a0f1d] rounded-2xl shadow-xs border border-stone-100 dark:border-slate-800 p-6">
-                        <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-4">إنشاء كوبون / جائزة عجلة حظ جديدة</h3>
+                        <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-1">إنشاء جائزة عجلة حظ جديدة</h3>
+                        <p class="text-xs text-stone-500 dark:text-slate-400 mb-4">
+                            🎡 ما سيظهر على العجلة للزبون هو <span class="font-bold text-amber-600 dark:text-amber-400">القيمة الحقيقية فقط</span> (نسبة أو مبلغ)، وليس كود الكوبون.
+                        </p>
                         <form @submit.prevent="createOffer" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">كود الخصم (مثال: SAVE20)</label>
-                                <TextInput v-model="form.code" type="text" class="w-full" required />
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    كود داخلي للمحاسبة
+                                    <span class="text-[10px] text-stone-400 font-normal mr-1">(لا يراه الزبون)</span>
+                                </label>
+                                <TextInput v-model="form.code" type="text" class="w-full" placeholder="مثال: WHEEL15" required />
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">نوع الخصم</label>
@@ -209,11 +233,14 @@ const deleteOffer = async (id: number) => {
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">قيمة الخصم</label>
-                                <TextInput v-model="form.discount_value" type="number" step="0.01" class="w-full" required />
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    قيمة الخصم
+                                    <span class="text-[10px] text-amber-600 dark:text-amber-400 font-semibold mr-1">← هذا ما سيظهر على العجلة</span>
+                                </label>
+                                <TextInput v-model="form.discount_value" type="number" step="0.01" class="w-full" placeholder="مثال: 15" required />
                             </div>
                             <div>
-                                <PrimaryButton type="submit" class="w-full justify-center h-10">إضافة الكوبون</PrimaryButton>
+                                <PrimaryButton type="submit" class="w-full justify-center h-10">إضافة للعجلة</PrimaryButton>
                             </div>
                         </form>
                     </div>
@@ -223,28 +250,54 @@ const deleteOffer = async (id: number) => {
                         <table class="w-full text-right text-sm">
                             <thead class="bg-stone-50 dark:bg-slate-800/80 text-stone-600 dark:text-slate-400 border-b border-stone-100 dark:border-slate-800">
                                 <tr>
-                                    <th class="py-3 px-4 font-semibold">الكود</th>
-                                    <th class="py-3 px-4 font-semibold">القيمة</th>
-                                    <th class="py-3 px-4 font-semibold">تاريخ الانتهاء</th>
-                                    <th class="py-3 px-4 font-semibold">الحالة في العجلة</th>
+                                    <th class="py-3 px-4 font-semibold">الكود الداخلي</th>
+                                    <th class="py-3 px-4 font-semibold">القيمة الحقيقية</th>
+                                    <th class="py-3 px-4 font-semibold">🎡 ما يراه الزبون على العجلة</th>
+                                    <th class="py-3 px-4 font-semibold">الانتهاء</th>
+                                    <th class="py-3 px-4 font-semibold">الحالة</th>
                                     <th class="py-3 px-4 font-semibold">إجراءات</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-stone-100 dark:divide-slate-800">
                                 <tr v-if="offers.length === 0">
-                                    <td colspan="5" class="py-6 text-center text-stone-400 dark:text-slate-500">لا توجد كوبونات مسجلة.</td>
+                                    <td colspan="6" class="py-6 text-center text-stone-400 dark:text-slate-500">لا توجد كوبونات مسجلة. أضف كوبوناً أعلاه ليظهر كجائزة في عجلة الحظ.</td>
                                 </tr>
                                 <tr v-for="offer in offers" :key="offer.id" class="hover:bg-stone-50/50 dark:hover:bg-slate-800/40 transition-colors">
-                                    <td class="py-3 px-4 font-bold text-gray-800 dark:text-white">{{ offer.code }}</td>
-                                    <td class="py-3 px-4 text-gray-600 dark:text-slate-300">
-                                        {{ offer.discount_value }} {{ offer.discount_type === 'percentage' ? '%' : $page.props.auth.restaurant?.currency }}
+                                    <!-- Internal code (admin only) -->
+                                    <td class="py-3 px-4 font-mono text-xs text-stone-500 dark:text-slate-500">{{ offer.code }}</td>
+
+                                    <!-- Actual discount value -->
+                                    <td class="py-3 px-4 font-bold text-gray-800 dark:text-white">
+                                        {{ offer.discount_value }}
+                                        {{ offer.discount_type === 'percentage' ? '%' : $page.props.auth.restaurant?.currency }}
+                                        <span class="text-[10px] font-normal text-stone-400 mr-1">({{ offer.discount_type === 'percentage' ? 'نسبة' : 'مبلغ ثابت' }})</span>
                                     </td>
-                                    <td class="py-3 px-4 text-gray-600 dark:text-slate-300">{{ offer.expires_at ? new Date(offer.expires_at).toLocaleDateString() : 'مفتوح' }}</td>
+
+                                    <!-- What customer sees on wheel — built from real values, never from code name -->
                                     <td class="py-3 px-4">
-                                        <button @click="toggleActive(offer)" :class="offer.is_active ? 'bg-green-100 dark:bg-emerald-950/60 text-green-700 dark:text-emerald-300' : 'bg-stone-100 dark:bg-slate-800 text-stone-600 dark:text-stone-400'" class="px-2.5 py-1 rounded-md text-xs font-semibold hover:opacity-80 transition-colors">
-                                            {{ offer.is_active ? 'نشط في العجلة' : 'معطل' }}
+                                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-sm"
+                                              :class="offer.is_active ? 'bg-amber-100 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border border-amber-300/50 dark:border-amber-700/40' : 'bg-stone-100 dark:bg-slate-800 text-stone-400 dark:text-slate-500'">
+                                            <span>🎁</span>
+                                            <span>
+                                                خصم
+                                                {{ offer.discount_type === 'percentage'
+                                                    ? `${offer.discount_value}%`
+                                                    : `${offer.discount_value} ${$page.props.auth.restaurant?.currency}` }}
+                                            </span>
+                                        </span>
+                                    </td>
+
+                                    <td class="py-3 px-4 text-gray-600 dark:text-slate-400 text-xs">{{ offer.expires_at ? new Date(offer.expires_at).toLocaleDateString('ar') : 'مفتوح' }}</td>
+
+                                    <!-- Toggle active/inactive (affects wheel visibility) -->
+                                    <td class="py-3 px-4">
+                                        <button @click="toggleActive(offer)"
+                                                :class="offer.is_active ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-900/60' : 'bg-stone-100 dark:bg-slate-800 text-stone-500 dark:text-slate-400 hover:bg-stone-200 dark:hover:bg-slate-700'"
+                                                class="px-2.5 py-1 rounded-md text-xs font-semibold transition-colors">
+                                            {{ offer.is_active ? '✓ نشط في العجلة' : '✕ معطل' }}
                                         </button>
                                     </td>
+
                                     <td class="py-3 px-4">
                                         <button @click="deleteOffer(offer.id)" class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-sm">حذف</button>
                                     </td>
