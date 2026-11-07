@@ -1153,7 +1153,7 @@ onUnmounted(() => {
                         class="relative flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm transition-all duration-500 cursor-pointer"
                     >
                         <span class="w-2 h-2 rounded-full" :class="heroMode === 'smart' ? 'bg-black' : 'bg-[#D4AF37]/50'"></span>
-                        <span>{{ currentLocale === 'ar' ? 'منظومة تدلّل (تحكم كامل)' : 'Tedallal Platform' }}</span>
+                        <span>{{ currentLocale === 'ar' ? 'منظومة تدلّل (تحكم كاامل)' : 'Tedallal Platform' }}</span>
                     </button>
                 </div>
 
