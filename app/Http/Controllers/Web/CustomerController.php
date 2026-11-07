@@ -78,10 +78,26 @@ class CustomerController extends Controller
 
         // Ensure the order exists and belongs to this table and restaurant
         $order = Order::withoutGlobalScopes()
+            ->with(['items', 'table', 'tableSession', 'restaurant'])
             ->where('restaurant_id', $table->restaurant_id)
             ->where('table_id', $table->id)
             ->where('order_number', $orderNumber)
             ->firstOrFail();
+
+        // Ensure the session cookie is valid for subsequent requests/polling
+        if ($order->tableSession) {
+            cookie()->queue(cookie(
+                'tedallal_session',
+                $order->tableSession->session_token,
+                60 * 4,
+                '/',
+                null,
+                app()->isProduction(),
+                true,
+                false,
+                'Lax'
+            ));
+        }
 
         // Check or generate wheel token for gamification
         $wheelToken = $order->wheelToken;
@@ -100,6 +116,8 @@ class CustomerController extends Controller
             'publicToken' => $token,
             'wheelToken' => $wheelToken->token,
             'isWheelClaimed' => (bool) $wheelToken->is_claimed,
+            'initialOrder' => (new \App\Http\Resources\OrderResource($order))->resolve(),
+            'sessionToken' => $order->tableSession?->session_token,
         ]);
     }
 }

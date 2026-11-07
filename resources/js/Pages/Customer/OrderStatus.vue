@@ -16,6 +16,8 @@ const props = defineProps<{
     publicToken: string;
     wheelToken?: string | null;
     isWheelClaimed?: boolean;
+    initialOrder?: any;
+    sessionToken?: string | null;
 }>();
 
 const order = ref<{
@@ -29,13 +31,17 @@ const order = ref<{
     restaurant_type?: string;
     windows_count?: number;
     items: Array<{ item_name_snapshot: string; quantity: number; subtotal: string; note?: string }>;
-} | null>(null);
+} | null>(props.initialOrder || null);
 
 let pollTimer: ReturnType<typeof setInterval> | null = null;
 
 async function loadOrder() {
     try {
-        const { data } = await axios.get(`/api/public/orders/${props.orderNumber}`);
+        const headers: Record<string, string> = {};
+        if (props.sessionToken) {
+            headers['X-Session-Token'] = props.sessionToken;
+        }
+        const { data } = await axios.get(`/api/public/orders/${props.orderNumber}`, { headers });
         order.value = data.data;
     } catch (e) {
         console.error(e);
