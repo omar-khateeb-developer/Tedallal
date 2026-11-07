@@ -29,7 +29,7 @@ jobs:
           echo "Key length: ${#SSH_KEY}"
 
           if [ ${#SSH_KEY} -lt 50 ]; then
-            echo "::error::VPS_SSH_KEY secret is missing or too short! Please verify GitHub Secrets."
+            echo "::error::VPS_SSH_KEY secret is missing or too short (length: ${#SSH_KEY}). Please ensure VPS_SSH_KEY contains the full private key."
             exit 1
           fi
 
@@ -37,4 +37,8 @@ jobs:
           printf "%s\n" "$SSH_KEY" | tr -d '\r' > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
 
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 -p "$TARGET_PORT" "${TARGET_USER}@${TARGET_HOST}" "bash /var/www/tedallal/deploy.sh"
+          if ! ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -i ~/.ssh/id_ed25519 -p "$TARGET_PORT" "${TARGET_USER}@${TARGET_HOST}" "bash /var/www/tedallal/deploy.sh" 2>&1 | tee /tmp/deploy.log; then
+            LAST_ERR=$(tail -n 15 /tmp/deploy.log | tr '\n' ' ')
+            echo "::error::Deployment failed: $LAST_ERR"
+            exit 1
+          fi
