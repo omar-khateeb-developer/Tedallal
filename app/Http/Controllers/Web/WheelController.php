@@ -81,9 +81,11 @@ class WheelController extends Controller
                 'code' => $gen->code,
                 'discount_value' => (float) $gen->discount_value,
                 'discount_type' => $gen->discount_type,
-                'discount_text' => $gen->discount_type === 'percentage'
-                    ? "%{$gen->discount_value}"
-                    : "{$gen->discount_value} {$restaurant->currency}",
+                'discount_text' => $this->formatDiscountLabel(
+                    $gen->discount_type,
+                    $gen->discount_value,
+                    $restaurant->currency
+                ),
                 'starts_at' => $gen->starts_at ? $gen->starts_at->format('Y-m-d h:i A') : null,
                 'expires_at' => $gen->expires_at ? $gen->expires_at->format('Y-m-d') : null,
                 'min_order_value' => (float) $gen->min_order_value,
@@ -105,13 +107,15 @@ class WheelController extends Controller
             }
         }
 
+        $cleanCurrency = $this->normalizeCurrency($restaurant->currency);
+
         return Inertia::render('Wheel', [
             'token' => $token,
             'is_demo' => false,
             'restaurant' => [
                 'name' => $restaurant->name,
                 'logo' => $restaurant->logo,
-                'currency' => $restaurant->currency,
+                'currency' => $cleanCurrency,
             ],
             'order_number' => $wheelToken->order?->order_number,
             'is_claimed' => $isClaimed,
@@ -235,9 +239,11 @@ class WheelController extends Controller
                 'won_index' => $winningIndex,
                 'voucher' => [
                     'code' => $generatedPromo->code,
-                    'discount_text' => $wonOffer->discount_type === 'percentage'
-                        ? "%{$wonOffer->discount_value}"
-                        : "{$wonOffer->discount_value} {$restaurant->currency}",
+                    'discount_text' => $this->formatDiscountLabel(
+                        $wonOffer->discount_type,
+                        $wonOffer->discount_value,
+                        $restaurant->currency
+                    ),
                     'starts_at' => $startsAt->format('Y-m-d h:i A'),
                     'expires_at' => $expiresAt->format('Y-m-d'),
                     'min_order_value' => (float) ($wonOffer->min_order_value ?? 0),
@@ -268,7 +274,7 @@ class WheelController extends Controller
     private function renderDemoWheel(Request $request): Response
     {
         $restaurant = Restaurant::first();
-        $currency = $restaurant?->currency ?? 'ل.س';
+        $currency = $this->normalizeCurrency($restaurant?->currency ?? 'ل.س');
 
         return Inertia::render('Wheel', [
             'token' => 'demo',
@@ -317,9 +323,11 @@ class WheelController extends Controller
         $icons = ['🎁', '⭐', '🎉', '☕', '🍰', '👑', '🔥', '🥗'];
 
         return $expandedOffers->values()->map(function ($offer, $index) use ($restaurant, $colors, $icons) {
-            $discountText = $offer->discount_type === 'percentage'
-                ? "خصم %{$offer->discount_value}"
-                : "خصم {$offer->discount_value} {$restaurant->currency}";
+            $discountText = $this->formatDiscountLabel(
+                $offer->discount_type,
+                $offer->discount_value,
+                $restaurant->currency
+            );
 
             return [
                 'id' => $offer->id,
@@ -338,8 +346,18 @@ class WheelController extends Controller
      */
     private function getDefaultSlices(string $currency): array
     {
+        $cleanCurrency = $this->normalizeCurrency($currency);
         $colors = self::SLICE_COLORS;
-        $rewards = self::DEFAULT_REWARDS;
+        $rewards = [
+            ['label' => 'خصم 15%', 'type' => 'percentage', 'value' => 15, 'icon' => '🔥'],
+            ['label' => 'مشروب ضيافة', 'type' => 'percentage', 'value' => 10, 'icon' => '☕'],
+            ['label' => 'خصم 20%', 'type' => 'percentage', 'value' => 20, 'icon' => '🎉'],
+            ['label' => 'حلى مجاني', 'type' => 'percentage', 'value' => 12, 'icon' => '🍰'],
+            ['label' => 'خصم 10%', 'type' => 'percentage', 'value' => 10, 'icon' => '⭐'],
+            ['label' => 'خصم 25%', 'type' => 'percentage', 'value' => 25, 'icon' => '👑'],
+            ['label' => 'خصم 5%', 'type' => 'percentage', 'value' => 5, 'icon' => '🎁'],
+            ['label' => 'مقبلات مجانية', 'type' => 'percentage', 'value' => 15, 'icon' => '🥗'],
+        ];
 
         $slices = [];
         foreach ($rewards as $index => $reward) {
@@ -355,5 +373,34 @@ class WheelController extends Controller
         }
 
         return $slices;
+    }
+
+    /**
+     * Format discount label cleanly without trailing zero decimals (.00),
+     * and display as "خصم بقيمة X ل.س" or "خصم X%".
+     */
+    private function formatDiscountLabel(string $type, float|string|int $value, ?string $currency): string
+    {
+        $floatVal = (float) $value;
+        // Strip unnecessary decimals like .00 for integer amounts (especially Syrian currency)
+        $formattedNum = ($floatVal == (int) $floatVal)
+            ? (string) (int) $floatVal
+            : rtrim(rtrim(number_format($floatVal, 2, '.', ''), '0'), '.');
+
+        $cleanCurrency = $this->normalizeCurrency($currency);
+
+        if ($type === 'percentage') {
+            return "خصم {$formattedNum}%";
+        }
+
+        return "خصم {$formattedNum} {$cleanCurrency}";
+    }
+
+    private function normalizeCurrency(?string $currency): string
+    {
+        if (!$currency || strtoupper(trim($currency)) === 'SYP') {
+            return 'ل.س';
+        }
+        return $currency;
     }
 }

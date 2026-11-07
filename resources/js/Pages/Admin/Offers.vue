@@ -24,6 +24,17 @@ const form = useForm({
     min_order_value: 0,
 });
 
+function formatDiscountVal(val: number | string): string {
+    const num = parseFloat(String(val));
+    if (isNaN(num)) return '0';
+    return num % 1 === 0 ? String(Math.round(num)) : num.toFixed(2).replace(/\.00$/, '');
+}
+
+function formatCurr(curr?: string): string {
+    if (!curr || curr.toUpperCase() === 'SYP') return 'ل.س';
+    return curr;
+}
+
 const loadOffers = async () => {
     try {
         const response = await axios.get('/api/admin/promo-codes', {
@@ -268,8 +279,8 @@ const deleteOffer = async (id: number) => {
 
                                     <!-- Actual discount value -->
                                     <td class="py-3 px-4 font-bold text-gray-800 dark:text-white">
-                                        {{ offer.discount_value }}
-                                        {{ offer.discount_type === 'percentage' ? '%' : $page.props.auth.restaurant?.currency }}
+                                        {{ formatDiscountVal(offer.discount_value) }}
+                                        {{ offer.discount_type === 'percentage' ? '%' : formatCurr($page.props.auth.restaurant?.currency) }}
                                         <span class="text-[10px] font-normal text-stone-400 mr-1">({{ offer.discount_type === 'percentage' ? 'نسبة' : 'مبلغ ثابت' }})</span>
                                     </td>
 
@@ -281,8 +292,8 @@ const deleteOffer = async (id: number) => {
                                             <span>
                                                 خصم
                                                 {{ offer.discount_type === 'percentage'
-                                                    ? `${offer.discount_value}%`
-                                                    : `${offer.discount_value} ${$page.props.auth.restaurant?.currency}` }}
+                                                    ? `${formatDiscountVal(offer.discount_value)}%`
+                                                    : `${formatDiscountVal(offer.discount_value)} ${formatCurr($page.props.auth.restaurant?.currency)}` }}
                                             </span>
                                         </span>
                                     </td>
@@ -327,7 +338,10 @@ const deleteOffer = async (id: number) => {
                                 <tr v-for="voucher in offers" :key="voucher.id" class="hover:bg-stone-50/50 dark:hover:bg-slate-800/40 transition-colors">
                                     <td class="py-3 px-4 font-mono font-bold text-amber-500 dark:text-amber-400" dir="ltr">{{ voucher.code }}</td>
                                     <td class="py-3 px-4 text-gray-800 dark:text-slate-200 font-semibold">
-                                        {{ voucher.discount_value }} {{ voucher.discount_type === 'percentage' ? '%' : $page.props.auth.restaurant?.currency }}
+                                        خصم
+                                        {{ voucher.discount_type === 'percentage'
+                                            ? `${formatDiscountVal(voucher.discount_value)}%`
+                                            : `${formatDiscountVal(voucher.discount_value)} ${formatCurr($page.props.auth.restaurant?.currency)}` }}
                                     </td>
                                     <td class="py-3 px-4 text-gray-600 dark:text-slate-400 text-xs">
                                         {{ voucher.starts_at ? new Date(voucher.starts_at).toLocaleString() : 'فوري' }}

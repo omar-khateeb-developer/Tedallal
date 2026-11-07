@@ -260,7 +260,7 @@ function drawWheel(angle: number) {
         ctx.shadowBlur = 5;
 
         const iconStr = slice.icon ? `${slice.icon} ` : '';
-        ctx.fillText(`${iconStr}${slice.label}`, wheelRadius - 16, 0);
+        ctx.fillText(`${iconStr}${formatSliceLabel(slice.label)}`, wheelRadius - 16, 0);
 
         ctx.restore();
     }
@@ -431,11 +431,52 @@ async function resetDemoSpin() {
     }
 }
 
+// Helper formatting functions for Syrian currency without decimals and professional wording
+function formatSliceLabel(label: string): string {
+    if (!label) return '';
+    let clean = label.trim().replace(/SYP/gi, 'ل.س');
+    clean = clean.replace(/(\d+)\.00(?!\d)/g, '$1');
+    return clean;
+}
+
+function formatVoucherDisplay(text?: string | null): string {
+    if (!text) return 'خصم خاص';
+    let clean = text.trim();
+
+    // Replace SYP or syp with ل.س
+    clean = clean.replace(/SYP/gi, 'ل.س');
+
+    // Remove .00 or trailing zero decimals e.g. 25.00 -> 25
+    clean = clean.replace(/(\d+)\.00(?!\d)/g, '$1');
+
+    if (clean.startsWith('خصم بقيمة ')) {
+        return clean;
+    }
+    if (clean.startsWith('خصم ')) {
+        const rest = clean.substring(4).trim();
+        return `خصم بقيمة ${rest}`;
+    }
+
+    return `خصم بقيمة ${clean}`;
+}
+
+function formatNumber(num: number | string): string {
+    const val = parseFloat(String(num));
+    if (isNaN(val)) return '0';
+    return val % 1 === 0 ? String(Math.round(val)) : val.toFixed(2).replace(/\.00$/, '');
+}
+
+function normalizeCurrency(curr?: string): string {
+    if (!curr || curr.toUpperCase() === 'SYP') return 'ل.س';
+    return curr;
+}
+
 // Share via WhatsApp
 function shareVoucherWhatsApp() {
     if (!voucher.value?.code) return;
+    const discountFormatted = formatVoucherDisplay(voucher.value.discount_text);
     const msg = encodeURIComponent(
-        `🎉 لقد ربحت للتو ${voucher.value.discount_text} في ${props.restaurant.name} عبر عجلة الحظ الذكية! استخدم كود الخصم: ${voucher.value.code}`
+        `🎉 لقد ربحت للتو ${discountFormatted} في ${props.restaurant.name} عبر عجلة الحظ الذكية! استخدم كود الخصم: ${voucher.value.code}`
     );
     window.open(`https://wa.me/?text=${msg}`, '_blank');
 }
@@ -665,10 +706,10 @@ onUnmounted(() => {
 
                             <span class="text-3xl block mb-2">🎉</span>
                             <h3 class="text-lg font-bold font-serif text-white">
-                                مبروك! لقد فزت بـ:
+                                مبروك! لقد ربحت:
                             </h3>
                             <div class="font-serif text-3xl sm:text-4xl font-extrabold bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#B38728] text-transparent bg-clip-text my-2">
-                                {{ voucher.discount_text }}
+                                {{ formatVoucherDisplay(voucher.discount_text) }}
                             </div>
 
                             <!-- Single-Use Voucher Code Container -->
@@ -700,7 +741,7 @@ onUnmounted(() => {
                                 </div>
                                 <div v-if="voucher.min_order_value > 0" class="flex items-center gap-2">
                                     <span>🛒</span>
-                                    <span>الحد الأدنى للطلب: {{ voucher.min_order_value }} {{ restaurant.currency }}</span>
+                                    <span>الحد الأدنى للطلب: {{ formatNumber(voucher.min_order_value) }} {{ normalizeCurrency(restaurant.currency) }}</span>
                                 </div>
                                 <div v-if="voucher.is_used" class="text-red-400 font-bold mt-1 text-center">
                                     تم استخدام هذا الكود بالفعل ✓
