@@ -1126,7 +1126,7 @@ onUnmounted(() => {
                         <circle cx="12" cy="18" r="1" fill="#D4AF37"/>
                     </svg>
                     <span class="text-xs sm:text-sm font-semibold tracking-widest text-[#FCF6BA]">
-                        {{ currentLocale === 'ar' ? 'مَنْظُومَةُ تَدَلَّلْ السَّحَابِيَّة • لِأَرْقَى الْمَطَاعِمِ وَالْفَنَادِقِ' : 'TEDALLAL BESPOKE RESTAURANT CLOUD' }}
+                        {{ currentLocale === 'ar' ? 'منظومة تدلَّل السحابية • لأرقى المطاعم والفنادق' : 'TEDALLAL BESPOKE RESTAURANT CLOUD' }}
                     </span>
                     <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[10px] text-emerald-300 font-bold tracking-normal">
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
@@ -1166,22 +1166,22 @@ onUnmounted(() => {
                         <h1 class="font-serif font-normal text-white">
                             <template v-if="heroMode === 'traditional'">
                                 <span class="block text-2xl sm:text-4xl lg:text-5xl text-stone-100 leading-relaxed font-bold drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] [text-shadow:_0_2px_10px_rgba(0,0,0,0.9),_0_0_1px_rgba(0,0,0,0.9)]">
-                                    <span class="inline-block">مَطْبَخٌ مُزْدَحِمٌ،</span>
-                                    <span class="inline-block">مَبِيعَاتٌ تَتَصَاعَدُ..</span>
+                                    <span class="inline-block">مطبخ مزدحم،</span>
+                                    <span class="inline-block">مبيعات تتصاعد..</span>
                                 </span>
                                 <span class="block mt-4 sm:mt-6 text-3xl sm:text-5xl lg:text-6xl font-extrabold text-rose-400 leading-[1.8] sm:leading-[1.9] lg:leading-[2.0] py-2 drop-shadow-[0_4px_24px_rgba(244,63,94,0.35)] [text-shadow:_0_2px_12px_rgba(0,0,0,0.95),_0_0_1px_rgba(0,0,0,0.95)]">
-                                    <span class="inline-block">وَأَرْبَاحُكَ الْحَقِيقِيَّةُ</span>
-                                    <span class="inline-block">تَتَبَخَّرُ بَيْنَ التَّطْبِيقَاتِ وَالْهَدْرِ!</span>
+                                    <span class="inline-block">وأرباحك الحقيقية</span>
+                                    <span class="inline-block">تتبخر بين التطبيقات والهَدْر!</span>
                                 </span>
                             </template>
                             <template v-else>
                                 <span class="block text-2xl sm:text-4xl lg:text-5xl text-white leading-relaxed font-bold drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] [text-shadow:_0_2px_10px_rgba(0,0,0,0.95),_0_0_1px_rgba(255,255,255,0.4)]">
-                                    <span class="inline-block">مَطْبَخٌ مُنَظَّمٌ كَالسَّاعَةِ،</span>
-                                    <span class="inline-block">طَلَبَاتٌ مُبَاشِرَةٌ..</span>
+                                    <span class="inline-block">مطبخ مُنظَّم كالساعة،</span>
+                                    <span class="inline-block">طلبات مباشرة..</span>
                                 </span>
                                 <span class="block mt-4 sm:mt-6 text-3xl sm:text-5xl lg:text-6xl font-black bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-transparent leading-[1.8] sm:leading-[1.9] lg:leading-[2.0] py-2 filter drop-shadow-[0_4px_20px_rgba(0,0,0,0.95)] drop-shadow-[0_0_30px_rgba(212,175,55,0.45)]">
-                                    <span class="inline-block">وَكُلُّ قِرْشٍ مِنْ أَرْبَاحِكَ</span>
-                                    <span class="inline-block">يَدْخُلُ جَيْبَكَ بِالْكَامِلِ!</span>
+                                    <span class="inline-block">وكل قرش من أرباحك</span>
+                                    <span class="inline-block">يدخل جيبك بالكامل!</span>
                                 </span>
                             </template>
                         </h1>
