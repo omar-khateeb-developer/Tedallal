@@ -39,6 +39,29 @@
             margin: 0 0 2mm 0;
         }
 
+        .daily-order-box {
+            text-align: center;
+            border: 2px solid #000;
+            border-radius: 4px;
+            padding: 2.5mm 1mm;
+            margin: 2mm 0 3mm 0;
+            background: #fff;
+        }
+
+        .daily-order-label {
+            font-size: 13px;
+            font-weight: 800;
+            margin-bottom: 1mm;
+        }
+
+        .daily-order-number {
+            font-size: 34px;
+            font-weight: 900;
+            line-height: 1.1;
+            font-family: monospace, 'Tajawal', sans-serif;
+            letter-spacing: -1px;
+        }
+
         .divider {
             border-top: 1px dashed #000;
             margin: 3mm 0;
@@ -128,11 +151,17 @@
         <div>فاتورة طلب</div>
     </div>
 
+    <!-- رقم الطلب اليومي المميز في سطر لوحده وبخط عريض وكبير -->
+    <div class="daily-order-box">
+        <div class="daily-order-label">رقم الطلب اليومي:</div>
+        <div class="daily-order-number">#{{ $order->short_order_number }}</div>
+    </div>
+
     <div class="divider"></div>
 
     <div class="info-row">
-        <span class="label">رقم الطلب:</span>
-        <span>#{{ $order->order_number }}</span>
+        <span class="label">الرمز المرجعي:</span>
+        <span dir="ltr" style="font-family: monospace; font-size: 11px; font-weight: 700;">{{ $order->order_number }}</span>
     </div>
     
     <div class="info-row">

@@ -98,4 +98,18 @@ class Order extends Model
     {
         return $this->hasOne(OrderWheelToken::class);
     }
+
+    /**
+     * الحصول على رقم الطلب اليومي المختصر المميز (مثل 24 من ORD-20261108-0024)
+     */
+    public function getShortOrderNumberAttribute(): string
+    {
+        if (!$this->order_number) {
+            return '';
+        }
+        $parts = explode('-', $this->order_number);
+        $last = end($parts);
+        $num = (int) $last;
+        return $num > 0 ? (string) $num : (string) $this->order_number;
+    }
 }
