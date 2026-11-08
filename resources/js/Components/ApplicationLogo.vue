@@ -31,21 +31,21 @@ withDefaults(defineProps<Props>(), {
         >
             <img
                 v-if="variant === 'pure'"
-                src="/images/tedallal-golden-logo-pure.png"
+                src="/images/tedallal-luxury-transparent.png"
                 :alt="alt"
                 class="w-full h-full object-contain filter drop-shadow-md"
-                onerror="this.src='/images/tedallal-golden-crop.png'"
+                onerror="this.src='/images/tedallal-luxury-transparent.png'"
             />
             <img
                 v-else-if="variant === 'full'"
                 src="/images/tedallal-golden-logo.png"
                 :alt="alt"
                 class="w-full h-full object-contain filter drop-shadow-md"
-                onerror="this.src='/images/tedallal-golden-crop.png'"
+                onerror="this.src='/images/tedallal-luxury-transparent.png'"
             />
             <img
                 v-else
-                src="/images/tedallal-golden-crop.png"
+                src="/images/tedallal-luxury-transparent.png"
                 :alt="alt"
                 class="w-full h-full object-contain filter drop-shadow-md"
                 onerror="this.src='/images/logo.jpg'"

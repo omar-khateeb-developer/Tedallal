@@ -2,7 +2,8 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { translations, type Locale } from '@/locales/landing';
-import { useTheme } from '@/composables/useTheme';
+import { useTheme } from '@/composables/useTheme'
+import TedallalHeroLogo from '@/Components/TedallalHeroLogo.vue';
 
 interface Props {
     canLogin?: boolean;
@@ -718,7 +719,7 @@ onUnmounted(() => {
                         <Link href="/" class="flex items-center gap-2.5 sm:gap-3 group">
                             <div class="relative w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-white dark:bg-[#131722] border border-amber-500/25 dark:border-amber-500/35 p-1.5 shadow-sm group-hover:border-amber-500/60 transition-all duration-300 flex items-center justify-center">
                                 <img
-                                    src="/images/tedallal-golden-crop.png"
+                                    src="/images/tedallal-luxury-transparent.png"
                                     alt="تدلّل"
                                     class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                                     onerror="this.src='/images/tedallal-golden-logo.png'"
@@ -1110,20 +1111,9 @@ onUnmounted(() => {
             <!-- Centered Content -->
             <div class="relative z-10 w-full max-w-6xl mx-auto px-6 sm:px-12 py-24 flex flex-col items-center text-center">
 
-                <!-- Tedallal Bespoke Gold Cutout Logo Emblem (شعار تدلل الذهبي المُفرّغ في المنتصف) -->
-                <div class="mb-5 flex flex-col items-center select-none group relative">
-                    <!-- Ambient Golden Aura -->
-                    <div class="absolute -inset-6 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.38)_0%,rgba(245,158,11,0.12)_55%,transparent_75%)] blur-2xl pointer-events-none animate-pulse"></div>
-
-                    <div class="relative tedallal-hero-emblem overflow-hidden rounded-2xl">
-                        <img
-                            src="/images/tedallal-golden-logo-pure.png"
-                            alt="تدلل - Tedallal Bespoke Luxury Hospitality"
-                            class="h-16 sm:h-20 lg:h-24 w-auto object-contain filter drop-shadow-[0_8px_25px_rgba(212,175,55,0.6)] group-hover:scale-105 group-hover:drop-shadow-[0_12px_35px_rgba(212,175,55,0.85)] transition-all duration-500"
-                        />
-                        <!-- Fluid Shimmer Reflection -->
-                        <div class="tedallal-hero-shimmer absolute inset-0 pointer-events-none"></div>
-                    </div>
+                <!-- Tedallal Bespoke Animated Vector Assembly & 3D Emblem Showcase -->
+                <div class="mb-6 w-full flex flex-col items-center">
+                    <TedallalHeroLogo width-class="w-64 sm:w-80 md:w-96 lg:w-[420px]" />
                 </div>
 
                 <!-- Royal Badge with Live Engine Status -->

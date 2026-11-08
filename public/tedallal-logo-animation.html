@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تدلّل | المنظومة السحابية الذكية — استعراض تحريك الشعار المتجهي (Vector Assembly & Trim Paths)</title>
+    <!-- Google Fonts: Cairo & Cinzel for luxury typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Cinzel:wght@700;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --gold-primary: #D4AF37;
+            --gold-light: #FCF6BA;
+            --gold-deep: #AA771C;
+            --gold-highlight: #FFF8DC;
+            --gold-glow: rgba(212, 175, 55, 0.45);
+            --bg-obsidian: #09090b;
+            --bg-navy: #080d18;
+            --bg-grid: #111115;
+            --speed-factor: 1;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--bg-obsidian);
+            color: #f1f5f9;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            transition: background-color 0.5s ease;
+        }
+
+        /* Luxury Dark Checkerboard Background (matching reference PNG preview) */
+        body.theme-checkerboard {
+            background-color: #0c0c0e;
+            background-image: 
+                linear-gradient(45deg, #131317 25%, transparent 25%), 
+                linear-gradient(-45deg, #131317 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #131317 75%), 
+                linear-gradient(-45deg, transparent 75%, #131317 75%);
+            background-size: 28px 28px;
+            background-position: 0 0, 0 14px, 14px -14px, -14px 0px;
+        }
+
+        body.theme-obsidian {
+            background-color: #08080a;
+            background-image: radial-gradient(circle at 50% 40%, rgba(212, 175, 55, 0.08) 0%, transparent 65%);
+        }
+
+        body.theme-navy {
+            background-color: #060a12;
+            background-image: radial-gradient(circle at 50% 40%, rgba(212, 175, 55, 0.12) 0%, rgba(10, 20, 38, 0.95) 70%);
+        }
+
+        /* Top Header Bar */
+        header {
+            padding: 18px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(10, 10, 12, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .header-brand-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: radial-gradient(circle, #221c0b, #000);
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.25);
+        }
+
+        .header-brand-text h1 {
+            font-size: 1.15rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff, #FCF6BA, #D4AF37);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.01em;
+        }
+
+        .header-brand-text p {
+            font-size: 0.78rem;
+            color: #94a3b8;
+        }
+
+        .badge-status {
+            padding: 5px 12px;
+            border-radius: 9999px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            background: rgba(212, 175, 55, 0.12);
+            border: 1px solid rgba(212, 175, 55, 0.35);
+            color: #FCF6BA;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .pulse-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #D4AF37;
+            box-shadow: 0 0 8px #D4AF37;
+            animation: pulseDot 2s infinite;
+        }
+
+        @keyframes pulseDot {
+            0%, 100% { opacity: 0.5; transform: scale(0.9); }
+            50% { opacity: 1; transform: scale(1.3); }
+        }
+
+        /* Main Container */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 20px 40px;
+            position: relative;
+        }
+
+        /* Particle Background Canvas */
+        #particleCanvas {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Stage Viewport */
+        .stage-wrapper {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 960px;
+            aspect-ratio: 1024 / 764;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+
+        .logo-svg-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            filter: drop-shadow(0 0 25px rgba(212, 175, 55, 0.35));
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Living Floating & Shimmer effect in Bloom mode */
+        .logo-svg-container.living-bloom {
+            animation: logoLevitation 4.5s ease-in-out infinite;
+        }
+
+        @keyframes logoLevitation {
+            0%, 100% {
+                transform: translateY(0px) rotate(0deg);
+                filter: drop-shadow(0 0 25px rgba(212, 175, 55, 0.35)) drop-shadow(0 15px 35px rgba(0, 0, 0, 0.7));
+            }
+            50% {
+                transform: translateY(-8px) rotate(0.4deg);
+                filter: drop-shadow(0 0 45px rgba(212, 175, 55, 0.6)) drop-shadow(0 25px 45px rgba(0, 0, 0, 0.9));
+            }
+        }
+
+        /* Reference Image Overlay for 1:1 Comparison */
+        .reference-overlay {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 5;
+        }
+
+        /* ============================================================
+           SVG STROKE ANIMATION (TRIM PATHS MATHEMATICS)
+           ============================================================ */
+
+        .v-stroke {
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            will-change: stroke-dashoffset, opacity, fill;
+        }
+
+        /* Dynamic progressive drawing with stroke-dashoffset */
+        .draw-active .v-stroke {
+            stroke-dasharray: var(--path-len, 500px);
+            stroke-dashoffset: var(--path-len, 500px);
+            animation: drawTrimPath var(--duration, 2s) cubic-bezier(0.35, 0, 0.25, 1) forwards;
+            animation-delay: var(--delay, 0s);
+        }
+
+        @keyframes drawTrimPath {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        /* Phase 1: Cosmic Orbit Rings */
+        .phase-orbits {
+            --duration: calc(2.4s / var(--speed-factor));
+            --delay: calc(0.1s / var(--speed-factor));
+        }
+
+        /* Phase 2: Base Platter & Pearls */
+        .phase-plate {
+            --duration: calc(1.8s / var(--speed-factor));
+            --delay: calc(0.6s / var(--speed-factor));
+        }
+        .phase-pearls {
+            opacity: 0;
+            animation: pearlPopIn calc(0.8s / var(--speed-factor)) cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            animation-delay: calc(1.4s / var(--speed-factor));
+        }
+
+        /* Phase 3: Architectural Cloche & Handle */
+        .phase-dome {
+            --duration: calc(2.2s / var(--speed-factor));
+            --delay: calc(1.5s / var(--speed-factor));
+        }
+        .phase-knob {
+            --duration: calc(1.4s / var(--speed-factor));
+            --delay: calc(1.8s / var(--speed-factor));
+        }
+
+        /* Phase 4: Digital Network Grid */
+        .phase-grid {
+            --duration: calc(1.8s / var(--speed-factor));
+            --delay: calc(2.4s / var(--speed-factor));
+        }
+        .phase-nodes {
+            opacity: 0;
+            animation: nodePulse calc(0.6s / var(--speed-factor)) ease-out forwards;
+            animation-delay: calc(3.0s / var(--speed-factor));
+        }
+
+        
+        /* Refined Calligraphy Phases */
+        .phase-callig-dots {
+            --duration: calc(1.4s / var(--speed-factor));
+            --delay: calc(2.4s / var(--speed-factor));
+        }
+        .phase-shaddah {
+            --duration: calc(1.2s / var(--speed-factor));
+            --delay: calc(3.4s / var(--speed-factor));
+        }
+        .phase-eng-letters {
+            --duration: calc(1.8s / var(--speed-factor));
+            --delay: calc(4.6s / var(--speed-factor));
+        }
+        .phase-ar-bottom {
+            --duration: calc(1.8s / var(--speed-factor));
+            --delay: calc(5.0s / var(--speed-factor));
+        }
+
+        /* Phase 5: Arabic Calligraphy "تدلّل" */
+        .phase-calligraphy {
+            --duration: calc(2.4s / var(--speed-factor));
+            --delay: calc(2.8s / var(--speed-factor));
+        }
+        .phase-shaddah {
+            --duration: calc(1.2s / var(--speed-factor));
+            --delay: calc(3.8s / var(--speed-factor));
+        }
+
+        /* Phase 6: Royal Crown & Jewels */
+        .phase-crown {
+            --duration: calc(2.0s / var(--speed-factor));
+            --delay: calc(3.6s / var(--speed-factor));
+        }
+        .phase-crown-jewels {
+            opacity: 0;
+            animation: jewelGlow calc(0.9s / var(--speed-factor)) cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            animation-delay: calc(4.6s / var(--speed-factor));
+        }
+
+        /* Phase 7: Typography */
+        .phase-text {
+            opacity: 0;
+            animation: textReveal calc(1.4s / var(--speed-factor)) ease-out forwards;
+            animation-delay: calc(4.8s / var(--speed-factor));
+        }
+
+        /* Phase 8: Final Gold Metallic Bloom (Transitions to Full 3D Luxury) */
+        .v-fill-target {
+            opacity: 0;
+            transition: opacity calc(1.6s / var(--speed-factor)) ease;
+        }
+
+        .living-bloom .v-fill-target,
+        .state-bloomed .v-fill-target,
+        .living-bloom .phase-text,
+        .state-bloomed .phase-text {
+            opacity: 1 !important;
+            transform: none !important;
+        }
+
+        @keyframes pearlPopIn {
+            0% { opacity: 0; transform: scale(0); transform-origin: center; }
+            70% { opacity: 1; transform: scale(1.25); transform-origin: center; }
+            100% { opacity: 1; transform: scale(1); transform-origin: center; }
+        }
+
+        @keyframes nodePulse {
+            0% { opacity: 0; transform: scale(0); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes jewelGlow {
+            0% { opacity: 0; transform: scale(0); filter: brightness(3); }
+            100% { opacity: 1; transform: scale(1); filter: brightness(1); }
+        }
+
+        @keyframes textReveal {
+            0% { opacity: 0; transform: translateY(12px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Orbital Continuous Cosmic Spin */
+        .spin-orbit-1 {
+            animation: spinOrbitCW 32s linear infinite;
+            transform-origin: 512px 420px;
+        }
+
+        .spin-orbit-2 {
+            animation: spinOrbitCCW 24s linear infinite;
+            transform-origin: 512px 420px;
+        }
+
+        @keyframes spinOrbitCW {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes spinOrbitCCW {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(-360deg); }
+        }
+
+        /* Wireframe Mode Specifics */
+        .mode-wireframe .v-fill-target {
+            opacity: 0 !important;
+        }
+        .mode-wireframe .v-stroke {
+            stroke: #00ffff !important;
+            filter: drop-shadow(0 0 4px #00ffff) !important;
+        }
+        .mode-wireframe .spin-orbit-1,
+        .mode-wireframe .spin-orbit-2 {
+            stroke: #ff00ff !important;
+            filter: drop-shadow(0 0 3px #ff00ff) !important;
+        }
+
+        /* ============================================================
+           INTERACTIVE CONTROL PANEL
+           ============================================================ */
+
+        .controls-card {
+            width: 100%;
+            max-width: 960px;
+            background: rgba(18, 18, 22, 0.75);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(212, 175, 55, 0.25);
+            border-radius: 20px;
+            padding: 22px 28px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .controls-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .controls-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .group-label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #94a3b8;
+            margin-inline-end: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Luxury Buttons */
+        .btn-luxury {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(170, 119, 28, 0.25));
+            border: 1px solid rgba(212, 175, 55, 0.45);
+            color: #FCF6BA;
+            padding: 9px 18px;
+            border-radius: 12px;
+            font-size: 0.84rem;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            user-select: none;
+        }
+
+        .btn-luxury:hover {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.3), rgba(170, 119, 28, 0.45));
+            border-color: #FCF6BA;
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.35);
+            transform: translateY(-2px);
+            color: #fff;
+        }
+
+        .btn-luxury:active {
+            transform: translateY(0);
+        }
+
+        .btn-luxury.active {
+            background: linear-gradient(135deg, #BF953F, #AA771C);
+            border-color: #FCF6BA;
+            color: #000;
+            font-weight: 800;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #cbd5e1;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .btn-secondary.active {
+            background: rgba(212, 175, 55, 0.2);
+            border-color: rgba(212, 175, 55, 0.5);
+            color: #FCF6BA;
+        }
+
+        /* Slider Controls */
+        .slider-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .slider-wrapper input[type="range"] {
+            accent-color: #D4AF37;
+            cursor: pointer;
+            width: 110px;
+        }
+
+        .slider-val {
+            font-size: 0.75rem;
+            color: #FCF6BA;
+            font-weight: 700;
+            min-width: 38px;
+        }
+
+        /* Timeline Progress Bar */
+        .timeline-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 9999px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .timeline-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #AA771C, #D4AF37, #FCF6BA);
+            box-shadow: 0 0 10px #D4AF37;
+            border-radius: 9999px;
+            transition: width 0.1s linear;
+        }
+
+        /* Info & Export Specs Cards */
+        .specs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 960px;
+            margin-top: 28px;
+            z-index: 20;
+        }
+
+        .spec-box {
+            background: rgba(14, 14, 18, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            text-align: start;
+        }
+
+        .spec-box h3 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #FCF6BA;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .spec-box p, .spec-box li {
+            font-size: 0.82rem;
+            color: #94a3b8;
+            line-height: 1.6;
+        }
+
+        .spec-box ul {
+            padding-inline-start: 18px;
+        }
+
+        .code-snippet {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 0.78rem;
+            color: #FCF6BA;
+            overflow-x: auto;
+            direction: ltr;
+            text-align: left;
+        }
+
+        /* Toast Notice */
+        .toast-notice {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid #D4AF37;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            z-index: 100;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none;
+        }
+
+        .toast-notice.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            header {
+                padding: 14px 18px;
+                flex-direction: column;
+                gap: 12px;
+                align-items: flex-start;
+            }
+            .controls-card {
+                padding: 16px;
+            }
+            .controls-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body class="theme-checkerboard">
+
+    <!-- Header -->
+    <header>
+        <div class="header-brand">
+            <div class="header-brand-icon">
+                <svg width="24" height="24" viewBox="0 0 100 100" fill="none">
+                    <path d="M20 70 Q50 75 80 70" stroke="#D4AF37" stroke-width="6" stroke-linecap="round"/>
+                    <path d="M25 70 C25 35 75 35 75 70" stroke="#D4AF37" stroke-width="6" stroke-linecap="round"/>
+                    <circle cx="50" cy="30" r="6" fill="#D4AF37"/>
+                    <path d="M36 30 L32 16 L50 24 L68 16 L64 30 Z" fill="#D4AF37"/>
+                </svg>
+            </div>
+            <div class="header-brand-text">
+                <h1>تدلّل • استعراض تجميع وتحريك الشعار المتجهي</h1>
+                <p>Mathematical Vector Stroke Assembly (Trim Paths) & 3D Luxury Living Bloom</p>
+            </div>
+        </div>
+        <div class="badge-status">
+            <span class="pulse-dot"></span>
+            <span>معاينة حيّة للمسارات المتجهية (Pure SVG & CSS)</span>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main>
+        <!-- Interactive Particle Canvas -->
+        <canvas id="particleCanvas"></canvas>
+
+        <!-- Stage Viewport -->
+        <div class="stage-wrapper">
+            <!-- 1:1 Reference Image Overlay (Toggleable / Slider) -->
+            <img id="refOverlay" 
+                 src="images/tedallal-vector-reference.jpg" 
+                 alt="Reference Logo Overlay" 
+                 class="reference-overlay"
+                 onerror="this.src='images/tedallal-golden-logo.png'">
+
+            <!-- SVG Vector Engine -->
+            <div id="svgContainer" class="logo-svg-container draw-active living-bloom">
+                <svg viewBox="0 0 1024 764" xmlns="http://www.w3.org/2000/svg" class="w-full h-full select-none" style="overflow: visible;">
+                    
+                    <defs>
+                        <!-- Linear Metallic Gold Gradients -->
+                        <linearGradient id="goldGradSheen" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#FFF8DC"/>
+                            <stop offset="25%" stop-color="#FCF6BA"/>
+                            <stop offset="50%" stop-color="#D4AF37"/>
+                            <stop offset="75%" stop-color="#AA771C"/>
+                            <stop offset="100%" stop-color="#805A10"/>
+                        </linearGradient>
+
+                        <linearGradient id="goldGradHorizontal" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#AA771C"/>
+                            <stop offset="30%" stop-color="#FCF6BA"/>
+                            <stop offset="50%" stop-color="#FFF8DC"/>
+                            <stop offset="70%" stop-color="#FCF6BA"/>
+                            <stop offset="100%" stop-color="#AA771C"/>
+                        </linearGradient>
+
+                        <linearGradient id="goldGradVertical" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#FFF8DC"/>
+                            <stop offset="35%" stop-color="#FCF6BA"/>
+                            <stop offset="70%" stop-color="#D4AF37"/>
+                            <stop offset="100%" stop-color="#805A10"/>
+                        </linearGradient>
+
+                        <!-- Radial Glow for Pearls & Knobs -->
+                        <radialGradient id="pearlRadial" cx="35%" cy="35%" r="65%">
+                            <stop offset="0%" stop-color="#FFFFFF"/>
+                            <stop offset="40%" stop-color="#FCF6BA"/>
+                            <stop offset="75%" stop-color="#D4AF37"/>
+                            <stop offset="100%" stop-color="#805A10"/>
+                        </radialGradient>
+
+                        <!-- Glowing Ambient Drop Shadow Filter -->
+                        <filter id="goldGlow" x="-20%" y="-20%" width="140%" height="140%">
+                            <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur"/>
+                            <feFlood flood-color="#D4AF37" flood-opacity="0.65" result="flood"/>
+                            <feComposite in2="blur" operator="in" result="glow"/>
+                            <feMerge>
+                                <feMergeNode in="glow"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+
+                        <!-- Subtle Specular Reflection Filter -->
+                        <filter id="luxurySpecular">
+                            <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000000" flood-opacity="0.85"/>
+                            <feDropShadow dx="0" dy="0" stdDeviation="12" flood-color="#D4AF37" flood-opacity="0.35"/>
+                        </filter>
+                    </defs>
+
+                    <!-- ========================================================
+                         LAYER 1: COSMIC ORBITAL RINGS & AURA
+                         ======================================================== -->
+                    <g id="layer-orbits" class="phase-orbits">
+                        <!-- Ambient Circular Halo -->
+                        <circle cx="512" cy="420" r="285" 
+                                class="v-stroke" 
+                                stroke="url(#goldGradHorizontal)" 
+                                stroke-width="1.5" 
+                                stroke-opacity="0.35" 
+                                stroke-dasharray="8 6"/>
+
+                        <!-- Tilted Swirling Orbit 1 -->
+                        <g class="spin-orbit-1">
+                            <ellipse cx="512" cy="420" rx="315" ry="210" 
+                                     transform="rotate(-22 512 420)"
+                                     class="v-stroke" 
+                                     stroke="url(#goldGradSheen)" 
+                                     stroke-width="2.5" 
+                                     stroke-opacity="0.85"
+                                     filter="url(#goldGlow)"/>
+                        </g>
+
+                        <!-- Tilted Swirling Orbit 2 -->
+                        <g class="spin-orbit-2">
+                            <ellipse cx="512" cy="420" rx="295" ry="195" 
+                                     transform="rotate(38 512 420)"
+                                     class="v-stroke" 
+                                     stroke="url(#goldGradHorizontal)" 
+                                     stroke-width="2.0" 
+                                     stroke-opacity="0.75"
+                                     filter="url(#goldGlow)"/>
+                        </g>
+                    </g>
+
+                    <!-- ========================================================
+                         LAYER 2: SERVING PLATTER TRAY & 3 BALANCING PEARLS
+                         ======================================================== -->
+                    <g id="layer-plate" class="phase-plate" filter="url(#luxurySpecular)">
+                        <!-- Upper Platter Rail -->
+                        <path class="v-stroke" 
+                              stroke="url(#goldGradHorizontal)" 
+                              stroke-width="6" 
+                              d="M 305 520 L 719 520" />
+                        
+                        <!-- Lower Platter Lip -->
+                        <path class="v-stroke" 
+                              stroke="url(#goldGradHorizontal)" 
+                              stroke-width="4" 
+                              d="M 322 531 L 702 531" />
+
+                        <!-- Left Tray Bevel Curve -->
+                        <path class="v-stroke" 
+                              stroke="url(#goldGradSheen)" 
+                              stroke-width="5" 
+                              d="M 305 520 C 298 523, 308 531, 322 531" />
+
+                        <!-- Right Tray Bevel Curve -->
+                        <path class="v-stroke" 
+                              stroke="url(#goldGradSheen)" 
+                              stroke-width="5" 
+                              d="M 719 520 C 726 523, 716 531, 702 531" />
+
+                        <!-- Platter 3D Metallic Fill (Blooms in Final State) -->
+                        <polygon class="v-fill-target" 
+                                 points="305,520 719,520 702,531 322,531" 
+                                 fill="url(#goldGradSheen)" 
+                                 opacity="0.9"/>
+                    </g>
+
+                    <!-- Three Balancing Pearls Beneath Platter -->
+                    <g id="layer-pearls" class="phase-pearls">
+                        <!-- Left Pearl -->
+                        <circle cx="474" cy="542" r="5.5" 
+                                fill="url(#pearlRadial)" 
+                                stroke="#AA771C" 
+                                stroke-width="1.2" 
+                                filter="url(#goldGlow)"/>
+                        <!-- Center Pearl (Larger) -->
+                        <circle cx="512" cy="542" r="7.5" 
+                                fill="url(#pearlRadial)" 
+                                stroke="#AA771C" 
+                                stroke-width="1.5" 
+                                filter="url(#goldGlow)"/>
+                        <!-- Right Pearl -->
+                        <circle cx="550" cy="542" r="5.5" 
+                                fill="url(#pearlRadial)" 
+                                stroke="#AA771C" 
+                                stroke-width="1.2" 
+                                filter="url(#goldGlow)"/>
+                    </g>
+
+                    <!-- ========================================================
+                         LAYER 3: CLOCHE DOME SILHOUETTE & ROYAL HANDLE KNOB
+                         ======================================================== -->
+                    <g id="layer-dome" class="phase-dome" filter="url(#luxurySpecular)">
+                        <!-- Left Cloche Sweeping Ribbon (Thick-to-Thin Architectural Arch) -->
+                        <path class="v-stroke" 
+                              stroke="url(#goldGradVertical)" 
+                              stroke-width="12" 
+                              d="M 505 304 C 445 315, 360 365, 328 440 C 314 472, 318 505, 324 520" />
+                        
+                        <!-- Inner Edge of Left Ribbon -->
+                        <path class="v-stroke" 
+                              stroke="url(#goldGradSheen)" 
+                              stroke-width="4" 
+                              d="M 505 320 C 455 332, 385 380, 355 450 C 342 478, 345 505, 348 520" />
+
+                        <!-- Right Dome Silhouette Contour -->
+                        <path class="v-stroke" 
+                              stroke="url(#goldGradVertical)" 
+                              stroke-width="7" 
+                              d="M 519 304 C 585 315, 680 375, 710 455 C 720 482, 720 505, 718 520" />
+
+                        <!-- Left Ribbon 3D Solid Metallic Shimmer Fill -->
+                        <path class="v-fill-target" 
+                              d="M 505 304 C 445 315, 360 365, 328 440 C 314 472, 318 505, 324 520 L 348 520 C 345 505, 342 478, 355 450 C 385 380, 455 332, 505 320 Z" 
+                              fill="url(#goldGradSheen)" 
+                              opacity="0.95"/>
+                    </g>
+
+                    <!-- Cloche Handle Knob (Finial) -->
+                    <g id="layer-knob" class="phase-knob">
+                        <!-- Neck Stem -->
+                        <path class="v-stroke" 
+                              stroke="url(#goldGradVertical)" 
+                              stroke-width="4" 
+                              d="M 508 290 L 508 304 M 516 290 L 516 304" />
+                        
+                        <!-- Sphere Knob -->
+                        <circle cx="512" cy="274" r="17.5" 
+                                class="v-stroke" 
+                                stroke="url(#goldGradSheen)" 
+                                stroke-width="4"/>
+
+                        <!-- Sphere 3D Metallic Fill -->
+                        <circle cx="512" cy="274" r="16" 
+                                class="v-fill-target" 
+                                fill="url(#pearlRadial)" 
+                                filter="url(#goldGlow)"/>
+                    </g>
+
+                    <!-- ========================================================
+                         LAYER 4: DIGITAL NETWORK GRID & DATA NODES (Right Hemisphere)
+                         ======================================================== -->
+                    <g id="layer-grid" class="phase-grid">
+                        <!-- Latitude 1 (Upper Curve) -->
+                        <path class="v-stroke" 
+                              stroke="url(#goldGradHorizontal)" 
+                              stroke-width="3" 
+                              stroke-opacity="0.8" 
+                              d="M 580 405 C 625 415, 668 435, 692 460" />
+
+                        <!-- Latitude 2 (Mid Curve) -->
+                        <path class="v-stroke" 
+                              stroke="url(#goldGradHorizontal)" 
+                              stroke-width="3.5" 
+                              stroke-opacity="0.85" 
+                              d="M 550 450 C 610 460, 670 475, 710 500" />
+
+                        <!-- Latitude 3 (Lower Curve) -->
+                        <path class="v-stroke" 
+                              stroke="url(#goldGradHorizontal)" 
+                              stroke-width="3" 
+                              stroke-opacity="0.8" 
+                              d="M 535 490 C 595 498, 655 508, 715 520" />
+
+                        <!-- Longitude Spoke 1 -->
+                        <path class="v-stroke" 
+                              stroke="url(#goldGradVertical)" 
+                              stroke-width="3" 
+                              stroke-opacity="0.75" 
+                              d="M 605 385 C 612 435, 616 480, 618 520" />
+
+                        <!-- Longitude Spoke 2 -->
+                        <path class="v-stroke" 
+                              stroke="url(#goldGradVertical)" 
+                              stroke-width="3" 
+                              stroke-opacity="0.75" 
+                              d="M 660 420 C 665 460, 670 495, 672 520" />
+                    </g>
+
+                    <!-- Network Data Nodes (Glowing Hubs) -->
+                    <g id="layer-nodes" class="phase-nodes">
+                        <circle cx="605" cy="410" r="4.5" fill="url(#pearlRadial)" filter="url(#goldGlow)"/>
+                        <circle cx="660" cy="432" r="4.5" fill="url(#pearlRadial)" filter="url(#goldGlow)"/>
+                        <circle cx="692" cy="460" r="5.0" fill="url(#pearlRadial)" filter="url(#goldGlow)"/>
+                        <circle cx="612" cy="455" r="4.5" fill="url(#pearlRadial)" filter="url(#goldGlow)"/>
+                        <circle cx="665" cy="470" r="4.5" fill="url(#pearlRadial)" filter="url(#goldGlow)"/>
+                        <circle cx="710" cy="500" r="5.0" fill="url(#pearlRadial)" filter="url(#goldGlow)"/>
+                        <circle cx="616" cy="495" r="4.5" fill="url(#pearlRadial)" filter="url(#goldGlow)"/>
+                        <circle cx="670" cy="505" r="4.5" fill="url(#pearlRadial)" filter="url(#goldGlow)"/>
+                    </g>
+
+                    <!-- ========================================================
+                         LAYER 5: ROYAL ARABIC CALLIGRAPHY "تدلّل" INSIDE DOME
+                         (100% Vector Traced from Official Brand Artwork)
+                         ======================================================== -->
+                    <!-- ========================================================
+                         LAYER 5: ROYAL ARABIC CALLIGRAPHY "تدلّل" INSIDE DOME
+                         (Authentic Mathematical Calligraphic Pen Strokes)
+                         ======================================================== -->
+                    <!-- ========================================================
+                         LAYER 5: ROYAL ARABIC CALLIGRAPHY "تدلّل" INSIDE DOME
+                         (Authentic Arabic Calligraphic Pen Strokes - ت د ل ل ّ)
+                         ======================================================== -->
+                    <g id="layer-calligraphy" filter="url(#luxurySpecular)">
+                        <!-- 1. Taa Dots (نقطتا التاء) -->
+                        <g id="callig_taa_dots" class="phase-callig-dots">
+                            <circle cx="594" cy="288" r="5" fill="url(#pearlRadial)" stroke="#AA771C" stroke-width="1.2" filter="url(#goldGlow)"/>
+                            <circle cx="612" cy="288" r="5" fill="url(#pearlRadial)" stroke="#AA771C" stroke-width="1.2" filter="url(#goldGlow)"/>
+                        </g>
+
+                        <!-- 2. Taa Head & Body (حرف التاء - ينساب من اليمين نحو الدال) -->
+                        <path id="callig_taa" 
+                              class="v-stroke phase-calligraphy" 
+                              stroke="url(#goldGradSheen)" 
+                              stroke-width="7" 
+                              stroke-linecap="round" 
+                              stroke-linejoin="round" 
+                              d="M 626 325 C 632 360, 616 396, 584 408 L 562 410" />
+
+                        <!-- 3. Dal (حرف الدال - يرتفع في الوسط وينحدر) -->
+                        <path id="callig_dal" 
+                              class="v-stroke phase-calligraphy" 
+                              stroke="url(#goldGradSheen)" 
+                              stroke-width="7" 
+                              stroke-linecap="round" 
+                              stroke-linejoin="round" 
+                              d="M 562 410 C 556 380, 544 366, 536 368 C 528 372, 524 395, 520 408" />
+
+                        <!-- 4. First Lam (اللام الأولى - عمود رأسي صاعد نحو مقبض القبة) -->
+                        <path id="callig_lam1" 
+                              class="v-stroke phase-calligraphy" 
+                              stroke="url(#goldGradVertical)" 
+                              stroke-width="7.5" 
+                              stroke-linecap="round" 
+                              stroke-linejoin="round" 
+                              d="M 520 408 L 520 264 C 520 256, 514 256, 512 264" />
+
+                        <!-- 5. Shaddah (الشدّة الملكية فوق اللام الأولى) -->
+                        <path id="callig_shaddah" 
+                              class="v-stroke phase-shaddah" 
+                              stroke="url(#goldGradSheen)" 
+                              stroke-width="4.5" 
+                              stroke-linecap="round" 
+                              stroke-linejoin="round" 
+                              d="M 540 252 Q 547 262 553 250 Q 559 262 566 252 Q 553 274 540 252 Z" />
+
+                        <!-- 6. Second Lam (اللام الثانية - تلتف في قوس هلالي واسع يشكل كاسة اللام) -->
+                        <path id="callig_lam2" 
+                              class="v-stroke phase-calligraphy" 
+                              stroke="url(#goldGradSheen)" 
+                              stroke-width="7.5" 
+                              stroke-linecap="round" 
+                              stroke-linejoin="round" 
+                              d="M 520 408 C 488 350, 448 300, 410 285 C 360 330, 340 405, 355 455 C 375 488, 450 490, 495 465" />
+                    </g>
+
+                    <!-- ========================================================
+                         LAYER 6: 5-POINT ROYAL CROWN & JEWEL FINIALS
+                         ======================================================== -->
+                    <g id="layer-crown" class="phase-crown" filter="url(#luxurySpecular)">
+                        <!-- Crown Curved Base -->
+                        <path class="v-stroke" 
+                              stroke="url(#goldGradHorizontal)" 
+                              stroke-width="5" 
+                              d="M 388 268 C 440 252, 584 252, 636 268" />
+
+                        <!-- Inner Cutout Clearance Arch (Resting above knob) -->
+                        <path class="v-stroke" 
+                              stroke="url(#goldGradSheen)" 
+                              stroke-width="3.5" 
+                              d="M 488 262 C 496 248, 528 248, 536 262" />
+
+                        <!-- Crown 5-Point Zigzag Contour -->
+                        <path class="v-stroke" 
+                              stroke="url(#goldGradSheen)" 
+                              stroke-width="5.5" 
+                              d="M 388 268 L 374 209 L 415 238 L 445 189 L 480 226 L 512 159 L 544 226 L 580 189 L 610 238 L 650 209 L 636 268" />
+
+                        <!-- 3D Facet Bevel Spine Lines -->
+                        <path class="v-stroke" 
+                              stroke="url(#goldGradSheen)" 
+                              stroke-width="2.5" 
+                              stroke-opacity="0.85" 
+                              d="M 512 159 L 512 254 M 445 189 L 465 258 M 374 209 L 405 264 M 580 189 L 559 258 M 650 209 L 619 264" />
+
+                        <!-- Crown Solid Metallic Fill (Blooms in Final State) -->
+                        <path class="v-fill-target" 
+                              d="M 388 268 L 374 209 L 415 238 L 445 189 L 480 226 L 512 159 L 544 226 L 580 189 L 610 238 L 650 209 L 636 268 C 584 252, 440 252, 388 268 Z" 
+                              fill="url(#goldGradSheen)" 
+                              opacity="0.95"/>
+                    </g>
+
+                    <!-- The 5 Crown Jewels (Golden Pearl Spheres) -->
+                    <g id="layer-crown-jewels" class="phase-crown-jewels">
+                        <!-- Tip 1 (Outer Left) -->
+                        <circle cx="374" cy="203" r="7.5" fill="url(#pearlRadial)" stroke="#AA771C" stroke-width="1.2" filter="url(#goldGlow)"/>
+                        <!-- Tip 2 (Mid Left) -->
+                        <circle cx="445" cy="181" r="9.0" fill="url(#pearlRadial)" stroke="#AA771C" stroke-width="1.5" filter="url(#goldGlow)"/>
+                        <!-- Tip 3 (Center Top - Grand Jewel) -->
+                        <circle cx="512" cy="148" r="12.5" fill="url(#pearlRadial)" stroke="#AA771C" stroke-width="2.0" filter="url(#goldGlow)"/>
+                        <!-- Tip 4 (Mid Right) -->
+                        <circle cx="580" cy="182" r="9.0" fill="url(#pearlRadial)" stroke="#AA771C" stroke-width="1.5" filter="url(#goldGlow)"/>
+                        <!-- Tip 5 (Outer Right) -->
+                        <circle cx="650" cy="203" r="7.5" fill="url(#pearlRadial)" stroke="#AA771C" stroke-width="1.2" filter="url(#goldGlow)"/>
+                    </g>
+
+                    <!-- ========================================================
+                         LAYER 7: LUXURY BRAND TYPOGRAPHY ("TEDALLAL" & "تدلّل")
+                         (100% Vector Paths Traced from Official Brand Emblem)
+                         ======================================================== -->
+                    <!-- ========================================================
+                         LAYER 7: LUXURY BRAND TYPOGRAPHY ("TEDALLAL" & "تدلّل")
+                         ======================================================== -->
+                    <g id="layer-text" class="phase-text" filter="url(#luxurySpecular)">
+                        <!-- English "TEDALLAL" -->
+                        <text x="512" y="608" 
+                              text-anchor="middle" 
+                              font-family="'Cinzel', 'Cairo', sans-serif" 
+                              font-size="52" 
+                              font-weight="900" 
+                              letter-spacing="0.22em" 
+                              fill="url(#goldGradHorizontal)" 
+                              stroke="#FCF6BA" 
+                              stroke-width="1.2">TEDALLAL</text>
+
+                        <!-- Arabic "تدلّل" with Shaddah -->
+                        <text x="512" y="688" 
+                              text-anchor="middle" 
+                              font-family="'Cairo', sans-serif" 
+                              font-size="50" 
+                              font-weight="900" 
+                              letter-spacing="0.04em" 
+                              fill="url(#goldGradHorizontal)" 
+                              stroke="#FCF6BA" 
+                              stroke-width="1.2">تدلّل</text>
+                    </g>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Interactive Control Panel -->
+        <div class="controls-card">
+            <!-- Row 1: Animation Mode Controls -->
+            <div class="controls-row">
+                <div class="controls-group">
+                    <span class="group-label">🎮 وضع العرض:</span>
+                    <button id="btnReplay" class="btn-luxury active" onclick="replayAnimation()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                        </svg>
+                        <span>إعادة تشغيل الرسم المتجهي (Trim Paths)</span>
+                    </button>
+
+                    <button id="btnBloom" class="btn-luxury" onclick="setMode('bloom')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="5"/>
+                            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                        </svg>
+                        <span>الوضع الملكي المكتمل (Living Bloom)</span>
+                    </button>
+
+                    <button id="btnWireframe" class="btn-luxury" onclick="setMode('wireframe')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/>
+                        </svg>
+                        <span>المسارات الهندسية (Wireframe)</span>
+                    </button>
+                </div>
+
+                <!-- Speed Control -->
+                <div class="controls-group">
+                    <span class="group-label">⏱️ السرعة:</span>
+                    <button class="btn-secondary" onclick="setSpeed(0.5, this)">0.5x سينمائي</button>
+                    <button class="btn-secondary active" onclick="setSpeed(1.0, this)">1.0x عادي</button>
+                    <button class="btn-secondary" onclick="setSpeed(1.75, this)">1.75x سريع</button>
+                </div>
+            </div>
+
+            <!-- Row 2: Visual Comparison & Background Theme -->
+            <div class="controls-row">
+                <!-- Reference Image Overlay Slider -->
+                <div class="controls-group">
+                    <span class="group-label">👁️ مقارنة مع الصورة الأصلية:</span>
+                    <div class="slider-wrapper">
+                        <input id="refSlider" type="range" min="0" max="100" value="0" oninput="updateRefOpacity(this.value)">
+                        <span id="refVal" class="slider-val">0%</span>
+                    </div>
+                    <button class="btn-secondary" onclick="toggleRefPeek()">ومضة مطابقة (Peek)</button>
+                </div>
+
+                <!-- Background Theme -->
+                <div class="controls-group">
+                    <span class="group-label">🎨 لون الخلفية:</span>
+                    <button class="btn-secondary active" onclick="setTheme('checkerboard', this)">مربعات الشفافية (Ref)</button>
+                    <button class="btn-secondary" onclick="setTheme('obsidian', this)">أسود فاحم</button>
+                    <button class="btn-secondary" onclick="setTheme('navy', this)">كحلي ملكي</button>
+                </div>
+            </div>
+
+            <!-- Timeline Progress Bar -->
+            <div class="timeline-container">
+                <div id="timelineBar" class="timeline-bar"></div>
+            </div>
+        </div>
+
+        <!-- Technical Implementation & Export Guide -->
+        <div class="specs-grid">
+            <div class="spec-box">
+                <h3>👑 آلية التجميع المتجهي (Trim Paths)</h3>
+                <p>تعتمد الحركة على تقسيم الشعار الفعلي إلى <strong>7 طبقات متجهية مستقلة</strong> يتم رسم مساراتها الرياضية بتوقيت متتابع عبر خصائص <code>stroke-dasharray</code> و <code>stroke-dashoffset</code>:</p>
+                <ul>
+                    <li><strong>المرحلة 1:</strong> المدارات الفلكية الكونية (Cosmic Orbits)</li>
+                    <li><strong>المرحلة 2:</strong> صينية التقديم ولآلئ الاتزان الثلاث</li>
+                    <li><strong>المرحلة 3:</strong> قبة الغطاء المعمارية والمقبض الملكي</li>
+                    <li><strong>المرحلة 4:</strong> شبكة التحول الرقمي وعقد البيانات الذكية</li>
+                    <li><strong>المرحلة 5:</strong> الخط العربي "تدلّل" مع علامة الشدّة</li>
+                    <li><strong>المرحلة 6:</strong> التاج الملكي الخماسي واللآلئ الخمس</li>
+                    <li><strong>المرحلة 7:</strong> الهوية النصية الملكية (TEDALLAL / تدلّل)</li>
+                    <li><strong>المرحلة 8:</strong> الإشعاع الملكي الكامل (Metallic 3D Bloom)</li>
+                </ul>
+            </div>
+
+            <div class="spec-box">
+                <h3>⚡ النقل إلى After Effects و Lottie</h3>
+                <p>يمكن لفريق الموشن جرافيكس استخدام هذه المسارات الرياضية مباشرة داخل <strong>After Effects</strong> عبر تحويل الـ SVG إلى Shape Layers ثم إضافة تأثير <code>Trim Paths (Start/End)</code> بنفس معاملات التوقيت ومنحنيات التسارع (Easing Curves):</p>
+                <div class="code-snippet">
+// Cubic-Bezier Smooth Easing
+cubic-bezier(0.4, 0.0, 0.2, 1.0)
+// Sequential Layer Stagger: 0.4s to 0.6s
+// Continuous Floating Rotation: 4.5s loop
+                </div>
+            </div>
+
+            <div class="spec-box">
+                <h3>💎 الاستخدام كـ Web Component خفيف</h3>
+                <p>هذا الملف مبني بالكامل بتقنيات <strong>Pure SVG + CSS</strong> بدون أي مكتبات خارجية وبدون ملفات فيديو ثقيلة (0 KB Video Load). يمكن دمجه فوراً في <code>ApplicationLogo.vue</code> ليعمل على أي شاشة وبأي دقة (Retina / 4K / 8K) وبحجم خفيف جداً أقل من 8 كيلوبايت.</p>
+                <button class="btn-luxury" style="margin-top: 10px;" onclick="copySvgCode()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                    </svg>
+                    <span>نسخ كود الـ SVG البرمجي</span>
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast-notice">تم نسخ كود الـ SVG بنجاح! جاهز للاستخدام.</div>
+
+    <!-- Interactive JavaScript Engine -->
+    <script>
+        let currentMode = 'draw';
+        let speedFactor = 1.0;
+        let animationTimer = null;
+        let timelineInterval = null;
+
+        const svgContainer = document.getElementById('svgContainer');
+        const timelineBar = document.getElementById('timelineBar');
+        const refOverlay = document.getElementById('refOverlay');
+        const refSlider = document.getElementById('refSlider');
+        const refVal = document.getElementById('refVal');
+        const toast = document.getElementById('toast');
+
+        // Initialize Particle Background
+        initParticles();
+        initStrokeLengths();
+
+        // Start Timeline Sync
+        startTimeline(5.8 / speedFactor);
+
+        function replayAnimation() {
+            setMode('draw');
+            svgContainer.classList.remove('draw-active', 'living-bloom', 'state-bloomed');
+            initStrokeLengths();
+            void svgContainer.offsetWidth; // Force Reflow
+            svgContainer.classList.add('draw-active');
+
+            startTimeline(5.8 / speedFactor);
+
+            // After animation finishes, transition smoothly into living bloom
+            if (animationTimer) clearTimeout(animationTimer);
+            animationTimer = setTimeout(() => {
+                svgContainer.classList.add('living-bloom', 'state-bloomed');
+            }, (5800 / speedFactor));
+        }
+
+        function setMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('#btnReplay, #btnBloom, #btnWireframe').forEach(b => b.classList.remove('active'));
+
+            svgContainer.classList.remove('mode-wireframe', 'living-bloom', 'state-bloomed');
+
+            if (mode === 'draw') {
+                document.getElementById('btnReplay').classList.add('active');
+            } else if (mode === 'bloom') {
+                document.getElementById('btnBloom').classList.add('active');
+                svgContainer.classList.add('living-bloom', 'state-bloomed');
+                timelineBar.style.width = '100%';
+            } else if (mode === 'wireframe') {
+                document.getElementById('btnWireframe').classList.add('active');
+                svgContainer.classList.add('mode-wireframe');
+            }
+        }
+
+        function setSpeed(speed, btn) {
+            speedFactor = speed;
+            document.documentElement.style.setProperty('--speed-factor', speed);
+            document.querySelectorAll('.controls-group button').forEach(b => {
+                if (b.innerText.includes('x')) b.classList.remove('active');
+            });
+            btn.classList.add('active');
+            replayAnimation();
+        }
+
+        function setTheme(theme, btn) {
+            document.body.className = 'theme-' + theme;
+            document.querySelectorAll('.controls-group button').forEach(b => {
+                if (['مربعات الشفافية (Ref)', 'أسود فاحم', 'كحلي ملكي'].includes(b.innerText)) {
+                    b.classList.remove('active');
+                }
+            });
+            btn.classList.add('active');
+        }
+
+        function updateRefOpacity(val) {
+            refOverlay.style.opacity = val / 100;
+            refVal.innerText = val + '%';
+        }
+
+        let isPeeking = false;
+        function toggleRefPeek() {
+            isPeeking = !isPeeking;
+            if (isPeeking) {
+                refOverlay.style.opacity = '0.75';
+                refVal.innerText = '75%';
+                refSlider.value = 75;
+            } else {
+                refOverlay.style.opacity = '0';
+                refVal.innerText = '0%';
+                refSlider.value = 0;
+            }
+        }
+
+        
+        // Measure and initialize exact stroke length for every path
+        function initStrokeLengths() {
+            document.querySelectorAll('.v-stroke').forEach(el => {
+                let len = 400;
+                try {
+                    if (el.getTotalLength) {
+                        len = Math.ceil(el.getTotalLength());
+                    }
+                } catch (e) {}
+                el.style.setProperty('--path-len', len + 'px');
+                el.style.strokeDasharray = len + 'px';
+                el.style.strokeDashoffset = len + 'px';
+            });
+        }
+
+        function startTimeline(totalSeconds) {
+            if (timelineInterval) clearInterval(timelineInterval);
+            let startTime = performance.now();
+            let durationMs = totalSeconds * 1000;
+
+            timelineInterval = setInterval(() => {
+                let elapsed = performance.now() - startTime;
+                let pct = Math.min((elapsed / durationMs) * 100, 100);
+                timelineBar.style.width = pct + '%';
+                if (pct >= 100) {
+                    clearInterval(timelineInterval);
+                }
+            }, 50);
+        }
+
+        function copySvgCode() {
+            const svgEl = svgContainer.querySelector('svg');
+            navigator.clipboard.writeText(svgEl.outerHTML).then(() => {
+                showToast('تم نسخ كود الـ SVG بنجاح! جاهز للاستخدام.');
+            });
+        }
+
+        function showToast(msg) {
+            toast.innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Particle Canvas Background
+        function initParticles() {
+            const canvas = document.getElementById('particleCanvas');
+            const ctx = canvas.getContext('2d');
+            let w, h;
+            let particles = [];
+
+            function resize() {
+                w = canvas.width = window.innerWidth;
+                h = canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            for (let i = 0; i < 50; i++) {
+                particles.push({
+                    x: Math.random() * w,
+                    y: Math.random() * h,
+                    r: Math.random() * 2 + 0.5,
+                    vx: (Math.random() - 0.5) * 0.4,
+                    vy: (Math.random() - 0.5) * 0.4,
+                    alpha: Math.random() * 0.7 + 0.3,
+                    pulse: Math.random() * 0.05 + 0.01
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, w, h);
+                particles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if (p.x < 0) p.x = w;
+                    if (p.x > w) p.x = 0;
+                    if (p.y < 0) p.y = h;
+                    if (p.y > h) p.y = 0;
+
+                    p.alpha += Math.sin(Date.now() * p.pulse * 0.05) * 0.01;
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(212, 175, 55, ${Math.max(0.1, Math.min(0.8, p.alpha))})`;
+                    ctx.shadowBlur = 8;
+                    ctx.shadowColor = '#D4AF37';
+                    ctx.fill();
+                });
+                requestAnimationFrame(draw);
+            }
+            draw();
+        }
+    </script>
+</body>
+</html>
