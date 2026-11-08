@@ -624,7 +624,197 @@
                 align-items: flex-start;
             }
         }
+    
+        /* ============================================================
+           ASSISTANT EXPORT PANEL & MODAL
+           ============================================================ */
+        .assistant-export-panel {
+            margin-top: 10px;
+            padding-top: 18px;
+            border-top: 1px solid rgba(212, 175, 55, 0.25);
+            width: 100%;
+        }
+
+        .btn-assistant-sync {
+            width: 100%;
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.25), rgba(170, 119, 28, 0.45));
+            border: 2px solid #D4AF37;
+            border-radius: 14px;
+            padding: 14px 22px;
+            color: #FFF8DC;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(212, 175, 55, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: inherit;
+        }
+
+        .btn-assistant-sync:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.35), rgba(170, 119, 28, 0.6));
+            box-shadow: 0 12px 32px rgba(212, 175, 55, 0.4), 0 0 18px rgba(212, 175, 55, 0.6);
+            border-color: #FFF8DC;
+        }
+
+        .btn-assistant-sync:active {
+            transform: translateY(0);
+        }
+
+        .sync-icon-pulse {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: rgba(212, 175, 55, 0.2);
+            border: 1px solid rgba(212, 175, 55, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #FFF8DC;
+            flex-shrink: 0;
+            animation: syncGlow 2.5s infinite ease-in-out;
+        }
+
+        @keyframes syncGlow {
+            0%, 100% { box-shadow: 0 0 0 rgba(212, 175, 55, 0); }
+            50% { box-shadow: 0 0 14px rgba(212, 175, 55, 0.7); }
+        }
+
+        .sync-text-group {
+            display: flex;
+            flex-direction: column;
+            text-align: right;
+            flex-grow: 1;
+        }
+
+        .sync-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #FFF8DC;
+            letter-spacing: 0.02em;
+        }
+
+        .sync-subtitle {
+            font-size: 0.82rem;
+            color: #d1d5db;
+            margin-top: 3px;
+        }
+
+        .sync-badge {
+            background: rgba(0, 0, 0, 0.45);
+            border: 1px solid rgba(212, 175, 55, 0.6);
+            color: #FCF6BA;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.84rem;
+            font-weight: 700;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+        }
+
+        /* Modal Backdrop */
+        .export-modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .export-modal-backdrop.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .export-modal-content {
+            background: #111116;
+            border: 2px solid rgba(212, 175, 55, 0.5);
+            border-radius: 22px;
+            width: 100%;
+            max-width: 620px;
+            padding: 28px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 40px rgba(212, 175, 55, 0.25);
+            color: #f1f5f9;
+            transform: scale(0.92);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .export-modal-backdrop.show .export-modal-content {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .modal-header h3 {
+            color: #FCF6BA;
+            font-size: 1.25rem;
+            font-weight: 800;
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 1.8rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .modal-close:hover {
+            color: #fff;
+        }
+
+        .modal-desc {
+            font-size: 0.94rem;
+            color: #cbd5e1;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .textarea-wrapper textarea {
+            width: 100%;
+            background: #09090c;
+            border: 1px solid rgba(212, 175, 55, 0.35);
+            border-radius: 12px;
+            padding: 14px;
+            color: #FCF6BA;
+            font-family: inherit;
+            font-size: 0.92rem;
+            line-height: 1.7;
+            resize: none;
+            direction: rtl;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        .textarea-wrapper textarea:focus {
+            border-color: #D4AF37;
+            box-shadow: 0 0 12px rgba(212, 175, 55, 0.4);
+        }
+
+        .modal-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 18px;
+        }
     </style>
+
 </head>
 <body class="theme-checkerboard">
 
@@ -1125,6 +1315,25 @@
             <div class="timeline-container">
                 <div id="timelineBar" class="timeline-bar"></div>
             </div>
+
+            <!-- Row 3: Export & Prompt AI Assistant -->
+            <div class="assistant-export-panel">
+                <button id="btnExportToAssistant" class="btn-assistant-sync" onclick="exportSettingsForAssistant()">
+                    <div class="sync-icon-pulse">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                            <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+                            <path d="M9 14l2 2 4-4"/>
+                        </svg>
+                    </div>
+                    <div class="sync-text-group">
+                        <span class="sync-title">📋 نسخ الإعدادات الحالية لتلقين المساعد الذكي (تطبيق فوري على الموقع)</span>
+                        <span class="sync-subtitle">انسخ توليفة العرض والسرعة والخلفية بنقرة واحدة، ثم الصقها في المحادثة</span>
+                    </div>
+                    <span class="sync-badge">انقر هنا للنسخ 📋</span>
+                </button>
+            </div>
+
         </div>
 
         <!-- Technical Implementation & Export Guide -->
@@ -1362,6 +1571,120 @@ cubic-bezier(0.4, 0.0, 0.2, 1.0)
             }
             draw();
         }
+    
+        function exportSettingsForAssistant() {
+            // Determine active mode name
+            let modeName = 'إعادة تشغيل الرسم المتجهي (Trim Paths)';
+            if (currentMode === 'bloom') {
+                modeName = 'الوضع الملكي المكتمل (Living Bloom)';
+            } else if (currentMode === 'wireframe') {
+                modeName = 'المسارات الهندسية (Wireframe)';
+            }
+
+            // Determine active speed
+            let speedText = '1.0x عادي (3.2 ثوانٍ)';
+            if (speedFactor === 0.5) {
+                speedText = '0.5x سينمائي فخم (6.4 ثوانٍ)';
+            } else if (speedFactor === 1.75) {
+                speedText = '1.75x سريع ورشيق (1.8 ثانية)';
+            }
+
+            // Determine theme
+            let currentTheme = 'أسود فاحم ملكي (Obsidian)';
+            if (document.body.className.includes('theme-navy')) {
+                currentTheme = 'كحلي ملكي عميق (Navy)';
+            } else if (document.body.className.includes('theme-checkerboard')) {
+                currentTheme = 'مربعات الشفافية المرجعية (Checkerboard)';
+            }
+
+            const refVal = document.getElementById('refSlider') ? document.getElementById('refSlider').value : '0';
+
+            const exportPayload = `اعتماد إعدادات الشعار في صفحة الهبوط:
+- وضع العرض: ${modeName}
+- سرعة الحركة: ${speedText}
+- نمط الخلفية: ${currentTheme}
+- شفافية الصورة المرجعية: ${refVal}%
+- وميض اللمعان: معطل (توهج ذهبي ملكي بدون وميض أبيض)
+- دورة التكرار: تكرار الرسم تلقائياً كل 6.5 ثوانٍ بعد اكتمال الصورة المفرغة`;
+
+            // Copy to clipboard
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(exportPayload).catch(() => {});
+            }
+
+            // Show in modal
+            const textarea = document.getElementById('exportTextarea');
+            if (textarea) {
+                textarea.value = exportPayload;
+                textarea.focus();
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                } catch(e) {}
+            }
+
+            const modal = document.getElementById('exportModal');
+            if (modal) {
+                modal.classList.add('show');
+            }
+
+            // Update badge text on the button
+            const badge = document.querySelector('.sync-badge');
+            if (badge) {
+                badge.innerText = '✅ تم النسخ بنجاح!';
+                setTimeout(() => {
+                    badge.innerText = 'انقر هنا للنسخ 📋';
+                }, 4000);
+            }
+
+            showToast('✅ تم نسخ الإعدادات بنجاح إلى الحافظة!');
+        }
+
+        function closeExportModal(e) {
+            const modal = document.getElementById('exportModal');
+            if (modal) {
+                modal.classList.remove('show');
+            }
+        }
+
+        function copyFromModal() {
+            const textarea = document.getElementById('exportTextarea');
+            if (textarea) {
+                textarea.select();
+                try {
+                    navigator.clipboard.writeText(textarea.value);
+                } catch(e) {
+                    document.execCommand('copy');
+                }
+                showToast('✅ تم نسخ النص مجدداً!');
+            }
+        }
+
     </script>
+
+    <!-- Modal for Assistant Export -->
+    <div id="exportModal" class="export-modal-backdrop" onclick="closeExportModal(event)">
+        <div class="export-modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3>👑 إعدادات الشعار الجاهزة للتلقين</h3>
+                <button class="modal-close" onclick="closeExportModal()">&times;</button>
+            </div>
+            <p class="modal-desc">
+                تم نسخ النص التالي إلى الحافظة تلقائياً! يمكنك الآن الانتقال إلى محادثة الذكاء الاصطناعي ولصقه هناك ليتم تطبيقه على الموقع فوراً:
+            </p>
+            <div class="textarea-wrapper">
+                <textarea id="exportTextarea" readonly rows="7"></textarea>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-luxury active" onclick="copyFromModal()">
+                    <span>📋 إعادة نسخ النص</span>
+                </button>
+                <button class="btn-secondary" onclick="closeExportModal()">
+                    <span>إغلاق</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
