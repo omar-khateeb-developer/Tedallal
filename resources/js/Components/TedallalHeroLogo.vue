@@ -11,7 +11,6 @@ withDefaults(defineProps<Props>(), {
 
 const isRevealed = ref(false);
 const isAnimating = ref(false);
-const svgKey = ref(0);
 const svgContainerRef = ref<HTMLDivElement | null>(null);
 
 let cycleTimer: ReturnType<typeof setTimeout> | null = null;
@@ -42,17 +41,13 @@ function startCycle() {
 
     isRevealed.value = false;
     isAnimating.value = false;
-    svgKey.value++; // Clean reset of the DOM tree
 
     nextTick(() => {
         if (svgContainerRef.value) {
-            // 1. Initialize exact lengths & offsets to zero-visible state
             initStrokes(svgContainerRef.value);
+            // Force reflow without destroying DOM
+            void svgContainerRef.value.offsetWidth;
 
-            // 2. Force browser layout reflow so the zero state is committed to GPU
-            void svgContainerRef.value.getBoundingClientRect();
-
-            // 3. Double requestAnimationFrame guarantees compositor commits the blank slate before drawing
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
                     isAnimating.value = true;
@@ -60,11 +55,11 @@ function startCycle() {
             });
         }
 
-        // 4. At 3.2s: transition seamlessly into 3D transparent PNG
+        // At 6.4s: transition seamlessly into 3D transparent PNG
         cycleTimer = setTimeout(() => {
             isRevealed.value = true;
 
-            // 5. Loop: repeat the drawing sequence every cycle
+            // Loop: repeat the drawing sequence every cycle
             loopTimer = setTimeout(() => {
                 startCycle();
             }, DISPLAY_DURATION);
@@ -76,13 +71,21 @@ function handleReplay() {
     startCycle();
 }
 
+function handleVisibilityChange() {
+    if (document.visibilityState === 'visible') {
+        startCycle();
+    }
+}
+
 onMounted(() => {
     startCycle();
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 });
 
 onUnmounted(() => {
     if (cycleTimer) clearTimeout(cycleTimer);
     if (loopTimer) clearTimeout(loopTimer);
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
 });
 </script>
 
@@ -105,7 +108,7 @@ onUnmounted(() => {
              ======================================================== -->
         <div
             ref="svgContainerRef"
-            :key="svgKey"
+            
             class="absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out pointer-events-none"
             :class="[
                 isRevealed ? 'opacity-0 scale-98' : 'opacity-100 scale-100',
@@ -521,22 +524,5 @@ onUnmounted(() => {
     animation: spinOrbitCCW 24s linear infinite;
 }
 
-@media (prefers-reduced-motion: reduce) {
-    .v-stroke {
-        stroke-dashoffset: 0 !important;
-        animation: none !important;
-    }
-    .phase-pearls,
-    .phase-nodes,
-    .phase-crown-jewels,
-    .phase-text,
-    .v-fill-target {
-        opacity: 1 !important;
-        animation: none !important;
-    }
-    .spin-orbit-1,
-    .spin-orbit-2 {
-        animation: none !important;
-    }
-}
+/* Reduced motion override removed to ensure cinematic vector drawing on all desktop & laptop devices */
 </style>

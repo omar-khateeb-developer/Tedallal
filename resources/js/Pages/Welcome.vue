@@ -4581,12 +4581,7 @@ onUnmounted(() => {
     }
 }
 
-@media (prefers-reduced-motion: reduce) {
-    .tedallal-hero-emblem {
-        animation: none !important;
-        transform: none !important;
-    }
-}
+/* prefers-reduced-motion removed to allow continuous hero animation on all platforms */
 
 .font-english {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
