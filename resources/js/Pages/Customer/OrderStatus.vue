@@ -147,6 +147,12 @@ const currentStepIndex = computed(() => {
                 </p>
             </div>
         </template>
+        <template #actions>
+            <div v-if="order" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 text-stone-950 font-black text-xs shadow-md border border-amber-300 select-none">
+                <span class="text-[10px] font-bold opacity-80">طلب</span>
+                <span class="text-base font-mono tracking-tight font-black">#{{ shortOrderNumber }}</span>
+            </div>
+        </template>
         <div v-if="!order" class="py-12 flex flex-col items-center justify-center text-stone-500">
             <svg class="h-8 w-8 animate-spin text-amber-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -156,27 +162,32 @@ const currentStepIndex = computed(() => {
         </div>
 
         <div v-else class="space-y-5 pb-20">
-            <!-- بطاقة رقم الطلب المختصر المميز لهذا اليوم (مخصصة ليقولها الزبون للكاشير عند الدفع) -->
-            <div class="rounded-3xl bg-gradient-to-br from-amber-500/25 via-amber-500/10 to-stone-50 dark:from-amber-500/20 dark:via-[#0f172a] dark:to-[#0a0f1d] p-6 text-center border-2 border-amber-500/60 shadow-xl relative overflow-hidden">
-                <div class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-500/20 text-amber-900 dark:text-amber-200 text-xs font-black mb-1">
-                    <span>📢</span>
-                    <span>رقم طلبك اليوم (اذكره للكاشير عند الدفع)</span>
+            <!-- تذكرة رقم الطلب المختصر المميز لهذا اليوم (واضحة وعريضة للكاشير عند الدفع) -->
+            <div class="rounded-3xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 dark:from-amber-500 dark:via-amber-600 dark:to-amber-700 text-stone-950 p-6 sm:p-7 text-center shadow-2xl relative overflow-hidden border-2 border-amber-300 select-none">
+                <!-- لمسات إضاءة خلفية -->
+                <div class="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-white/20 blur-xl pointer-events-none"></div>
+                <div class="absolute -left-8 -bottom-8 w-32 h-32 rounded-full bg-black/15 blur-xl pointer-events-none"></div>
+
+                <!-- شارة التوجيه للكاشير -->
+                <div class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-stone-950/15 backdrop-blur-xs text-stone-950 font-black text-xs sm:text-sm tracking-wide mb-1 border border-stone-950/15">
+                    <span class="text-base">📢</span>
+                    <span>رقم طلبك اليوم (اذكره للكاشير عند الدفع):</span>
                 </div>
-                <div class="text-6xl sm:text-7xl font-black text-amber-600 dark:text-amber-400 font-mono tracking-tight my-2">
+
+                <!-- رقم الطلب المختصر الضخم والعريض جداً -->
+                <div class="text-7xl sm:text-8xl font-black font-mono tracking-tight text-stone-950 my-1 drop-shadow-sm select-all">
                     #{{ shortOrderNumber }}
                 </div>
-                <p class="text-xs font-medium text-stone-500 dark:text-slate-400">
-                    كود الطلب الكامل: <span class="font-mono font-bold text-stone-700 dark:text-slate-200">{{ orderNumber }}</span>
-                </p>
-            </div>
-            <!-- إشعار الدفع للكاشير في حال المطعم دفع مسبق والطلب بانتظار الدفع -->
-            <div v-if="isPrepaid && order.status === 'pending'" class="rounded-3xl bg-amber-500/10 border-2 border-amber-500/40 p-6 text-center shadow-lg relative overflow-hidden">
-                <div class="text-3xl mb-2">💳</div>
-                <h4 class="font-extrabold text-amber-800 dark:text-amber-300 text-lg leading-snug">يرجى التوجه للكاشير و اخباره برقم طلبك لتدفع الفاتورة ليتم تحضير طلبك</h4>
-                <div class="mt-3 inline-flex items-center gap-2 bg-amber-500/20 px-4 py-2 rounded-2xl text-amber-900 dark:text-amber-200">
-                    <span class="text-xs font-semibold">رقم طلبك:</span>
-                    <span class="font-black text-xl font-mono">{{ orderNumber }}</span>
+
+                <!-- إشعار الدفع المسبق التنبيهي إن كان الطلب قيد انتظار الدفع -->
+                <div v-if="isPrepaid && order.status === 'pending'" class="mt-3 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-stone-950 text-amber-300 text-xs sm:text-sm font-black shadow-xl animate-pulse w-full max-w-md mx-auto">
+                    <span>💳</span>
+                    <span>توجّه للكاشير واذكر رقم <span class="font-mono underline text-white text-base">#{{ shortOrderNumber }}</span> لدفع الفاتورة وبدء التحضير</span>
                 </div>
+
+                <p class="text-[11px] font-bold text-stone-950/75 mt-2.5">
+                    الرمز المرجعي للطلب: <span class="font-mono font-black">{{ orderNumber }}</span>
+                </p>
             </div>
 
             <!-- بطاقة إعلان جاهزية الطلب ونافذة الاستلام -->
@@ -210,8 +221,9 @@ const currentStepIndex = computed(() => {
                     </span>
                 </div>
                 
-                <p class="text-sm font-medium text-stone-500 dark:text-slate-400 relative z-10">رقم الطلب</p>
-                <p class="mt-1 text-3xl font-black tracking-wider text-stone-800 dark:text-white relative z-10">{{ orderNumber }}</p>
+                <p class="text-xs font-bold text-amber-700 dark:text-amber-400 relative z-10">رقم الطلب اليوم (للكاشير)</p>
+                <p class="mt-1 text-4xl sm:text-5xl font-black tracking-tight text-amber-600 dark:text-amber-400 font-mono relative z-10">#{{ shortOrderNumber }}</p>
+                <p class="mt-1 text-[11px] font-medium text-stone-400 dark:text-slate-500 font-mono relative z-10">الرمز المرجعي: {{ orderNumber }}</p>
                 
                 <!-- نوع الطلب والنافذة -->
                 <div class="mt-3 flex items-center justify-center gap-2 flex-wrap relative z-10">
