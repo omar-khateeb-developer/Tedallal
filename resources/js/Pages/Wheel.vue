@@ -304,7 +304,7 @@ function shadeColor(color: string, percent: number): string {
 // Real-time Physics Engine: Instant-Launch + Deceleration Easing
 // =========================================================================
 async function spinWheel() {
-    if (isSpinning.value || hasWon.value || props.is_expired || props.slices.length === 0) return;
+    if (isSpinning.value || hasWon.value || props.is_expired || props.is_claimed || props.slices.length === 0) return;
 
     errorMessage.value = null;
     isSpinning.value = true;
@@ -676,9 +676,22 @@ onUnmounted(() => {
                 <!-- The Interactive Wheel Container -->
                 <div class="relative w-[340px] h-[340px] sm:w-[380px] sm:h-[380px] flex items-center justify-center my-3 select-none">
 
+                    <!-- Slanted Ribbon / Void Stamp Banner when QR is already claimed -->
+                    <div
+                        v-if="props.is_claimed"
+                        class="absolute z-40 inset-x-[-6%] top-1/2 -translate-y-1/2 -rotate-12 pointer-events-none select-none drop-shadow-[0_15px_30px_rgba(0,0,0,0.95)]"
+                    >
+                        <div class="bg-gradient-to-r from-red-800 via-red-600 to-red-800 text-white font-black text-center py-2.5 px-3 border-y-4 border-dashed border-red-200/90 shadow-2xl flex items-center justify-center gap-2 tracking-wide">
+                            <span class="text-base sm:text-lg">🚫</span>
+                            <span class="text-xs sm:text-sm font-black uppercase whitespace-nowrap">كود تالف — تم استخدام هذا الرمز مسبقاً</span>
+                            <span class="text-base sm:text-lg">🚫</span>
+                        </div>
+                    </div>
+
                     <!-- Top Mechanical Ticker / Indicator Needle (With Dynamic Kickback Physics) -->
                     <div
                         class="absolute -top-4 z-30 flex flex-col items-center drop-shadow-[0_8px_16px_rgba(0,0,0,0.9)] transition-transform duration-75 origin-top"
+                        :class="{ 'opacity-60 filter grayscale-[50%]': props.is_claimed }"
                         :style="{ transform: `rotate(${pointerDeflection}deg)` }"
                     >
                         <div class="w-6 h-6 rounded-full bg-gradient-to-b from-[#FFF2B2] via-[#D4AF37] to-[#8C6D1F] border-2 border-black flex items-center justify-center shadow-md">
@@ -690,23 +703,34 @@ onUnmounted(() => {
                     <!-- The High-DPI Canvas Wheel -->
                     <canvas
                         ref="canvasRef"
-                        class="w-full h-full rounded-full cursor-pointer select-none"
+                        class="w-full h-full rounded-full select-none transition-all duration-500"
+                        :class="[
+                            props.is_claimed
+                                ? 'filter grayscale-[85%] contrast-75 opacity-40 cursor-not-allowed pointer-events-none'
+                                : 'cursor-pointer'
+                        ]"
                         @click="spinWheel"
                     ></canvas>
 
                     <!-- Center 3D Spin Button Hub (Always Visible & Dimensional) -->
                     <button
                         @click="spinWheel"
-                        :disabled="isSpinning || hasWon"
+                        :disabled="isSpinning || hasWon || props.is_claimed"
                         type="button"
                         class="absolute z-20 w-20 h-20 rounded-full bg-gradient-to-br from-[#FFF2B2] via-[#D4AF37] to-[#8C6D1F] text-black font-extrabold text-sm tracking-wide shadow-[0_8px_25px_rgba(0,0,0,0.8),inset_0_2px_2px_rgba(255,255,255,0.6)] flex flex-col items-center justify-center border-4 border-[#1A1814] active:scale-95 transition-all group disabled:cursor-not-allowed"
                         :class="[
-                            !hasWon && !isSpinning ? 'hover:scale-105 cursor-pointer' : '',
-                            hasWon ? 'opacity-95' : ''
+                            !hasWon && !isSpinning && !props.is_claimed ? 'hover:scale-105 cursor-pointer' : '',
+                            props.is_claimed ? 'opacity-70 filter grayscale-[40%]' : (hasWon ? 'opacity-95' : '')
                         ]"
                     >
+                        <!-- Claimed State: Locked -->
+                        <template v-if="props.is_claimed">
+                            <span class="text-base leading-none">🔒</span>
+                            <span class="font-serif font-black text-[10px] mt-0.5 text-stone-900">مُستخدم</span>
+                        </template>
+
                         <!-- Ready to Spin State -->
-                        <template v-if="!hasWon && !isSpinning">
+                        <template v-else-if="!hasWon && !isSpinning">
                             <span class="absolute -inset-2 rounded-full border border-[#D4AF37]/50 animate-ping pointer-events-none"></span>
                             <span class="text-base leading-none">🎡</span>
                             <span class="font-serif font-black text-xs mt-0.5">دَوّرْ!</span>
@@ -718,7 +742,7 @@ onUnmounted(() => {
                             <span class="text-[9px] font-bold mt-0.5 text-black/90">حظاً موفقاً</span>
                         </template>
 
-                        <!-- Already Claimed State -->
+                        <!-- Already Claimed State (won in current session) -->
                         <template v-else>
                             <span class="text-lg">👑</span>
                             <span class="text-[10px] font-bold">مبروك!</span>
@@ -758,8 +782,17 @@ onUnmounted(() => {
 
                     <!-- Already Claimed Celebration / Voucher Details -->
                     <div v-else-if="voucher" class="space-y-4">
-                        <!-- Success Banner -->
-                        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-bold">
+                        <!-- Success / Notice Banner -->
+                        <div
+                            v-if="props.is_claimed"
+                            class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-500/20 border border-red-500/40 text-red-200 text-xs font-bold"
+                        >
+                            <span>🚫 هذا الرمز تالف — تم تدوير العجلة لهذا الطلب سابقاً</span>
+                        </div>
+                        <div
+                            v-else
+                            class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-bold"
+                        >
                             <span>✓ تم تدوير العجلة واستلام جائزتك بنجاح</span>
                         </div>
 
@@ -769,9 +802,9 @@ onUnmounted(() => {
                             <div class="absolute -start-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-[#070707] border-e-2 border-[#D4AF37]/50"></div>
                             <div class="absolute -end-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-[#070707] border-s-2 border-[#D4AF37]/50"></div>
 
-                            <span class="text-3xl block mb-2">🎉</span>
-                            <h3 class="text-lg font-bold font-serif text-white">
-                                مبروك! لقد ربحت:
+                            <span class="text-3xl block mb-2">{{ props.is_claimed ? '🎟️' : '🎉' }}</span>
+                            <h3 class="text-base sm:text-lg font-bold font-serif text-white">
+                                {{ props.is_claimed ? '🏆 لقد حصلت بالفعل على جائزتك لهذا الطلب:' : 'مبروك! لقد ربحت:' }}
                             </h3>
                             <div class="font-serif text-3xl sm:text-4xl font-extrabold bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#B38728] text-transparent bg-clip-text my-2">
                                 {{ formatVoucherDisplay(voucher.discount_text) }}
@@ -808,8 +841,9 @@ onUnmounted(() => {
                                     <span>🛒</span>
                                     <span>الحد الأدنى للطلب: {{ formatNumber(voucher.min_order_value) }} {{ normalizeCurrency(restaurant.currency) }}</span>
                                 </div>
-                                <div v-if="voucher.is_used" class="text-red-400 font-bold mt-1 text-center">
-                                    تم استخدام هذا الكود بالفعل ✓
+                                <div v-if="voucher.is_used" class="mt-2 p-2 rounded-lg bg-red-950/50 border border-red-800/60 text-red-300 font-bold text-center text-xs flex items-center justify-center gap-1.5">
+                                    <span>⚠️</span>
+                                    <span>تم استهلاك هذا الكوبون مسبقاً في عملية شراء (تالف)</span>
                                 </div>
                             </div>
 

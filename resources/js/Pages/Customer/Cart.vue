@@ -189,8 +189,14 @@ onMounted(loadCart);
                         إلغاء
                     </button>
                 </div>
-                <p v-if="promoError" class="mt-2 text-xs text-red-600 dark:text-red-400 font-medium">{{ promoError }}</p>
-                <p v-if="appliedPromoCode" class="mt-2 text-xs text-green-600 dark:text-green-400 font-medium">تم تطبيق الخصم بنجاح!</p>
+                <div v-if="promoError" class="mt-2.5 text-xs text-red-600 dark:text-red-400 font-bold bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 rounded-xl p-2.5 flex items-center gap-1.5">
+                    <span>⚠️</span>
+                    <span>{{ promoError }}</span>
+                </div>
+                <p v-if="appliedPromoCode" class="mt-2 text-xs text-green-600 dark:text-green-400 font-bold flex items-center gap-1">
+                    <span>✓</span>
+                    <span>تم تطبيق الخصم بنجاح!</span>
+                </p>
             </div>
 
             <div class="rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/60 p-4 space-y-2 transition-colors">

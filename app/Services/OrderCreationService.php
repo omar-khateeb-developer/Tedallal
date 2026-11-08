@@ -80,7 +80,12 @@ final class OrderCreationService
                 }
                 $promoCode = \App\Models\PromoCode::where('restaurant_id', $restaurant->id)->where('code', $promoCodeStr)->first();
                 if (!$promoCode || !$promoCode->isValid((float)$subtotal)) {
-                    throw ValidationException::withMessages(['promo_code' => ['الكوبون غير صالح أو لا يغطي الحد الأدنى للطلب.']]);
+                    if ($promoCode && $promoCode->is_single_use && $promoCode->times_used >= 1) {
+                        throw ValidationException::withMessages(['promo_code' => ['عذراً، هذا الكوبون مُستهلك (تالف) وقد تم استخدامه مسبقاً! الرمز صالح لمرة واحدة فقط.']]);
+                    }
+                    $diagnostics = $promoCode?->getValidationDiagnostics((float)$subtotal);
+                    $msg = $diagnostics['reason_message'] ?? 'الكوبون غير صالح أو لا يغطي الحد الأدنى للطلب.';
+                    throw ValidationException::withMessages(['promo_code' => [$msg]]);
                 }
                 $discountAmount = (string) $promoCode->calculateDiscount((float)$subtotal);
             }

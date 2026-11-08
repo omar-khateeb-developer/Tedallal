@@ -38,6 +38,10 @@ class PromoCode extends Model
     
     public function isValid(?float $orderTotal = null): bool
     {
+        if ($this->is_single_use && $this->times_used >= 1) {
+            return false;
+        }
+
         if (!$this->is_active) {
             return false;
         }
@@ -47,10 +51,6 @@ class PromoCode extends Model
         }
 
         if ($this->expires_at && $this->expires_at->isPast()) {
-            return false;
-        }
-
-        if ($this->is_single_use && $this->times_used >= 1) {
             return false;
         }
 
@@ -69,7 +69,7 @@ class PromoCode extends Model
         $now = now();
         $isFuture = $this->starts_at && $this->starts_at->isFuture();
         $isPast = $this->expires_at && $this->expires_at->isPast();
-        $isSingleUsed = $this->is_single_use && $this->times_used >= 1;
+        $isSingleUsed = ($this->is_single_use && $this->times_used >= 1) || ($this->times_used >= 1 && !$this->is_active);
         $isMinNotMet = $orderTotal !== null && $orderTotal < (float)$this->min_order_value;
         $isInactive = !$this->is_active;
 
@@ -79,7 +79,10 @@ class PromoCode extends Model
         $reasonMessage = 'الكوبون صالح وجاهز للتطبيق.';
         $canForceActivate = false;
 
-        if ($isInactive) {
+        if ($isSingleUsed) {
+            $reasonCode = 'already_used';
+            $reasonMessage = "عذراً، هذا الكوبون مُستهلك (تالف) وقد تم استخدامه مسبقاً! الرمز صالح لمرة واحدة فقط.";
+        } elseif ($isInactive) {
             $reasonCode = 'inactive';
             $reasonMessage = 'هذا الكوبون معطل وموقوف حالياً من قبل إدارة المطعم.';
         } elseif ($isFuture) {
@@ -96,9 +99,6 @@ class PromoCode extends Model
             $reasonCode = 'expired';
             $formattedEnd = $this->expires_at->format('Y-m-d h:i A');
             $reasonMessage = "انتهت صلاحية هذا الكوبون بتاريخ {$formattedEnd}.";
-        } elseif ($isSingleUsed) {
-            $reasonCode = 'already_used';
-            $reasonMessage = "✓ تم استخدام هذا الكوبون مسبقاً (صالح للاستخدام لمرة واحدة فقط).";
         } elseif ($isMinNotMet) {
             $reasonCode = 'min_order_not_met';
             $diff = round((float)$this->min_order_value - (float)$orderTotal, 2);

@@ -191,7 +191,7 @@ const emit = defineEmits<{
                     >
                         <div class="flex items-start gap-2">
                             <span class="text-base leading-none">
-                                {{ promoError.includes('🎁') ? '🎁' : (promoError.includes('🏷️') ? '💡' : 'ℹ️') }}
+                                {{ (promoError.includes('مُستهلك') || promoError.includes('تالف') || promoError.includes('مسبقاً')) ? '❌' : (promoError.includes('🎁') ? '🎁' : (promoError.includes('🏷️') ? '💡' : 'ℹ️')) }}
                             </span>
                             <div class="flex-1">
                                 <p class="font-bold leading-relaxed">{{ promoError }}</p>
