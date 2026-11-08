@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>فاتورة الطلب #{{ $order->order_number }}</title>
     <style>
-        /* إعدادات خط طابعات 80mm */
-        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
+        /* إعدادات خط طابعات 80mm حرارية ومضغوطة لتقصير طول الفاتورة */
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap');
 
         * {
             box-sizing: border-box;
@@ -20,60 +20,68 @@
             width: 80mm;
             color: #000;
             background: #fff;
-            font-size: 14px;
-            line-height: 1.4;
+            font-size: 12px;
+            line-height: 1.3;
         }
 
         .receipt-container {
-            padding: 5mm;
+            padding: 2.5mm 3mm;
             width: 80mm;
             margin: 0 auto;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 5mm;
+            margin-bottom: 1.5mm;
         }
 
         .restaurant-name {
-            font-size: 18px;
-            font-weight: 800;
-            margin: 0 0 2mm 0;
+            font-size: 16px;
+            font-weight: 900;
+            margin: 0 0 1mm 0;
+            line-height: 1.2;
         }
 
+        .header-sub {
+            font-size: 11.5px;
+            font-weight: 600;
+        }
+
+        /* صندوق رقم الطلب المميز بخط عريض ومضغوط */
         .daily-order-box {
             text-align: center;
-            border: 2px solid #000;
+            border: 1.5px solid #000;
             border-radius: 4px;
-            padding: 2.5mm 1mm;
-            margin: 2mm 0 3mm 0;
+            padding: 1.5mm 1mm;
+            margin: 1.5mm 0;
             background: #fff;
         }
 
         .daily-order-label {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 800;
-            margin-bottom: 1mm;
+            margin-bottom: 0.5mm;
         }
 
         .daily-order-number {
-            font-size: 34px;
+            font-size: 28px;
             font-weight: 900;
-            line-height: 1.1;
+            line-height: 1;
             font-family: monospace, 'Tajawal', sans-serif;
-            letter-spacing: -1px;
+            letter-spacing: -0.5px;
         }
 
         .divider {
             border-top: 1px dashed #000;
-            margin: 3mm 0;
+            margin: 1.5mm 0;
         }
 
         .info-row {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 1mm;
-            font-size: 13px;
+            margin-bottom: 0.5mm;
+            font-size: 11.5px;
+            line-height: 1.25;
         }
 
         .info-row .label {
@@ -83,15 +91,15 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            margin: 4mm 0;
-            font-size: 13px;
+            margin: 1.5mm 0;
+            font-size: 11.5px;
         }
 
         th {
             border-bottom: 1px dashed #000;
-            padding-bottom: 2mm;
+            padding-bottom: 1mm;
             text-align: right;
-            font-weight: 700;
+            font-weight: 800;
         }
 
         th.text-left {
@@ -103,7 +111,7 @@
         }
 
         td {
-            padding: 2mm 0;
+            padding: 1mm 0;
             vertical-align: top;
         }
 
@@ -116,32 +124,32 @@
         }
 
         .item-name {
-            font-weight: 500;
+            font-weight: 600;
         }
 
         .item-note {
-            font-size: 11px;
+            font-size: 10px;
             color: #444;
             display: block;
             margin-top: 1px;
         }
 
         .totals {
-            margin-top: 4mm;
+            margin-top: 1.5mm;
         }
 
         .total-row {
             display: flex;
             justify-content: space-between;
-            font-weight: 800;
-            font-size: 16px;
-            margin-top: 2mm;
+            font-weight: 900;
+            font-size: 15px;
+            margin-top: 1mm;
         }
 
         .footer {
             text-align: center;
-            margin-top: 6mm;
-            font-size: 12px;
+            margin-top: 2mm;
+            font-size: 10.5px;
             font-weight: 500;
         }
 
@@ -165,12 +173,12 @@
     <div class="receipt-container">
         <div class="header">
             <h1 class="restaurant-name">{{ $restaurant->name }}</h1>
-            <div>فاتورة طلب</div>
+            <div class="header-sub">فاتورة طلب</div>
         </div>
 
-        <!-- رقم الطلب اليومي المميز في سطر لوحده وبخط عريض وكبير -->
+        <!-- رقم الطلب المميز في سطر مستقل وبخط عريض -->
         <div class="daily-order-box">
-            <div class="daily-order-label">رقم الطلب:</div>
+            <div class="daily-order-label">رقم الطلب</div>
             <div class="daily-order-number">#{{ $order->short_order_number }}</div>
         </div>
 
@@ -178,7 +186,7 @@
 
         <div class="info-row">
             <span class="label">الرمز المرجعي:</span>
-            <span dir="ltr" style="font-family: monospace; font-size: 11px; font-weight: 700;">{{ $order->order_number }}</span>
+            <span dir="ltr" style="font-family: monospace; font-size: 10.5px; font-weight: 700;">{{ $order->order_number }}</span>
         </div>
 
         <div class="info-row">
@@ -192,9 +200,9 @@
         </div>
 
         @if($order->pickup_window)
-        <div class="info-row" style="background: #f1f5f9; padding: 1mm 2mm; border-radius: 4px; margin: 1mm 0;">
+        <div class="info-row" style="background: #f1f5f9; padding: 0.5mm 1.5mm; border-radius: 3px; margin: 0.5mm 0;">
             <span class="label" style="color: #0f172a; font-weight: 800;">نافذة الاستلام:</span>
-            <span style="font-weight: 800; color: #0284c7; font-size: 15px;">نافذة رقم {{ $order->pickup_window }}</span>
+            <span style="font-weight: 800; color: #0284c7; font-size: 13px;">نافذة رقم {{ $order->pickup_window }}</span>
         </div>
         @endif
 
@@ -213,9 +221,9 @@
         @endif
 
         @if($order->customer_note)
-        <div class="info-row" style="flex-direction: column; align-items: flex-start; margin-top: 2mm; background: #fffbeb; padding: 2mm; border: 1px dashed #d97706; border-radius: 2mm;">
-            <span class="label" style="color: #b45309; font-size: 12px;">ملاحظات الزبون:</span>
-            <span style="font-weight: 700; margin-top: 1mm; font-size: 13px;">{{ $order->customer_note }}</span>
+        <div class="info-row" style="flex-direction: column; align-items: flex-start; margin-top: 1mm; background: #fffbeb; padding: 1.5mm; border: 1px dashed #d97706; border-radius: 2mm;">
+            <span class="label" style="color: #b45309; font-size: 11px;">ملاحظات الزبون:</span>
+            <span style="font-weight: 700; margin-top: 0.5mm; font-size: 11.5px;">{{ $order->customer_note }}</span>
         </div>
         @endif
 
@@ -256,19 +264,18 @@
 
         @if(!empty($wheelQrBase64))
         <div class="divider"></div>
-        <div style="text-align: center; margin: 3mm 0; padding: 2.5mm 1mm; border: 1.5px dashed #000; border-radius: 4px; background: #fafafa;">
-            <div style="font-weight: 800; font-size: 13px; margin-bottom: 1mm;">🎁 عجلة الحظ (خصم زيارتك القادمة)</div>
-            <div style="font-size: 11px; margin-bottom: 2mm; color: #222;">امسح الرمز لتدوير العجلة وربح كود خصم!</div>
-            <img src="data:image/png;base64,{{ $wheelQrBase64 }}" style="width: 30mm; height: 30mm; margin: 0 auto; display: block;" alt="رمز عجلة الحظ" />
-            <div style="font-size: 10px; margin-top: 1.5mm; font-weight: 700; color: #444;">كود فريد لمرة واحدة • صالح لـ 14 يوم</div>
+        <div style="text-align: center; margin: 1.5mm 0; padding: 1.5mm 1mm; border: 1px dashed #000; border-radius: 3px; background: #fafafa;">
+            <div style="font-weight: 800; font-size: 11.5px; margin-bottom: 0.5mm;">🎁 امسح لتدوير عجلة الحظ واربح خصم!</div>
+            <img src="data:image/png;base64,{{ $wheelQrBase64 }}" style="width: 22mm; height: 22mm; margin: 1mm auto; display: block;" alt="رمز عجلة الحظ" />
+            <div style="font-size: 9px; font-weight: 700; color: #444;">كود فريد لمرة واحدة • صالح لـ 14 يوم</div>
         </div>
         @endif
 
         <div class="divider"></div>
 
         <div class="footer">
-            <p>شكراً لزيارتكم! نتمنى لكم يوماً سعيداً.</p>
-            <div style="margin-top: 2.5mm; font-size: 11px; font-weight: 700; color: #555; text-align: center; letter-spacing: 0.5px;">
+            <div>شكراً لزيارتكم! نتمنى لكم يوماً سعيداً.</div>
+            <div style="margin-top: 1mm; font-size: 10px; font-weight: 700; color: #555; text-align: center; letter-spacing: 0.5px;">
                 Powered by: www.tedallal.tech
             </div>
         </div>
