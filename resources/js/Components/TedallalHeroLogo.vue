@@ -17,8 +17,8 @@ const svgContainerRef = ref<HTMLDivElement | null>(null);
 let cycleTimer: ReturnType<typeof setTimeout> | null = null;
 let loopTimer: ReturnType<typeof setTimeout> | null = null;
 
-// Durations
-const DRAW_DURATION = 3200;     // 3.2 seconds for progressive vector drawing
+// Durations (0.5x Cinematic Luxury Profile)
+const DRAW_DURATION = 6400;     // 6.4 seconds for cinematic progressive vector drawing (0.5x)
 const DISPLAY_DURATION = 6500;  // 6.5 seconds for 3D transparent emblem display
 
 function initStrokes(container: HTMLElement) {
@@ -380,46 +380,46 @@ onUnmounted(() => {
     }
 }
 
-/* Phase 1: Cosmic Orbits */
+/* Phase 1: Cosmic Orbits (0.5x Cinematic) */
 .phase-orbits {
-    --duration: 1.4s;
-    --delay: 0.1s;
+    --duration: 2.8s;
+    --delay: 0.2s;
 }
 
 /* Phase 2: Platter & Pearls */
 .phase-plate {
-    --duration: 1.0s;
-    --delay: 0.3s;
+    --duration: 2.0s;
+    --delay: 0.6s;
 }
 .phase-pearls {
     opacity: 0;
 }
 .draw-active .phase-pearls {
-    animation: pearlPopIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
-    animation-delay: 0.9s;
+    animation: pearlPopIn 0.9s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+    animation-delay: 1.8s;
 }
 
 /* Phase 3: Cloche Dome & Handle Knob */
 .phase-dome {
-    --duration: 1.2s;
-    --delay: 0.7s;
+    --duration: 2.4s;
+    --delay: 1.4s;
 }
 .phase-knob {
-    --duration: 0.8s;
-    --delay: 1.0s;
+    --duration: 1.6s;
+    --delay: 2.0s;
 }
 
 /* Phase 4: Digital Network Grid & Nodes */
 .phase-grid {
-    --duration: 1.0s;
-    --delay: 1.2s;
+    --duration: 2.0s;
+    --delay: 2.4s;
 }
 .phase-nodes {
     opacity: 0;
 }
 .draw-active .phase-nodes {
-    animation: nodePulse 0.5s ease-out both;
-    animation-delay: 1.6s;
+    animation: nodePulse 0.9s ease-out both;
+    animation-delay: 3.2s;
 }
 
 /* Phase 5: Royal Arabic Calligraphy "تدلّل" */
@@ -427,29 +427,29 @@ onUnmounted(() => {
     opacity: 0;
 }
 .draw-active .phase-callig-dots {
-    animation: pearlPopIn 0.5s ease-out both;
-    animation-delay: 1.5s;
+    animation: pearlPopIn 0.9s ease-out both;
+    animation-delay: 3.0s;
 }
 .phase-calligraphy {
-    --duration: 1.2s;
-    --delay: 1.6s;
+    --duration: 2.4s;
+    --delay: 3.2s;
 }
 .phase-shaddah {
-    --duration: 0.7s;
-    --delay: 2.1s;
+    --duration: 1.4s;
+    --delay: 4.2s;
 }
 
 /* Phase 6: Royal Crown & Jewels */
 .phase-crown {
-    --duration: 1.1s;
-    --delay: 2.0s;
+    --duration: 2.2s;
+    --delay: 4.0s;
 }
 .phase-crown-jewels {
     opacity: 0;
 }
 .draw-active .phase-crown-jewels {
-    animation: jewelGlow 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
-    animation-delay: 2.5s;
+    animation: jewelGlow 1.1s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+    animation-delay: 5.0s;
 }
 
 /* Phase 7: Typography */
@@ -457,8 +457,8 @@ onUnmounted(() => {
     opacity: 0;
 }
 .draw-active .phase-text {
-    animation: textReveal 0.7s ease-out both;
-    animation-delay: 2.4s;
+    animation: textReveal 1.3s ease-out both;
+    animation-delay: 4.8s;
 }
 
 /* Phase 8: Fill target blooms */
@@ -466,8 +466,8 @@ onUnmounted(() => {
     opacity: 0;
 }
 .draw-active .v-fill-target {
-    animation: fillBloom 0.7s ease both;
-    animation-delay: 2.7s;
+    animation: fillBloom 1.2s ease both;
+    animation-delay: 5.4s;
 }
 
 @keyframes fillBloom {
