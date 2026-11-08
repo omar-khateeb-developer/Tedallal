@@ -40,7 +40,7 @@ class PromoCode extends Model
     {
         return $this->hasMany(Order::class);
     }
-    
+
     public function isValid(?float $orderTotal = null): bool
     {
         // 1. التحقق أولاً وقبل أي فحص زمني: هل الكوبون مستهلك أو تالف أو تم استخدامه مسبقاً؟
@@ -88,8 +88,8 @@ class PromoCode extends Model
             ->exists();
 
         $isSingleUsed = ($this->is_single_use && ($this->times_used >= 1 || !$this->is_active || $isUsedInActiveOrder))
-                     || ($this->times_used >= 1)
-                     || $isUsedInActiveOrder;
+            || ($this->times_used >= 1)
+            || $isUsedInActiveOrder;
 
         $isInactive = !$this->is_active && !$isSingleUsed;
         $isMinNotMet = $orderTotal !== null && $orderTotal < (float)$this->min_order_value;
