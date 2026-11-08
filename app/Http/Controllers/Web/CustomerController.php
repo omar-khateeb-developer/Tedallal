@@ -20,7 +20,7 @@ class CustomerController extends Controller
 
     public function table(Request $request, string $token): Response
     {
-        $table = RestaurantTable::query()
+        $table = RestaurantTable::withoutGlobalScopes()
             ->with('restaurant')
             ->where('public_token', $token)
             ->where('status', 'active')
@@ -77,7 +77,7 @@ class CustomerController extends Controller
 
     public function order(string $token, string $orderNumber): Response
     {
-        $table = RestaurantTable::query()
+        $table = RestaurantTable::withoutGlobalScopes()
             ->with('restaurant')
             ->where('public_token', $token)
             ->firstOrFail();

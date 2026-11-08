@@ -11,7 +11,7 @@ class TableController extends ApiController
 {
     public function show(string $token)
     {
-        $table = RestaurantTable::query()
+        $table = RestaurantTable::withoutGlobalScopes()
             ->with('restaurant')
             ->where('public_token', $token)
             ->first();

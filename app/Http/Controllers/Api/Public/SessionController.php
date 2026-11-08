@@ -20,7 +20,7 @@ class SessionController extends ApiController
             'public_token' => ['required', 'string'],
         ]);
 
-        $table = RestaurantTable::query()
+        $table = RestaurantTable::withoutGlobalScopes()
             ->where('public_token', $request->string('public_token'))
             ->where('status', 'active')
             ->first();

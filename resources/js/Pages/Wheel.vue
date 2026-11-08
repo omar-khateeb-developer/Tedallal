@@ -65,13 +65,13 @@ const whatsappShareUrl = computed(() => {
     }
     const restaurantName = props.restaurant.name || 'المطعم';
     const discountText = formatVoucherDisplay(voucher.value.discount_text);
-    const text = `🎁 مبارك! لقد حصلت على ${discountText} من ${restaurantName}.\n` +
+    const text = `🎁 مبارك! لقد حصلت على ${discountText} من ${restaurantName}.\n\n` +
         `🎟️ كود الخصم: ${voucher.value.code}\n` +
         `⏳ صالح ابتداءً من: ${voucher.value.starts_at || 'الآن'}\n` +
         `📅 ينتهي في: ${voucher.value.expires_at}\n` +
         (voucher.value.min_order_value > 0 ? `🛒 الحد الأدنى للطلب: ${voucher.value.min_order_value} ${props.restaurant.currency}\n` : '') +
-        (props.restaurant.menu_url ? `🍽️ رابط قائمة الطعام: ${props.restaurant.menu_url}\n` : '') +
-        `✨ نتطلع لزيارتكم القادمة!`;
+        (props.restaurant.menu_url ? `\n🍽️ رابط قائمة الطعام:\n${props.restaurant.menu_url}\n` : '') +
+        `\n✨ نتطلع لزيارتكم القادمة!`;
     const encoded = encodeURIComponent(text);
     return cleanPhone ? `https://wa.me/${cleanPhone}?text=${encoded}` : `https://wa.me/?text=${encoded}`;
 });
