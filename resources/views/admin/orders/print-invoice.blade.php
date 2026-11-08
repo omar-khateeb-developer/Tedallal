@@ -262,7 +262,7 @@
                 <span dir="ltr">{{ (int) round((float) $order->subtotal) }} {{ $restaurant->currency }}</span>
             </div>
             <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 11px; color: #b91c1c; margin-bottom: 0.8mm;">
-                <span>الخصم{{ $order->promoCode ? ' (' . $order->promoCode->code . ')' : '' }}:</span>
+                <span>قيمة الحسم:</span>
                 <span dir="ltr">-{{ (int) round((float) $order->discount_amount) }} {{ $restaurant->currency }}</span>
             </div>
             @endif
