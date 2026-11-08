@@ -1111,12 +1111,19 @@ onUnmounted(() => {
             <div class="relative z-10 w-full max-w-6xl mx-auto px-6 sm:px-12 py-24 flex flex-col items-center text-center">
 
                 <!-- Tedallal Bespoke Gold Cutout Logo Emblem (شعار تدلل الذهبي المُفرّغ في المنتصف) -->
-                <div class="mb-5 flex flex-col items-center select-none group">
-                    <img
-                        src="/images/tedallal-golden-logo-pure.png"
-                        alt="تدلل - Tedallal Bespoke Luxury Hospitality"
-                        class="h-16 sm:h-20 lg:h-24 w-auto object-contain filter drop-shadow-[0_8px_25px_rgba(212,175,55,0.5)] group-hover:scale-105 group-hover:drop-shadow-[0_12px_35px_rgba(212,175,55,0.7)] transition-all duration-500"
-                    />
+                <div class="mb-5 flex flex-col items-center select-none group relative">
+                    <!-- Ambient Golden Aura -->
+                    <div class="absolute -inset-6 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.38)_0%,rgba(245,158,11,0.12)_55%,transparent_75%)] blur-2xl pointer-events-none animate-pulse"></div>
+
+                    <div class="relative tedallal-hero-emblem overflow-hidden rounded-2xl">
+                        <img
+                            src="/images/tedallal-golden-logo-pure.png"
+                            alt="تدلل - Tedallal Bespoke Luxury Hospitality"
+                            class="h-16 sm:h-20 lg:h-24 w-auto object-contain filter drop-shadow-[0_8px_25px_rgba(212,175,55,0.6)] group-hover:scale-105 group-hover:drop-shadow-[0_12px_35px_rgba(212,175,55,0.85)] transition-all duration-500"
+                        />
+                        <!-- Fluid Shimmer Reflection -->
+                        <div class="tedallal-hero-shimmer absolute inset-0 pointer-events-none"></div>
+                    </div>
                 </div>
 
                 <!-- Royal Badge with Live Engine Status -->
@@ -4539,6 +4546,52 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+/* Tedallal Fluid Hero Emblem Levitation & Shimmer */
+.tedallal-hero-emblem {
+    animation: tedallalHeroFloat 4.6s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+    will-change: transform;
+}
+
+@keyframes tedallalHeroFloat {
+    0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-4px) rotate(0.4deg);
+    }
+}
+
+.tedallal-hero-shimmer {
+    background: linear-gradient(
+        115deg,
+        transparent 30%,
+        rgba(255, 255, 255, 0.4) 48%,
+        rgba(252, 246, 186, 0.6) 52%,
+        transparent 70%
+    );
+    transform: translateX(-130%);
+    animation: tedallalHeroShimmerSweep 5.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    mix-blend-mode: overlay;
+    will-change: transform;
+}
+
+@keyframes tedallalHeroShimmerSweep {
+    0%, 18% {
+        transform: translateX(-130%);
+    }
+    42%, 100% {
+        transform: translateX(130%);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .tedallal-hero-emblem,
+    .tedallal-hero-shimmer {
+        animation: none !important;
+        transform: none !important;
+    }
+}
+
 .font-english {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
