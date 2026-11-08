@@ -34,7 +34,7 @@ class AppServiceProvider extends ServiceProvider
 
     public function register(): void
     {
-        //
+        $this->app->scoped(\App\Services\RestaurantContext::class);
     }
 
     public function boot(): void
@@ -52,6 +52,16 @@ class AppServiceProvider extends ServiceProvider
                 return true;
             }
             return null;
+        });
+
+        \Illuminate\Support\Facades\Route::bind('promoCode', function ($value) {
+            $restaurantId = auth()->user()?->restaurant_id;
+            if ($restaurantId) {
+                return \App\Models\PromoCode::withoutGlobalScopes()
+                    ->where('restaurant_id', $restaurantId)
+                    ->findOrFail($value);
+            }
+            return \App\Models\PromoCode::withoutGlobalScopes()->findOrFail($value);
         });
     }
 

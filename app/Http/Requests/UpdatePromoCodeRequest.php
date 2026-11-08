@@ -26,7 +26,7 @@ class UpdatePromoCodeRequest extends FormRequest
         return [
             'code' => [
                 'sometimes',
-                'required',
+                'nullable',
                 'string',
                 'max:50',
                 Rule::unique('promo_codes', 'code')
