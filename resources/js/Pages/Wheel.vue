@@ -36,6 +36,7 @@ const props = defineProps<{
     order_number: string | null;
     is_claimed: boolean;
     is_expired: boolean;
+    order_error_message?: string | null;
     claimed_voucher: Voucher | null;
     won_slice_index: number | null;
     slices: Slice[];
@@ -304,7 +305,7 @@ function shadeColor(color: string, percent: number): string {
 // Real-time Physics Engine: Instant-Launch + Deceleration Easing
 // =========================================================================
 async function spinWheel() {
-    if (isSpinning.value || hasWon.value || props.is_expired || props.is_claimed || props.slices.length === 0) return;
+    if (isSpinning.value || hasWon.value || props.is_expired || props.is_claimed || props.order_error_message || props.slices.length === 0) return;
 
     errorMessage.value = null;
     isSpinning.value = true;
@@ -656,17 +657,19 @@ onUnmounted(() => {
         <!-- Main Gameplay Arena -->
         <main class="w-full max-w-md flex flex-col items-center justify-center my-auto py-2 relative z-10">
 
-            <!-- State 1: Expired Token -->
+            <!-- State 1: Expired Token or Order Error -->
             <div
-                v-if="is_expired"
+                v-if="is_expired || order_error_message"
                 class="bg-[#121212]/90 border border-red-500/30 rounded-3xl p-8 text-center backdrop-blur-xl shadow-2xl w-full"
             >
                 <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-red-500/10 text-red-400 flex items-center justify-center text-3xl">
-                    ⏳
+                    {{ order_error_message ? '🚫' : '⏳' }}
                 </div>
-                <h2 class="text-xl font-bold font-serif text-white mb-2">عذراً، انتهت صلاحية الرابط</h2>
+                <h2 class="text-xl font-bold font-serif text-white mb-2">
+                    {{ order_error_message ? 'تنبيه بشأن الطلب' : 'عذراً، انتهت صلاحية الرابط' }}
+                </h2>
                 <p class="text-sm text-[#9CA3AF] leading-relaxed">
-                    انتهت صلاحية جلسة عجلة الحظ الخاصة بهذه الفاتورة. نتمنى لك حظاً سعيداً في زيارتك القادمة لمطعمنا!
+                    {{ order_error_message || 'انتهت صلاحية جلسة عجلة الحظ الخاصة بهذه الفاتورة. نتمنى لك حظاً سعيداً في زيارتك القادمة لمطعمنا!' }}
                 </p>
             </div>
 

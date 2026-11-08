@@ -256,13 +256,23 @@
         <div class="divider"></div>
 
         <div class="totals">
-            <div class="total-row">
+            @if((float) $order->discount_amount > 0)
+            <div style="display: flex; justify-content: space-between; font-weight: 600; font-size: 11px; margin-bottom: 0.8mm; color: #444;">
+                <span>المجموع الفرعي:</span>
+                <span dir="ltr">{{ (int) round((float) $order->subtotal) }} {{ $restaurant->currency }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 11px; color: #b91c1c; margin-bottom: 0.8mm;">
+                <span>الخصم{{ $order->promoCode ? ' (' . $order->promoCode->code . ')' : '' }}:</span>
+                <span dir="ltr">-{{ (int) round((float) $order->discount_amount) }} {{ $restaurant->currency }}</span>
+            </div>
+            @endif
+            <div class="total-row" style="{{ (float) $order->discount_amount > 0 ? 'border-top: 1px dashed #666; padding-top: 1mm; margin-top: 0.8mm;' : '' }}">
                 <span>الإجمالي:</span>
                 <span dir="ltr">{{ (int) round((float) $order->total) }} {{ $restaurant->currency }}</span>
             </div>
         </div>
 
-        @if(!empty($wheelQrBase64))
+        @if(!empty($wheelQrBase64) && $order->status->value !== 'cancelled')
         <div class="divider"></div>
         <div style="text-align: center; margin: 1.5mm 0; padding: 1.5mm 1mm; border: 1px dashed #000; border-radius: 3px; background: #fafafa;">
             <div style="font-weight: 800; font-size: 11.5px; margin-bottom: 0.5mm;">🎁 امسح لتدوير عجلة الحظ واربح خصم!</div>

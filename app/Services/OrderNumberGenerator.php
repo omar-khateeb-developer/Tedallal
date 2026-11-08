@@ -11,18 +11,26 @@ final class OrderNumberGenerator
     {
         return DB::transaction(function () use ($restaurantId) {
             $date = now()->format('Ymd');
-            $prefix = "ORD-{$date}-";
+            $prefix = "ORD-{$restaurantId}-{$date}-";
+            $legacyPrefix = "ORD-{$date}-";
 
-            $lastSequence = Order::withoutGlobalScopes()
-                ->where('order_number', 'like', $prefix.'%')
+            // Find last sequence for this specific restaurant today (supporting backward-compatibility)
+            $lastOrderNumber = Order::withoutGlobalScopes()
+                ->where('restaurant_id', $restaurantId)
+                ->where(function ($q) use ($prefix, $legacyPrefix) {
+                    $q->where('order_number', 'like', $prefix.'%')
+                      ->orWhere('order_number', 'like', $legacyPrefix.'%');
+                })
                 ->lockForUpdate()
-                ->orderByDesc('order_number')
+                ->orderByDesc('id')
                 ->value('order_number');
 
             $sequence = 1;
 
-            if ($lastSequence) {
-                $sequence = (int) substr($lastSequence, -4) + 1;
+            if ($lastOrderNumber) {
+                $parts = explode('-', $lastOrderNumber);
+                $lastSeq = end($parts);
+                $sequence = (int) $lastSeq + 1;
             }
 
             return $prefix.str_pad((string) $sequence, 4, '0', STR_PAD_LEFT);

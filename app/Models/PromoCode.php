@@ -130,14 +130,18 @@ class PromoCode extends Model
 
     public function calculateDiscount(float $orderTotal): float
     {
-        if (!$this->isValid($orderTotal)) {
+        if (!$this->isValid($orderTotal) || $orderTotal <= 0) {
             return 0.0;
         }
 
         if ($this->discount_type === 'fixed') {
-            return min($this->discount_value, $orderTotal);
+            return min((float) $this->discount_value, $orderTotal);
         }
 
-        return round($orderTotal * ($this->discount_value / 100), 2);
+        // Percentage discount capped at 100% and strictly non-negative
+        $percent = min(max((float) $this->discount_value, 0.0), 100.0);
+        $discount = round($orderTotal * ($percent / 100), 2);
+
+        return min($discount, $orderTotal);
     }
 }

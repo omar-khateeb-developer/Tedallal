@@ -111,6 +111,14 @@ class WheelController extends Controller
 
         $cleanCurrency = $this->normalizeCurrency($restaurant->currency);
 
+        $orderErrorMessage = null;
+        $order = $wheelToken->order;
+        if ($order && $order->status === \App\Enums\OrderStatus::Cancelled) {
+            $orderErrorMessage = 'عذراً، تم إلغاء الطلب المرتبط بهذه الفاتورة، ولا يمكن استخدام عجلة الحظ.';
+        } elseif ($restaurant->isPrepaid() && $order && $order->status === \App\Enums\OrderStatus::Pending && !$order->paid_at) {
+            $orderErrorMessage = 'يرجى سداد قيمة الفاتورة لدى المحاسب (الكاشير) أولاً لتفعيل دوران عجلة الحظ.';
+        }
+
         $table = $wheelToken->order?->table;
         $menuUrl = $table?->public_token ? route('customer.menu', ['token' => $table->public_token]) : null;
         $orderUrl = ($table?->public_token && $wheelToken->order?->order_number)
@@ -130,6 +138,7 @@ class WheelController extends Controller
             'order_number' => $wheelToken->order?->order_number,
             'is_claimed' => $isClaimed,
             'is_expired' => $isExpired,
+            'order_error_message' => $orderErrorMessage,
             'claimed_voucher' => $claimedVoucher,
             'won_slice_index' => $wonSliceIndex,
             'slices' => $slices,
@@ -161,7 +170,7 @@ class WheelController extends Controller
         // 1. Handle Demo Spin
         if ($token === 'demo') {
             $slices = $this->getDefaultSlices('ل.س');
-            $winningIndex = random_int(0, count($slices) - 1);
+            $winningIndex = $this->pickWeightedSliceIndex($slices);
             $wonSlice = $slices[$winningIndex];
 
             return response()->json([
@@ -182,6 +191,7 @@ class WheelController extends Controller
         // 2. Real Token Spin Transaction
         return DB::transaction(function () use ($token) {
             $wheelToken = OrderWheelToken::where('token', $token)
+                ->with(['order', 'restaurant'])
                 ->lockForUpdate()
                 ->firstOrFail();
 
@@ -199,7 +209,23 @@ class WheelController extends Controller
                 ], 422);
             }
 
+            $order = $wheelToken->order;
+            if ($order && $order->status === \App\Enums\OrderStatus::Cancelled) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'عذراً، تم إلغاء الطلب المرتبط بهذا الرمز، ولا يمكن تدوير عجلة الحظ.',
+                ], 422);
+            }
+
             $restaurant = $wheelToken->restaurant;
+
+            if ($restaurant->isPrepaid() && $order && $order->status === \App\Enums\OrderStatus::Pending && !$order->paid_at) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'يرجى سداد قيمة الفاتورة لدى المحاسب (الكاشير) أولاً لتفعيل دوران عجلة الحظ.',
+                ], 422);
+            }
+
             $slices = $this->buildSlicesForRestaurant($restaurant);
 
             if (empty($slices)) {
@@ -209,8 +235,8 @@ class WheelController extends Controller
                 ], 422);
             }
 
-            // Pick a winning slice randomly
-            $winningIndex = random_int(0, count($slices) - 1);
+            // Pick a winning slice using weighted probability distribution
+            $winningIndex = $this->pickWeightedSliceIndex($slices);
             $wonSlice = $slices[$winningIndex];
 
             // Resolve or ensure PromoCode in database
@@ -431,6 +457,52 @@ class WheelController extends Controller
         }
 
         return "خصم بقيمة {$formattedNum} {$cleanCurrency}";
+    }
+
+    /**
+     * Pick a winning slice using weighted probability distribution.
+     * Higher probability for smaller discounts to ensure safe unit economics.
+     */
+    private function pickWeightedSliceIndex(array $slices): int
+    {
+        $count = count($slices);
+        if ($count <= 1) {
+            return 0;
+        }
+
+        $weights = [];
+        foreach ($slices as $idx => $slice) {
+            $val = (float) ($slice['discount_value'] ?? 10);
+            $type = $slice['discount_type'] ?? 'percentage';
+
+            if ($type === 'percentage') {
+                if ($val <= 10) {
+                    $weights[$idx] = 45; // 45% pool
+                } elseif ($val <= 15) {
+                    $weights[$idx] = 30; // 30% pool
+                } elseif ($val <= 20) {
+                    $weights[$idx] = 18; // 18% pool
+                } else {
+                    $weights[$idx] = 7;  // 7% pool (rare grand prize)
+                }
+            } else {
+                // Fixed discounts
+                $weights[$idx] = 25;
+            }
+        }
+
+        $totalWeight = array_sum($weights);
+        $rand = random_int(1, max(1, $totalWeight));
+        $acc = 0;
+
+        foreach ($weights as $idx => $w) {
+            $acc += $w;
+            if ($rand <= $acc) {
+                return $idx;
+            }
+        }
+
+        return 0;
     }
 
     private function normalizeCurrency(?string $currency): string

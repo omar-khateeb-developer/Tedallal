@@ -26,7 +26,7 @@ class OrderPrintController extends Controller
             abort(404);
         }
 
-        $order->load(['items', 'table', 'wheelToken']);
+        $order->load(['items', 'table', 'wheelToken', 'promoCode']);
 
         $wheelQrBase64 = null;
         $wheelUrl = null;

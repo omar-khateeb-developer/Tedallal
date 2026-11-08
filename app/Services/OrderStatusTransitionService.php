@@ -74,6 +74,22 @@ final class OrderStatusTransitionService
 
         $order->update($updateData);
 
+        // استرجاع الكوبون التالف/أحادي الاستخدام تلقائياً عند إلغاء الطلب
+        if ($target === OrderStatus::Cancelled && $order->promo_code_id) {
+            $promo = \App\Models\PromoCode::find($order->promo_code_id);
+            if ($promo && $promo->is_single_use) {
+                if ($promo->times_used > 0) {
+                    $promo->decrement('times_used');
+                }
+                $promo->update(['is_active' => true]);
+                Log::info('Reclaimed single-use promo code after order cancellation', [
+                    'order_id' => $order->id,
+                    'promo_code_id' => $promo->id,
+                    'code' => $promo->code,
+                ]);
+            }
+        }
+
         Log::info('Order status changed', [
             'order_id' => $order->id,
             'order_number' => $order->order_number,

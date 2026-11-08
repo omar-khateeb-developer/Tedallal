@@ -78,7 +78,10 @@ final class OrderCreationService
                 if (!$restaurant->hasOffersFeature()) {
                     throw ValidationException::withMessages(['promo_code' => ['نظام العروض غير مفعل في هذا المطعم.']]);
                 }
-                $promoCode = \App\Models\PromoCode::where('restaurant_id', $restaurant->id)->where('code', $promoCodeStr)->first();
+                $promoCode = \App\Models\PromoCode::where('restaurant_id', $restaurant->id)
+                    ->where('code', $promoCodeStr)
+                    ->lockForUpdate()
+                    ->first();
                 if (!$promoCode || !$promoCode->isValid((float)$subtotal)) {
                     if ($promoCode && $promoCode->is_single_use && $promoCode->times_used >= 1) {
                         throw ValidationException::withMessages(['promo_code' => ['عذراً، هذا الكوبون مُستهلك (تالف) وقد تم استخدامه مسبقاً! الرمز صالح لمرة واحدة فقط.']]);
