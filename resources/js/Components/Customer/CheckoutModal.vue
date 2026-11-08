@@ -185,13 +185,17 @@ const emit = defineEmits<{
 
                     <!-- بطاقة توضيحية لتفاصيل الكوبون للزبون -->
                     <div v-if="promoError" class="mt-2.5 p-3 rounded-xl border text-xs leading-relaxed space-y-2"
-                        :class="promoError.includes('🎁') || promoError.includes('🏷️')
-                            ? 'bg-amber-50/80 dark:bg-amber-950/30 border-amber-300/80 dark:border-amber-800/80 text-amber-900 dark:text-amber-200'
-                            : 'bg-rose-50/80 dark:bg-rose-950/30 border-rose-200 dark:border-rose-900/60 text-rose-800 dark:text-rose-300'"
+                        :class="[
+                            promoError.includes('مُستهلك') || promoError.includes('تالف') || promoError.includes('مسبقاً')
+                                ? 'bg-rose-50/80 dark:bg-rose-950/30 border-rose-200 dark:border-rose-900/60 text-rose-800 dark:text-rose-300'
+                                : (promoError.includes('تم التحقق') || promoError.includes('مخصص لزيارتك القادمة') || promoError.includes('🎁') || promoError.includes('🏷️')
+                                    ? 'bg-amber-50/80 dark:bg-amber-950/30 border-amber-300/80 dark:border-amber-800/80 text-amber-900 dark:text-amber-200'
+                                    : 'bg-rose-50/80 dark:bg-rose-950/30 border-rose-200 dark:border-rose-900/60 text-rose-800 dark:text-rose-300')
+                        ]"
                     >
                         <div class="flex items-start gap-2">
                             <span class="text-base leading-none">
-                                {{ (promoError.includes('مُستهلك') || promoError.includes('تالف') || promoError.includes('مسبقاً')) ? '❌' : (promoError.includes('🎁') ? '🎁' : (promoError.includes('🏷️') ? '💡' : 'ℹ️')) }}
+                                {{ (promoError.includes('مُستهلك') || promoError.includes('تالف') || promoError.includes('مسبقاً')) ? '🚫' : (promoError.includes('تم التحقق') ? '✅' : (promoError.includes('🎁') ? '🎁' : (promoError.includes('🏷️') ? '💡' : 'ℹ️'))) }}
                             </span>
                             <div class="flex-1">
                                 <p class="font-bold leading-relaxed">{{ promoError }}</p>

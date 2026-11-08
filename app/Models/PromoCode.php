@@ -35,10 +35,21 @@ class PromoCode extends Model
     {
         return $this->belongsTo(Restaurant::class);
     }
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
     
     public function isValid(?float $orderTotal = null): bool
     {
-        if ($this->is_single_use && $this->times_used >= 1) {
+        // 1. التحقق أولاً وقبل أي فحص زمني: هل الكوبون مستهلك أو تالف أو تم استخدامه مسبقاً؟
+        $isUsedInActiveOrder = Order::withoutGlobalScopes()
+            ->where('promo_code_id', $this->id)
+            ->where('status', '!=', \App\Enums\OrderStatus::Cancelled)
+            ->exists();
+
+        if ($this->times_used >= 1 || $isUsedInActiveOrder || ($this->is_single_use && !$this->is_active)) {
             return false;
         }
 
@@ -69,9 +80,19 @@ class PromoCode extends Model
         $now = now();
         $isFuture = $this->starts_at && $this->starts_at->isFuture();
         $isPast = $this->expires_at && $this->expires_at->isPast();
-        $isSingleUsed = ($this->is_single_use && $this->times_used >= 1) || ($this->times_used >= 1 && !$this->is_active);
+
+        // 1. الأولوية القصوى والأولى: التحقق الصارم هل الكوبون مُستهلك أو تم استخدامه مسبقاً قبل أي انتظار أو فحص زمني
+        $isUsedInActiveOrder = Order::withoutGlobalScopes()
+            ->where('promo_code_id', $this->id)
+            ->where('status', '!=', \App\Enums\OrderStatus::Cancelled)
+            ->exists();
+
+        $isSingleUsed = ($this->is_single_use && ($this->times_used >= 1 || !$this->is_active || $isUsedInActiveOrder))
+                     || ($this->times_used >= 1)
+                     || $isUsedInActiveOrder;
+
+        $isInactive = !$this->is_active && !$isSingleUsed;
         $isMinNotMet = $orderTotal !== null && $orderTotal < (float)$this->min_order_value;
-        $isInactive = !$this->is_active;
 
         $valid = !$isInactive && !$isFuture && !$isPast && !$isSingleUsed && !$isMinNotMet;
 
@@ -79,6 +100,7 @@ class PromoCode extends Model
         $reasonMessage = 'الكوبون صالح وجاهز للتطبيق.';
         $canForceActivate = false;
 
+        // الفحص الصارم: إذا كان الكوبون مستهلكاً مسبقاً يظهر فوراً بدون إدخال الزبون في دوامة الانتظار
         if ($isSingleUsed) {
             $reasonCode = 'already_used';
             $reasonMessage = "عذراً، هذا الكوبون مُستهلك (تالف) وقد تم استخدامه مسبقاً! الرمز صالح لمرة واحدة فقط.";
@@ -93,7 +115,7 @@ class PromoCode extends Model
             $timeStr = ($hours > 0 ? "{$hours} ساعة و " : '') . "{$mins} دقيقة";
             $formattedStart = $this->starts_at->format('Y-m-d h:i A');
 
-            $reasonMessage = "🎁 هذا الكوبون مخصص لزيارتك القادمة: يبدأ تفعيله بتاريخ {$formattedStart} (متبقي حوالي {$timeStr}). نتشرف بزيارتك القادمة!";
+            $reasonMessage = "✓ تم التحقق بنجاح: الكوبون سليم وغير مستخدم مسبقاً ومحفوظ لحسابك! وهو مخصص لزيارتك القادمة حيث يبدأ تفعيله بتاريخ {$formattedStart} (متبقي حوالي {$timeStr}). نتشرف بزيارتك القادمة!";
             $canForceActivate = true;
         } elseif ($isPast) {
             $reasonCode = 'expired';
