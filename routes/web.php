@@ -38,7 +38,7 @@ Route::get('/t/{token}/cart', [CustomerController::class, 'cart'])->name('custom
 Route::get('/t/{token}/orders/{orderNumber}', [CustomerController::class, 'order'])->name('customer.order');
 
 // Lucky Wheel routes (Marketing Gamification)
-Route::get('/wheel-demo', fn() => redirect()->route('wheel.show', ['token' => 'demo']))->name('wheel.demo');
+Route::get('/wheel-demo', fn(\Illuminate\Http\Request $request) => redirect()->route('wheel.show', array_merge(['token' => 'demo'], $request->query())))->name('wheel.demo');
 Route::get('/wheel/{token}', [\App\Http\Controllers\Web\WheelController::class, 'show'])->name('wheel.show');
 Route::post('/wheel/{token}/spin', [\App\Http\Controllers\Web\WheelController::class, 'spin'])->name('wheel.spin');
 Route::post('/wheel/{token}/reset', [\App\Http\Controllers\Web\WheelController::class, 'reset'])->name('wheel.reset');

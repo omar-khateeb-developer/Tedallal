@@ -26,7 +26,9 @@ interface Voucher {
 const props = defineProps<{
     token: string;
     is_demo?: boolean;
+    restaurant_id?: number;
     restaurant: {
+        id?: number;
         name: string;
         logo: string | null;
         currency: string;
@@ -322,7 +324,9 @@ async function spinWheel() {
     let wonVoucherData: Voucher | null = null;
 
     // Send API spin request
-    axios.post(`/wheel/${props.token}/spin`)
+    axios.post(`/wheel/${props.token}/spin`, {
+        restaurant_id: props.restaurant_id || props.restaurant?.id,
+    })
         .then(res => {
             const data = res.data;
             wonIndex = data.won_index !== undefined ? data.won_index : 0;

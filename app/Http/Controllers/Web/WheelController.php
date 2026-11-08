@@ -128,7 +128,9 @@ class WheelController extends Controller
         return Inertia::render('Wheel', [
             'token' => $token,
             'is_demo' => false,
+            'restaurant_id' => $restaurant->id,
             'restaurant' => [
+                'id' => $restaurant->id,
                 'name' => $restaurant->name,
                 'logo' => $restaurant->logo,
                 'currency' => $cleanCurrency,
@@ -169,7 +171,12 @@ class WheelController extends Controller
     {
         // 1. Handle Demo Spin
         if ($token === 'demo') {
-            $restaurant = auth()->user()?->restaurant ?? Restaurant::first();
+            $restaurantId = $request->input('restaurant_id') ?? $request->query('restaurant_id');
+            $restaurant = $restaurantId ? Restaurant::find($restaurantId) : null;
+            if (!$restaurant) {
+                $restaurant = auth()->user()?->restaurant ?? Restaurant::first();
+            }
+
             $slices = $restaurant ? $this->buildSlicesForRestaurant($restaurant) : $this->getDefaultSlices('ل.س');
             $winningIndex = $this->pickWeightedSliceIndex($slices);
             $wonSlice = $slices[$winningIndex];
@@ -334,7 +341,11 @@ class WheelController extends Controller
      */
     private function renderDemoWheel(Request $request): Response
     {
-        $restaurant = auth()->user()?->restaurant ?? Restaurant::first();
+        $restaurantId = $request->query('restaurant_id') ?? $request->input('restaurant_id');
+        $restaurant = $restaurantId ? Restaurant::find($restaurantId) : null;
+        if (!$restaurant) {
+            $restaurant = auth()->user()?->restaurant ?? Restaurant::first();
+        }
         if (!$restaurant) {
             abort(404);
         }
@@ -353,7 +364,9 @@ class WheelController extends Controller
         return Inertia::render('Wheel', [
             'token' => 'demo',
             'is_demo' => true,
+            'restaurant_id' => $restaurant->id,
             'restaurant' => [
+                'id' => $restaurant->id,
                 'name' => $restaurant->name ?? 'مطعم تدلّل الفاخر',
                 'logo' => $restaurant->logo ?? '/images/tedallal-golden-crop.png',
                 'currency' => $currency,

@@ -152,7 +152,7 @@ const deleteOffer = async (id: number) => {
                                 </p>
                             </div>
                         </div>
-                        <a href="/wheel/demo" target="_blank"
+                        <a :href="`/wheel/demo${$page.props.auth?.restaurant?.id ? `?restaurant_id=${$page.props.auth.restaurant.id}` : ''}`" target="_blank"
                            class="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-700 dark:text-amber-300 text-sm font-semibold transition-colors">
                             <span>🎲</span>
                             <span>معاينة العجلة</span>
