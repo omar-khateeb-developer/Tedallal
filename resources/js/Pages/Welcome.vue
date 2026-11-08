@@ -687,7 +687,7 @@ onUnmounted(() => {
     <div
         :dir="currentLocale === 'ar' ? 'rtl' : 'ltr'"
         :class="[
-            currentLocale === 'ar' ? 'font-tajawal' : 'font-sans font-english',
+            'font-sans',
             isDark ? 'dark-mode-theme bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#1a1a1a] via-[#0d0d0d] to-[#050505] text-[#f8fafc]' : 'light-mode-theme bg-white text-[#0f172a]'
         ]"
         class="min-h-screen selection:bg-[#BF953F] selection:text-black antialiased overflow-x-hidden relative transition-colors duration-500"
@@ -1170,7 +1170,7 @@ onUnmounted(() => {
                 <!-- Massive Royal Headline: Centered, Typography As Art with Crisp Contours -->
                 <Transition name="hero-mode" mode="out-in">
                     <div :key="heroMode" class="space-y-6 max-w-5xl mx-auto">
-                        <h1 class="font-serif font-normal text-white">
+                        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.25] text-white">
                             <template v-if="heroMode === 'traditional'">
                                 <span class="block text-2xl sm:text-4xl lg:text-5xl text-stone-100 leading-relaxed font-bold drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] [text-shadow:_0_2px_10px_rgba(0,0,0,0.9),_0_0_1px_rgba(0,0,0,0.9)]">
                                     <span class="inline-block">مطبخ مزدحم،</span>
@@ -1193,7 +1193,7 @@ onUnmounted(() => {
                             </template>
                         </h1>
 
-                        <p class="font-tajawal font-normal text-base sm:text-xl text-stone-300 max-w-2xl mx-auto leading-relaxed pt-2">
+                        <p class="text-base sm:text-lg text-slate-300 dark:text-stone-300 max-w-2xl mx-auto leading-relaxed pt-2">
                             <template v-if="heroMode === 'traditional'">
                                 {{ currentLocale === 'ar'
                                     ? 'عمولات وساطة تلتهم 25% من إيراداتك، أخطاء متكررة في تذاكر المطبخ، ومخزون يتسرب يومياً دون رقابة دقيقة.'
@@ -1218,8 +1218,8 @@ onUnmounted(() => {
                         <div class="w-9 h-9 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center mb-3">
                             <svg class="w-5 h-5 text-[#D4AF37]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="8"/><path d="M9 15l6-6M9.5 9.5h.01M14.5 14.5h.01"/></svg>
                         </div>
-                        <span class="text-xs text-stone-400 font-medium mb-1">{{ currentLocale === 'ar' ? 'عمولة وسيط' : 'Intermediary Cut' }}</span>
-                        <span class="font-serif text-3xl font-bold bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-transparent" dir="ltr">0%</span>
+                        <span class="text-xs text-stone-300 font-medium mb-1">{{ currentLocale === 'ar' ? 'عمولة وسيط' : 'Intermediary Cut' }}</span>
+                        <span class="text-3xl font-extrabold bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-transparent" dir="ltr">0%</span>
                         <span class="text-[11px] font-bold text-emerald-400 mt-1.5">{{ currentLocale === 'ar' ? 'أرباحك كاملة 100% لك' : '100% direct revenue' }}</span>
                     </div>
 
@@ -1229,8 +1229,8 @@ onUnmounted(() => {
                         <div class="w-9 h-9 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center mb-3">
                             <svg class="w-5 h-5 text-[#D4AF37]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20V10M6 20V14M18 20V4"/></svg>
                         </div>
-                        <span class="text-xs text-stone-400 font-medium mb-1">{{ currentLocale === 'ar' ? 'ضبط التكاليف' : 'Cost Control' }}</span>
-                        <span class="font-serif text-2xl font-bold text-[#FCF6BA]">{{ currentLocale === 'ar' ? 'فوري ولحظي' : 'Real-Time' }}</span>
+                        <span class="text-xs text-stone-300 font-medium mb-1">{{ currentLocale === 'ar' ? 'ضبط التكاليف' : 'Cost Control' }}</span>
+                        <span class="text-2xl font-bold text-[#FCF6BA]">{{ currentLocale === 'ar' ? 'فوري ولحظي' : 'Real-Time' }}</span>
                         <span class="text-[11px] font-bold text-stone-300 mt-1.5">{{ currentLocale === 'ar' ? 'ربط المطبخ بالوصفات آلياً' : 'Recipe-level inventory sync' }}</span>
                     </div>
 
@@ -1240,8 +1240,8 @@ onUnmounted(() => {
                         <div class="w-9 h-9 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center mb-3">
                             <svg class="w-5 h-5 text-[#D4AF37]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22,7 13.5,15.5 8.5,10.5 2,17"/><polyline points="16,7 22,7 22,13"/></svg>
                         </div>
-                        <span class="text-xs text-stone-400 font-medium mb-1">{{ currentLocale === 'ar' ? 'النتيجة' : 'Bottom-Line Growth' }}</span>
-                        <span class="font-serif text-2xl font-bold text-[#FCF6BA]">{{ currentLocale === 'ar' ? 'مضاعفة صافي الأرباح' : '+100% Margin Boost' }}</span>
+                        <span class="text-xs text-stone-300 font-medium mb-1">{{ currentLocale === 'ar' ? 'النتيجة' : 'Bottom-Line Growth' }}</span>
+                        <span class="text-2xl font-bold text-[#FCF6BA]">{{ currentLocale === 'ar' ? 'مضاعفة صافي الأرباح' : '+100% Margin Boost' }}</span>
                         <span class="text-[11px] font-bold text-[#D4AF37] mt-1.5">{{ currentLocale === 'ar' ? 'نمو وسيطرة مالية كاملة' : 'Total operational command' }}</span>
                     </div>
                 </div>
@@ -1303,14 +1303,14 @@ onUnmounted(() => {
                 <div class="max-w-3xl mb-24 space-y-5 text-start">
                     <div class="relative inline-flex items-center gap-2.5 px-4.5 py-1.5 rounded-full bg-black/40 backdrop-blur-xl border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_20px_40px_rgba(0,0,0,0.5)] before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/50 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm text-[#FCF6BA] text-xs font-semibold">
                         <span class="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-pulse"></span>
-                        <span>{{ currentLocale === 'ar' ? 'هَنْدَسَةُ الضِّيَافَةِ الرَّقْمِيَّة • ARCHITECTURAL COMMAND' : 'BESPOKE PLATFORM ARCHITECTURE' }}</span>
+                        <span>{{ currentLocale === 'ar' ? 'هندسة الضيافة الرقمية • قيادة معمارية متكاملة' : 'BESPOKE PLATFORM ARCHITECTURE' }}</span>
                     </div>
 
-                    <h2 class="font-serif text-3xl sm:text-5xl lg:text-6xl font-bold tracking-normal text-transparent bg-clip-text bg-gradient-to-r from-white via-[#FCF6BA] to-[#D4AF37] leading-[1.4] py-1">
+                    <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-[#FCF6BA] to-[#D4AF37] leading-tight py-1">
                         {{ currentLocale === 'ar' ? 'أركان المنظومة المصممة يدوياً لرواد الضيافة الفاخرة' : 'Bespoke Pillars for Elite Restaurant Operations' }}
                     </h2>
 
-                    <p class="font-tajawal text-base sm:text-lg text-stone-300 leading-relaxed max-w-2xl">
+                    <p class="text-base sm:text-lg text-slate-300 dark:text-stone-300 leading-relaxed max-w-2xl">
                         {{ currentLocale === 'ar'
                             ? 'نرفض القوالب البرمجية المكررة. بنينا كل تفصيلة في تدلّل لتجسيد الفخامة البصرية ودقة الأتمتة اللحظية لصالتك ومطبخك.'
                             : 'Rejecting generic SaaS templates. Every element is crafted to unify visual majesty with real-time operational precision.'
@@ -1341,16 +1341,16 @@ onUnmounted(() => {
 
                             <div class="flex items-center gap-3">
                                 <span class="px-3.5 py-1 rounded-full text-xs font-bold bg-[#BF953F]/20 text-[#FCF6BA] border border-[#BF953F]/40">
-                                    {{ currentLocale === 'ar' ? 'باقة Max الحصرية' : 'Max Plan Signature' }}
+                                    {{ currentLocale === 'ar' ? 'الباقة المتكاملة (ماكس) الحصرية' : 'Max Plan Signature' }}
                                 </span>
-                                <span class="text-xs text-stone-400 font-medium">Zero App Downloads Required</span>
+                                <span class="text-xs text-slate-300 font-medium">{{ currentLocale === 'ar' ? 'بدون أي تطبيق — يعمل فوراً عبر المتصفح' : 'Zero App Downloads Required' }}</span>
                             </div>
 
-                            <h3 class="font-serif text-3xl sm:text-4xl lg:text-5xl font-normal text-white group-hover:text-[#FCF6BA] transition-colors duration-500">
-                                {{ currentLocale === 'ar' ? 'منيو الباركود التفاعلي — فخامة بصرية وشعار مخصص في قلب الـ QR' : 'Interactive QR Dining & Centerpiece Logo Customization' }}
+                            <h3 class="text-xl sm:text-2xl font-bold leading-snug text-white group-hover:text-[#FCF6BA] transition-colors duration-500">
+                                {{ currentLocale === 'ar' ? 'منيو الباركود التفاعلي — فخامة بصرية وشعار مخصص في قلب رمز الاستجابة السريع' : 'Interactive QR Dining & Centerpiece Logo Customization' }}
                             </h3>
 
-                            <p class="font-tajawal text-base text-stone-300 leading-relaxed max-w-xl">
+                            <p class="text-sm sm:text-base text-slate-300 dark:text-stone-300 leading-relaxed max-w-xl">
                                 {{ currentLocale === 'ar'
                                     ? 'يتيح لضيوفك استعراض الأطباق بصور عالية الدقة فائقة الوضوح، والطلب المباشر من طاولتهم دون تنزيل أي تطبيق. يتضمن ميزة دمج شعار مطعمك الذهبي في منتصف الباركود مع دعم متعدد العملات واللغات.'
                                     : 'Empowers patrons to explore high-res dishes and order directly from their table with zero app installs. Embeds your bespoke gold restaurant emblem in the QR center.'
@@ -1361,11 +1361,11 @@ onUnmounted(() => {
                             <div class="pt-8 border-t border-white/10 flex flex-wrap items-center justify-between gap-4">
                                 <div class="flex items-center gap-3.5">
                                     <div class="w-12 h-12 rounded-xl bg-black/40 border border-white/10 flex items-center justify-center text-[#D4AF37] font-bold text-xs">
-                                        QR
+                                        {{ currentLocale === 'ar' ? 'باركود' : 'QR' }}
                                     </div>
                                     <div class="text-start">
                                         <div class="text-xs font-bold text-white">{{ currentLocale === 'ar' ? 'طلب فوري من الطاولة • دقة 100%' : 'Instant Table Order • 100% Accuracy' }}</div>
-                                        <div class="text-[11px] text-stone-400 mt-0.5">{{ currentLocale === 'ar' ? 'توفير 40% من وقت النادل لكل دورة طاولة' : 'Saves 40% waiter time per table turn' }}</div>
+                                        <div class="text-[11px] text-stone-300 mt-0.5">{{ currentLocale === 'ar' ? 'توفير 40% من وقت النادل لكل دورة طاولة' : 'Saves 40% waiter time per table turn' }}</div>
                                     </div>
                                 </div>
 
@@ -1400,11 +1400,11 @@ onUnmounted(() => {
                                 {{ currentLocale === 'ar' ? 'تنظيم المطبخ اللحظي' : 'Cloud KDS Routing' }}
                             </span>
 
-                            <h3 class="font-serif text-2xl sm:text-3xl font-normal text-white group-hover:text-[#FCF6BA] transition-colors duration-500">
-                                {{ currentLocale === 'ar' ? 'شاشات المطبخ الذكية (Multi-KDS)' : 'Multi-Station Cloud KDS Displays' }}
+                            <h3 class="text-xl sm:text-2xl font-bold leading-snug text-white group-hover:text-[#FCF6BA] transition-colors duration-500">
+                                {{ currentLocale === 'ar' ? 'شاشات المطبخ الذكية (محطات مطبخ متعددة)' : 'Multi-Station Cloud KDS Displays' }}
                             </h3>
 
-                            <p class="font-tajawal text-xs sm:text-sm text-stone-300 leading-relaxed">
+                            <p class="text-sm sm:text-base text-slate-300 dark:text-stone-300 leading-relaxed">
                                 {{ currentLocale === 'ar'
                                     ? 'توجيه آلي وفوري للطلبات بين خطوط التحضير (مشاوي، بار، سلطات) مع مؤقتات لونية تقضي تماماً على التذاكر الورقية وتمنع تأخير الأطباق.'
                                     : 'Real-time automatic routing across preparation lines (Grill, Bar, Pastry) with color-coded timers eliminating paper ticket chaos.'
@@ -1413,7 +1413,7 @@ onUnmounted(() => {
 
                             <!-- Mini Preparation Benchmark Widget -->
                             <div class="pt-6 border-t border-white/10 flex items-center justify-between text-xs">
-                                <span class="text-stone-400">{{ currentLocale === 'ar' ? 'مؤقت التحضير المعياري' : 'Prep Benchmark' }}</span>
+                                <span class="text-stone-300">{{ currentLocale === 'ar' ? 'مؤقت التحضير المعياري' : 'Prep Benchmark' }}</span>
                                 <span class="font-mono font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-md border border-emerald-500/25">08:30 دقيقة</span>
                             </div>
                         </div>
@@ -1434,10 +1434,10 @@ onUnmounted(() => {
                                 <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
                                     {{ currentLocale === 'ar' ? 'حماية الإيراد الكامل' : '100% Margin Retention' }}
                                 </span>
-                                <h4 class="font-serif text-2xl sm:text-3xl font-normal text-white">
+                                <h4 class="text-lg sm:text-xl font-bold leading-snug text-white">
                                     {{ currentLocale === 'ar' ? 'صفر عمولة وسيطة 0% — كل قرش يدخل حسابك' : 'Zero 0% Commission — Retain All Profits' }}
                                 </h4>
-                                <p class="font-tajawal text-sm text-stone-300 leading-relaxed">
+                                <p class="text-sm text-slate-300 dark:text-stone-300 leading-relaxed">
                                     {{ currentLocale === 'ar'
                                         ? 'احتفظ بكامل أرباحك بدون استنزاف تطبيقات التوصيل (15%-25%). تقارير محاسبية فورية مع جرد آلي للمخزون يربط كل وجبة بمكوناتها بدقة الغرام.'
                                         : 'Retain 100% of receipts without delivery app cuts. Real-time CPA reports and automated recipe-level inventory tracking.'
@@ -1455,10 +1455,10 @@ onUnmounted(() => {
                                 <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-[#BF953F]/20 text-[#FCF6BA] border border-[#BF953F]/40">
                                     {{ currentLocale === 'ar' ? 'زيادة المبيعات آلياً' : 'Automated Upselling AI' }}
                                 </span>
-                                <h4 class="font-serif text-2xl sm:text-3xl font-normal text-white">
+                                <h4 class="text-lg sm:text-xl font-bold leading-snug text-white">
                                     {{ currentLocale === 'ar' ? 'النادل الذكي — زيادة متوسط الفاتورة بنسبة 28%' : 'AI Concierge — +28% Average Ticket Growth' }}
                                 </h4>
-                                <p class="font-tajawal text-sm text-stone-300 leading-relaxed">
+                                <p class="text-sm text-slate-300 dark:text-stone-300 leading-relaxed">
                                     {{ currentLocale === 'ar'
                                         ? 'محرك اقتراحات نخبوي يقترح الأطباق الجانبية والمشروبات المتناغمة بأسلوب راقٍ وتوقيت نفسي مثالي، لرفع قيمة الفاتورة دون أي إلحاح.'
                                         : 'An intelligent recommendation engine presenting complementary pairings and desserts at the exact psychological moment.'
@@ -1493,14 +1493,14 @@ onUnmounted(() => {
                         <span>{{ t.workflow.tag }}</span>
                     </div>
                     <h2
-                        class="text-3xl sm:text-5xl font-black tracking-tight"
+                        class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight"
                         :class="isDark ? 'text-white' : 'text-slate-900'"
                     >
                         {{ t.workflow.title }}
                     </h2>
                     <p
                         class="text-sm sm:text-base leading-relaxed"
-                        :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                        :class="isDark ? 'text-slate-300' : 'text-slate-700'"
                     >
                         {{ t.workflow.subtitle }}
                     </p>
@@ -1605,7 +1605,7 @@ onUnmounted(() => {
                             </h3>
                             <p
                                 class="text-xs leading-relaxed"
-                                :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                                :class="isDark ? 'text-slate-300' : 'text-slate-700'"
                             >
                                 {{ activeWorkflow.step1Desc }}
                             </p>
@@ -1681,7 +1681,7 @@ onUnmounted(() => {
                             </h3>
                             <p
                                 class="text-xs leading-relaxed"
-                                :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                                :class="isDark ? 'text-slate-300' : 'text-slate-700'"
                             >
                                 {{ activeWorkflow.step2Desc }}
                             </p>
@@ -1757,7 +1757,7 @@ onUnmounted(() => {
                             </h3>
                             <p
                                 class="text-xs leading-relaxed"
-                                :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                                :class="isDark ? 'text-slate-300' : 'text-slate-700'"
                             >
                                 {{ activeWorkflow.step3Desc }}
                             </p>
@@ -1833,7 +1833,7 @@ onUnmounted(() => {
                             </h3>
                             <p
                                 class="text-xs leading-relaxed"
-                                :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                                :class="isDark ? 'text-slate-300' : 'text-slate-700'"
                             >
                                 {{ activeWorkflow.step4Desc }}
                             </p>
@@ -1902,14 +1902,14 @@ onUnmounted(() => {
                         <span>{{ t.solutions.tag }}</span>
                     </div>
                     <h2
-                        class="text-3xl sm:text-5xl font-extrabold leading-tight tracking-tight"
+                        class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight"
                         :class="isDark ? 'text-white' : 'text-slate-900'"
                     >
                         {{ t.solutions.title }}
                     </h2>
                     <p
                         class="text-base sm:text-lg"
-                        :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                        :class="isDark ? 'text-slate-300' : 'text-slate-700'"
                     >
                         {{ t.solutions.subtitle }}
                     </p>
@@ -1946,7 +1946,7 @@ onUnmounted(() => {
 
                             <div>
                                 <h3
-                                    class="text-2xl font-black mb-2"
+                                    class="text-xl sm:text-2xl font-bold leading-snug mb-2"
                                     :class="isDark ? 'text-white' : 'text-slate-900'"
                                 >
                                     {{ t.solutions.postpaidTitle }}
@@ -2029,7 +2029,7 @@ onUnmounted(() => {
 
                             <div>
                                 <h3
-                                    class="text-2xl font-black mb-2"
+                                    class="text-xl sm:text-2xl font-bold leading-snug mb-2"
                                     :class="isDark ? 'text-white' : 'text-slate-900'"
                                 >
                                     {{ t.solutions.prepaidTitle }}
@@ -2106,14 +2106,14 @@ onUnmounted(() => {
                         <span>{{ t.demo.tag }}</span>
                     </div>
                     <h2
-                        class="text-3xl sm:text-4xl font-extrabold tracking-tight"
+                        class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight"
                         :class="isDark ? 'text-white' : 'text-slate-900'"
                     >
                         {{ t.demo.title }}
                     </h2>
                     <p
                         class="text-base sm:text-lg"
-                        :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                        :class="isDark ? 'text-slate-300' : 'text-slate-700'"
                     >
                         {{ t.demo.subtitle }}
                     </p>
@@ -2182,7 +2182,7 @@ onUnmounted(() => {
                                 <span>{{ t.demo.tabCustomer }}</span>
                             </div>
                             <h3
-                                class="text-2xl sm:text-3xl font-extrabold"
+                                class="text-xl sm:text-2xl font-bold leading-snug"
                                 :class="isDark ? 'text-white' : 'text-slate-900'"
                             >
                                 {{ currentLocale === 'ar' ? 'منيو رقمي فوري على الطاولة' : 'Instant Tabletop Digital Menu' }}
@@ -2432,7 +2432,7 @@ onUnmounted(() => {
                                 </h4>
                                 <p
                                     class="text-xs mt-1"
-                                    :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                                    :class="isDark ? 'text-slate-300' : 'text-slate-700'"
                                 >
                                     {{ t.demo.kdsHeaderSubtitle }}
                                 </p>
@@ -2738,7 +2738,7 @@ onUnmounted(() => {
 
                                 <div class="flex justify-between text-[11px] border-b border-slate-300 pb-1">
                                     <span>{{ currentLocale === 'ar' ? 'طاولة: 04' : 'Table: 04' }}</span>
-                                    <span>#INV-9402</span>
+                                    <span>{{ currentLocale === 'ar' ? 'فاتورة #9402' : '#INV-9402' }}</span>
                                 </div>
 
                                 <div class="space-y-1.5 border-b border-dashed border-slate-400 pb-3 text-xs">
@@ -2800,7 +2800,7 @@ onUnmounted(() => {
                                 </h4>
                                 <p
                                     class="text-xs mt-1"
-                                    :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                                    :class="isDark ? 'text-slate-300' : 'text-slate-700'"
                                 >
                                     {{ t.demo.analyticsSubtitle }}
                                 </p>
@@ -2881,7 +2881,7 @@ onUnmounted(() => {
                             >
                                 <div
                                     class="text-[11px] font-semibold mb-1"
-                                    :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                                    :class="isDark ? 'text-slate-300' : 'text-slate-700'"
                                 >
                                     {{ currentLocale === 'ar' ? 'إجمالي المبيعات والخصومات' : 'Gross Sales & Discounts' }}
                                 </div>
@@ -2905,9 +2905,9 @@ onUnmounted(() => {
                             >
                                 <div
                                     class="text-[11px] font-semibold mb-1"
-                                    :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                                    :class="isDark ? 'text-slate-300' : 'text-slate-700'"
                                 >
-                                    {{ currentLocale === 'ar' ? 'متوسط الفاتورة (AOV)' : 'Avg Order Value (AOV)' }}
+                                    {{ currentLocale === 'ar' ? 'متوسط قيمة الطلب' : 'Avg Order Value (AOV)' }}
                                 </div>
                                 <div
                                     class="text-lg sm:text-xl font-bold font-mono"
@@ -2932,7 +2932,7 @@ onUnmounted(() => {
                             >
                                 <div
                                     class="text-[11px] font-semibold mb-1"
-                                    :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                                    :class="isDark ? 'text-slate-300' : 'text-slate-700'"
                                 >
                                     {{ currentLocale === 'ar' ? 'الصالة مقابل السفري' : 'Dine-In vs Takeaway' }}
                                 </div>
@@ -3083,14 +3083,14 @@ onUnmounted(() => {
                         <span>{{ t.features.tag }}</span>
                     </div>
                     <h2
-                        class="text-3xl sm:text-4xl font-extrabold tracking-tight"
+                        class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight"
                         :class="isDark ? 'text-white' : 'text-slate-900'"
                     >
                         {{ t.features.title }}
                     </h2>
                     <p
                         class="text-base sm:text-lg"
-                        :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                        :class="isDark ? 'text-slate-300' : 'text-slate-700'"
                     >
                         {{ t.features.subtitle }}
                     </p>
@@ -3109,12 +3109,12 @@ onUnmounted(() => {
                             ⚡
                         </div>
                         <h4
-                            class="text-xl font-bold mb-3"
+                            class="text-lg sm:text-xl font-bold leading-snug mb-3"
                             :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'"
                         >{{ t.features.f1Title }}</h4>
                         <p
                             class="text-sm leading-relaxed"
-                            :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                            :class="isDark ? 'text-slate-300' : 'text-slate-700'"
                         >{{ t.features.f1Desc }}</p>
                     </div>
 
@@ -3130,12 +3130,12 @@ onUnmounted(() => {
                             📱
                         </div>
                         <h4
-                            class="text-xl font-bold mb-3"
+                            class="text-lg sm:text-xl font-bold leading-snug mb-3"
                             :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'"
                         >{{ t.features.f2Title }}</h4>
                         <p
                             class="text-sm leading-relaxed"
-                            :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                            :class="isDark ? 'text-slate-300' : 'text-slate-700'"
                         >{{ t.features.f2Desc }}</p>
                     </div>
 
@@ -3151,12 +3151,12 @@ onUnmounted(() => {
                             👨‍🍳
                         </div>
                         <h4
-                            class="text-xl font-bold mb-3"
+                            class="text-lg sm:text-xl font-bold leading-snug mb-3"
                             :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'"
                         >{{ t.features.f3Title }}</h4>
                         <p
                             class="text-sm leading-relaxed"
-                            :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                            :class="isDark ? 'text-slate-300' : 'text-slate-700'"
                         >{{ t.features.f3Desc }}</p>
                     </div>
 
@@ -3172,12 +3172,12 @@ onUnmounted(() => {
                             🖨️
                         </div>
                         <h4
-                            class="text-xl font-bold mb-3"
+                            class="text-lg sm:text-xl font-bold leading-snug mb-3"
                             :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'"
                         >{{ t.features.f4Title }}</h4>
                         <p
                             class="text-sm leading-relaxed"
-                            :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                            :class="isDark ? 'text-slate-300' : 'text-slate-700'"
                         >{{ t.features.f4Desc }}</p>
                     </div>
 
@@ -3193,12 +3193,12 @@ onUnmounted(() => {
                             🏢
                         </div>
                         <h4
-                            class="text-xl font-bold mb-3"
+                            class="text-lg sm:text-xl font-bold leading-snug mb-3"
                             :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'"
                         >{{ t.features.f5Title }}</h4>
                         <p
                             class="text-sm leading-relaxed"
-                            :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                            :class="isDark ? 'text-slate-300' : 'text-slate-700'"
                         >{{ t.features.f5Desc }}</p>
                     </div>
 
@@ -3214,14 +3214,14 @@ onUnmounted(() => {
                             📊
                         </div>
                         <h4
-                            class="text-xl font-bold mb-3 flex items-center gap-2"
+                            class="text-lg sm:text-xl font-bold leading-snug mb-3 flex items-center gap-2"
                             :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'"
                         >
                             <span>{{ t.features.f6Title }}</span>
                         </h4>
                         <p
                             class="text-sm leading-relaxed"
-                            :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                            :class="isDark ? 'text-slate-300' : 'text-slate-700'"
                         >{{ t.features.f6Desc }}</p>
                     </div>
                 </div>
@@ -3265,8 +3265,8 @@ onUnmounted(() => {
                             <span>{{ t.directoryPromo.tag }}</span>
                         </div>
                         <h2
-                            class="text-3xl sm:text-5xl font-black tracking-tight"
-                            :class="isDark ? 'text-white' : 'text-slate-950 font-black'"
+                            class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight"
+                            :class="isDark ? 'text-white' : 'text-slate-950'"
                         >
                             {{ t.directoryPromo.title }}
                         </h2>
@@ -3303,7 +3303,7 @@ onUnmounted(() => {
                             >{{ t.directoryPromo.benefit1Title }}</h4>
                             <p
                                 class="text-xs leading-relaxed"
-                                :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                                :class="isDark ? 'text-slate-300' : 'text-slate-700'"
                             >{{ t.directoryPromo.benefit1Desc }}</p>
                         </div>
 
@@ -3323,7 +3323,7 @@ onUnmounted(() => {
                             >{{ t.directoryPromo.benefit2Title }}</h4>
                             <p
                                 class="text-xs leading-relaxed"
-                                :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                                :class="isDark ? 'text-slate-300' : 'text-slate-700'"
                             >{{ t.directoryPromo.benefit2Desc }}</p>
                         </div>
 
@@ -3343,7 +3343,7 @@ onUnmounted(() => {
                             >{{ t.directoryPromo.benefit3Title }}</h4>
                             <p
                                 class="text-xs leading-relaxed"
-                                :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                                :class="isDark ? 'text-slate-300' : 'text-slate-700'"
                             >{{ t.directoryPromo.benefit3Desc }}</p>
                         </div>
                     </div>
@@ -3384,14 +3384,14 @@ onUnmounted(() => {
                         <span>{{ t.roi.tag }}</span>
                     </div>
                     <h2
-                        class="text-3xl sm:text-4xl font-extrabold tracking-tight"
+                        class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight"
                         :class="isDark ? 'text-white' : 'text-slate-900'"
                     >
                         {{ t.roi.title }}
                     </h2>
                     <p
                         class="text-base sm:text-lg"
-                        :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                        :class="isDark ? 'text-slate-300' : 'text-slate-700'"
                     >
                         {{ t.roi.subtitle }}
                     </p>
@@ -3578,14 +3578,14 @@ onUnmounted(() => {
                         <span>{{ t.comparison.tag }}</span>
                     </div>
                     <h2
-                        class="text-3xl sm:text-4xl font-extrabold tracking-tight"
+                        class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight"
                         :class="isDark ? 'text-white' : 'text-slate-900'"
                     >
                         {{ t.comparison.title }}
                     </h2>
                     <p
                         class="text-base sm:text-lg"
-                        :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                        :class="isDark ? 'text-slate-300' : 'text-slate-700'"
                     >
                         {{ t.comparison.subtitle }}
                     </p>
@@ -3734,14 +3734,14 @@ onUnmounted(() => {
                         <span>{{ t.testimonials.tag }}</span>
                     </div>
                     <h2
-                        class="text-3xl sm:text-4xl font-extrabold tracking-tight"
+                        class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight"
                         :class="isDark ? 'text-white' : 'text-slate-900'"
                     >
                         {{ t.testimonials.title }}
                     </h2>
                     <p
                         class="text-base sm:text-lg"
-                        :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                        :class="isDark ? 'text-slate-300' : 'text-slate-700'"
                     >
                         {{ t.testimonials.subtitle }}
                     </p>
@@ -3863,14 +3863,14 @@ onUnmounted(() => {
                         <span>💎 {{ currentLocale === 'ar' ? 'باقات مرنة ومخصصة لأهداف مطعمك' : 'Flexible Packages Tailored For You' }}</span>
                     </div>
                     <h2
-                        class="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight"
+                        class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight"
                         :class="isDark ? 'text-white' : 'text-slate-900'"
                     >
                         {{ currentLocale === 'ar' ? 'استثمر في نمو مطعمك بعائد فوري ومباشر' : 'Invest in Growth with Immediate ROI' }}
                     </h2>
                     <p
                         class="text-base sm:text-lg leading-relaxed max-w-2xl mx-auto"
-                        :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                        :class="isDark ? 'text-slate-300' : 'text-slate-700'"
                     >
                         {{ currentLocale === 'ar'
                             ? 'باقات مدروسة تمنحك الأتمتة الشاملة بدون اقتطاع أي عمولة من مبيعاتك (0% عمولة) — اختر الباقة التي تلائم نموذج تشغيلك.'
@@ -3896,10 +3896,10 @@ onUnmounted(() => {
                                 </span>
                                 <span class="text-2xl">⚡</span>
                             </div>
-                            <h3 class="text-2xl font-black text-slate-900 dark:text-white mb-2">
-                                Basic
+                            <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white mb-2">
+                                {{ currentLocale === 'ar' ? 'الباقة الأساسية' : 'Basic' }}
                             </h3>
-                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 min-h-[40px] leading-relaxed mb-6">
+                            <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 min-h-[40px] leading-relaxed mb-6">
                                 {{ currentLocale === 'ar'
                                     ? 'إدارة الطلب والتشغيل الأساسي: الحل الأمثل لرقمنة الصالة والمطبخ والتخلص من فوضى الأوراق وأخطاء الفواتير.'
                                     : 'Core Ordering Operations: Digitize table orders and kitchen flow, eliminating paper errors.'
@@ -3920,7 +3920,7 @@ onUnmounted(() => {
                                 </div>
                                 <div class="flex items-start gap-2.5 text-slate-700 dark:text-slate-300">
                                     <span class="text-emerald-500 font-bold shrink-0">✓</span>
-                                    <span>{{ currentLocale === 'ar' ? 'منيو الباركود التفاعلي فائق السرعة عبر رمز QR دون تحميل تطبيقات' : 'Fast interactive QR menu without app download' }}</span>
+                                    <span>{{ currentLocale === 'ar' ? 'منيو الباركود التفاعلي فائق السرعة عبر رمز الاستجابة السريع دون الحاجة لتحميل تطبيقات' : 'Fast interactive QR menu without app download' }}</span>
                                 </div>
                                 <div class="flex items-start gap-2.5 text-slate-700 dark:text-slate-300">
                                     <span class="text-emerald-500 font-bold shrink-0">✓</span>
@@ -3953,7 +3953,7 @@ onUnmounted(() => {
                                 ? 'border-slate-700 hover:border-amber-400 bg-slate-800/80 text-white hover:bg-slate-800'
                                 : 'border-slate-300 hover:border-amber-500 bg-white text-slate-900 hover:bg-stone-50 shadow-xs'"
                         >
-                            {{ currentLocale === 'ar' ? 'طلب باقة Basic' : 'Select Basic Plan' }}
+                            {{ currentLocale === 'ar' ? 'طلب الباقة الأساسية' : 'Select Basic Plan' }}
                         </Link>
                     </div>
 
@@ -3976,10 +3976,10 @@ onUnmounted(() => {
                                 </span>
                                 <span class="text-2xl">🔥</span>
                             </div>
-                            <h3 class="text-2xl font-black text-slate-900 dark:text-white mb-2">
-                                Pro
+                            <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white mb-2">
+                                {{ currentLocale === 'ar' ? 'الباقة الاحترافية' : 'Pro' }}
                             </h3>
-                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 min-h-[40px] leading-relaxed mb-6">
+                            <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 min-h-[40px] leading-relaxed mb-6">
                                 {{ currentLocale === 'ar'
                                     ? 'إدارة الطلب + منظومة الكوبونات والتسويق الذكي: لمضاعفة ولاء الزبائن وتكرار زياراتهم وتنشيط المبيعات.'
                                     : 'Ordering + Smart Marketing & Coupons: Boost customer loyalty and recurring visits.'
@@ -3996,7 +3996,7 @@ onUnmounted(() => {
                             <!-- Features List -->
                             <div class="space-y-3 mb-8 text-xs sm:text-sm">
                                 <div class="font-extrabold text-amber-700 dark:text-amber-400 mb-2">
-                                    {{ currentLocale === 'ar' ? 'تشمل كافة ميزات Basic، بالإضافة إلى:' : 'Everything in Basic, plus:' }}
+                                    {{ currentLocale === 'ar' ? 'تشمل كافة ميزات الباقة الأساسية، بالإضافة إلى:' : 'Everything in Basic, plus:' }}
                                 </div>
                                 <div class="flex items-start gap-2.5 text-slate-800 dark:text-slate-200 font-medium">
                                     <span class="text-amber-500 font-black shrink-0">★</span>
@@ -4026,7 +4026,7 @@ onUnmounted(() => {
                             href="/consultation"
                             class="w-full text-center py-3.5 px-6 rounded-2xl font-black text-sm bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-lg shadow-amber-500/25 hover:brightness-105 active:scale-95 transition-all block cursor-pointer"
                         >
-                            {{ currentLocale === 'ar' ? 'اختر باقة Pro الأكثر طلباً' : 'Choose Pro Plan' }}
+                            {{ currentLocale === 'ar' ? 'اختر الباقة الاحترافية الأكثر طلباً' : 'Choose Pro Plan' }}
                         </Link>
                     </div>
 
@@ -4044,10 +4044,10 @@ onUnmounted(() => {
                                 </span>
                                 <span class="text-2xl">🤖</span>
                             </div>
-                            <h3 class="text-2xl font-black text-slate-900 dark:text-white mb-2">
-                                Max
+                            <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white mb-2">
+                                {{ currentLocale === 'ar' ? 'الباقة المتكاملة (ماكس)' : 'Max' }}
                             </h3>
-                            <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 min-h-[40px] leading-relaxed mb-6">
+                            <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 min-h-[40px] leading-relaxed mb-6">
                                 {{ currentLocale === 'ar'
                                     ? 'كامل الخدمات والأتمتة الذكية: لأصحاب المطابخ الكبرى والسلاسل الراغبين في أقصى كفاءة ومضاعفة الفاتورة بالذكاء الاصطناعي.'
                                     : 'Complete Full-Stack AI Ecosystem: Built for high-volume restaurants & chains seeking peak efficiency.'
@@ -4064,11 +4064,11 @@ onUnmounted(() => {
                             <!-- Features List -->
                             <div class="space-y-3 mb-8 text-xs sm:text-sm">
                                 <div class="font-extrabold text-blue-700 dark:text-blue-400 mb-2">
-                                    {{ currentLocale === 'ar' ? 'تشمل كافة ميزات Pro، بالإضافة إلى:' : 'Everything in Pro, plus:' }}
+                                    {{ currentLocale === 'ar' ? 'تشمل كافة ميزات الباقة الاحترافية، بالإضافة إلى:' : 'Everything in Pro, plus:' }}
                                 </div>
                                 <div class="flex items-start gap-2.5 text-slate-800 dark:text-slate-200 font-medium">
                                     <span class="text-blue-500 font-black shrink-0">✦</span>
-                                    <span>{{ currentLocale === 'ar' ? 'الويتر الذكي بالذكاء الاصطناعي: محرك توصيات ذكي لزيادة مبيعات كل طلب (Upselling)' : 'AI Digital Waiter: Smart recommendations engine boosting order totals' }}</span>
+                                    <span>{{ currentLocale === 'ar' ? 'الويتر الذكي بالذكاء الاصطناعي: محرك توصيات ذكي لمضاعفة قيمة كل طلب تلقائياً' : 'AI Digital Waiter: Smart recommendations engine boosting order totals' }}</span>
                                 </div>
                                 <div class="flex items-start gap-2.5 text-slate-800 dark:text-slate-200 font-medium">
                                     <span class="text-blue-500 font-black shrink-0">✦</span>
@@ -4097,7 +4097,7 @@ onUnmounted(() => {
                                 ? 'border-blue-500/40 hover:border-blue-400 bg-blue-500/10 text-blue-300 hover:bg-blue-500/20'
                                 : 'border-blue-300 hover:border-blue-500 bg-blue-50 text-blue-900 hover:bg-blue-100 shadow-xs'"
                         >
-                            {{ currentLocale === 'ar' ? 'احجز باقة Max المتكاملة' : 'Book Max Plan' }}
+                            {{ currentLocale === 'ar' ? 'احجز الباقة المتكاملة (ماكس)' : 'Book Max Plan' }}
                         </Link>
                     </div>
 
@@ -4139,14 +4139,14 @@ onUnmounted(() => {
                         <span>{{ t.faqs.tag }}</span>
                     </div>
                     <h2
-                        class="text-3xl sm:text-4xl font-extrabold tracking-tight"
+                        class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight"
                         :class="isDark ? 'text-white' : 'text-slate-900'"
                     >
                         {{ t.faqs.title }}
                     </h2>
                     <p
                         class="text-base"
-                        :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                        :class="isDark ? 'text-slate-300' : 'text-slate-700'"
                     >
                         {{ t.faqs.subtitle }}
                     </p>
@@ -4273,12 +4273,12 @@ onUnmounted(() => {
                             :class="isDark ? 'text-amber-400' : 'text-amber-700'"
                         >{{ t.modal.badge }}</span>
                         <h3
-                            class="text-2xl font-black"
+                            class="text-xl sm:text-2xl font-bold leading-snug"
                             :class="isDark ? 'text-white' : 'text-slate-900'"
                         >{{ t.modal.title }}</h3>
                         <p
                             class="text-xs"
-                            :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                            :class="isDark ? 'text-slate-300' : 'text-slate-700'"
                         >
                             {{ t.modal.subtitle }}
                         </p>
@@ -4383,7 +4383,7 @@ onUnmounted(() => {
                         ✓
                     </div>
                     <h3
-                        class="text-2xl font-bold"
+                        class="text-xl sm:text-2xl font-bold leading-snug"
                         :class="isDark ? 'text-white' : 'text-slate-900'"
                     >{{ t.modal.successTitle }}</h3>
                     <p
@@ -4425,7 +4425,7 @@ onUnmounted(() => {
                         </div>
                         <p
                             class="text-xs leading-relaxed max-w-sm"
-                            :class="isDark ? 'text-slate-400' : 'text-slate-600'"
+                            :class="isDark ? 'text-slate-300' : 'text-slate-700'"
                         >
                             {{ t.footer.brandDesc }}
                         </p>
