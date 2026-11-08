@@ -51,12 +51,7 @@ withDefaults(defineProps<Props>(), {
                 onerror="this.src='/images/logo.jpg'"
             />
 
-            <!-- Shimmer Light Sweep Layer -->
-            <div
-                v-if="animated"
-                class="tedallal-shimmer-sweep absolute inset-0 pointer-events-none"
-                aria-hidden="true"
-            ></div>
+
         </div>
     </div>
 </template>
@@ -101,35 +96,12 @@ withDefaults(defineProps<Props>(), {
     }
 }
 
-/* 3. Luxury Golden Light Sweep (Shimmer) */
-.tedallal-shimmer-sweep {
-    background: linear-gradient(
-        115deg,
-        transparent 30%,
-        rgba(255, 255, 255, 0.45) 48%,
-        rgba(252, 246, 186, 0.6) 52%,
-        transparent 70%
-    );
-    transform: translateX(-120%);
-    animation: tedallalShimmer 5.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-    mix-blend-mode: overlay;
-    will-change: transform;
-}
 
-@keyframes tedallalShimmer {
-    0%, 15% {
-        transform: translateX(-130%);
-    }
-    40%, 100% {
-        transform: translateX(130%);
-    }
-}
 
 /* Respect User Reduced Motion Preference */
 @media (prefers-reduced-motion: reduce) {
     .tedallal-floating,
-    .tedallal-golden-aura,
-    .tedallal-shimmer-sweep {
+    .tedallal-golden-aura {
         animation: none !important;
         transform: none !important;
     }

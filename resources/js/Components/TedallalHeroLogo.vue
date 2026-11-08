@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, nextTick } from 'vue';
 
 interface Props {
     widthClass?: string;
@@ -10,30 +10,66 @@ withDefaults(defineProps<Props>(), {
 });
 
 const isRevealed = ref(false);
+const isAnimating = ref(false);
 const svgKey = ref(0);
+const svgContainerRef = ref<HTMLDivElement | null>(null);
+
 let cycleTimer: ReturnType<typeof setTimeout> | null = null;
 let loopTimer: ReturnType<typeof setTimeout> | null = null;
 
 // Durations
-const DRAW_DURATION = 3100;     // 3.1 seconds for vector drawing
+const DRAW_DURATION = 3200;     // 3.2 seconds for progressive vector drawing
 const DISPLAY_DURATION = 6500;  // 6.5 seconds for 3D transparent emblem display
+
+function initStrokes(container: HTMLElement) {
+    const strokes = container.querySelectorAll<SVGGeometryElement>('.v-stroke');
+    strokes.forEach((el) => {
+        let len = 400;
+        try {
+            if (el.getTotalLength) {
+                len = Math.ceil(el.getTotalLength());
+            }
+        } catch (e) {}
+        el.style.setProperty('--path-len', `${len}px`);
+        el.style.strokeDasharray = `${len}px`;
+        el.style.strokeDashoffset = `${len}px`;
+    });
+}
 
 function startCycle() {
     if (cycleTimer) clearTimeout(cycleTimer);
     if (loopTimer) clearTimeout(loopTimer);
 
     isRevealed.value = false;
-    svgKey.value++; // Clean reset for all SVG stroke animations
+    isAnimating.value = false;
+    svgKey.value++; // Clean reset of the DOM tree
 
-    // Transition from SVG to 3D rendered PNG
-    cycleTimer = setTimeout(() => {
-        isRevealed.value = true;
+    nextTick(() => {
+        if (svgContainerRef.value) {
+            // 1. Initialize exact lengths & offsets to zero-visible state
+            initStrokes(svgContainerRef.value);
 
-        // Loop: re-draw every cycle
-        loopTimer = setTimeout(() => {
-            startCycle();
-        }, DISPLAY_DURATION);
-    }, DRAW_DURATION);
+            // 2. Force browser layout reflow so the zero state is committed to GPU
+            void svgContainerRef.value.getBoundingClientRect();
+
+            // 3. Double requestAnimationFrame guarantees compositor commits the blank slate before drawing
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    isAnimating.value = true;
+                });
+            });
+        }
+
+        // 4. At 3.2s: transition seamlessly into 3D transparent PNG
+        cycleTimer = setTimeout(() => {
+            isRevealed.value = true;
+
+            // 5. Loop: repeat the drawing sequence every cycle
+            loopTimer = setTimeout(() => {
+                startCycle();
+            }, DISPLAY_DURATION);
+        }, DRAW_DURATION);
+    });
 }
 
 function handleReplay() {
@@ -57,20 +93,24 @@ onUnmounted(() => {
         @click="handleReplay"
         title="انقر لإعادة تشغيل حركة الشعار"
     >
-        <!-- Ambient Royal Backlight Glow -->
+        <!-- Ambient Royal Backlight Glow (No harsh shimmer streaks) -->
         <div
-            class="absolute -inset-4 sm:-inset-6 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.35)_0%,rgba(245,158,11,0.12)_55%,transparent_75%)] blur-2xl pointer-events-none transition-all duration-700"
-            :class="isRevealed ? 'opacity-90 scale-105' : 'opacity-50 scale-95'"
+            class="absolute -inset-4 sm:-inset-6 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.32)_0%,rgba(245,158,11,0.08)_55%,transparent_75%)] blur-2xl pointer-events-none transition-all duration-700"
+            :class="isRevealed ? 'opacity-90 scale-105' : 'opacity-40 scale-95'"
             aria-hidden="true"
         ></div>
 
         <!-- ========================================================
-             LAYER 1: ANIMATED VECTOR SVG (Trim Paths Assembly)
+             LAYER 1: ANIMATED VECTOR SVG (Starts Strictly from 0)
              ======================================================== -->
         <div
+            ref="svgContainerRef"
             :key="svgKey"
             class="absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out pointer-events-none"
-            :class="isRevealed ? 'opacity-0 scale-98' : 'opacity-100 scale-100'"
+            :class="[
+                isRevealed ? 'opacity-0 scale-98' : 'opacity-100 scale-100',
+                isAnimating ? 'draw-active' : 'draw-idle'
+            ]"
         >
             <svg
                 viewBox="0 0 1024 764"
@@ -139,8 +179,8 @@ onUnmounted(() => {
                         stroke="url(#goldGradHorizontal)"
                         stroke-width="1.5"
                         stroke-opacity="0.35"
-                        stroke-dasharray="8 6"
-                        style="--path-len: 1790px; stroke-dasharray: 1790px; stroke-dashoffset: 1790px;"
+                        
+                        style="--path-len: 1791px; stroke-dasharray: 1791px; stroke-dashoffset: 1791px;"
                     ></circle>
 
                     <g class="spin-orbit-1">
@@ -182,7 +222,7 @@ onUnmounted(() => {
                     <path class="v-stroke" stroke="url(#goldGradHorizontal)" stroke-width="4" d="M 322 531 L 702 531" style="--path-len: 380px; stroke-dasharray: 380px; stroke-dashoffset: 380px;"></path>
                     <path class="v-stroke" stroke="url(#goldGradSheen)" stroke-width="5" d="M 305 520 C 298 523, 308 531, 322 531" style="--path-len: 27px; stroke-dasharray: 27px; stroke-dashoffset: 27px;"></path>
                     <path class="v-stroke" stroke="url(#goldGradSheen)" stroke-width="5" d="M 719 520 C 726 523, 716 531, 702 531" style="--path-len: 27px; stroke-dasharray: 27px; stroke-dashoffset: 27px;"></path>
-                    <polygon class="v-fill-target" points="305,520 719,520 702,531 322,531" fill="url(#goldGradSheen)" opacity="0.9"></polygon>
+                    <polygon class="v-fill-target" points="305,520 719,520 702,531 322,531" fill="url(#goldGradSheen)"></polygon>
                 </g>
 
                 <!-- 3 Balancing Pearls Beneath Platter -->
@@ -197,7 +237,7 @@ onUnmounted(() => {
                     <path class="v-stroke" stroke="url(#goldGradVertical)" stroke-width="12" d="M 505 304 C 445 315, 360 365, 328 440 C 314 472, 318 505, 324 520" style="--path-len: 314px; stroke-dasharray: 314px; stroke-dashoffset: 314px;"></path>
                     <path class="v-stroke" stroke="url(#goldGradSheen)" stroke-width="4" d="M 505 320 C 455 332, 385 380, 355 450 C 342 478, 345 505, 348 520" style="--path-len: 277px; stroke-dasharray: 277px; stroke-dashoffset: 277px;"></path>
                     <path class="v-stroke" stroke="url(#goldGradVertical)" stroke-width="7" d="M 519 304 C 585 315, 680 375, 710 455 C 720 482, 720 505, 718 520" style="--path-len: 320px; stroke-dasharray: 320px; stroke-dashoffset: 320px;"></path>
-                    <path class="v-fill-target" d="M 505 304 C 445 315, 360 365, 328 440 C 314 472, 318 505, 324 520 L 348 520 C 345 505, 342 478, 355 450 C 385 380, 455 332, 505 320 Z" fill="url(#goldGradSheen)" opacity="0.95"></path>
+                    <path class="v-fill-target" d="M 505 304 C 445 315, 360 365, 328 440 C 314 472, 318 505, 324 520 L 348 520 C 345 505, 342 478, 355 450 C 385 380, 455 332, 505 320 Z" fill="url(#goldGradSheen)"></path>
                 </g>
 
                 <!-- Cloche Handle Knob -->
@@ -258,7 +298,7 @@ onUnmounted(() => {
                     <path class="v-stroke" stroke="url(#goldGradSheen)" stroke-width="3.5" d="M 488 262 C 496 248, 528 248, 536 262" style="--path-len: 55px; stroke-dasharray: 55px; stroke-dashoffset: 55px;"></path>
                     <path class="v-stroke" stroke="url(#goldGradSheen)" stroke-width="5.5" d="M 388 268 L 374 209 L 415 238 L 445 189 L 480 226 L 512 159 L 544 226 L 580 189 L 610 238 L 650 209 L 636 268" style="--path-len: 587px; stroke-dasharray: 587px; stroke-dashoffset: 587px;"></path>
                     <path class="v-stroke" stroke="url(#goldGradSheen)" stroke-width="2.5" stroke-opacity="0.85" d="M 512 159 L 512 254 M 445 189 L 465 258 M 374 209 L 405 264 M 580 189 L 559 258 M 650 209 L 619 264" style="--path-len: 366px; stroke-dasharray: 366px; stroke-dashoffset: 366px;"></path>
-                    <path class="v-fill-target" d="M 388 268 L 374 209 L 415 238 L 445 189 L 480 226 L 512 159 L 544 226 L 580 189 L 610 238 L 650 209 L 636 268 C 584 252, 440 252, 388 268 Z" fill="url(#goldGradSheen)" opacity="0.95"></path>
+                    <polygon class="v-fill-target" points="388,268 374,209 415,238 445,189 480,226 512,159 544,226 580,189 610,238 650,209 636,268" fill="url(#goldGradSheen)"></polygon>
                 </g>
 
                 <!-- Crown Jewels -->
@@ -280,6 +320,7 @@ onUnmounted(() => {
 
         <!-- ========================================================
              LAYER 2: 3D LUXURY TRANSPARENT PNG EMBLEM (Final Climax)
+             (Clean Luxury 3D Depth - No Harsh Light Sweep Glare)
              ======================================================== -->
         <div
             class="absolute inset-0 w-full h-full flex items-center justify-center transition-all duration-700 ease-in-out"
@@ -288,115 +329,152 @@ onUnmounted(() => {
             <img
                 src="/images/tedallal-luxury-transparent.png"
                 alt="تدلّل - Tedallal Bespoke Luxury Hospitality"
-                class="w-full h-full object-contain filter drop-shadow-[0_12px_45px_rgba(212,175,55,0.8)] group-hover:scale-105 group-hover:drop-shadow-[0_16px_55px_rgba(212,175,55,0.95)] transition-all duration-500"
+                class="w-full h-full object-contain filter drop-shadow-[0_12px_45px_rgba(212,175,55,0.75)] group-hover:scale-105 group-hover:drop-shadow-[0_16px_55px_rgba(212,175,55,0.9)] transition-all duration-500"
             />
-            <!-- Ambient Golden Shimmer Sweep on 3D Emblem -->
-            <div class="tedallal-emblem-shimmer absolute inset-0 pointer-events-none" aria-hidden="true"></div>
         </div>
     </div>
 </template>
 
 <style scoped>
 /* ========================================================
-   SVG TRIM PATHS ANIMATION RULES
+   SVG TRIM PATHS ANIMATION RULES (Starts Strictly from 0)
    ======================================================== */
+
+/* Idle / Zero State: Nothing is visible, all offsets equal length */
 .v-stroke {
     fill: none;
     stroke-linecap: round;
     stroke-linejoin: round;
-    stroke-dasharray: var(--path-len, 500px);
-    stroke-dashoffset: var(--path-len, 500px);
-    animation: drawTrimPath var(--duration, 1.2s) cubic-bezier(0.35, 0, 0.25, 1) forwards;
-    animation-delay: var(--delay, 0s);
+    stroke-dasharray: var(--path-len, 3500px);
+    stroke-dashoffset: var(--path-len, 3500px);
     will-change: stroke-dashoffset;
 }
 
+.draw-idle .v-stroke {
+    stroke-dashoffset: var(--path-len, 3500px) !important;
+    animation: none !important;
+}
+
+.draw-idle .v-fill-target,
+.draw-idle .phase-pearls,
+.draw-idle .phase-nodes,
+.draw-idle .phase-callig-dots,
+.draw-idle .phase-crown-jewels,
+.draw-idle .phase-text {
+    opacity: 0 !important;
+    animation: none !important;
+}
+
+/* When draw-active is enabled, trigger progressive drawing */
+.draw-active .v-stroke {
+    animation: drawTrimPath var(--duration, 1.2s) cubic-bezier(0.35, 0, 0.25, 1) both;
+    animation-delay: var(--delay, 0s);
+}
+
 @keyframes drawTrimPath {
-    to {
+    0% {
+        stroke-dashoffset: var(--path-len, 3500px);
+    }
+    100% {
         stroke-dashoffset: 0;
     }
 }
 
-/* Phase 1: Orbits */
+/* Phase 1: Cosmic Orbits */
 .phase-orbits {
-    --duration: 1.5s;
+    --duration: 1.4s;
     --delay: 0.1s;
 }
 
 /* Phase 2: Platter & Pearls */
 .phase-plate {
     --duration: 1.0s;
-    --delay: 0.4s;
+    --delay: 0.3s;
 }
 .phase-pearls {
     opacity: 0;
-    animation: pearlPopIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+.draw-active .phase-pearls {
+    animation: pearlPopIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
     animation-delay: 0.9s;
 }
 
-/* Phase 3: Cloche Dome & Handle */
+/* Phase 3: Cloche Dome & Handle Knob */
 .phase-dome {
     --duration: 1.2s;
-    --delay: 0.9s;
+    --delay: 0.7s;
 }
 .phase-knob {
     --duration: 0.8s;
-    --delay: 1.1s;
+    --delay: 1.0s;
 }
 
 /* Phase 4: Digital Network Grid & Nodes */
 .phase-grid {
     --duration: 1.0s;
-    --delay: 1.4s;
+    --delay: 1.2s;
 }
 .phase-nodes {
     opacity: 0;
-    animation: nodePulse 0.5s ease-out forwards;
-    animation-delay: 1.7s;
 }
-
-/* Phase 5: Arabic Calligraphy "تدلّل" */
-.phase-callig-dots {
-    opacity: 0;
-    animation: pearlPopIn 0.5s ease-out forwards;
+.draw-active .phase-nodes {
+    animation: nodePulse 0.5s ease-out both;
     animation-delay: 1.6s;
 }
+
+/* Phase 5: Royal Arabic Calligraphy "تدلّل" */
+.phase-callig-dots {
+    opacity: 0;
+}
+.draw-active .phase-callig-dots {
+    animation: pearlPopIn 0.5s ease-out both;
+    animation-delay: 1.5s;
+}
 .phase-calligraphy {
-    --duration: 1.3s;
-    --delay: 1.7s;
+    --duration: 1.2s;
+    --delay: 1.6s;
 }
 .phase-shaddah {
     --duration: 0.7s;
-    --delay: 2.2s;
+    --delay: 2.1s;
 }
 
 /* Phase 6: Royal Crown & Jewels */
 .phase-crown {
     --duration: 1.1s;
-    --delay: 2.1s;
+    --delay: 2.0s;
 }
 .phase-crown-jewels {
     opacity: 0;
-    animation: jewelGlow 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-    animation-delay: 2.6s;
+}
+.draw-active .phase-crown-jewels {
+    animation: jewelGlow 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+    animation-delay: 2.5s;
 }
 
 /* Phase 7: Typography */
 .phase-text {
     opacity: 0;
-    animation: textReveal 0.7s ease-out forwards;
-    animation-delay: 2.5s;
+}
+.draw-active .phase-text {
+    animation: textReveal 0.7s ease-out both;
+    animation-delay: 2.4s;
 }
 
 /* Phase 8: Fill target blooms */
 .v-fill-target {
     opacity: 0;
-    animation: fillBloom 0.7s ease forwards;
+}
+.draw-active .v-fill-target {
+    animation: fillBloom 0.7s ease both;
     animation-delay: 2.7s;
 }
 
 @keyframes fillBloom {
-    to {
+    0% {
+        opacity: 0;
+    }
+    100% {
         opacity: 0.95;
     }
 }
@@ -443,29 +521,6 @@ onUnmounted(() => {
     animation: spinOrbitCCW 24s linear infinite;
 }
 
-/* Golden Shimmer on revealed 3D emblem */
-.tedallal-emblem-shimmer {
-    background: linear-gradient(
-        115deg,
-        transparent 30%,
-        rgba(255, 255, 255, 0.45) 48%,
-        rgba(252, 246, 186, 0.6) 52%,
-        transparent 70%
-    );
-    transform: translateX(-120%);
-    animation: emblemShimmer 5.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-    mix-blend-mode: overlay;
-}
-
-@keyframes emblemShimmer {
-    0%, 20% {
-        transform: translateX(-130%);
-    }
-    45%, 100% {
-        transform: translateX(130%);
-    }
-}
-
 @media (prefers-reduced-motion: reduce) {
     .v-stroke {
         stroke-dashoffset: 0 !important;
@@ -480,8 +535,7 @@ onUnmounted(() => {
         animation: none !important;
     }
     .spin-orbit-1,
-    .spin-orbit-2,
-    .tedallal-emblem-shimmer {
+    .spin-orbit-2 {
         animation: none !important;
     }
 }

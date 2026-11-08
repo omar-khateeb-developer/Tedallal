@@ -1094,18 +1094,17 @@ onUnmounted(() => {
             dir="rtl"
             class="relative min-h-screen flex flex-col items-center justify-center overflow-hidden z-10"
         >
-            <!-- Full-Screen Luminous Luxury Architectural Interior -->
-            <div class="absolute inset-0 z-0">
-                <img
-                    src="/images/luxury-restaurant-hero-bg.jpg?v=4"
-                    alt="Luxury Restaurant Interior"
-                    class="w-full h-full object-cover object-center"
-                    onerror="this.src='/images/tedallal-luxury-hero-bg.jpg'"
-                />
-                <!-- Balanced Luxury Vignette: Reveals the high crystal chandeliers and arched marble architecture with warm clarity -->
-                <div class="absolute inset-0 bg-gradient-to-b from-black/55 via-black/35 to-[#070b14]/95"></div>
+            <!-- Luxury Deep Obsidian Background with Subtle Geometric Motif & Center Glow -->
+            <div class="absolute inset-0 z-0 bg-[#08080a] overflow-hidden pointer-events-none">
+                <!-- Subtle Luxury Geometric Arabesque Mesh Pattern -->
+                <div
+                    class="absolute inset-0 opacity-[0.045]"
+                    style="background-image: url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23D4AF37%22%20stroke-width%3D%220.8%22%20stroke-opacity%3D%220.14%22%3E%3Cpath%20d%3D%22M30%200%20L60%2030%20L30%2060%20L0%2030%20Z%22/%3E%3Cpath%20d%3D%22M0%200%20L60%2060%20M60%200%20L0%2060%22%20stroke-opacity%3D%220.06%22%20stroke-dasharray%3D%222%204%22/%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%2212%22%20stroke-opacity%3D%220.1%22/%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%223.5%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.09%22/%3E%3Ccircle%20cx%3D%220%22%20cy%3D%220%22%20r%3D%223%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.08%22/%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%220%22%20r%3D%223%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.08%22/%3E%3Ccircle%20cx%3D%220%22%20cy%3D%2260%22%20r%3D%223%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.08%22/%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%2260%22%20r%3D%223%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.08%22/%3E%3C/g%3E%3C/svg%3E'); background-size: 60px 60px; background-repeat: repeat;"
+                ></div>
                 <!-- Center Warm Champagne Lighting Glow -->
-                <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(212,175,55,0.12),transparent_65%)] pointer-events-none"></div>
+                <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(212,175,55,0.16)_0%,rgba(180,130,30,0.04)_45%,transparent_75%)]"></div>
+                <!-- Seamless Vignette Gradients -->
+                <div class="absolute inset-0 bg-gradient-to-b from-[#0a0a0a]/90 via-transparent to-[#0a0a0a]"></div>
             </div>
 
             <!-- Centered Content -->
@@ -4551,32 +4550,8 @@ onUnmounted(() => {
     }
 }
 
-.tedallal-hero-shimmer {
-    background: linear-gradient(
-        115deg,
-        transparent 30%,
-        rgba(255, 255, 255, 0.4) 48%,
-        rgba(252, 246, 186, 0.6) 52%,
-        transparent 70%
-    );
-    transform: translateX(-130%);
-    animation: tedallalHeroShimmerSweep 5.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-    mix-blend-mode: overlay;
-    will-change: transform;
-}
-
-@keyframes tedallalHeroShimmerSweep {
-    0%, 18% {
-        transform: translateX(-130%);
-    }
-    42%, 100% {
-        transform: translateX(130%);
-    }
-}
-
 @media (prefers-reduced-motion: reduce) {
-    .tedallal-hero-emblem,
-    .tedallal-hero-shimmer {
+    .tedallal-hero-emblem {
         animation: none !important;
         transform: none !important;
     }
