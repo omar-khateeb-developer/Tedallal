@@ -689,27 +689,36 @@ onUnmounted(() => {
         :dir="currentLocale === 'ar' ? 'rtl' : 'ltr'"
         :class="[
             'font-sans',
-            isDark ? 'dark-mode-theme bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#1a1a1a] via-[#0d0d0d] to-[#050505] text-[#f8fafc]' : 'light-mode-theme bg-white text-[#0f172a]'
+            isDark ? 'dark-mode-theme bg-[#020b07] text-[#f8fafc]' : 'light-mode-theme bg-white text-[#0f172a]'
         ]"
         class="min-h-screen selection:bg-[#BF953F] selection:text-black antialiased overflow-x-hidden relative transition-colors duration-500"
     >
         <!-- Physical Texture (The Carved Feel): Inline SVG Noise / Grain Pattern Overlay -->
         <div
-            class="fixed inset-0 pointer-events-none z-50 opacity-[0.038] mix-blend-overlay"
+            class="fixed inset-0 pointer-events-none z-50 opacity-[0.032] mix-blend-overlay"
             style="background-image: url('data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.85\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E');"
         ></div>
 
-        <!-- Ambient Atmospheric Deep Gold & Obsidian Spotlight Layer -->
+        <!-- Moorish Trefoil Islamic Arabesque Wallpaper (Pattern 4 - Size 37px) -->
+        <div
+            v-if="isDark"
+            class="fixed inset-0 pointer-events-none z-0"
+            style="background-color: #020b07; background-image: radial-gradient(circle at 50% 18%, rgba(16, 185, 129, 0.14) 0%, transparent 60%), radial-gradient(circle at 80% 65%, rgba(212, 175, 55, 0.08) 0%, transparent 50%), url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%0A%20%20%3Cg%20stroke%3D%22%23D4AF37%22%20fill%3D%22none%22%20stroke-width%3D%220.85%22%20stroke-opacity%3D%220.32%22%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%2222%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%220%22%20cy%3D%220%22%20r%3D%2222%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2260%22%20cy%3D%220%22%20r%3D%2222%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%220%22%20cy%3D%2260%22%20r%3D%2222%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2260%22%20cy%3D%2260%22%20r%3D%2222%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2230%2C22%2036%2C30%2030%2C38%2024%2C30%22%20stroke-width%3D%220.7%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.1%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%222.5%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.45%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%220%2C22%206%2C30%200%2C38%20-6%2C30%22%20stroke-width%3D%220.7%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.1%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2260%2C22%2066%2C30%2060%2C38%2054%2C30%22%20stroke-width%3D%220.7%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.1%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2230%2C-8%2036%2C0%2030%2C8%2024%2C0%22%20stroke-width%3D%220.7%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.1%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2230%2C52%2036%2C60%2030%2C68%2024%2C60%22%20stroke-width%3D%220.7%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.1%22/%3E%0A%20%20%3C/g%3E%0A%3C/svg%3E'); background-size: 100% 100%, 100% 100%, 37px 37px; background-repeat: no-repeat, no-repeat, repeat;"
+        ></div>
+
+        <!-- Ambient Atmospheric Deep Velvet Emerald & Gold Spotlight Aura Layers -->
         <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-            <div class="absolute -top-40 left-1/2 -translate-x-1/2 w-[1200px] h-[600px] rounded-full bg-[radial-gradient(ellipse_at_top,rgba(212,175,55,0.08),transparent_70%)] blur-3xl"></div>
-            <div class="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.012)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.012)_1px,transparent_1px)] bg-[size:5rem_5rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
+            <div class="absolute -top-40 left-1/2 -translate-x-1/2 w-[1400px] h-[700px] rounded-full bg-[radial-gradient(ellipse_at_top,rgba(16,185,129,0.08)_0%,rgba(212,175,55,0.06)_40%,transparent_70%)] blur-3xl"></div>
+            <div class="absolute top-1/4 -right-40 w-[900px] h-[900px] rounded-full bg-[radial-gradient(circle,rgba(16,185,129,0.045)_0%,transparent_65%)] blur-3xl"></div>
+            <div class="absolute top-2/4 -left-40 w-[900px] h-[900px] rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.04)_0%,transparent_65%)] blur-3xl"></div>
+            <div class="absolute top-3/4 -right-40 w-[900px] h-[900px] rounded-full bg-[radial-gradient(circle,rgba(16,185,129,0.045)_0%,transparent_65%)] blur-3xl"></div>
         </div>
 
         <!-- ========================================================================= -->
         <!-- TOP NAVBAR -->
         <!-- ========================================================================= -->
         <header
-            class="sticky top-0 z-40 backdrop-blur-2xl border-b border-white/5 bg-[#0a0a0a]/85 shadow-[0_10px_35px_rgba(0,0,0,0.8)] transition-all duration-500"
+            class="sticky top-0 z-40 backdrop-blur-2xl border-b border-emerald-500/10 bg-[#020b07]/85 shadow-[0_10px_35px_rgba(0,0,0,0.85)] transition-all duration-500"
         >
             <div class="max-w-[1550px] w-full mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between h-20 gap-2 xl:gap-4">
@@ -1015,7 +1024,7 @@ onUnmounted(() => {
             <div
                 v-if="isMobileMenuOpen"
                 class="lg:hidden border-t backdrop-blur-2xl px-6 py-6 space-y-4"
-                :class="isDark ? 'bg-[#090e1c]/95 border-white/5' : 'bg-white/95 border-slate-200 shadow-xl'"
+                :class="isDark ? 'bg-[#020b07]/95 border-emerald-500/20 shadow-2xl' : 'bg-white/95 border-slate-200 shadow-xl'"
             >
                 <!-- Theme Mode row for mobile -->
                 <div class="flex items-center justify-between pb-3 border-b text-xs" :class="isDark ? 'border-white/10' : 'border-slate-100'">
@@ -1094,17 +1103,10 @@ onUnmounted(() => {
             dir="rtl"
             class="relative min-h-screen flex flex-col items-center justify-center overflow-hidden z-10"
         >
-            <!-- Luxury Deep Obsidian Background with Subtle Geometric Motif & Center Glow -->
-            <div class="absolute inset-0 z-0 bg-[#08080a] overflow-hidden pointer-events-none">
-                <!-- Subtle Luxury Geometric Arabesque Mesh Pattern -->
-                <div
-                    class="absolute inset-0 opacity-[0.045]"
-                    style="background-image: url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23D4AF37%22%20stroke-width%3D%220.8%22%20stroke-opacity%3D%220.14%22%3E%3Cpath%20d%3D%22M30%200%20L60%2030%20L30%2060%20L0%2030%20Z%22/%3E%3Cpath%20d%3D%22M0%200%20L60%2060%20M60%200%20L0%2060%22%20stroke-opacity%3D%220.06%22%20stroke-dasharray%3D%222%204%22/%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%2212%22%20stroke-opacity%3D%220.1%22/%3E%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%223.5%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.09%22/%3E%3Ccircle%20cx%3D%220%22%20cy%3D%220%22%20r%3D%223%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.08%22/%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%220%22%20r%3D%223%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.08%22/%3E%3Ccircle%20cx%3D%220%22%20cy%3D%2260%22%20r%3D%223%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.08%22/%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%2260%22%20r%3D%223%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.08%22/%3E%3C/g%3E%3C/svg%3E'); background-size: 60px 60px; background-repeat: repeat;"
-                ></div>
-                <!-- Center Warm Champagne Lighting Glow -->
-                <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(212,175,55,0.16)_0%,rgba(180,130,30,0.04)_45%,transparent_75%)]"></div>
-                <!-- Seamless Vignette Gradients -->
-                <div class="absolute inset-0 bg-gradient-to-b from-[#0a0a0a]/90 via-transparent to-[#0a0a0a]"></div>
+            <!-- Luxury Velvet Emerald Stage Lighting & Vignette Layer (Transparent so Wallpaper flows through) -->
+            <div class="absolute inset-0 z-0 bg-transparent overflow-hidden pointer-events-none">
+                <!-- Center Warm Champagne & Emerald Lighting Glow -->
+                <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(212,175,55,0.18)_0%,rgba(16,185,129,0.12)_35%,transparent_75%)]"></div>
             </div>
 
             <!-- Centered Content -->
@@ -1469,7 +1471,7 @@ onUnmounted(() => {
         <section
             id="how-it-works"
             class="py-24 relative z-10 border-t backdrop-blur-xl transition-colors duration-500"
-            :class="isDark ? 'border-white/5 bg-[#080d19]/80' : 'border-slate-200/90 bg-white'"
+            :class="isDark ? 'border-white/5 bg-[#020b07]/75 backdrop-blur-xl' : 'border-slate-200/90 bg-white'"
         >
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
@@ -1879,7 +1881,7 @@ onUnmounted(() => {
         <section
             id="solutions"
             class="py-24 relative z-10 border-t transition-colors duration-500"
-            :class="isDark ? 'border-white/5 bg-[#060a13]' : 'border-slate-200/90 bg-slate-50/70'"
+            :class="isDark ? 'border-white/5 bg-[#03110a]/70 backdrop-blur-xl' : 'border-slate-200/90 bg-slate-50/70'"
         >
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
@@ -2365,7 +2367,7 @@ onUnmounted(() => {
                                     v-if="totalCartCount > 0"
                                     class="absolute bottom-2.5 right-2.5 left-2.5 p-3 rounded-2xl border shadow-2xl backdrop-blur-xl flex items-center justify-between z-20 transition-all"
                                     :class="isDark
-                                        ? 'bg-[#090e1c]/95 border-amber-500/40 text-white'
+                                        ? 'bg-[#03130c]/95 border-amber-500/40 text-white'
                                         : 'bg-white/95 border-amber-400 text-slate-900 shadow-2xl'"
                                 >
                                     <div class="flex items-center gap-2.5">
@@ -3060,7 +3062,7 @@ onUnmounted(() => {
         <section
             id="features"
             class="py-20 relative z-10 border-t transition-colors duration-500"
-            :class="isDark ? 'border-white/5 bg-[#080d19]/60' : 'border-slate-200/90 bg-white'"
+            :class="isDark ? 'border-white/5 bg-[#020b07]/65 backdrop-blur-xl' : 'border-slate-200/90 bg-white'"
         >
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
@@ -3227,7 +3229,7 @@ onUnmounted(() => {
         <section
             id="directory"
             class="py-24 relative z-10 border-t transition-colors duration-500"
-            :class="isDark ? 'border-white/5 bg-[#070b14]' : 'border-slate-200/90 bg-slate-50/60'"
+            :class="isDark ? 'border-white/5 bg-[#03110a]/75 backdrop-blur-xl' : 'border-slate-200/90 bg-slate-50/60'"
         >
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
@@ -3361,7 +3363,7 @@ onUnmounted(() => {
         <section
             id="roi-calculator"
             class="py-24 relative z-10 border-t transition-colors duration-500"
-            :class="isDark ? 'border-white/5 bg-[#070b14]' : 'border-slate-200/90 bg-white'"
+            :class="isDark ? 'border-white/5 bg-[#020b07]/75 backdrop-blur-xl' : 'border-slate-200/90 bg-white'"
         >
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
@@ -3555,7 +3557,7 @@ onUnmounted(() => {
         <section
             id="comparison"
             class="py-20 border-t transition-colors duration-500 relative z-10"
-            :class="isDark ? 'border-white/5 bg-[#090e1c]' : 'border-slate-200/90 bg-slate-50/60'"
+            :class="isDark ? 'border-white/5 bg-[#03110a]/70 backdrop-blur-xl' : 'border-slate-200/90 bg-slate-50/60'"
         >
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
@@ -3711,7 +3713,7 @@ onUnmounted(() => {
         <!-- ========================================================================= -->
         <section
             class="py-20 relative z-10 border-t transition-colors duration-500"
-            :class="isDark ? 'border-white/5 bg-[#070b14]' : 'border-slate-200/90 bg-white'"
+            :class="isDark ? 'border-white/5 bg-[#020b07]/75 backdrop-blur-xl' : 'border-slate-200/90 bg-white'"
         >
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
@@ -3840,7 +3842,7 @@ onUnmounted(() => {
         <section
             id="pricing"
             class="py-24 border-t transition-colors duration-500 relative z-10"
-            :class="isDark ? 'border-white/5 bg-[#070b14]' : 'border-slate-200/90 bg-white'"
+            :class="isDark ? 'border-white/5 bg-[#020b07]/75 backdrop-blur-xl' : 'border-slate-200/90 bg-white'"
         >
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <!-- Section Header -->
@@ -4116,7 +4118,7 @@ onUnmounted(() => {
         <section
             id="faqs"
             class="py-20 relative z-10 border-t transition-colors duration-500"
-            :class="isDark ? 'border-white/5 bg-[#080d19]/80' : 'border-slate-200/90 bg-slate-50/60'"
+            :class="isDark ? 'border-white/5 bg-[#03110a]/80 backdrop-blur-xl' : 'border-slate-200/90 bg-slate-50/60'"
         >
             <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
@@ -4193,7 +4195,7 @@ onUnmounted(() => {
                 class="fixed bottom-6 z-40 max-w-sm w-[90%] sm:w-auto p-4 rounded-2xl border shadow-2xl backdrop-blur-2xl flex items-center gap-3.5 transition-all"
                 :class="[
                     currentLocale === 'ar' ? 'right-6' : 'left-6',
-                    isDark ? 'bg-[#090e1c]/95 border-amber-500/30 text-white' : 'bg-white/95 border-amber-300 text-slate-900 shadow-xl'
+                    isDark ? 'bg-[#020b07]/95 border-emerald-500/30 text-white' : 'bg-white/95 border-amber-300 text-slate-900 shadow-xl'
                 ]"
             >
                 <div
@@ -4391,7 +4393,7 @@ onUnmounted(() => {
         <!-- ========================================================================= -->
         <footer
             class="border-t py-12 relative z-10 text-sm transition-colors duration-500"
-            :class="isDark ? 'border-white/5 bg-[#05080f] text-slate-400' : 'border-slate-200/90 bg-slate-100 text-slate-600'"
+            :class="isDark ? 'border-white/5 bg-[#010604]/90 backdrop-blur-xl text-slate-400' : 'border-slate-200/90 bg-slate-100 text-slate-600'"
         >
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
@@ -4402,7 +4404,7 @@ onUnmounted(() => {
                             <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 p-[1.5px]">
                                 <div
                                     class="w-full h-full rounded-xl flex items-center justify-center overflow-hidden"
-                                    :class="isDark ? 'bg-[#0b101d]' : 'bg-white'"
+                                    :class="isDark ? 'bg-[#020b07]' : 'bg-white'"
                                 >
                                     <img src="/images/tedallal-brand-logo.jpg" alt="Logo" class="w-full h-full object-cover" onerror="this.src='/images/logo.jpg'" />
                                 </div>
@@ -4753,6 +4755,19 @@ onUnmounted(() => {
 .light-mode-theme .bg-slate-950\/70,
 .light-mode-theme .bg-slate-950\/80,
 .light-mode-theme .bg-slate-950\/90,
+.light-mode-theme .bg-\[\#020b07\],
+.light-mode-theme .bg-\[\#020b07\]\/65,
+.light-mode-theme .bg-\[\#020b07\]\/70,
+.light-mode-theme .bg-\[\#020b07\]\/75,
+.light-mode-theme .bg-\[\#020b07\]\/80,
+.light-mode-theme .bg-\[\#020b07\]\/85,
+.light-mode-theme .bg-\[\#020b07\]\/95,
+.light-mode-theme .bg-\[\#03110a\]\/70,
+.light-mode-theme .bg-\[\#03110a\]\/75,
+.light-mode-theme .bg-\[\#03110a\]\/80,
+.light-mode-theme .bg-\[\#03130c\],
+.light-mode-theme .bg-\[\#03130c\]\/95,
+.light-mode-theme .bg-\[\#010604\]\/90,
 .light-mode-theme .bg-\[\#090e1c\],
 .light-mode-theme .bg-\[\#090e1c\]\/95,
 .light-mode-theme .bg-\[\#0b101d\],
@@ -4816,16 +4831,16 @@ onUnmounted(() => {
 }
 
 /* Light mode mobile drawer */
-.light-mode-theme .lg\:hidden.bg-\[\#090e1c\]\/95 {
+.light-mode-theme .lg\:hidden.bg-\[\#020b07\]\/95, .light-mode-theme .lg\:hidden.bg-\[\#090e1c\]\/95 {
     background-color: rgba(255, 255, 255, 0.98) !important;
     border-top-color: #e2e8f0 !important;
 }
-.light-mode-theme .lg\:hidden.bg-\[\#090e1c\]\/95 a.text-slate-200 {
+.light-mode-theme .lg\:hidden.bg-\[\#020b07\]\/95, .light-mode-theme .lg\:hidden.bg-\[\#090e1c\]\/95 a.text-slate-200 {
     color: #1e293b !important;
 }
 
 /* Light mode floating toast */
-.light-mode-theme .fixed.bottom-6.bg-\[\#090e1c\]\/95 {
+.light-mode-theme .fixed.bottom-6.bg-\[\#020b07\]\/95, .light-mode-theme .fixed.bottom-6.bg-\[\#090e1c\]\/95 {
     background-color: rgba(255, 255, 255, 0.98) !important;
     border-color: rgba(245, 158, 11, 0.4) !important;
     box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.08);
