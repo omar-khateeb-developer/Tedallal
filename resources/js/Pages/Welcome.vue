@@ -699,11 +699,16 @@ onUnmounted(() => {
             style="background-image: url('data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.85\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E');"
         ></div>
 
-        <!-- Moorish Trefoil Islamic Arabesque Wallpaper (Pattern 4 - Size 37px) -->
+        <!-- Moorish Trefoil Islamic Arabesque Wallpaper (Dark Velvet Emerald & Light Royal Alabaster) -->
         <div
             v-if="isDark"
             class="fixed inset-0 pointer-events-none z-0"
             style="background-color: #020b07; background-image: radial-gradient(circle at 50% 18%, rgba(16, 185, 129, 0.14) 0%, transparent 60%), radial-gradient(circle at 80% 65%, rgba(212, 175, 55, 0.08) 0%, transparent 50%), url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%0A%20%20%3Cg%20stroke%3D%22%23D4AF37%22%20fill%3D%22none%22%20stroke-width%3D%220.85%22%20stroke-opacity%3D%220.32%22%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%2222%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%220%22%20cy%3D%220%22%20r%3D%2222%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2260%22%20cy%3D%220%22%20r%3D%2222%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%220%22%20cy%3D%2260%22%20r%3D%2222%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2260%22%20cy%3D%2260%22%20r%3D%2222%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2230%2C22%2036%2C30%2030%2C38%2024%2C30%22%20stroke-width%3D%220.7%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.1%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%222.5%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.45%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%220%2C22%206%2C30%200%2C38%20-6%2C30%22%20stroke-width%3D%220.7%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.1%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2260%2C22%2066%2C30%2060%2C38%2054%2C30%22%20stroke-width%3D%220.7%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.1%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2230%2C-8%2036%2C0%2030%2C8%2024%2C0%22%20stroke-width%3D%220.7%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.1%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2230%2C52%2036%2C60%2030%2C68%2024%2C60%22%20stroke-width%3D%220.7%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.1%22/%3E%0A%20%20%3C/g%3E%0A%3C/svg%3E'); background-size: 100% 100%, 100% 100%, 37px 37px; background-repeat: no-repeat, no-repeat, repeat;"
+        ></div>
+        <div
+            v-else
+            class="fixed inset-0 pointer-events-none z-0"
+            style="background-color: #FAF7F2; background-image: radial-gradient(circle at 50% 18%, rgba(212, 175, 55, 0.12) 0%, transparent 60%), radial-gradient(circle at 80% 65%, rgba(16, 185, 129, 0.05) 0%, transparent 50%), url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%0A%20%20%3Cg%20stroke%3D%22%23A67C1E%22%20fill%3D%22none%22%20stroke-width%3D%220.85%22%20stroke-opacity%3D%220.18%22%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%2222%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%220%22%20cy%3D%220%22%20r%3D%2222%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2260%22%20cy%3D%220%22%20r%3D%2222%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%220%22%20cy%3D%2260%22%20r%3D%2222%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2260%22%20cy%3D%2260%22%20r%3D%2222%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2230%2C22%2036%2C30%2030%2C38%2024%2C30%22%20stroke-width%3D%220.7%22%20fill%3D%22%23A67C1E%22%20fill-opacity%3D%220.04%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%222.5%22%20fill%3D%22%23A67C1E%22%20fill-opacity%3D%220.25%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%220%2C22%206%2C30%200%2C38%20-6%2C30%22%20stroke-width%3D%220.7%22%20fill%3D%22%23A67C1E%22%20fill-opacity%3D%220.04%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2260%2C22%2066%2C30%2060%2C38%2054%2C30%22%20stroke-width%3D%220.7%22%20fill%3D%22%23A67C1E%22%20fill-opacity%3D%220.04%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2230%2C-8%2036%2C0%2030%2C8%2024%2C0%22%20stroke-width%3D%220.7%22%20fill%3D%22%23A67C1E%22%20fill-opacity%3D%220.04%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2230%2C52%2036%2C60%2030%2C68%2024%2C60%22%20stroke-width%3D%220.7%22%20fill%3D%22%23A67C1E%22%20fill-opacity%3D%220.04%22/%3E%0A%20%20%3C/g%3E%0A%3C/svg%3E'); background-size: 100% 100%, 100% 100%, 37px 37px; background-repeat: no-repeat, no-repeat, repeat;"
         ></div>
 
         <!-- Ambient Atmospheric Deep Velvet Emerald & Gold Spotlight Aura Layers -->
@@ -743,7 +748,7 @@ onUnmounted(() => {
                                         {{ currentLocale === 'ar' ? 'تِـك' : 'Tech' }}
                                     </span>
                                 </div>
-                                <span class="hidden 2xl:inline text-[11px] text-stone-500 dark:text-stone-400 font-medium truncate max-w-[220px]">المنظومة السحابية لأتمتة المطاعم</span>
+                                <span class="hidden 2xl:inline text-[11px] text-stone-500 dark:text-stone-400 font-medium truncate max-w-[220px]">{{ t.nav.brandSubtitle }}</span>
                             </div>
                         </Link>
                     </div>
@@ -836,7 +841,7 @@ onUnmounted(() => {
                     </nav>
 
                     <!-- Language, Currency & Theme Controls + Auth CTAs -->
-                    <div class="hidden sm:flex items-center gap-2 xl:gap-2.5 shrink-0">
+                    <div class="hidden lg:flex items-center gap-2 xl:gap-2.5 shrink-0">
                         <!-- Theme Toggle Button (Light / Dark) -->
                         <button
                             id="theme-toggle-btn"
@@ -1164,22 +1169,46 @@ onUnmounted(() => {
                         <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.25] text-white">
                             <template v-if="heroMode === 'traditional'">
                                 <span class="block text-2xl sm:text-4xl lg:text-5xl text-stone-100 leading-relaxed font-bold drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] [text-shadow:_0_2px_10px_rgba(0,0,0,0.9),_0_0_1px_rgba(0,0,0,0.9)]">
-                                    <span class="inline-block">مطبخ مزدحم،</span>
-                                    <span class="inline-block">مبيعات تتصاعد..</span>
+                                    <template v-if="currentLocale === 'ar'">
+                                        <span class="inline-block">مطبخ مزدحم،</span>
+                                        <span class="inline-block">مبيعات تتصاعد..</span>
+                                    </template>
+                                    <template v-else>
+                                        <span class="inline-block">Crowded Kitchen,</span>
+                                        <span class="inline-block">Surging Sales..</span>
+                                    </template>
                                 </span>
                                 <span class="block mt-4 sm:mt-6 text-3xl sm:text-5xl lg:text-6xl font-extrabold text-rose-400 leading-[1.8] sm:leading-[1.9] lg:leading-[2.0] py-2 drop-shadow-[0_4px_24px_rgba(244,63,94,0.35)] [text-shadow:_0_2px_12px_rgba(0,0,0,0.95),_0_0_1px_rgba(0,0,0,0.95)]">
-                                    <span class="inline-block">وأرباحك الحقيقية</span>
-                                    <span class="inline-block">تتبخر بين التطبيقات والهَدْر!</span>
+                                    <template v-if="currentLocale === 'ar'">
+                                        <span class="inline-block">وأرباحك الحقيقية</span>
+                                        <span class="inline-block">تتبخر بين التطبيقات والهَدْر!</span>
+                                    </template>
+                                    <template v-else>
+                                        <span class="inline-block">Yet Your Real Profits</span>
+                                        <span class="inline-block">Vanish In Delivery Fees & Waste!</span>
+                                    </template>
                                 </span>
                             </template>
                             <template v-else>
                                 <span class="block text-2xl sm:text-4xl lg:text-5xl text-white leading-relaxed font-bold drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] [text-shadow:_0_2px_10px_rgba(0,0,0,0.95),_0_0_1px_rgba(255,255,255,0.4)]">
-                                    <span class="inline-block">مطبخ مُنظَّم كالساعة،</span>
-                                    <span class="inline-block">طلبات مباشرة..</span>
+                                    <template v-if="currentLocale === 'ar'">
+                                        <span class="inline-block">مطبخ مُنظَّم كالساعة،</span>
+                                        <span class="inline-block">طلبات مباشرة..</span>
+                                    </template>
+                                    <template v-else>
+                                        <span class="inline-block">Clockwork Kitchen,</span>
+                                        <span class="inline-block">Direct Table Orders..</span>
+                                    </template>
                                 </span>
                                 <span class="block mt-4 sm:mt-6 text-3xl sm:text-5xl lg:text-6xl font-black bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-transparent leading-[1.8] sm:leading-[1.9] lg:leading-[2.0] py-2 filter drop-shadow-[0_4px_20px_rgba(0,0,0,0.95)] drop-shadow-[0_0_30px_rgba(212,175,55,0.45)]">
-                                    <span class="inline-block">وكل قرش من أرباحك</span>
-                                    <span class="inline-block">يدخل جيبك بالكامل!</span>
+                                    <template v-if="currentLocale === 'ar'">
+                                        <span class="inline-block">وكل قرش من أرباحك</span>
+                                        <span class="inline-block">يدخل جيبك بالكامل!</span>
+                                    </template>
+                                    <template v-else>
+                                        <span class="inline-block">And Every Cent of Profit</span>
+                                        <span class="inline-block">Goes Straight to Your Pocket!</span>
+                                    </template>
                                 </span>
                             </template>
                         </h1>
@@ -4628,20 +4657,15 @@ onUnmounted(() => {
 
 .light-mode-theme section#how-it-works,
 .light-mode-theme section#features,
-.light-mode-theme section#roi-calculator {
-    background-color: #ffffff !important;
-}
-
-.light-mode-theme section#features-bespoke {
-    background-color: #f8fafc !important;
-    border-top-color: #e2e8f0 !important;
-}
-
+.light-mode-theme section#roi-calculator,
+.light-mode-theme section#features-bespoke,
 .light-mode-theme section#solutions,
 .light-mode-theme section#directory,
 .light-mode-theme section#comparison,
+.light-mode-theme section#pricing,
 .light-mode-theme section#faqs {
-    background-color: #f8fafc !important;
+    background-color: rgba(250, 247, 242, 0.82) !important;
+    backdrop-filter: blur(16px) !important;
 }
 
 /* Light mode headings & titles (High contrast #0f172a) */
@@ -4653,14 +4677,66 @@ onUnmounted(() => {
     color: #0f172a !important;
 }
 
-/* Hero section remains the royal fine-dining showcase with luminous backdrop in both themes */
-.light-mode-theme #hero-luxury h1,
-.light-mode-theme #hero-luxury h1 span {
-    color: #ffffff !important;
+/* Hero section in Light Mode: Crisp Obsidian & Antique Gold Typography */
+.light-mode-theme #hero-luxury h1 span.block:first-child span {
+    color: #0f172a !important;
+    text-shadow: none !important;
+    filter: none !important;
 }
 
-.light-mode-theme #hero-luxury .text-transparent {
-    color: transparent !important;
+.light-mode-theme #hero-luxury h1 span.bg-clip-text {
+    background-image: linear-gradient(135deg, #8a6218 0%, #b8860b 50%, #6d4c0c 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    filter: drop-shadow(0 2px 6px rgba(184, 134, 11, 0.25)) !important;
+}
+
+.light-mode-theme #hero-luxury h1 .text-rose-400 span {
+    color: #e11d48 !important;
+    text-shadow: none !important;
+    filter: none !important;
+}
+
+.light-mode-theme #hero-luxury p {
+    color: #334155 !important;
+}
+
+.light-mode-theme #hero-luxury .relative.inline-flex.rounded-full.bg-black\/60 {
+    background-color: rgba(255, 255, 255, 0.88) !important;
+    border-color: rgba(184, 134, 11, 0.35) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06) !important;
+}
+.light-mode-theme #hero-luxury .relative.inline-flex.rounded-full.bg-black\/60 span {
+    color: #1e293b !important;
+}
+
+.light-mode-theme #hero-luxury .relative.inline-flex.p-2.rounded-2xl.bg-black\/50 {
+    background-color: rgba(255, 255, 255, 0.88) !important;
+    border-color: rgba(226, 232, 240, 0.9) !important;
+}
+
+/* Metric cards in Light Mode */
+.light-mode-theme #hero-luxury .grid > div {
+    background: rgba(255, 255, 255, 0.88) !important;
+    border-color: rgba(184, 134, 11, 0.25) !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.02) !important;
+}
+.light-mode-theme #hero-luxury .grid > div span {
+    color: #475569 !important;
+}
+.light-mode-theme #hero-luxury .grid > div .text-emerald-400 {
+    color: #059669 !important;
+}
+.light-mode-theme #hero-luxury .grid > div .text-amber-400,
+.light-mode-theme #hero-luxury .grid > div .text-\[\#FCF6BA\] {
+    color: #b8860b !important;
+}
+
+/* Secondary CTA in Light Mode */
+.light-mode-theme #hero-luxury a[href="#features-bespoke"] {
+    background-color: rgba(255, 255, 255, 0.9) !important;
+    border-color: rgba(203, 213, 225, 0.9) !important;
+    color: #1e293b !important;
 }
 
 /* Bespoke features in Light Mode: Crisp Luminous Cards with Deep Slate & Gold Typography */

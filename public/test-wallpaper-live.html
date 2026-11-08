@@ -3,22 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>معرض أنماط ورق الجدران الأرابيسك الملكي • تدلّل</title>
+    <title>معرض أنماط ورق الجدران الملكي • تدلّل (الوضع الداكن والفاتح)</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Cinzel:wght@700;900&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         :root {
-            --pattern-size: 80px;
-            --pattern-opacity: 1;
+            --pattern-size: 37px;
+            --bg-color: #020b07;
+            --text-color: #f8fafc;
+            --card-bg: rgba(5, 15, 10, 0.78);
+            --card-border: rgba(212, 175, 55, 0.28);
+            --headline-color: #ffffff;
+            --bar-bg: rgba(2, 11, 7, 0.88);
+            --bar-border: rgba(212, 175, 55, 0.35);
+        }
+
+        body.light-mode {
+            --bg-color: #FAF7F2;
+            --text-color: #0F172A;
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --card-border: rgba(184, 134, 11, 0.28);
+            --headline-color: #0F172A;
+            --bar-bg: rgba(250, 247, 242, 0.92);
+            --bar-border: rgba(184, 134, 11, 0.3);
         }
 
         body {
             font-family: 'Cairo', sans-serif;
-            background-color: #020b07;
-            color: #f8fafc;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             min-height: 100vh;
             overflow-x: hidden;
-            transition: background-color 0.4s ease;
+            transition: background-color 0.4s ease, color 0.4s ease;
         }
 
         /* 1. Dynamic Wallpaper Layer */
@@ -27,15 +43,10 @@
             inset: 0;
             z-index: 0;
             pointer-events: none;
-            background-color: #020b07;
-            background-image: 
-                radial-gradient(circle at 50% 18%, rgba(16, 185, 129, 0.14) 0%, transparent 60%),
-                radial-gradient(circle at 80% 65%, rgba(212, 175, 55, 0.08) 0%, transparent 50%),
-                url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2296%22%20viewBox%3D%220%200%2060%2096%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%0A%20%20%3Cg%20stroke%3D%22%23D4AF37%22%20fill%3D%22none%22%20stroke-width%3D%220.85%22%20stroke-opacity%3D%220.32%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M%200%200%20C%2018%2016%2C%2018%2032%2C%200%2048%20C%2018%2064%2C%2018%2080%2C%200%2096%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M%2060%200%20C%2042%2016%2C%2042%2032%2C%2060%2048%20C%2042%2064%2C%2042%2080%2C%2060%2096%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M%2030%200%20C%2048%2016%2C%2048%2032%2C%2030%2048%20C%2012%2064%2C%2012%2080%2C%2030%2096%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M%2030%200%20C%2012%2016%2C%2012%2032%2C%2030%2048%20C%2048%2064%2C%2048%2080%2C%2030%2096%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M%2030%2018%20C%2036%2024%2C%2036%2030%2C%2030%2036%20C%2024%2030%2C%2024%2024%2C%2030%2018%20Z%22%20stroke-width%3D%220.75%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.08%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2230%22%20cy%3D%2227%22%20r%3D%222.5%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.35%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M%200%2066%20C%206%2072%2C%206%2078%2C%200%2084%20C%20-6%2078%2C%20-6%2072%2C%200%2066%20Z%22%20stroke-width%3D%220.75%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.08%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%220%22%20cy%3D%2275%22%20r%3D%222.5%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.35%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M%2060%2066%20C%2066%2072%2C%2066%2078%2C%2060%2084%20C%2054%2078%2C%2054%2072%2C%2060%2066%20Z%22%20stroke-width%3D%220.75%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.08%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2260%22%20cy%3D%2275%22%20r%3D%222.5%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.35%22/%3E%0A%20%20%3C/g%3E%0A%3C/svg%3E');
+            background-color: var(--bg-color);
             background-size: 100% 100%, 100% 100%, var(--pattern-size) var(--pattern-size);
             background-repeat: no-repeat, no-repeat, repeat;
-            opacity: var(--pattern-opacity);
-            transition: background-image 0.4s ease, opacity 0.3s ease;
+            transition: background 0.4s ease;
         }
 
         /* 2. Top Interactive Switcher Bar */
@@ -43,41 +54,61 @@
             position: sticky;
             top: 0;
             z-index: 50;
-            background: rgba(2, 11, 7, 0.88);
+            background: var(--bar-bg);
             backdrop-filter: blur(20px);
-            border-bottom: 2px solid rgba(212, 175, 55, 0.35);
-            padding: 16px 24px;
+            border-bottom: 2px solid var(--bar-border);
+            padding: 14px 24px;
             display: flex;
             flex-wrap: wrap;
             align-items: center;
             justify-content: space-between;
             gap: 16px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
         }
 
         .brand-label {
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-size: 1.15rem;
+            gap: 12px;
+            font-size: 1.1rem;
             font-weight: 800;
-            color: #FCF6BA;
+        }
+
+        .theme-mode-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-family: inherit;
+            font-weight: 800;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            background: rgba(212, 175, 55, 0.15);
+            color: inherit;
+            transition: all 0.25s ease;
+        }
+        .theme-mode-btn:hover {
+            transform: scale(1.04);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
         }
 
         .pattern-tabs {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
         }
 
         .btn-tab {
-            background: rgba(18, 22, 20, 0.7);
-            border: 1px solid rgba(212, 175, 55, 0.35);
-            color: #cbd5e1;
-            padding: 10px 18px;
-            border-radius: 12px;
-            font-size: 0.88rem;
+            background: rgba(120, 120, 120, 0.1);
+            border: 1px solid var(--card-border);
+            color: inherit;
+            padding: 8px 15px;
+            border-radius: 10px;
+            font-size: 0.85rem;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.25s ease;
@@ -86,146 +117,175 @@
 
         .btn-tab:hover {
             background: rgba(212, 175, 55, 0.2);
-            border-color: #D4AF37;
-            color: #fff;
             transform: translateY(-2px);
         }
 
         .btn-tab.active {
             background: linear-gradient(135deg, rgba(212, 175, 55, 0.35), rgba(170, 119, 28, 0.55));
             border: 2px solid #D4AF37;
-            color: #FFF8DC;
-            box-shadow: 0 0 16px rgba(212, 175, 55, 0.4);
+            box-shadow: 0 0 14px rgba(212, 175, 55, 0.35);
             transform: translateY(-1px);
+        }
+        body.light-mode .btn-tab.active {
+            color: #452a03;
+            background: linear-gradient(135deg, #fef08a, #facc15);
+            border-color: #b45309;
         }
 
         .controls-group {
             display: flex;
             align-items: center;
-            gap: 14px;
-            background: rgba(0, 0, 0, 0.45);
-            padding: 6px 14px;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            font-size: 0.82rem;
-            color: #94a3b8;
+            gap: 10px;
+            font-size: 0.85rem;
+            font-weight: 700;
         }
 
-        .controls-group input[type=range] {
+        .controls-group input[type="range"] {
             accent-color: #D4AF37;
             cursor: pointer;
-            width: 100px;
         }
 
-        /* 3. Main Stage Content */
+        /* 3. Hero & Content */
         .stage-container {
             position: relative;
             z-index: 10;
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 60px 24px 100px;
+            max-width: 1050px;
+            margin: 40px auto 80px;
+            padding: 0 24px;
+            display: flex;
+            flex-col: column;
+            flex-direction: column;
+            align-items: center;
             text-align: center;
         }
 
         .hero-emblem-wrap {
-            width: 320px;
-            max-width: 90vw;
-            margin: 0 auto 30px;
-            filter: drop-shadow(0 15px 45px rgba(212, 175, 55, 0.55));
+            width: 140px;
+            height: 140px;
+            margin-bottom: 24px;
+            filter: drop-shadow(0 15px 35px rgba(212, 175, 55, 0.3));
             transition: transform 0.4s ease;
         }
-
         .hero-emblem-wrap:hover {
-            transform: scale(1.03);
+            transform: scale(1.05);
         }
 
         .badge-live {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            padding: 6px 18px;
+            gap: 10px;
+            padding: 8px 20px;
             border-radius: 9999px;
-            background: rgba(16, 185, 129, 0.15);
-            border: 1px solid rgba(16, 185, 129, 0.35);
-            color: #6ee7b7;
-            font-size: 0.85rem;
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            font-size: 0.82rem;
             font-weight: 700;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
 
         h1 {
-            font-size: 2.8rem;
-            color: #FCF6BA;
-            margin-bottom: 20px;
-            text-shadow: 0 4px 30px rgba(212, 175, 55, 0.45);
+            font-size: 2.2rem;
             font-weight: 900;
+            color: var(--headline-color);
+            margin-bottom: 12px;
+            line-height: 1.35;
         }
 
-        p.lead {
-            font-size: 1.25rem;
-            color: #cbd5e1;
-            line-height: 1.8;
-            max-width: 760px;
-            margin: 0 auto 40px;
+        .headline-gold {
+            background: linear-gradient(135deg, #BF953F 0%, #FCF6BA 50%, #B38728 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+        }
+        body.light-mode .headline-gold {
+            background: linear-gradient(135deg, #8a6218 0%, #b8860b 50%, #6d4c0c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
-        /* Pattern Description Card */
-        .pattern-info-card {
-            background: rgba(2, 11, 7, 0.55);
-            backdrop-filter: blur(18px);
-            border: 1px solid rgba(212, 175, 55, 0.3);
-            border-radius: 20px;
-            padding: 32px 40px;
-            max-width: 850px;
-            margin: 0 auto 40px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
-            text-align: right;
+        .lead {
+            font-size: 1.05rem;
+            opacity: 0.85;
+            max-width: 720px;
+            line-height: 1.7;
+            margin-bottom: 30px;
+        }
+
+        /* 4. Trio Cards */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            width: 100%;
+            margin-bottom: 35px;
+        }
+
+        @media (max-width: 768px) {
+            .cards-grid { grid-template-columns: 1fr; }
+        }
+
+        .metric-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            border-radius: 18px;
+            padding: 24px;
             display: flex;
             flex-direction: column;
-            gap: 16px;
-        }
-
-        .info-title {
-            font-size: 1.4rem;
-            color: #D4AF37;
-            font-weight: 800;
-            display: flex;
             align-items: center;
-            gap: 10px;
-        }
-
-        .info-text {
-            font-size: 1.05rem;
-            color: #e2e8f0;
-            line-height: 1.8;
-        }
-
-        /* Action Apply Button */
-        .btn-apply-pattern {
-            background: linear-gradient(135deg, #D4AF37, #AA771C);
-            border: none;
-            color: #000;
-            font-weight: 900;
-            font-size: 1.15rem;
-            padding: 16px 36px;
-            border-radius: 16px;
-            cursor: pointer;
-            box-shadow: 0 8px 30px rgba(212, 175, 55, 0.5);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
             transition: all 0.3s ease;
-            font-family: inherit;
+        }
+        .metric-card:hover {
+            transform: translateY(-4px);
+            border-color: #D4AF37;
+        }
+
+        .metric-num {
+            font-size: 1.9rem;
+            font-weight: 900;
+            margin: 6px 0;
+            color: #D4AF37;
+        }
+        body.light-mode .metric-num {
+            color: #b8860b;
+        }
+
+        .pattern-info-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 28px;
+            max-width: 800px;
+            width: 100%;
+            text-align: right;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+        }
+
+        .btn-apply-pattern {
             display: inline-flex;
             align-items: center;
-            gap: 12px;
-            margin-top: 10px;
+            gap: 10px;
+            padding: 14px 32px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #BF953F, #FCF6BA, #B38728);
+            color: #0b0f0d;
+            font-weight: 900;
+            font-size: 1rem;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(212, 175, 55, 0.4);
+            transition: all 0.3s ease;
+            font-family: inherit;
         }
-
         .btn-apply-pattern:hover {
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 12px 40px rgba(212, 175, 55, 0.7);
-            filter: brightness(1.1);
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(212, 175, 55, 0.6);
         }
 
-        /* Toast */
         .toast {
             position: fixed;
             bottom: 30px;
@@ -249,17 +309,18 @@
     </style>
 </head>
 <body>
-    <!-- Live Wallpaper -->
     <div id="wallpaperLayer"></div>
 
-    <!-- Switcher Controls Bar -->
     <header class="switcher-bar">
         <div class="brand-label">
-            <span>👑 اختر نقش ورق الجدران:</span>
+            <button class="theme-mode-btn" onclick="toggleThemeMode()">
+                <span id="themeIcon">☀️</span>
+                <span id="themeLabel">التبديل إلى الوضع الفاتح (Light Mode)</span>
+            </button>
         </div>
 
         <div class="pattern-tabs">
-            <button class="btn-tab active" onclick="selectPattern(1, this)">
+            <button class="btn-tab" onclick="selectPattern(1, this)">
                 1️⃣ الأرابيسك الأندلسي الملكي (Damask Ogee)
             </button>
             <button class="btn-tab" onclick="selectPattern(2, this)">
@@ -268,46 +329,63 @@
             <button class="btn-tab" onclick="selectPattern(3, this)">
                 3️⃣ المشربية الملكية الدقيقة (Mashrabiya)
             </button>
-            <button class="btn-tab" onclick="selectPattern(4, this)">
-                4️⃣ القوس المغربي المعماري (Moorish Trefoil)
+            <button class="btn-tab active" onclick="selectPattern(4, this)">
+                4️⃣ القوس المغربي المعماري (Moorish Trefoil - المعتمد)
             </button>
         </div>
 
         <div class="controls-group">
-            <span>حجم النقش:</span>
-            <input type="range" min="50" max="140" value="80" oninput="changeSize(this.value)">
-            <span id="sizeVal">80px</span>
+            <span>الحجم:</span>
+            <input type="range" min="30" max="100" value="37" oninput="changeSize(this.value)">
+            <span id="sizeVal">37px</span>
         </div>
     </header>
 
-    <!-- Main Stage Content -->
     <div class="stage-container">
-        <!-- 3D Brand Emblem -->
         <div class="hero-emblem-wrap">
             <img src="/images/tedallal-luxury-transparent.png" alt="تدلّل - Tedallal" style="width: 100%; height: auto;">
         </div>
 
         <div class="badge-live">
-            <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #34d399;"></span>
-            <span>منظومة تدلَّل السحابية • معاينة حية للنقوش على خلفية الزمردي المخملي</span>
+            <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
+            <span id="badgeText">منظومة تدلَّل السحابية • معاينة حية للنقوش الملكية</span>
         </div>
 
-        <h1 id="patternHeading">1️⃣ الأرابيسك الأندلسي الملكي (Damask Ogee Arch)</h1>
-        <p class="lead">
-            انقر على الأزرار في الشريط العلوي لتغيير النقش في الخلفية فوراً، وشاهد كيف يتناغم كل نقش مع الشعار الذهبي ونصوص الضيافة الفاخرة.
+        <h1 id="patternHeading">مطبخ مُنظَّم كالساعة، طلبات مباشرة..</h1>
+        <h1 class="headline-gold">وكل قرش من أرباحك يدخل جيبك بالكامل!</h1>
+        <p class="lead" id="patternDesc">
+            عمارة سحابية نادِية توقف استنزاف العمولات، وتربط الصالة بالمطبخ بهندسة فورية متناهية الدقة.
         </p>
 
-        <!-- Information Card -->
-        <div class="pattern-info-card">
-            <div class="info-title" id="infoTitle">
-                <span>✨ مواصفات هذا النمط الفني:</span>
+        <div class="cards-grid">
+            <div class="metric-card">
+                <span style="font-size: 0.82rem; opacity: 0.8;">عمولة وسيط</span>
+                <div class="metric-num">0%</div>
+                <span style="font-size: 0.78rem; color: #10b981; font-weight: 700;">أرباحك كاملة 100% لك</span>
             </div>
-            <p class="info-text" id="infoText">
-                يعتمد على أقواس «الأوجي» الأندلسية المتماوجة مع لمسات البتلات المورقة المتناظرة. هذا النمط هو الأكثر استخداماً في أقمشة ورق الجدران الفاخرة لدى مطاعم الفنادق العالمية (5 نجوم)؛ لأنه يمنح إحساساً ملكياً دافئاً دون أي خطوط حادة تزعج العين.
+            <div class="metric-card">
+                <span style="font-size: 0.82rem; opacity: 0.8;">ضبط التكاليف</span>
+                <div class="metric-num" style="font-size: 1.5rem;">فوري ولحظي</div>
+                <span style="font-size: 0.78rem; opacity: 0.75; font-weight: 700;">ربط المطبخ بالوصفات آلياً</span>
+            </div>
+            <div class="metric-card">
+                <span style="font-size: 0.82rem; opacity: 0.8;">النتيجة</span>
+                <div class="metric-num" style="font-size: 1.5rem;">+100% أرباح</div>
+                <span style="font-size: 0.78rem; color: #D4AF37; font-weight: 700;">نمو وسيطرة مالية كاملة</span>
+            </div>
+        </div>
+
+        <div class="pattern-info-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <span style="font-weight: 800; font-size: 1.1rem; color: #D4AF37;">✨ تفاصيل هذا النمط في هذا الوضع:</span>
+                <span id="activeModeBadge" style="font-size: 0.8rem; font-weight: 700; padding: 4px 10px; border-radius: 8px; background: rgba(212,175,55,0.15);">🌙 الوضع الداكن</span>
+            </div>
+            <p id="infoText" style="line-height: 1.8; font-size: 0.95rem; margin-bottom: 20px; opacity: 0.9;">
+                يعتمد على تداخل الدوائر الهندسية والأقواس ثلاثية الفصوص مع نجوم مركزية ناعمة. يمنح شعوراً بالاتساع والرحابة المعمارية مع مظهر كلاسيكي فخم.
             </p>
-            <div style="text-align: center; margin-top: 10px;">
+            <div style="text-align: center;">
                 <button class="btn-apply-pattern" onclick="confirmSelection()">
-                    <span>📋 اعتماد هذا النقش وإرسال اختياري للمساعد الذكي</span>
+                    <span>📋 اعتماد هذه الإعدادات وتطبيقها على الموقع فوراً</span>
                 </button>
             </div>
         </div>
@@ -316,51 +394,98 @@
     <div id="toast" class="toast"></div>
 
     <script>
-        const patterns = {
+        let isLightMode = false;
+        let activePatternId = 4;
+        let currentSize = 37;
+
+        // Pattern SVG Generators for Dark & Light palettes
+        function getSvgUri(id, light) {
+            const strokeColor = light ? '%23A67C1E' : '%23D4AF37';
+            const strokeOpacity = light ? '0.18' : '0.32';
+            const fillOpacity = light ? '0.04' : '0.1';
+            const dotOpacity = light ? '0.25' : '0.45';
+
+            if (id === 1) { // Damask Ogee
+                return `data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2296%22%20viewBox%3D%220%200%2060%2096%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%0A%20%20%3Cg%20stroke%3D%22${strokeColor}%22%20fill%3D%22none%22%20stroke-width%3D%220.85%22%20stroke-opacity%3D%22${strokeOpacity}%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M%200%200%20C%2018%2016%2C%2018%2032%2C%200%2048%20C%2018%2064%2C%2018%2080%2C%200%2096%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M%2060%200%20C%2042%2016%2C%2042%2032%2C%2060%2048%20C%2042%2064%2C%2042%2080%2C%2060%2096%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M%2030%200%20C%2048%2016%2C%2048%2032%2C%2030%2048%20C%2012%2064%2C%2012%2080%2C%2030%2096%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M%2030%200%20C%2012%2016%2C%2012%2032%2C%2030%2048%20C%2048%2064%2C%2048%2080%2C%2030%2096%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M%2030%2018%20C%2036%2024%2C%2036%2030%2C%2030%2036%20C%2024%2030%2C%2024%2024%2C%2030%2018%20Z%22%20stroke-width%3D%220.75%22%20fill%3D%22${strokeColor}%22%20fill-opacity%3D%22${fillOpacity}%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2230%22%20cy%3D%2227%22%20r%3D%222.5%22%20fill%3D%22${strokeColor}%22%20fill-opacity%3D%22${dotOpacity}%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M%200%2066%20C%206%2072%2C%206%2078%2C%200%2084%20C%20-6%2078%2C%20-6%2072%2C%200%2066%20Z%22%20stroke-width%3D%220.75%22%20fill%3D%22${strokeColor}%22%20fill-opacity%3D%22${fillOpacity}%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%220%22%20cy%3D%2275%22%20r%3D%222.5%22%20fill%3D%22${strokeColor}%22%20fill-opacity%3D%22${dotOpacity}%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M%2060%2066%20C%2066%2072%2C%2066%2078%2C%2060%2084%20C%2054%2078%2C%2054%2072%2C%2060%2066%20Z%22%20stroke-width%3D%220.75%22%20fill%3D%22${strokeColor}%22%20fill-opacity%3D%22${fillOpacity}%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2260%22%20cy%3D%2275%22%20r%3D%222.5%22%20fill%3D%22${strokeColor}%22%20fill-opacity%3D%22${dotOpacity}%22/%3E%0A%20%20%3C/g%3E%0A%3C/svg%3E`;
+            }
+            if (id === 2) { // Girih Star
+                return `data:image/svg+xml,%3Csvg%20width%3D%2280%22%20height%3D%2280%22%20viewBox%3D%220%200%2080%2080%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%0A%20%20%3Cg%20stroke%3D%22${strokeColor}%22%20fill%3D%22none%22%20stroke-width%3D%220.9%22%20stroke-opacity%3D%22${strokeOpacity}%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M%2040%2014%20L%2047%2027%20L%2061%2024%20L%2056%2037%20L%2066%2045%20L%2053%2049%20L%2051%2063%20L%2040%2054%20L%2029%2063%20L%2027%2049%20L%2014%2045%20L%2024%2037%20L%2019%2024%20L%2033%2027%20Z%22%20fill%3D%22${strokeColor}%22%20fill-opacity%3D%22${fillOpacity}%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2240%22%20cy%3D%2240%22%20r%3D%229%22%20stroke-width%3D%220.75%22%20stroke-opacity%3D%220.25%22%20fill%3D%22${strokeColor}%22%20fill-opacity%3D%220.12%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M%200%200%20L%2019%2024%20M%2080%200%20L%2061%2024%20M%200%2080%20L%2019%2056%20M%2080%2080%20L%2061%2056%22%20stroke-width%3D%220.8%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M%2040%200%20L%2040%2014%20M%2040%2066%20L%2040%2080%20M%200%2045%20L%2014%2045%20M%2066%2045%20L%2080%2045%22%20stroke-width%3D%220.8%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%220%22%20cy%3D%220%22%20r%3D%2210%22%20stroke-width%3D%220.8%22%20stroke-dasharray%3D%223%203%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2280%22%20cy%3D%220%22%20r%3D%2210%22%20stroke-width%3D%220.8%22%20stroke-dasharray%3D%223%203%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%220%22%20cy%3D%2280%22%20r%3D%2210%22%20stroke-width%3D%220.8%22%20stroke-dasharray%3D%223%203%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2280%22%20cy%3D%2280%22%20r%3D%2210%22%20stroke-width%3D%220.8%22%20stroke-dasharray%3D%223%203%22/%3E%0A%20%20%3C/g%3E%0A%3C/svg%3E`;
+            }
+            if (id === 3) { // Mashrabiya
+                return `data:image/svg+xml,%3Csvg%20width%3D%2264%22%20height%3D%2264%22%20viewBox%3D%220%200%2064%2064%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%0A%20%20%3Cg%20stroke%3D%22${strokeColor}%22%20fill%3D%22none%22%20stroke-width%3D%220.8%22%20stroke-opacity%3D%22${strokeOpacity}%22%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2222%2C10%2042%2C10%2054%2C22%2054%2C42%2042%2C54%2022%2C54%2010%2C42%2010%2C22%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2232%2C20%2044%2C32%2032%2C44%2020%2C32%22%20stroke-width%3D%220.65%22%20stroke-opacity%3D%220.25%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%224.5%22%20fill%3D%22${strokeColor}%22%20fill-opacity%3D%220.18%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M%200%2010%20L%2010%2022%20M%2054%2022%20L%2064%2010%20M%200%2054%20L%2010%2042%20M%2054%2042%20L%2064%2054%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%220%2C0%206%2C0%2010%2C4%2010%2C10%204%2C10%200%2C6%22%20fill%3D%22${strokeColor}%22%20fill-opacity%3D%22${fillOpacity}%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2264%2C0%2058%2C0%2054%2C4%2054%2C10%2060%2C10%2064%2C6%22%20fill%3D%22${strokeColor}%22%20fill-opacity%3D%22${fillOpacity}%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%220%2C64%206%2C64%2010%2C60%2010%2C54%204%2C54%200%2C58%22%20fill%3D%22${strokeColor}%22%20fill-opacity%3D%22${fillOpacity}%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2264%2C64%2058%2C64%2054%2C60%2054%2C54%2060%2C54%2064%2C58%22%20fill%3D%22${strokeColor}%22%20fill-opacity%3D%22${fillOpacity}%22/%3E%0A%20%20%20%20%3Cline%20x1%3D%2232%22%20y1%3D%220%22%20x2%3D%2232%22%20y2%3D%2210%22/%3E%0A%20%20%20%20%3Cline%20x1%3D%2232%22%20y1%3D%2254%22%20x2%3D%2232%22%20y2%3D%2264%22/%3E%0A%20%20%20%20%3Cline%20x1%3D%220%22%20y1%3D%2232%22%20x2%3D%2210%22%20y2%3D%2232%22/%3E%0A%20%20%20%20%3Cline%20x1%3D%2254%22%20y1%3D%2232%22%20x2%3D%2264%22%20y2%3D%2232%22/%3E%0A%20%20%3C/g%3E%0A%3C/svg%3E`;
+            }
+            // Default 4: Moorish Trefoil
+            return `data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%0A%20%20%3Cg%20stroke%3D%22${strokeColor}%22%20fill%3D%22none%22%20stroke-width%3D%220.85%22%20stroke-opacity%3D%22${strokeOpacity}%22%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%2222%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%220%22%20cy%3D%220%22%20r%3D%2222%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2260%22%20cy%3D%220%22%20r%3D%2222%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%220%22%20cy%3D%2260%22%20r%3D%2222%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2260%22%20cy%3D%2260%22%20r%3D%2222%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2230%2C22%2036%2C30%2030%2C38%2024%2C30%22%20stroke-width%3D%220.7%22%20fill%3D%22${strokeColor}%22%20fill-opacity%3D%22${fillOpacity}%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%222.5%22%20fill%3D%22${strokeColor}%22%20fill-opacity%3D%22${dotOpacity}%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%220%2C22%206%2C30%200%2C38%20-6%2C30%22%20stroke-width%3D%220.7%22%20fill%3D%22${strokeColor}%22%20fill-opacity%3D%22${fillOpacity}%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2260%2C22%2066%2C30%2060%2C38%2054%2C30%22%20stroke-width%3D%220.7%22%20fill%3D%22${strokeColor}%22%20fill-opacity%3D%22${fillOpacity}%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2230%2C-8%2036%2C0%2030%2C8%2024%2C0%22%20stroke-width%3D%220.7%22%20fill%3D%22${strokeColor}%22%20fill-opacity%3D%22${fillOpacity}%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2230%2C52%2036%2C60%2030%2C68%2024%2C60%22%20stroke-width%3D%220.7%22%20fill%3D%22${strokeColor}%22%20fill-opacity%3D%22${fillOpacity}%22/%3E%0A%20%20%3C/g%3E%0A%3C/svg%3E`;
+        }
+
+        const descriptions = {
             1: {
-                uri: 'data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2296%22%20viewBox%3D%220%200%2060%2096%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%0A%20%20%3Cg%20stroke%3D%22%23D4AF37%22%20fill%3D%22none%22%20stroke-width%3D%220.85%22%20stroke-opacity%3D%220.32%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M%200%200%20C%2018%2016%2C%2018%2032%2C%200%2048%20C%2018%2064%2C%2018%2080%2C%200%2096%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M%2060%200%20C%2042%2016%2C%2042%2032%2C%2060%2048%20C%2042%2064%2C%2042%2080%2C%2060%2096%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M%2030%200%20C%2048%2016%2C%2048%2032%2C%2030%2048%20C%2012%2064%2C%2012%2080%2C%2030%2096%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M%2030%200%20C%2012%2016%2C%2012%2032%2C%2030%2048%20C%2048%2064%2C%2048%2080%2C%2030%2096%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M%2030%2018%20C%2036%2024%2C%2036%2030%2C%2030%2036%20C%2024%2030%2C%2024%2024%2C%2030%2018%20Z%22%20stroke-width%3D%220.75%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.08%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2230%22%20cy%3D%2227%22%20r%3D%222.5%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.35%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M%200%2066%20C%206%2072%2C%206%2078%2C%200%2084%20C%20-6%2078%2C%20-6%2072%2C%200%2066%20Z%22%20stroke-width%3D%220.75%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.08%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%220%22%20cy%3D%2275%22%20r%3D%222.5%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.35%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M%2060%2066%20C%2066%2072%2C%2066%2078%2C%2060%2084%20C%2054%2078%2C%2054%2072%2C%2060%2066%20Z%22%20stroke-width%3D%220.75%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.08%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2260%22%20cy%3D%2275%22%20r%3D%222.5%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.35%22/%3E%0A%20%20%3C/g%3E%0A%3C/svg%3E',
                 name: 'النموذج 1: الأرابيسك الأندلسي الملكي (Damask Ogee)',
-                heading: '1️⃣ الأرابيسك الأندلسي الملكي (Damask Ogee Arch)',
-                desc: 'يعتمد على أقواس «الأوجي» الأندلسية المتماوجة مع لمسات البتلات المورقة المتناظرة. هذا النمط هو الأكثر استخداماً في أقمشة ورق الجدران الفاخرة لدى مطاعم الفنادق العالمية (5 نجوم)؛ لأنه يمنح إحساساً ملكياً دافئاً دون أي خطوط حادة تزعج العين.'
+                desc: 'يعتمد على أقواس «الأوجي» الأندلسية المتماوجة مع لمسات البتلات المورقة المتناظرة. في الوضع الفاتح يمنح طابع ورق الجدران الدمشقي الفاخر (Embossed Damask).'
             },
             2: {
-                uri: 'data:image/svg+xml,%3Csvg%20width%3D%2280%22%20height%3D%2280%22%20viewBox%3D%220%200%2080%2080%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%0A%20%20%3Cg%20stroke%3D%22%23D4AF37%22%20fill%3D%22none%22%20stroke-width%3D%220.9%22%20stroke-opacity%3D%220.34%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M%2040%2014%20L%2047%2027%20L%2061%2024%20L%2056%2037%20L%2066%2045%20L%2053%2049%20L%2051%2063%20L%2040%2054%20L%2029%2063%20L%2027%2049%20L%2014%2045%20L%2024%2037%20L%2019%2024%20L%2033%2027%20Z%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.04%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2240%22%20cy%3D%2240%22%20r%3D%229%22%20stroke-width%3D%220.75%22%20stroke-opacity%3D%220.25%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.12%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M%200%200%20L%2019%2024%20M%2080%200%20L%2061%2024%20M%200%2080%20L%2019%2056%20M%2080%2080%20L%2061%2056%22%20stroke-width%3D%220.8%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M%2040%200%20L%2040%2014%20M%2040%2066%20L%2040%2080%20M%200%2045%20L%2014%2045%20M%2066%2045%20L%2080%2045%22%20stroke-width%3D%220.8%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%220%22%20cy%3D%220%22%20r%3D%2210%22%20stroke-width%3D%220.8%22%20stroke-dasharray%3D%223%203%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2280%22%20cy%3D%220%22%20r%3D%2210%22%20stroke-width%3D%220.8%22%20stroke-dasharray%3D%223%203%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%220%22%20cy%3D%2280%22%20r%3D%2210%22%20stroke-width%3D%220.8%22%20stroke-dasharray%3D%223%203%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2280%22%20cy%3D%2280%22%20r%3D%2210%22%20stroke-width%3D%220.8%22%20stroke-dasharray%3D%223%203%22/%3E%0A%20%20%3C/g%3E%0A%3C/svg%3E',
                 name: 'النموذج 2: النجمة الثمانية المعشقة (Girih Star)',
-                heading: '2️⃣ النجمة الثمانية المعشقة (Interlocking Girih Star)',
-                desc: 'نقش هندسي إسلامي أصيل يدمج النجوم الثمانية المعشقة مع أحزمة الخطوط المتقاطعة (Ribbon Weave). يتميز بهندسة محسوبة دقيقة تعكس روح الضيافة العربية العريقة مع عمق زمردي فخم.'
+                desc: 'نقش هندسي إسلامي أصيل يدمج النجوم الثمانية المعشقة مع أحزمة الخطوط المتقاطعة، يعكس روح الضيافة العربية العريقة بدقة هندسية متوازنة.'
             },
             3: {
-                uri: 'data:image/svg+xml,%3Csvg%20width%3D%2264%22%20height%3D%2264%22%20viewBox%3D%220%200%2064%2064%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%0A%20%20%3Cg%20stroke%3D%22%23D4AF37%22%20fill%3D%22none%22%20stroke-width%3D%220.8%22%20stroke-opacity%3D%220.32%22%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2222%2C10%2042%2C10%2054%2C22%2054%2C42%2042%2C54%2022%2C54%2010%2C42%2010%2C22%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2232%2C20%2044%2C32%2032%2C44%2020%2C32%22%20stroke-width%3D%220.65%22%20stroke-opacity%3D%220.25%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%224.5%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.18%22/%3E%0A%20%20%20%20%3Cpath%20d%3D%22M%200%2010%20L%2010%2022%20M%2054%2022%20L%2064%2010%20M%200%2054%20L%2010%2042%20M%2054%2042%20L%2064%2054%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%220%2C0%206%2C0%2010%2C4%2010%2C10%204%2C10%200%2C6%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.09%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2264%2C0%2058%2C0%2054%2C4%2054%2C10%2060%2C10%2064%2C6%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.09%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%220%2C64%206%2C64%2010%2C60%2010%2C54%204%2C54%200%2C58%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.09%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2264%2C64%2058%2C64%2054%2C60%2054%2C54%2060%2C54%2064%2C58%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.09%22/%3E%0A%20%20%20%20%3Cline%20x1%3D%2232%22%20y1%3D%220%22%20x2%3D%2232%22%20y2%3D%2210%22/%3E%0A%20%20%20%20%3Cline%20x1%3D%2232%22%20y1%3D%2254%22%20x2%3D%2232%22%20y2%3D%2264%22/%3E%0A%20%20%20%20%3Cline%20x1%3D%220%22%20y1%3D%2232%22%20x2%3D%2210%22%20y2%3D%2232%22/%3E%0A%20%20%20%20%3Cline%20x1%3D%2254%22%20y1%3D%2232%22%20x2%3D%2264%22%20y2%3D%2232%22/%3E%0A%20%20%3C/g%3E%0A%3C/svg%3E',
                 name: 'النموذج 3: المشربية الملكية الدقيقة (Palace Mashrabiya)',
-                heading: '3️⃣ المشربية الملكية الدقيقة (Palace Mashrabiya)',
-                desc: 'مستوحى من المشربيات الذهبية في قصور الأندلس والعمارة الفاطمية. يعتمد على شبكة مثمنات هندسية رقيقة تشبه التطريز الذهبي على المخمل الداكن، وهو مريح جداً للقراءة ولا يشتت الانتباه إطلاقاً.'
+                desc: 'مستوحى من المشربيات الذهبية في قصور الأندلس والعمارة الفاطمية. يعتمد على شبكة مثمنات هندسية رقيقة تشبه التطريز الذهبي الناعم مريح جداً للعين.'
             },
             4: {
-                uri: 'data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%0A%20%20%3Cg%20stroke%3D%22%23D4AF37%22%20fill%3D%22none%22%20stroke-width%3D%220.85%22%20stroke-opacity%3D%220.32%22%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%2222%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%220%22%20cy%3D%220%22%20r%3D%2222%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2260%22%20cy%3D%220%22%20r%3D%2222%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%220%22%20cy%3D%2260%22%20r%3D%2222%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2260%22%20cy%3D%2260%22%20r%3D%2222%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2230%2C22%2036%2C30%2030%2C38%2024%2C30%22%20stroke-width%3D%220.7%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.1%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%222.5%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.45%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%220%2C22%206%2C30%200%2C38%20-6%2C30%22%20stroke-width%3D%220.7%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.1%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2260%2C22%2066%2C30%2060%2C38%2054%2C30%22%20stroke-width%3D%220.7%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.1%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2230%2C-8%2036%2C0%2030%2C8%2024%2C0%22%20stroke-width%3D%220.7%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.1%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2230%2C52%2036%2C60%2030%2C68%2024%2C60%22%20stroke-width%3D%220.7%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.1%22/%3E%0A%20%20%3C/g%3E%0A%3C/svg%3E',
                 name: 'النموذج 4: القوس المغربي المعماري (Moorish Trefoil)',
-                heading: '4️⃣ القوس المغربي المعماري (Moorish Trefoil Arches)',
-                desc: 'يعتمد على تداخل الدوائر الهندسية والأقواس ثلاثية الفصوص مع نجوم مركزية ناعمة. يمنح شعوراً بالاتساع والرحابة المعمارية مع مظهر كلاسيكي فخم.'
+                desc: 'النموذج الملكي المعتمد حالياً: يعتمد على تداخل الدوائر والأقواس ثلاثية الفصوص مع نجوم مركزية ناعمة. في الوضع الفاتح يعطي تأثيراً كخلفية رخام عاجي ملكي منقوش بماء الذهب العتيق.'
             }
         };
 
-        let activePatternId = 1;
-        let currentSize = 80;
+        function updateWallpaper() {
+            const layer = document.getElementById('wallpaperLayer');
+            const uri = getSvgUri(activePatternId, isLightMode);
+
+            if (isLightMode) {
+                layer.style.backgroundImage = `
+                    radial-gradient(circle at 50% 18%, rgba(212, 175, 55, 0.12) 0%, transparent 60%),
+                    radial-gradient(circle at 80% 65%, rgba(16, 185, 129, 0.05) 0%, transparent 50%),
+                    url('${uri}')
+                `;
+            } else {
+                layer.style.backgroundImage = `
+                    radial-gradient(circle at 50% 18%, rgba(16, 185, 129, 0.14) 0%, transparent 60%),
+                    radial-gradient(circle at 80% 65%, rgba(212, 175, 55, 0.08) 0%, transparent 50%),
+                    url('${uri}')
+                `;
+            }
+
+            document.getElementById('infoText').innerText = descriptions[activePatternId].desc;
+        }
+
+        function toggleThemeMode() {
+            isLightMode = !isLightMode;
+            document.body.classList.toggle('light-mode', isLightMode);
+            const icon = document.getElementById('themeIcon');
+            const label = document.getElementById('themeLabel');
+            const badge = document.getElementById('activeModeBadge');
+
+            if (isLightMode) {
+                icon.innerText = '🌙';
+                label.innerText = 'التبديل إلى الوضع الداكن (Dark Mode)';
+                badge.innerText = '☀️ الوضع الفاتح (عاجي ملكي مع ذهب برونزي)';
+                badge.style.background = 'rgba(184,134,11,0.15)';
+                badge.style.color = '#78350f';
+            } else {
+                icon.innerText = '☀️';
+                label.innerText = 'التبديل إلى الوضع الفاتح (Light Mode)';
+                badge.innerText = '🌙 الوضع الداكن (زمردي مخملي مع ذهب)';
+                badge.style.background = 'rgba(212,175,55,0.15)';
+                badge.style.color = '#FCF6BA';
+            }
+            updateWallpaper();
+        }
 
         function selectPattern(id, btn) {
             activePatternId = id;
             document.querySelectorAll('.btn-tab').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-
-            const p = patterns[id];
-            const layer = document.getElementById('wallpaperLayer');
-            layer.style.backgroundImage = `
-                radial-gradient(circle at 50% 18%, rgba(16, 185, 129, 0.14) 0%, transparent 60%),
-                radial-gradient(circle at 80% 65%, rgba(212, 175, 55, 0.08) 0%, transparent 50%),
-                url('${p.uri}')
-            `;
-
-            document.getElementById('patternHeading').innerText = p.heading;
-            document.getElementById('infoText').innerText = p.desc;
+            updateWallpaper();
         }
 
         function changeSize(val) {
@@ -370,12 +495,13 @@
         }
 
         function confirmSelection() {
-            const p = patterns[activePatternId];
-            const msg = `اعتمد ${p.name} بحجم ${currentSize}px للخلفية`;
+            const modeName = isLightMode ? 'الوضع الفاتح (عاجي ملكي #FAF7F2)' : 'الوضع الداكن (زمردي مخملي #020b07)';
+            const p = descriptions[activePatternId];
+            const msg = `اعتمد ${p.name} بحجم ${currentSize}px لـ ${modeName}`;
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(msg).catch(() => {});
             }
-            showToast('✅ تم نسخ: ' + msg + ' — الصقها هنا في المحادثة لأقوم بتطبيقها فوراً!');
+            showToast('✅ تم نسخ: ' + msg + ' — الصقها هنا في الشات لأقوم باعتمادها!');
         }
 
         function showToast(msg) {
@@ -384,6 +510,9 @@
             toast.classList.add('show');
             setTimeout(() => toast.classList.remove('show'), 3500);
         }
+
+        // Initialize default pattern 4
+        updateWallpaper();
     </script>
 </body>
 </html>
