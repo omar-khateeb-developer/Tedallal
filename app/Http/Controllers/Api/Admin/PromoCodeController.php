@@ -7,6 +7,7 @@ use App\Http\Requests\StorePromoCodeRequest;
 use App\Http\Requests\UpdatePromoCodeRequest;
 use Illuminate\Http\Request;
 use App\Models\PromoCode;
+use Illuminate\Support\Str;
 
 class PromoCodeController extends ApiController
 {
@@ -53,8 +54,14 @@ class PromoCodeController extends ApiController
         }
 
         $validated = $request->validated();
-
         $validated['restaurant_id'] = $restaurant->id;
+
+        if (empty($validated['code'])) {
+            do {
+                $validated['code'] = 'OFFER-' . strtoupper(Str::random(6));
+            } while (PromoCode::withoutGlobalScopes()->where('restaurant_id', $restaurant->id)->where('code', $validated['code'])->exists());
+        }
+
         $promoCode = PromoCode::create($validated);
 
         return $this->success($promoCode, 201);

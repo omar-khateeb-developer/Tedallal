@@ -38,7 +38,8 @@ class PromoCodeController extends ApiController
             ], 400);
         }
 
-        $promoCode = PromoCode::where('restaurant_id', $restaurant->id)
+        $promoCode = PromoCode::withoutGlobalScopes()
+            ->where('restaurant_id', $restaurant->id)
             ->where('code', trim($request->code))
             ->first();
 
@@ -104,7 +105,8 @@ class PromoCodeController extends ApiController
         $session = ValidateTableSession::sessionFrom($request);
         $restaurant = $session->table->restaurant;
 
-        $promo = PromoCode::where('restaurant_id', $restaurant->id)
+        $promo = PromoCode::withoutGlobalScopes()
+            ->where('restaurant_id', $restaurant->id)
             ->where('code', trim($request->code))
             ->firstOrFail();
 

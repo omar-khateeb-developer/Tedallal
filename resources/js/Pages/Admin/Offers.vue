@@ -230,13 +230,6 @@ const deleteOffer = async (id: number) => {
                         </p>
                         <form @submit.prevent="createOffer" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    كود داخلي للمحاسبة
-                                    <span class="text-[10px] text-stone-400 font-normal mr-1">(لا يراه الزبون)</span>
-                                </label>
-                                <TextInput v-model="form.code" type="text" class="w-full" placeholder="مثال: WHEEL15" required />
-                            </div>
-                            <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">نوع الخصم</label>
                                 <select v-model="form.discount_type" class="w-full border-gray-300 dark:border-slate-700 rounded-md shadow-xs bg-white dark:bg-slate-900 text-stone-900 dark:text-white focus:border-amber-500 focus:ring-amber-500">
                                     <option value="percentage">نسبة مئوية (%)</option>
@@ -246,9 +239,16 @@ const deleteOffer = async (id: number) => {
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     قيمة الخصم
-                                    <span class="text-[10px] text-amber-600 dark:text-amber-400 font-semibold mr-1">← هذا ما سيظهر على العجلة</span>
+                                    <span class="text-[10px] text-amber-600 dark:text-amber-400 font-semibold mr-1">← تظهر على شريحة العجلة</span>
                                 </label>
                                 <TextInput v-model="form.discount_value" type="number" step="0.01" class="w-full" placeholder="مثال: 15" required />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    كود داخلي
+                                    <span class="text-[10px] text-stone-400 font-normal mr-1">(اختياري - يُولّد تلقائياً)</span>
+                                </label>
+                                <TextInput v-model="form.code" type="text" class="w-full" placeholder="تلقائي (اختياري)" />
                             </div>
                             <div>
                                 <PrimaryButton type="submit" class="w-full justify-center h-10">إضافة للعجلة</PrimaryButton>
@@ -261,9 +261,9 @@ const deleteOffer = async (id: number) => {
                         <table class="w-full text-right text-sm">
                             <thead class="bg-stone-50 dark:bg-slate-800/80 text-stone-600 dark:text-slate-400 border-b border-stone-100 dark:border-slate-800">
                                 <tr>
-                                    <th class="py-3 px-4 font-semibold">الكود الداخلي</th>
-                                    <th class="py-3 px-4 font-semibold">القيمة الحقيقية</th>
                                     <th class="py-3 px-4 font-semibold">🎡 ما يراه الزبون على العجلة</th>
+                                    <th class="py-3 px-4 font-semibold">قيمة الخصم</th>
+                                    <th class="py-3 px-4 font-semibold">كود النظام</th>
                                     <th class="py-3 px-4 font-semibold">الانتهاء</th>
                                     <th class="py-3 px-4 font-semibold">الحالة</th>
                                     <th class="py-3 px-4 font-semibold">إجراءات</th>
@@ -274,16 +274,6 @@ const deleteOffer = async (id: number) => {
                                     <td colspan="6" class="py-6 text-center text-stone-400 dark:text-slate-500">لا توجد كوبونات مسجلة. أضف كوبوناً أعلاه ليظهر كجائزة في عجلة الحظ.</td>
                                 </tr>
                                 <tr v-for="offer in offers" :key="offer.id" class="hover:bg-stone-50/50 dark:hover:bg-slate-800/40 transition-colors">
-                                    <!-- Internal code (admin only) -->
-                                    <td class="py-3 px-4 font-mono text-xs text-stone-500 dark:text-slate-500">{{ offer.code }}</td>
-
-                                    <!-- Actual discount value -->
-                                    <td class="py-3 px-4 font-bold text-gray-800 dark:text-white">
-                                        {{ formatDiscountVal(offer.discount_value) }}
-                                        {{ offer.discount_type === 'percentage' ? '%' : formatCurr($page.props.auth.restaurant?.currency) }}
-                                        <span class="text-[10px] font-normal text-stone-400 mr-1">({{ offer.discount_type === 'percentage' ? 'نسبة' : 'مبلغ ثابت' }})</span>
-                                    </td>
-
                                     <!-- What customer sees on wheel — built from real values, never from code name -->
                                     <td class="py-3 px-4">
                                         <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-sm"
@@ -297,6 +287,16 @@ const deleteOffer = async (id: number) => {
                                             </span>
                                         </span>
                                     </td>
+
+                                    <!-- Actual discount value -->
+                                    <td class="py-3 px-4 font-bold text-gray-800 dark:text-white">
+                                        {{ formatDiscountVal(offer.discount_value) }}
+                                        {{ offer.discount_type === 'percentage' ? '%' : formatCurr($page.props.auth.restaurant?.currency) }}
+                                        <span class="text-[10px] font-normal text-stone-400 mr-1">({{ offer.discount_type === 'percentage' ? 'نسبة' : 'مبلغ ثابت' }})</span>
+                                    </td>
+
+                                    <!-- Internal code (admin only) -->
+                                    <td class="py-3 px-4 font-mono text-xs text-stone-400 dark:text-slate-500" dir="ltr">{{ offer.code }}</td>
 
                                     <td class="py-3 px-4 text-gray-600 dark:text-slate-400 text-xs">{{ offer.expires_at ? new Date(offer.expires_at).toLocaleDateString('ar') : 'مفتوح' }}</td>
 

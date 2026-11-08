@@ -169,7 +169,8 @@ class WheelController extends Controller
     {
         // 1. Handle Demo Spin
         if ($token === 'demo') {
-            $slices = $this->getDefaultSlices('ل.س');
+            $restaurant = auth()->user()?->restaurant ?? Restaurant::first();
+            $slices = $restaurant ? $this->buildSlicesForRestaurant($restaurant) : $this->getDefaultSlices('ل.س');
             $winningIndex = $this->pickWeightedSliceIndex($slices);
             $wonSlice = $slices[$winningIndex];
 
@@ -240,7 +241,8 @@ class WheelController extends Controller
             $wonSlice = $slices[$winningIndex];
 
             // Resolve or ensure PromoCode in database
-            $wonOffer = PromoCode::where('restaurant_id', $restaurant->id)
+            $wonOffer = PromoCode::withoutGlobalScopes()
+                ->where('restaurant_id', $restaurant->id)
                 ->where('id', $wonSlice['id'])
                 ->first();
 
@@ -260,7 +262,7 @@ class WheelController extends Controller
             // Generate unique voucher code for next visit
             do {
                 $uniqueCode = 'LUCK-' . strtoupper(Str::random(6));
-            } while (PromoCode::where('restaurant_id', $restaurant->id)->where('code', $uniqueCode)->exists());
+            } while (PromoCode::withoutGlobalScopes()->where('restaurant_id', $restaurant->id)->where('code', $uniqueCode)->exists());
 
             // Next visit validity: begins in 2 hours, valid for 14 days
             $startsAt = now()->addHours(2);
@@ -326,23 +328,28 @@ class WheelController extends Controller
      */
     private function renderDemoWheel(Request $request): Response
     {
-        $restaurant = Restaurant::first();
-        $currency = $this->normalizeCurrency($restaurant?->currency ?? 'ل.س');
+        $restaurant = auth()->user()?->restaurant ?? Restaurant::first();
+        if (!$restaurant) {
+            abort(404);
+        }
+        $currency = $this->normalizeCurrency($restaurant->currency ?? 'ل.س');
 
         $firstTable = null;
         try {
-            $firstTable = $restaurant ? RestaurantTable::withoutGlobalScopes()->where('restaurant_id', $restaurant->id)->first() : null;
+            $firstTable = RestaurantTable::withoutGlobalScopes()->where('restaurant_id', $restaurant->id)->first();
         } catch (\Throwable $e) {
             // Silently fallback if table query is unresolvable
         }
         $menuUrl = ($firstTable && $firstTable->public_token) ? route('customer.menu', ['token' => $firstTable->public_token]) : null;
 
+        $slices = $this->buildSlicesForRestaurant($restaurant);
+
         return Inertia::render('Wheel', [
             'token' => 'demo',
             'is_demo' => true,
             'restaurant' => [
-                'name' => $restaurant?->name ?? 'مطعم تدلّل الفاخر',
-                'logo' => $restaurant?->logo ?? '/images/tedallal-golden-crop.png',
+                'name' => $restaurant->name ?? 'مطعم تدلّل الفاخر',
+                'logo' => $restaurant->logo ?? '/images/tedallal-golden-crop.png',
                 'currency' => $currency,
                 'menu_url' => $menuUrl,
                 'order_url' => null,
@@ -352,7 +359,7 @@ class WheelController extends Controller
             'is_expired' => false,
             'claimed_voucher' => null,
             'won_slice_index' => null,
-            'slices' => $this->getDefaultSlices($currency),
+            'slices' => $slices,
         ]);
     }
 
@@ -361,7 +368,8 @@ class WheelController extends Controller
      */
     private function buildSlicesForRestaurant(Restaurant $restaurant): array
     {
-        $activeOffers = PromoCode::where('restaurant_id', $restaurant->id)
+        $activeOffers = PromoCode::withoutGlobalScopes()
+            ->where('restaurant_id', $restaurant->id)
             ->where('is_active', true)
             ->where('is_single_use', false)
             ->orderBy('id')

@@ -24,7 +24,7 @@ class StorePromoCodeRequest extends FormRequest
     {
         $restaurantId = auth()->user()->restaurant_id;
         return [
-            'code' => 'required|string|max:50|unique:promo_codes,code,NULL,id,restaurant_id,' . $restaurantId,
+            'code' => 'nullable|string|max:50|unique:promo_codes,code,NULL,id,restaurant_id,' . $restaurantId,
             'discount_type' => 'required|in:percentage,fixed',
             'discount_value' => 'required|numeric|min:0',
             'min_order_value' => 'nullable|numeric|min:0',
