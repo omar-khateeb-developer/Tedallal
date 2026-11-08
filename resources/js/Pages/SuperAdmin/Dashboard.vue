@@ -134,7 +134,8 @@ const toggleRestaurantType = async (restaurant: any) => {
 
 const toggleFeature = async (restaurant: any, featureName: string) => {
     try {
-        const currentStatus = restaurant.features?.[featureName] || false;
+        const features = restaurant.effective_features || restaurant.features || {};
+        const currentStatus = !!features[featureName];
         await axios.patch(`/api/super-admin/restaurants/${restaurant.id}`, {
             features: { [featureName]: !currentStatus }
         });
@@ -1167,6 +1168,30 @@ onMounted(() => {
                                                 <span class="text-sm font-bold text-purple-700 dark:text-purple-300 flex items-center gap-1">
                                                     <span>🤖</span>
                                                     <span>الويتر الذكي (AI)</span>
+                                                </span>
+                                            </label>
+
+                                            <label class="inline-flex items-center gap-2 cursor-pointer">
+                                                <input type="checkbox"
+                                                    :checked="!!((restaurant.effective_features || restaurant.features)?.whatsapp_reminders)"
+                                                    @change="toggleFeature(restaurant, 'whatsapp_reminders')"
+                                                    class="rounded border-gray-300 text-emerald-600 shadow-sm focus:border-emerald-300 focus:ring focus:ring-emerald-200 focus:ring-opacity-50"
+                                                >
+                                                <span class="text-sm font-medium text-emerald-700 flex items-center gap-1">
+                                                    <span>💬</span>
+                                                    <span>تذكيرات الواتساب</span>
+                                                </span>
+                                            </label>
+
+                                            <label class="inline-flex items-center gap-2 cursor-pointer">
+                                                <input type="checkbox"
+                                                    :checked="!!((restaurant.effective_features || restaurant.features)?.menu_engineering)"
+                                                    @change="toggleFeature(restaurant, 'menu_engineering')"
+                                                    class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                                >
+                                                <span class="text-sm font-medium text-blue-700 flex items-center gap-1">
+                                                    <span>📊</span>
+                                                    <span>هندسة المنيو والربحية</span>
                                                 </span>
                                             </label>
                                         </div>

@@ -52,6 +52,7 @@ Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
         Route::delete('users/{user}', [UserController::class, 'destroy']);
         Route::get('users/{user}/logs', [UserController::class, 'logs']);
         Route::get('analytics', [\App\Http\Controllers\Api\Admin\AnalyticsController::class, 'index']);
+        Route::get('analytics/menu-engineering', [\App\Http\Controllers\Api\Admin\AnalyticsController::class, 'menuEngineering']);
         Route::get('insights', [\App\Http\Controllers\Api\Admin\InsightsController::class, 'index']);
         Route::get('reports/sales', [\App\Http\Controllers\Api\Admin\SalesReportController::class, 'index']);
         Route::apiResource('promo-codes', AdminPromoCodeController::class)->parameters([

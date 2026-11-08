@@ -129,6 +129,7 @@ class WheelController extends Controller
             'token' => $token,
             'is_demo' => false,
             'restaurant_id' => $restaurant->id,
+            'has_whatsapp_feature' => $restaurant->hasFeature('whatsapp_reminders'),
             'restaurant' => [
                 'id' => $restaurant->id,
                 'name' => $restaurant->name,
@@ -365,6 +366,7 @@ class WheelController extends Controller
             'token' => 'demo',
             'is_demo' => true,
             'restaurant_id' => $restaurant->id,
+            'has_whatsapp_feature' => $restaurant->hasFeature('whatsapp_reminders'),
             'restaurant' => [
                 'id' => $restaurant->id,
                 'name' => $restaurant->name ?? 'مطعم تدلّل الفاخر',

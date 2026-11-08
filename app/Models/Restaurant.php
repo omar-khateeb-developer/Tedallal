@@ -216,4 +216,14 @@ class Restaurant extends Model
     {
         return $this->hasFeature('analytics');
     }
+
+    public function hasWhatsappRemindersFeature(): bool
+    {
+        return $this->hasFeature('whatsapp_reminders');
+    }
+
+    public function hasMenuEngineeringFeature(): bool
+    {
+        return $this->hasFeature('menu_engineering');
+    }
 }

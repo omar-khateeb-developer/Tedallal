@@ -34,18 +34,24 @@ enum RestaurantPlan: string
                 'offers' => false,
                 'ai_waiter' => false,
                 'custom_branding' => false,
+                'whatsapp_reminders' => false,
+                'menu_engineering' => false,
             ],
             self::Pro => [
                 'analytics' => true,
                 'offers' => true,
                 'ai_waiter' => false,
                 'custom_branding' => false,
+                'whatsapp_reminders' => false,
+                'menu_engineering' => false,
             ],
             self::Max => [
                 'analytics' => true,
                 'offers' => true,
                 'ai_waiter' => true,
                 'custom_branding' => true,
+                'whatsapp_reminders' => true,
+                'menu_engineering' => true,
             ],
         };
     }

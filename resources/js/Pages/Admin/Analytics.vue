@@ -36,6 +36,12 @@ const isLocked = ref(false);
 const loading = ref(true);
 const period = ref('all'); // all, today, week, month
 
+const activeTab = ref<'overview' | 'engineering'>('overview');
+const engineeringData = ref<any>(null);
+const engineeringLoading = ref(false);
+const engineeringLocked = ref(false);
+const engineeringFilter = ref<'all' | 'star' | 'plowhorse' | 'puzzle' | 'dog'>('all');
+
 const periods = [
     { value: 'today', label: 'اليوم' },
     { value: 'week', label: 'هذا الأسبوع' },
@@ -66,13 +72,50 @@ const fetchInsights = async () => {
     }
 };
 
+const fetchMenuEngineering = async () => {
+    engineeringLoading.value = true;
+    try {
+        const response = await axios.get(`/api/admin/analytics/menu-engineering?period=${period.value}`);
+        engineeringData.value = response.data.data;
+        engineeringLocked.value = false;
+    } catch (e: any) {
+        if (e.response?.status === 403 || e.response?.data?.locked) {
+            engineeringLocked.value = true;
+        }
+    } finally {
+        engineeringLoading.value = false;
+    }
+};
+
+const filteredEngineeringItems = computed(() => {
+    if (!engineeringData.value) return [];
+    const all = [
+        ...(engineeringData.value.stars || []),
+        ...(engineeringData.value.plowhorses || []),
+        ...(engineeringData.value.puzzles || []),
+        ...(engineeringData.value.dogs || [])
+    ];
+    if (engineeringFilter.value === 'all') return all;
+    return all.filter((it: any) => it.type === engineeringFilter.value);
+});
+
 onMounted(() => {
     fetchAnalytics();
     fetchInsights();
 });
 
 watch(period, () => {
-    fetchAnalytics();
+    if (activeTab.value === 'overview') {
+        fetchAnalytics();
+    } else {
+        fetchMenuEngineering();
+    }
+});
+
+watch(activeTab, (newTab) => {
+    if (newTab === 'engineering' && !engineeringData.value && !engineeringLocked.value) {
+        fetchMenuEngineering();
+    }
 });
 
 const getMaxOrders = (hourlyData: any[]) => {
@@ -199,6 +242,36 @@ const categoryChartOptions = {
 
             <!-- Dashboard Content -->
             <div v-else>
+                <!-- Navigation Tabs -->
+                <div class="flex items-center gap-2 mb-6 border-b border-stone-200 dark:border-slate-800 pb-3">
+                    <button
+                        @click="activeTab = 'overview'"
+                        type="button"
+                        class="px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 cursor-pointer"
+                        :class="activeTab === 'overview'
+                            ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
+                            : 'bg-white dark:bg-[#0a0f1d] text-stone-600 dark:text-slate-400 hover:bg-stone-50 dark:hover:bg-slate-800 border border-stone-200 dark:border-slate-800'"
+                    >
+                        <span>📈</span>
+                        <span>المبيعات والمؤشرات العامة</span>
+                    </button>
+
+                    <button
+                        @click="activeTab = 'engineering'"
+                        type="button"
+                        class="px-5 py-2.5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 cursor-pointer"
+                        :class="activeTab === 'engineering'
+                            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20'
+                            : 'bg-white dark:bg-[#0a0f1d] text-stone-600 dark:text-slate-400 hover:bg-stone-50 dark:hover:bg-slate-800 border border-stone-200 dark:border-slate-800'"
+                    >
+                        <span>🧠</span>
+                        <span>ذكاء الأعمال وهندسة المنيو</span>
+                        <span v-if="!$page.props.auth.restaurant?.features?.menu_engineering" class="text-[10px] bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 px-1.5 py-0.5 rounded-md font-bold">باقة إضافية 🔒</span>
+                    </button>
+                </div>
+
+                <!-- TAB 1: General Analytics Overview -->
+                <div v-show="activeTab === 'overview'">
                 <!-- Insights Section (Rule-based) -->
                 <div v-if="insights.length > 0" class="mb-8 space-y-3">
                     <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-2 flex items-center gap-2">
@@ -309,7 +382,7 @@ const categoryChartOptions = {
                                         </div>
                                         <div class="text-left">
                                             <div class="text-sm font-bold text-gray-800 dark:text-white">{{ item.total_quantity }} طلب</div>
-                                            <div class="text-xs text-stone-500 dark:text-slate-400">{{ formatCurrency(item.total_revenue) }} SR</div>
+                                            <div class="text-xs text-stone-500 dark:text-slate-400">{{ formatCurrency(item.total_revenue) }} {{ $page.props.auth.restaurant?.currency || 'ل.س' }}</div>
                                         </div>
                                     </div>
                                 </template>
@@ -343,7 +416,7 @@ const categoryChartOptions = {
                                         </div>
                                         <div class="text-left">
                                             <div class="text-sm font-bold text-gray-800 dark:text-white">{{ item.total_quantity }} طلب</div>
-                                            <div class="text-xs text-stone-500 dark:text-slate-400">{{ formatCurrency(item.total_revenue) }} SR</div>
+                                            <div class="text-xs text-stone-500 dark:text-slate-400">{{ formatCurrency(item.total_revenue) }} {{ $page.props.auth.restaurant?.currency || 'ل.س' }}</div>
                                         </div>
                                     </div>
                                 </template>
@@ -395,7 +468,7 @@ const categoryChartOptions = {
                                             <td class="px-4 py-3 font-bold text-stone-400 dark:text-slate-500">#{{ idx + 1 }}</td>
                                             <td class="px-4 py-3 font-medium text-gray-800 dark:text-white">{{ table.name }}</td>
                                             <td class="px-4 py-3 text-stone-700 dark:text-slate-300">{{ table.total_orders }}</td>
-                                            <td class="px-4 py-3 font-semibold text-green-600 dark:text-emerald-400">{{ formatCurrency(table.total_revenue) }} SR</td>
+                                            <td class="px-4 py-3 font-semibold text-green-600 dark:text-emerald-400">{{ formatCurrency(table.total_revenue) }} {{ $page.props.auth.restaurant?.currency || 'ل.س' }}</td>
                                         </tr>
                                     </template>
                                     <template v-else>
@@ -411,7 +484,199 @@ const categoryChartOptions = {
                         </div>
                     </div>
                 </div>
+            </div> <!-- End TAB 1 -->
+
+            <!-- TAB 2: Menu Engineering & Profitability Matrix -->
+            <div v-show="activeTab === 'engineering'">
+                <!-- Locked State for Menu Engineering -->
+                <div v-if="!$page.props.auth.restaurant?.features?.menu_engineering || engineeringLocked"
+                     class="bg-white dark:bg-[#0a0f1d] rounded-2xl p-10 text-center shadow-xs border border-stone-100 dark:border-slate-800 max-w-2xl mx-auto my-8">
+                    <div class="bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">
+                        🧠
+                    </div>
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300 text-xs font-bold mb-3">
+                        <span>🔒 باقة إضافية خاصة</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800 dark:text-white mb-3">ذكاء الأعمال وهندسة المنيو (Menu Engineering)</h3>
+                    <p class="text-stone-500 dark:text-stone-400 mb-6 leading-relaxed text-sm">
+                        تتيح لك هذه المنظومة تصنيف قائمة طعامك بدقة وفق مصفوفة بوسطن العالمية إلى (نجوم 🌟، أحصنة جر 🐴، ألغاز 🧩، وأصناف راكدة 🐕) مع توصيات ذكية لرفع هوامش الأرباح وتحليل الساعات الأكثر طلباً.
+                        <br><br>
+                        هذه الميزة إضافية، يرجى التواصل مع إدارة منصة تدلّل لتفعيلها لحساب مطعمك.
+                    </p>
+                    <a
+                        href="https://wa.me/963934578117?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%20%D8%A3%D8%B3%D8%AA%D8%A7%D8%B0%20%D8%B9%D9%85%D8%B1%D8%8C%20%D8%A3%D8%B1%D8%BA%D8%A8%20%D8%A8%D8%AA%D9%81%D8%B9%D9%8A%D9%84%20%D9%85%D9%8A%D8%B2%D8%A9%20%D9%87%D9%86%D8%AF%D8%B3%D8%A9%20%D8%A7%D9%84%D9%85%D9%86%D9%8A%D9%88%20%D9%88%D8%B0%D9%83%D8%A7%D8%A1%20%D8%A7%D9%84%D8%A3%D8%B9%D9%85%D8%A7%D9%84%20%D9%84%D9%85%D8%B7%D8%B9%D9%85%D9%8A"
+                        target="_blank"
+                        class="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:from-blue-700 hover:to-indigo-700 transition shadow-lg shadow-blue-600/20 cursor-pointer"
+                    >
+                        <span>💬 تواصل مع إدارة المنصة لتفعيل الميزة</span>
+                    </a>
+                </div>
+
+                <!-- Unlocked State: Menu Engineering Matrix -->
+                <div v-else class="space-y-6">
+                    <!-- Filters -->
+                    <div class="flex items-center justify-between bg-white dark:bg-[#0a0f1d] p-2 rounded-xl shadow-xs border border-stone-100 dark:border-slate-800">
+                        <div class="flex gap-1">
+                            <button 
+                                v-for="p in periods" 
+                                :key="p.value"
+                                @click="period = p.value"
+                                class="px-4 py-2 rounded-lg text-sm font-medium transition cursor-pointer"
+                                :class="period === p.value ? 'bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-bold' : 'text-stone-500 dark:text-slate-400 hover:bg-stone-50 dark:hover:bg-slate-800'"
+                            >
+                                {{ p.label }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Loading State -->
+                    <div v-if="engineeringLoading && !engineeringData" class="text-center py-20">
+                        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <p class="text-stone-500 dark:text-slate-400">جاري تحليل مصفوفة أداء وربحية الأصناف...</p>
+                    </div>
+
+                    <!-- Content Loaded -->
+                    <div v-else-if="engineeringData" class="space-y-6">
+                        <!-- 4 Quadrants Summary Cards -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <!-- Stars -->
+                            <div @click="engineeringFilter = (engineeringFilter === 'star' ? 'all' : 'star')"
+                                 class="cursor-pointer p-5 rounded-2xl border transition-all hover:scale-[1.02]"
+                                 :class="engineeringFilter === 'star' ? 'bg-amber-500/15 border-amber-500 shadow-md ring-2 ring-amber-500/30' : 'bg-white dark:bg-[#0a0f1d] border-stone-200 dark:border-slate-800'">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-2xl">🌟</span>
+                                    <span class="text-xs px-2 py-0.5 rounded-full font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300">أرباح وإقبال مرتفع</span>
+                                </div>
+                                <h4 class="text-base font-bold text-gray-800 dark:text-white mt-3">النجوم (Stars)</h4>
+                                <p class="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">{{ engineeringData.summary?.stars_count || 0 }} <span class="text-xs font-normal text-stone-400">صنف</span></p>
+                                <p class="text-[11px] text-stone-500 dark:text-slate-400 mt-1">أطباق رابحة ومحبوبة، حافظ على جودتها وتواجدها بصدارة المنيو.</p>
+                            </div>
+
+                            <!-- Plowhorses -->
+                            <div @click="engineeringFilter = (engineeringFilter === 'plowhorse' ? 'all' : 'plowhorse')"
+                                 class="cursor-pointer p-5 rounded-2xl border transition-all hover:scale-[1.02]"
+                                 :class="engineeringFilter === 'plowhorse' ? 'bg-emerald-500/15 border-emerald-500 shadow-md ring-2 ring-emerald-500/30' : 'bg-white dark:bg-[#0a0f1d] border-stone-200 dark:border-slate-800'">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-2xl">🐴</span>
+                                    <span class="text-xs px-2 py-0.5 rounded-full font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">شعبية بربح أقل</span>
+                                </div>
+                                <h4 class="text-base font-bold text-gray-800 dark:text-white mt-3">أحصنة الجر (Plowhorses)</h4>
+                                <p class="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">{{ engineeringData.summary?.plowhorses_count || 0 }} <span class="text-xs font-normal text-stone-400">صنف</span></p>
+                                <p class="text-[11px] text-stone-500 dark:text-slate-400 mt-1">طلب عالٍ بسعر منخفض، ارفع سعرها بنسبة بسيطة لتعظيم الربح.</p>
+                            </div>
+
+                            <!-- Puzzles -->
+                            <div @click="engineeringFilter = (engineeringFilter === 'puzzle' ? 'all' : 'puzzle')"
+                                 class="cursor-pointer p-5 rounded-2xl border transition-all hover:scale-[1.02]"
+                                 :class="engineeringFilter === 'puzzle' ? 'bg-blue-500/15 border-blue-500 shadow-md ring-2 ring-blue-500/30' : 'bg-white dark:bg-[#0a0f1d] border-stone-200 dark:border-slate-800'">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-2xl">🧩</span>
+                                    <span class="text-xs px-2 py-0.5 rounded-full font-bold bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300">ربح عالٍ بطلب قليل</span>
+                                </div>
+                                <h4 class="text-base font-bold text-gray-800 dark:text-white mt-3">الألغاز (Puzzles)</h4>
+                                <p class="text-2xl font-black text-blue-600 dark:text-blue-400 mt-1">{{ engineeringData.summary?.puzzles_count || 0 }} <span class="text-xs font-normal text-stone-400">صنف</span></p>
+                                <p class="text-[11px] text-stone-500 dark:text-slate-400 mt-1">عائدها الربحي ممتاز ولكن إقبالها قليل، روّج لها عبر عجلة الحظ!</p>
+                            </div>
+
+                            <!-- Dogs -->
+                            <div @click="engineeringFilter = (engineeringFilter === 'dog' ? 'all' : 'dog')"
+                                 class="cursor-pointer p-5 rounded-2xl border transition-all hover:scale-[1.02]"
+                                 :class="engineeringFilter === 'dog' ? 'bg-red-500/15 border-red-500 shadow-md ring-2 ring-red-500/30' : 'bg-white dark:bg-[#0a0f1d] border-stone-200 dark:border-slate-800'">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-2xl">🐕</span>
+                                    <span class="text-xs px-2 py-0.5 rounded-full font-bold bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-300">راكد وضعيف العائد</span>
+                                </div>
+                                <h4 class="text-base font-bold text-gray-800 dark:text-white mt-3">الأصناف الراكدة (Dogs)</h4>
+                                <p class="text-2xl font-black text-red-600 dark:text-red-400 mt-1">{{ engineeringData.summary?.dogs_count || 0 }} <span class="text-xs font-normal text-stone-400">صنف</span></p>
+                                <p class="text-[11px] text-stone-500 dark:text-slate-400 mt-1">طلب ضعيف وعائد متواضع، قيّم إمكانية استبدالها بصنف جديد.</p>
+                            </div>
+                        </div>
+
+                        <!-- Filter Buttons + Info -->
+                        <div class="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-[#0a0f1d] p-4 rounded-2xl border border-stone-200 dark:border-slate-800">
+                            <div class="flex items-center gap-1.5 overflow-x-auto">
+                                <button @click="engineeringFilter = 'all'"
+                                        type="button"
+                                        class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer"
+                                        :class="engineeringFilter === 'all' ? 'bg-stone-900 text-white dark:bg-slate-700' : 'bg-stone-100 dark:bg-slate-800 text-stone-600 dark:text-slate-300 hover:bg-stone-200'">
+                                    الكل ({{ engineeringData.summary?.total_items || 0 }})
+                                </button>
+                                <button @click="engineeringFilter = 'star'"
+                                        type="button"
+                                        class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer"
+                                        :class="engineeringFilter === 'star' ? 'bg-amber-500 text-slate-950 font-black' : 'bg-amber-100 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 hover:bg-amber-200'">
+                                    🌟 النجوم ({{ engineeringData.summary?.stars_count || 0 }})
+                                </button>
+                                <button @click="engineeringFilter = 'plowhorse'"
+                                        type="button"
+                                        class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer"
+                                        :class="engineeringFilter === 'plowhorse' ? 'bg-emerald-600 text-white font-black' : 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-200'">
+                                    🐴 أحصنة الجر ({{ engineeringData.summary?.plowhorses_count || 0 }})
+                                </button>
+                                <button @click="engineeringFilter = 'puzzle'"
+                                        type="button"
+                                        class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer"
+                                        :class="engineeringFilter === 'puzzle' ? 'bg-blue-600 text-white font-black' : 'bg-blue-100 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300 hover:bg-blue-200'">
+                                    🧩 الألغاز ({{ engineeringData.summary?.puzzles_count || 0 }})
+                                </button>
+                                <button @click="engineeringFilter = 'dog'"
+                                        type="button"
+                                        class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer"
+                                        :class="engineeringFilter === 'dog' ? 'bg-red-600 text-white font-black' : 'bg-red-100 dark:bg-red-950/50 text-red-800 dark:text-red-300 hover:bg-red-200'">
+                                    🐕 الراكدة ({{ engineeringData.summary?.dogs_count || 0 }})
+                                </button>
+                            </div>
+
+                            <div class="text-xs text-stone-500 dark:text-slate-400 flex items-center gap-3">
+                                <span>متوسط المبيعات للصنف: <strong class="text-stone-800 dark:text-white font-mono">{{ engineeringData.summary?.avg_volume || 0 }}</strong></span>
+                                <span>•</span>
+                                <span>متوسط السعر: <strong class="text-stone-800 dark:text-white font-mono">{{ engineeringData.summary?.avg_price || 0 }} {{ $page.props.auth.restaurant?.currency }}</strong></span>
+                            </div>
+                        </div>
+
+                        <!-- Matrix Detailed Items Table -->
+                        <div class="bg-white dark:bg-[#0a0f1d] rounded-2xl shadow-xs border border-stone-100 dark:border-slate-800 overflow-x-auto">
+                            <table class="w-full text-sm text-right">
+                                <thead class="text-xs text-stone-500 dark:text-slate-400 bg-stone-50 dark:bg-slate-800/80 border-b border-stone-200 dark:border-slate-800">
+                                    <tr>
+                                        <th class="py-3 px-4 font-semibold">الصنف</th>
+                                        <th class="py-3 px-4 font-semibold">القسم</th>
+                                        <th class="py-3 px-4 font-semibold">السعر</th>
+                                        <th class="py-3 px-4 font-semibold">الكمية المباعة</th>
+                                        <th class="py-3 px-4 font-semibold">إجمالي الإيراد</th>
+                                        <th class="py-3 px-4 font-semibold">التصنيف</th>
+                                        <th class="py-3 px-4 font-semibold">التوصية الذكية لمدير المطعم</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-stone-100 dark:divide-slate-800">
+                                    <tr v-for="it in filteredEngineeringItems" :key="it.id" class="hover:bg-stone-50/50 dark:hover:bg-slate-800/40 transition">
+                                        <td class="py-3 px-4 font-bold text-gray-800 dark:text-white">{{ it.name }}</td>
+                                        <td class="py-3 px-4 text-xs text-stone-500">{{ it.category }}</td>
+                                        <td class="py-3 px-4 font-mono font-bold text-stone-700 dark:text-slate-300">{{ it.price }} {{ $page.props.auth.restaurant?.currency }}</td>
+                                        <td class="py-3 px-4 font-mono font-bold" :class="it.total_sold >= (engineeringData.summary?.avg_volume || 0) ? 'text-emerald-600' : 'text-stone-500'">{{ it.total_sold }} طلب</td>
+                                        <td class="py-3 px-4 font-mono font-bold text-gray-800 dark:text-white">{{ formatCurrency(it.total_revenue) }} {{ $page.props.auth.restaurant?.currency }}</td>
+                                        <td class="py-3 px-4">
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold"
+                                                  :class="{
+                                                      'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300/40': it.type === 'star',
+                                                      'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300/40': it.type === 'plowhorse',
+                                                      'bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border border-blue-300/40': it.type === 'puzzle',
+                                                      'bg-red-100 dark:bg-red-950/60 text-red-800 dark:text-red-300 border border-red-300/40': it.type === 'dog',
+                                                  }">
+                                                {{ it.badge }}
+                                            </span>
+                                        </td>
+                                        <td class="py-3 px-4 text-xs text-stone-600 dark:text-slate-300 max-w-xs leading-relaxed">
+                                            {{ it.advice }}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </AuthenticatedLayout>
+    </div>
+</AuthenticatedLayout>
 </template>

@@ -27,6 +27,7 @@ const props = defineProps<{
     token: string;
     is_demo?: boolean;
     restaurant_id?: number;
+    has_whatsapp_feature?: boolean;
     restaurant: {
         id?: number;
         name: string;
@@ -53,6 +54,27 @@ const copied = ref(false);
 const soundEnabled = ref(true);
 const pointerDeflection = ref(0);
 const lightBulbState = ref(0);
+const whatsappPhone = ref('');
+
+const whatsappShareUrl = computed(() => {
+    if (!voucher.value) return '#';
+    const rawDigits = whatsappPhone.value.replace(/\D/g, '');
+    let cleanPhone = rawDigits;
+    if (cleanPhone.startsWith('09') && cleanPhone.length === 10) {
+        cleanPhone = '963' + cleanPhone.substring(1);
+    }
+    const restaurantName = props.restaurant.name || 'المطعم';
+    const discountText = formatVoucherDisplay(voucher.value.discount_text);
+    const text = `🎁 مبارك! لقد حصلت على ${discountText} من ${restaurantName}.\n` +
+        `🎟️ كود الخصم: ${voucher.value.code}\n` +
+        `⏳ صالح ابتداءً من: ${voucher.value.starts_at || 'الآن'}\n` +
+        `📅 ينتهي في: ${voucher.value.expires_at}\n` +
+        (voucher.value.min_order_value > 0 ? `🛒 الحد الأدنى للطلب: ${voucher.value.min_order_value} ${props.restaurant.currency}\n` : '') +
+        (props.restaurant.menu_url ? `🍽️ رابط قائمة الطعام: ${props.restaurant.menu_url}\n` : '') +
+        `✨ نتطلع لزيارتكم القادمة!`;
+    const encoded = encodeURIComponent(text);
+    return cleanPhone ? `https://wa.me/${cleanPhone}?text=${encoded}` : `https://wa.me/?text=${encoded}`;
+});
 
 // Physics & Animation state
 let currentAngle = 0;
@@ -851,6 +873,35 @@ onUnmounted(() => {
                                 <div v-if="voucher.is_used" class="mt-2 p-2 rounded-lg bg-red-950/50 border border-red-800/60 text-red-300 font-bold text-center text-xs flex items-center justify-center gap-1.5">
                                     <span>⚠️</span>
                                     <span>تم استهلاك هذا الكوبون مسبقاً في عملية شراء (تالف)</span>
+                                </div>
+                            </div>
+
+                            <!-- WhatsApp Save / Share Box (When whatsapp_reminders is enabled for the restaurant) -->
+                            <div v-if="props.has_whatsapp_feature" class="mt-3 p-3 rounded-2xl bg-gradient-to-r from-emerald-950/70 via-emerald-900/50 to-emerald-950/70 border border-emerald-500/50 text-center shadow-lg shadow-emerald-950/40">
+                                <div class="flex items-center justify-center gap-1.5 text-emerald-300 font-bold text-xs mb-1.5">
+                                    <span class="text-base">💬</span>
+                                    <span>احفظ هديتك في واتساب لزيارتك القادمة</span>
+                                </div>
+                                <p class="text-[11px] text-emerald-100/70 mb-2 leading-relaxed">
+                                    أدخل رقم هاتفك لتصلك تفاصيل الكوبون، أو اضغط مباشرة لإرساله لنفسك:
+                                </p>
+                                <div class="flex items-center gap-2">
+                                    <input
+                                        v-model="whatsappPhone"
+                                        type="tel"
+                                        dir="ltr"
+                                        placeholder="رقم الهاتف (اختياري)"
+                                        class="w-full text-center text-xs py-2 px-3 rounded-xl bg-black/60 border border-emerald-500/40 text-white placeholder-stone-500 focus:outline-none focus:border-emerald-400 font-mono"
+                                    />
+                                    <a
+                                        :href="whatsappShareUrl"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-md shadow-emerald-950/50 cursor-pointer active:scale-95"
+                                    >
+                                        <span>📱</span>
+                                        <span>واتساب</span>
+                                    </a>
                                 </div>
                             </div>
 
