@@ -62,6 +62,16 @@ class PromoCodeController extends ApiController
             } while (PromoCode::withoutGlobalScopes()->where('restaurant_id', $restaurant->id)->where('code', $validated['code'])->exists());
         }
 
+        // تطبيق حد الأمان الذكي للحد الأدنى للفاتورة إذا لم يحدده المدير
+        if (!isset($validated['min_order_value']) || $validated['min_order_value'] === null || $validated['min_order_value'] === '') {
+            if ($validated['discount_type'] === 'fixed') {
+                // للخصم الثابت: حد الأمان الافتراضي هو 3 أضعاف قيمة الخصم لمنع الفواتير الصفرية
+                $validated['min_order_value'] = round((float) $validated['discount_value'] * 3, 2);
+            } else {
+                $validated['min_order_value'] = 0;
+            }
+        }
+
         $promoCode = PromoCode::create($validated);
 
         return $this->success($promoCode, 201);
@@ -81,6 +91,12 @@ class PromoCodeController extends ApiController
         }
 
         $validated = $request->validated();
+
+        if (array_key_exists('min_order_value', $validated) && ($validated['min_order_value'] === null || $validated['min_order_value'] === '')) {
+            $type = $validated['discount_type'] ?? $promoCode->discount_type;
+            $value = $validated['discount_value'] ?? $promoCode->discount_value;
+            $validated['min_order_value'] = ($type === 'fixed') ? round((float) $value * 3, 2) : 0;
+        }
 
         $promoCode->update($validated);
 

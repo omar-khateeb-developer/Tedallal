@@ -268,12 +268,18 @@ class WheelController extends Controller
             $startsAt = now()->addHours(2);
             $expiresAt = now()->addDays(14);
 
+            // Minimum order value: use manager's setting or smart safety default (3x discount)
+            $minOrderValue = (float) ($wonOffer->min_order_value ?? 0);
+            if ($minOrderValue <= 0 && $wonOffer->discount_type === 'fixed') {
+                $minOrderValue = round((float) $wonOffer->discount_value * 3, 2);
+            }
+
             $generatedPromo = PromoCode::create([
                 'restaurant_id' => $restaurant->id,
                 'code' => $uniqueCode,
                 'discount_type' => $wonOffer->discount_type,
                 'discount_value' => $wonOffer->discount_value,
-                'min_order_value' => $wonOffer->min_order_value ?? 0,
+                'min_order_value' => $minOrderValue,
                 'is_active' => true,
                 'starts_at' => $startsAt,
                 'is_single_use' => true,
@@ -406,6 +412,7 @@ class WheelController extends Controller
                 'label' => $discountText,
                 'discount_value' => (float) $offer->discount_value,
                 'discount_type' => $offer->discount_type,
+                'min_order_value' => (float) $offer->min_order_value,
                 'color' => $colors[$index % count($colors)],
                 'icon' => $icons[$index % count($icons)],
             ];

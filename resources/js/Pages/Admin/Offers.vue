@@ -21,7 +21,7 @@ const form = useForm({
     code: '',
     discount_type: 'percentage',
     discount_value: '',
-    min_order_value: 0,
+    min_order_value: '' as any,
 });
 
 function formatDiscountVal(val: number | string): string {
@@ -62,7 +62,11 @@ onMounted(loadOffers);
 
 const createOffer = async () => {
     try {
-        await axios.post('/api/admin/promo-codes', form.data());
+        const payload = form.data();
+        if (payload.min_order_value === '' || payload.min_order_value === null) {
+            delete (payload as any).min_order_value;
+        }
+        await axios.post('/api/admin/promo-codes', payload);
         form.reset();
         await loadOffers();
     } catch (e: any) {
@@ -228,10 +232,10 @@ const deleteOffer = async (id: number) => {
                         <p class="text-xs text-stone-500 dark:text-slate-400 mb-4">
                             🎡 ما سيظهر على العجلة للزبون هو <span class="font-bold text-amber-600 dark:text-amber-400">القيمة الحقيقية فقط</span> (نسبة أو مبلغ)، وليس كود الكوبون.
                         </p>
-                        <form @submit.prevent="createOffer" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                        <form @submit.prevent="createOffer" class="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">نوع الخصم</label>
-                                <select v-model="form.discount_type" class="w-full border-gray-300 dark:border-slate-700 rounded-md shadow-xs bg-white dark:bg-slate-900 text-stone-900 dark:text-white focus:border-amber-500 focus:ring-amber-500">
+                                <select v-model="form.discount_type" class="w-full border-gray-300 dark:border-slate-700 rounded-md shadow-xs bg-white dark:bg-slate-900 text-stone-900 dark:text-white focus:border-amber-500 focus:ring-amber-500 text-sm">
                                     <option value="percentage">نسبة مئوية (%)</option>
                                     <option value="fixed">مبلغ ثابت ({{ $page.props.auth.restaurant?.currency }})</option>
                                 </select>
@@ -239,16 +243,23 @@ const deleteOffer = async (id: number) => {
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     قيمة الخصم
-                                    <span class="text-[10px] text-amber-600 dark:text-amber-400 font-semibold mr-1">← تظهر على شريحة العجلة</span>
+                                    <span class="text-[10px] text-amber-600 dark:text-amber-400 font-semibold mr-1">← على العجلة</span>
                                 </label>
                                 <TextInput v-model="form.discount_value" type="number" step="0.01" class="w-full" placeholder="مثال: 15" required />
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    كود داخلي
-                                    <span class="text-[10px] text-stone-400 font-normal mr-1">(اختياري - يُولّد تلقائياً)</span>
+                                    الحد الأدنى للفاتورة
+                                    <span class="text-[10px] text-stone-400 font-normal mr-1">(أمان: 3x تلقائياً)</span>
                                 </label>
-                                <TextInput v-model="form.code" type="text" class="w-full" placeholder="تلقائي (اختياري)" />
+                                <TextInput v-model="form.min_order_value" type="number" step="0.01" class="w-full" placeholder="تلقائي (اختياري)" />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    كود داخلي
+                                    <span class="text-[10px] text-stone-400 font-normal mr-1">(اختياري)</span>
+                                </label>
+                                <TextInput v-model="form.code" type="text" class="w-full" placeholder="تلقائي" />
                             </div>
                             <div>
                                 <PrimaryButton type="submit" class="w-full justify-center h-10">إضافة للعجلة</PrimaryButton>
@@ -263,6 +274,7 @@ const deleteOffer = async (id: number) => {
                                 <tr>
                                     <th class="py-3 px-4 font-semibold">🎡 ما يراه الزبون على العجلة</th>
                                     <th class="py-3 px-4 font-semibold">قيمة الخصم</th>
+                                    <th class="py-3 px-4 font-semibold">الحد الأدنى للطلب</th>
                                     <th class="py-3 px-4 font-semibold">كود النظام</th>
                                     <th class="py-3 px-4 font-semibold">الانتهاء</th>
                                     <th class="py-3 px-4 font-semibold">الحالة</th>
@@ -271,7 +283,7 @@ const deleteOffer = async (id: number) => {
                             </thead>
                             <tbody class="divide-y divide-stone-100 dark:divide-slate-800">
                                 <tr v-if="offers.length === 0">
-                                    <td colspan="6" class="py-6 text-center text-stone-400 dark:text-slate-500">لا توجد كوبونات مسجلة. أضف كوبوناً أعلاه ليظهر كجائزة في عجلة الحظ.</td>
+                                    <td colspan="7" class="py-6 text-center text-stone-400 dark:text-slate-500">لا توجد كوبونات مسجلة. أضف كوبوناً أعلاه ليظهر كجائزة في عجلة الحظ.</td>
                                 </tr>
                                 <tr v-for="offer in offers" :key="offer.id" class="hover:bg-stone-50/50 dark:hover:bg-slate-800/40 transition-colors">
                                     <!-- What customer sees on wheel — built from real values, never from code name -->
@@ -293,6 +305,17 @@ const deleteOffer = async (id: number) => {
                                         {{ formatDiscountVal(offer.discount_value) }}
                                         {{ offer.discount_type === 'percentage' ? '%' : formatCurr($page.props.auth.restaurant?.currency) }}
                                         <span class="text-[10px] font-normal text-stone-400 mr-1">({{ offer.discount_type === 'percentage' ? 'نسبة' : 'مبلغ ثابت' }})</span>
+                                    </td>
+
+                                    <!-- Minimum Order Safety Threshold -->
+                                    <td class="py-3 px-4 text-xs font-semibold text-gray-700 dark:text-slate-300">
+                                        <span v-if="parseFloat(offer.min_order_value) > 0" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-stone-100 dark:bg-slate-800/80 text-stone-800 dark:text-stone-200">
+                                            <span>🛒</span>
+                                            <span>{{ formatDiscountVal(offer.min_order_value) }} {{ formatCurr($page.props.auth.restaurant?.currency) }}</span>
+                                        </span>
+                                        <span v-else class="text-stone-400 dark:text-slate-500 font-normal">
+                                            بدون حد أدنى
+                                        </span>
                                     </td>
 
                                     <!-- Internal code (admin only) -->
@@ -326,6 +349,7 @@ const deleteOffer = async (id: number) => {
                                 <tr>
                                     <th class="py-3 px-4 font-semibold">كود الزبون الفريد</th>
                                     <th class="py-3 px-4 font-semibold">قيمة الخصم</th>
+                                    <th class="py-3 px-4 font-semibold">الحد الأدنى للطلب</th>
                                     <th class="py-3 px-4 font-semibold">صالح ابتداءً من</th>
                                     <th class="py-3 px-4 font-semibold">تاريخ الانتهاء</th>
                                     <th class="py-3 px-4 font-semibold">حالة الاستخدام</th>
@@ -333,7 +357,7 @@ const deleteOffer = async (id: number) => {
                             </thead>
                             <tbody class="divide-y divide-stone-100 dark:divide-slate-800">
                                 <tr v-if="offers.length === 0">
-                                    <td colspan="5" class="py-6 text-center text-stone-400 dark:text-slate-500">لا توجد كوبونات فواتير صادرة حتى الآن.</td>
+                                    <td colspan="6" class="py-6 text-center text-stone-400 dark:text-slate-500">لا توجد كوبونات فواتير صادرة حتى الآن.</td>
                                 </tr>
                                 <tr v-for="voucher in offers" :key="voucher.id" class="hover:bg-stone-50/50 dark:hover:bg-slate-800/40 transition-colors">
                                     <td class="py-3 px-4 font-mono font-bold text-amber-500 dark:text-amber-400" dir="ltr">{{ voucher.code }}</td>
@@ -342,6 +366,15 @@ const deleteOffer = async (id: number) => {
                                         {{ voucher.discount_type === 'percentage'
                                             ? `${formatDiscountVal(voucher.discount_value)}%`
                                             : `${formatDiscountVal(voucher.discount_value)} ${formatCurr($page.props.auth.restaurant?.currency)}` }}
+                                    </td>
+                                    <td class="py-3 px-4 text-xs font-semibold text-gray-700 dark:text-slate-300">
+                                        <span v-if="parseFloat(voucher.min_order_value) > 0" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-stone-100 dark:bg-slate-800 text-stone-700 dark:text-stone-300">
+                                            <span>🛒</span>
+                                            <span>{{ formatDiscountVal(voucher.min_order_value) }} {{ formatCurr($page.props.auth.restaurant?.currency) }}</span>
+                                        </span>
+                                        <span v-else class="text-stone-400 dark:text-slate-500 font-normal">
+                                            بدون حد أدنى
+                                        </span>
                                     </td>
                                     <td class="py-3 px-4 text-gray-600 dark:text-slate-400 text-xs">
                                         {{ voucher.starts_at ? new Date(voucher.starts_at).toLocaleString() : 'فوري' }}

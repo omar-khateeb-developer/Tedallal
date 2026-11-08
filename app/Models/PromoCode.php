@@ -124,7 +124,11 @@ class PromoCode extends Model
         } elseif ($isMinNotMet) {
             $reasonCode = 'min_order_not_met';
             $diff = round((float)$this->min_order_value - (float)$orderTotal, 2);
-            $reasonMessage = "🏷️ الحد الأدنى لتطبيق هذا الكوبون هو {$this->min_order_value} {$currency} ومجموع سلتك الحالي {$orderTotal} {$currency}. أضف أصنافاً بقيمة {$diff} {$currency} لتفعيل الخصم!";
+            $cleanMin = ((float)$this->min_order_value == (int)$this->min_order_value) ? (int)$this->min_order_value : $this->min_order_value;
+            $cleanTotal = ($orderTotal == (int)$orderTotal) ? (int)$orderTotal : $orderTotal;
+            $cleanDiff = ($diff == (int)$diff) ? (int)$diff : $diff;
+            $cleanCurrency = ($currency === 'SYP' || strtoupper($currency) === 'SYP') ? 'ل.س' : $currency;
+            $reasonMessage = "🏷️ الحد الأدنى لتطبيق هذا الخصم هو {$cleanMin} {$cleanCurrency} ومجموع طلبك الحالي {$cleanTotal} {$cleanCurrency}. أضف أصنافاً بقيمة {$cleanDiff} {$cleanCurrency} لتفعيل الخصم!";
         }
 
         return [
