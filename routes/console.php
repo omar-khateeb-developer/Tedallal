@@ -7,16 +7,42 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Artisan::command('tables:generate-qr', function (\App\Services\QrCodeService $qrCodeService) {
+Artisan::command('tables:generate-qr {--force : Force re-generate all QR codes even if they exist} {--clean-orphans : Delete QR files for tables that no longer exist}', function (\App\Services\QrCodeService $qrCodeService) {
+    $force = $this->option('force');
+    $cleanOrphans = $this->option('clean-orphans');
+    $appUrl = rtrim(config('app.url'), '/');
+    $this->info("🔄 بدء فحص وتوليد رموز QR للطاولات باستخدام النطاق: {$appUrl}");
+
     $tables = \App\Models\RestaurantTable::withoutGlobalScopes()->get();
     $generated = 0;
+    $skipped = 0;
+    $validPaths = [];
+
     foreach ($tables as $table) {
         $path = "qr/{$table->restaurant_id}/{$table->public_token}.png";
-        if (! \Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
+        $validPaths[$path] = true;
+        $exists = \Illuminate\Support\Facades\Storage::disk('public')->exists($path);
+
+        if (! $exists || $force) {
             $qrCodeService->generateForTable($table);
             $generated++;
-            $this->info("✓ تم توليد QR للطاولة #{$table->id} ({$table->name})");
+            $this->line("  ✓ تم تحديث QR للطاولة #{$table->id} ({$table->name}) -> " . $table->publicUrl());
+        } else {
+            $skipped++;
         }
     }
-    $this->info("اكتمل التوليد. تم إنشاء {$generated} رمز QR مفقود.");
-})->purpose('Generate missing QR code images for all tables');
+
+    $deletedOrphans = 0;
+    if ($cleanOrphans) {
+        $allFiles = \Illuminate\Support\Facades\Storage::disk('public')->allFiles('qr');
+        foreach ($allFiles as $file) {
+            if (! isset($validPaths[$file])) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($file);
+                $deletedOrphans++;
+            }
+        }
+        $this->info("🗑️ تم حذف {$deletedOrphans} ملف QR قديم لطاولات محذوفة.");
+    }
+
+    $this->info("✅ اكتملت العملية بنجاح: تم توليد/تحديث {$generated} رمز QR (تم تخطي {$skipped} موجود مسبقاً).");
+})->purpose('Generate or regenerate QR code images for all tables');
