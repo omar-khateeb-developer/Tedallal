@@ -6,6 +6,7 @@ import { Head, usePage } from '@inertiajs/vue3';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import axios from 'axios';
 import { useToast } from '@/composables/useToast';
+import { soundAlerts } from '@/utils/soundAlerts';
 
 // ============================================================
 // 🔔 نظام التنبيهات الصوتية وإشعارات المتصفح
@@ -27,71 +28,16 @@ async function requestNotificationPermission() {
 }
 
 const audioUnlocked = ref(false);
-let globalAudioCtx: AudioContext | null = null;
 
 function unlockAudio() {
-    try {
-        if (!globalAudioCtx) {
-            globalAudioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-        }
-        
-        if (globalAudioCtx.state === 'suspended') {
-            globalAudioCtx.resume();
-        }
-        
-        // Play a silent short beep to fully unlock the context on iOS/Safari
-        const oscillator = globalAudioCtx.createOscillator();
-        const gainNode = globalAudioCtx.createGain();
-        gainNode.gain.value = 0;
-        oscillator.connect(gainNode);
-        gainNode.connect(globalAudioCtx.destination);
-        oscillator.start();
-        oscillator.stop(globalAudioCtx.currentTime + 0.01);
-        
-        audioUnlocked.value = true;
-    } catch (e) {
-        console.error('Failed to unlock audio:', e);
-    }
+    soundAlerts.unlock();
+    audioUnlocked.value = true;
+    soundAlerts.playKitchenAlert(); // تجربة صوت المطبخ الصاخب فوراً لتأكيد التفعيل للشيف
 }
 
-// توليد صوت تنبيه مزدوج باستخدام Web Audio API
+// توليد صوت تنبيه المطبخ الصاخب والفائق الوضوح (Commercial High-Penetration Kitchen Alarm)
 function playAlertSound() {
-    if (!audioUnlocked.value || !globalAudioCtx) return;
-
-    try {
-        if (globalAudioCtx.state === 'suspended') {
-            globalAudioCtx.resume();
-        }
-
-        const playBeep = (startTime: number, freq: number, duration: number) => {
-            if (!globalAudioCtx) return;
-            const oscillator = globalAudioCtx.createOscillator();
-            const gainNode = globalAudioCtx.createGain();
-
-            oscillator.connect(gainNode);
-            gainNode.connect(globalAudioCtx.destination);
-
-            oscillator.type = 'sine';
-            oscillator.frequency.setValueAtTime(freq, startTime);
-
-            // fade in
-            gainNode.gain.setValueAtTime(0, startTime);
-            gainNode.gain.linearRampToValueAtTime(0.6, startTime + 0.02);
-            // fade out
-            gainNode.gain.linearRampToValueAtTime(0, startTime + duration - 0.02);
-
-            oscillator.start(startTime);
-            oscillator.stop(startTime + duration);
-        };
-
-        const now = globalAudioCtx.currentTime;
-        playBeep(now, 880, 0.18);        // نغمة أولى
-        playBeep(now + 0.22, 1100, 0.18); // نغمة ثانية أعلى
-        playBeep(now + 0.44, 880, 0.25);  // نغمة ختامية
-
-    } catch (e) {
-        console.warn('Audio alert failed:', e);
-    }
+    soundAlerts.playKitchenAlert();
 }
 
 function showBrowserNotification(order: Order) {

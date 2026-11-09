@@ -3,6 +3,7 @@ import CustomerLayout from '@/Layouts/CustomerLayout.vue';
 import { Link } from '@inertiajs/vue3';
 import { onMounted, onUnmounted, ref, computed } from 'vue';
 import axios from 'axios';
+import { soundAlerts } from '@/utils/soundAlerts';
 
 const props = defineProps<{
     restaurant: {
@@ -52,6 +53,16 @@ function formatPrice(price: string | number) {
     return `${intVal} ${curr}`;
 }
 
+function notifyStatusChange(oldStatus?: string, newStatus?: string) {
+    if (!oldStatus || !newStatus || oldStatus === newStatus) return;
+
+    if (newStatus === 'ready') {
+        soundAlerts.playCustomerAlert('ready');
+    } else if (newStatus === 'preparing' || newStatus === 'accepted' || newStatus === 'served') {
+        soundAlerts.playCustomerAlert('status');
+    }
+}
+
 async function loadOrder() {
     try {
         const headers: Record<string, string> = {};
@@ -59,7 +70,11 @@ async function loadOrder() {
             headers['X-Session-Token'] = props.sessionToken;
         }
         const { data } = await axios.get(`/api/public/orders/${props.orderNumber}`, { headers });
+        const oldStatus = order.value?.status;
         order.value = data.data;
+        if (oldStatus && data.data?.status) {
+            notifyStatusChange(oldStatus, data.data.status);
+        }
     } catch (e) {
         console.error(e);
     }
@@ -72,10 +87,13 @@ function subscribeToRealtime() {
         '.order.status_changed',
         (payload: { order: any }) => {
             if (payload.order) {
+                const oldStatus = order.value?.status;
+                const newStatus = payload.order.status;
                 order.value = {
                     ...order.value,
                     ...payload.order,
                 };
+                notifyStatusChange(oldStatus, newStatus);
             }
         },
     );
@@ -148,9 +166,21 @@ const currentStepIndex = computed(() => {
             </div>
         </template>
         <template #actions>
-            <div v-if="order" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 text-stone-950 font-black text-xs shadow-md border border-amber-300 select-none">
-                <span class="text-[10px] font-bold opacity-80">طلب</span>
-                <span class="text-base font-mono tracking-tight font-black">#{{ shortOrderNumber }}</span>
+            <div class="flex items-center gap-2">
+                <button
+                    @click="soundAlerts.playCustomerAlert('ready')"
+                    type="button"
+                    class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-xs font-bold hover:bg-amber-500/20 active:scale-95 transition-all select-none cursor-pointer"
+                    title="التنبيه الصوتي مفعّل، انقر لتجربة نغمة جاهزية الطلب"
+                >
+                    <span>🔔</span>
+                    <span class="text-[11px] hidden xs:inline">تنبيه صوتي</span>
+                </button>
+
+                <div v-if="order" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 text-stone-950 font-black text-xs shadow-md border border-amber-300 select-none">
+                    <span class="text-[10px] font-bold opacity-80">طلب</span>
+                    <span class="text-base font-mono tracking-tight font-black">#{{ shortOrderNumber }}</span>
+                </div>
             </div>
         </template>
         <div v-if="!order" class="py-12 flex flex-col items-center justify-center text-stone-500">

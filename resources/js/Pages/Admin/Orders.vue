@@ -4,6 +4,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import NotificationToast from '@/Components/NotificationToast.vue';
 import { useRestaurantOrders } from '@/composables/useRealtimeOrders';
 import { useToast } from '@/composables/useToast';
+import { soundAlerts } from '@/utils/soundAlerts';
 import { Head, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import axios from 'axios';
@@ -63,20 +64,7 @@ const pendingCashierOrdersCount = computed(() =>
 const { showToast } = useToast();
 
 function playSound() {
-    try {
-        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(880, ctx.currentTime);
-        gain.gain.setValueAtTime(0.4, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
-        osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + 0.5);
-        setTimeout(() => ctx.close(), 800);
-    } catch (e) {}
+    soundAlerts.playCashierAlert();
 }
 
 async function loadOrders() {
@@ -167,6 +155,16 @@ useRestaurantOrders(restaurantId.value, {
                         <span>💳 بانتظار المحاسبة:</span>
                         <span class="rounded-full bg-amber-500 text-white px-2 py-0.5 text-xs font-black">{{ pendingCashierOrdersCount }}</span>
                     </div>
+
+                    <button
+                        @click="soundAlerts.playCashierAlert()"
+                        type="button"
+                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-xs font-bold text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-all select-none cursor-pointer shrink-0"
+                        title="التنبيه الصوتي مفعّل، انقر لتجربة نغمة الكاشير الصاخبة"
+                    >
+                        <span>🔊</span>
+                        <span>صوت الكاشير</span>
+                    </button>
                 </div>
 
                 <div v-if="filteredOrders.length === 0" class="rounded-2xl bg-white dark:bg-[#0a0f1d] p-8 text-center text-gray-500 dark:text-gray-400 shadow-xs border border-dashed border-gray-300 dark:border-slate-800">
