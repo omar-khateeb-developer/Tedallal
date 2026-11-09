@@ -44,6 +44,19 @@ const shortOrderNumber = computed(() => {
     return isNaN(num) ? props.orderNumber : String(num);
 });
 
+function shareOrderOnWhatsApp() {
+    const url = window.location.href;
+    const itemsText = order.value.items && order.value.items.length > 0
+        ? '\n📋 أصناف الطلب:\n' + order.value.items.map(i => `• ${i.quantity}x ${i.item_name_snapshot}`).join('\n')
+        : '';
+    const tableText = props.table?.name ? ` (طاولة ${props.table.name})` : '';
+    const text = `فاتورة وتتبع طلب #${props.orderNumber}${tableText} من ${props.restaurant.name} 🍽️\n` +
+        `• الحالة: ${order.value.status_label}\n` +
+        `• المبلغ الإجمالي: ${formatPrice(order.value.total)}${itemsText}\n\n` +
+        `🔗 رابط تتبع الفاتورة والطلب لحظياً:\n${url}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+}
+
 function formatPrice(price: string | number) {
     if (price === null || price === undefined) return '0 ل.س';
     const cleanStr = String(price).replace(/,/g, '');
@@ -346,6 +359,16 @@ const currentStepIndex = computed(() => {
                     <span class="text-stone-600 dark:text-slate-300">المبلغ الإجمالي</span>
                     <span class="text-amber-600 dark:text-amber-400 text-lg">{{ formatPrice(order.total) }}</span>
                 </div>
+
+                <!-- زر مشاركة الفاتورة عبر واتساب -->
+                <button
+                    @click="shareOrderOnWhatsApp"
+                    type="button"
+                    class="mt-3 w-full flex items-center justify-center gap-2 rounded-2xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60 py-3 text-sm font-bold shadow-xs transition-all cursor-pointer active:scale-95"
+                >
+                    <span class="text-base">💬</span>
+                    <span>مشاركة الفاتورة وتفاصيل الطلب عبر واتساب</span>
+                </button>
             </div>
 
             <!-- Powered by Tedallal Brand Footer -->

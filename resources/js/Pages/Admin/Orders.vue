@@ -2,8 +2,11 @@
 import AdminNav from '@/Components/Admin/AdminNav.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import NotificationToast from '@/Components/NotificationToast.vue';
+import ConnectionBanner from '@/Components/ConnectionBanner.vue';
 import { useRestaurantOrders } from '@/composables/useRealtimeOrders';
 import { useToast } from '@/composables/useToast';
+import { useWakeLock } from '@/composables/useWakeLock';
+import { useLiveConnection } from '@/composables/useLiveConnection';
 import { soundAlerts } from '@/utils/soundAlerts';
 import { Head, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
@@ -72,6 +75,25 @@ async function loadOrders() {
     orders.value = data.data?.data ?? data.data ?? [];
 }
 
+const { isSupported: isWakeLockSupported, isActive: isWakeLockActive, toggleLock: toggleWakeLock } = useWakeLock();
+const { isOnline, isSocketConnected, showReconnectedBanner, reconnectNow } = useLiveConnection(loadOrders);
+
+function shareOnWhatsApp(order: Order) {
+    const origin = window.location.origin;
+    const printUrl = `${origin}/admin/orders/${order.id}/print`;
+    const currency = (page.props.auth as any)?.restaurant?.currency ?? 'ر.س';
+    const restName = (page.props.auth as any)?.restaurant?.name ?? 'المطعم';
+    const tableInfo = order.table?.name ? ` (طاولة ${order.table.name})` : (order.service_type === 'takeaway' ? ' (سفري)' : '');
+    const itemsText = order.items && order.items.length > 0
+        ? '\n📋 تفاصيل الأصناف:\n' + order.items.map(i => `• ${i.quantity}x ${i.item_name_snapshot}`).join('\n')
+        : '';
+    const text = `فاتورة وتتبع طلب #${order.order_number}${tableInfo} من ${restName} 🍽️\n` +
+        `• الحالة: ${order.status_label}\n` +
+        `• الإجمالي: ${order.total} ${currency}${itemsText}\n\n` +
+        `📄 رابط الفاتورة الإلكترونية:\n${printUrl}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+}
+
 const updatingIds = ref<Set<number>>(new Set());
 
 async function updateStatus(order: Order, status: string, pickupWindow?: number | null) {
@@ -123,6 +145,8 @@ useRestaurantOrders(restaurantId.value, {
 <template>
     <Head title="الطلبات" />
 
+    <ConnectionBanner :is-online="isOnline" :is-socket-connected="isSocketConnected" :show-reconnected="showReconnectedBanner" @reconnect="reconnectNow" />
+
     <AuthenticatedLayout>
         <template #header>
             <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-white">إدارة الطلبات</h2>
@@ -155,6 +179,33 @@ useRestaurantOrders(restaurantId.value, {
                         <span>💳 بانتظار المحاسبة:</span>
                         <span class="rounded-full bg-amber-500 text-white px-2 py-0.5 text-xs font-black">{{ pendingCashierOrdersCount }}</span>
                     </div>
+
+                    <!-- تقرير إغلاق الوردية Z-Report -->
+                    <a
+                        href="/admin/orders/shift-report"
+                        target="_blank"
+                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60 text-xs font-bold text-purple-800 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/60 transition-all select-none cursor-pointer shrink-0"
+                        title="طباعة تقرير إغلاق الوردية اليومي (Z-Report) ومطابقة الصندوق"
+                    >
+                        <span>📊</span>
+                        <span>تقرير الوردية (Z)</span>
+                    </a>
+
+                    <!-- إبقاء الشاشة مضاءة -->
+                    <button
+                        v-if="isWakeLockSupported"
+                        @click="toggleWakeLock"
+                        type="button"
+                        :class="[
+                            'flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all select-none cursor-pointer shrink-0',
+                            isWakeLockActive
+                                ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/40'
+                                : 'bg-stone-50 dark:bg-slate-900 text-stone-600 dark:text-slate-400 border-stone-200 dark:border-slate-800'
+                        ]"
+                        :title="isWakeLockActive ? 'الشاشة لن تنطفئ (مفعل)' : 'انقر لإبقاء الشاشة مضاءة دائماً'"
+                    >
+                        <span>{{ isWakeLockActive ? '💡 الشاشة نشطة' : '💤 شاشة عادية' }}</span>
+                    </button>
 
                     <button
                         @click="soundAlerts.playCashierAlert()"
@@ -245,6 +296,17 @@ useRestaurantOrders(restaurantId.value, {
                             >
                                 ✕ تم إلغاء الطلب
                             </span>
+
+                            <!-- مشاركة الفاتورة عبر واتساب -->
+                            <button
+                                @click="shareOnWhatsApp(order)"
+                                type="button"
+                                class="rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800/50 px-2.5 py-2 text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
+                                title="إرسال الفاتورة وتتبع الطلب للزبون عبر واتساب"
+                            >
+                                <span>💬</span>
+                                <span class="hidden sm:inline">واتساب</span>
+                            </button>
 
                             <!-- طباعة الفاتورة -->
                             <a

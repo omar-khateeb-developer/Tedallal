@@ -7,6 +7,9 @@ import { computed, onMounted, onUnmounted, ref } from 'vue';
 import axios from 'axios';
 import { useToast } from '@/composables/useToast';
 import { soundAlerts } from '@/utils/soundAlerts';
+import { useWakeLock } from '@/composables/useWakeLock';
+import { useLiveConnection } from '@/composables/useLiveConnection';
+import ConnectionBanner from '@/Components/ConnectionBanner.vue';
 
 // ============================================================
 // 🔔 نظام التنبيهات الصوتية وإشعارات المتصفح
@@ -153,6 +156,9 @@ function formatTime(iso?: string): string {
 const orders = ref<Order[]>([]);
 const page = usePage();
 const restaurantId = computed(() => page.props.restaurantId as number | undefined);
+
+const { isSupported: isWakeLockSupported, isActive: isWakeLockActive, toggleLock: toggleWakeLock } = useWakeLock();
+const { isOnline, isSocketConnected, showReconnectedBanner, reconnectNow } = useLiveConnection(loadOrders);
 
 async function loadOrders() {
     const { data } = await axios.get('/api/admin/orders');
@@ -365,6 +371,8 @@ useRestaurantOrders(restaurantId.value, {
 <template>
     <Head title="المطبخ - لوحة الكانبان" />
 
+    <ConnectionBanner :is-online="isOnline" :is-socket-connected="isSocketConnected" :show-reconnected="showReconnectedBanner" @reconnect="reconnectNow" />
+
     <AuthenticatedLayout>
         <template #header>
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 w-full">
@@ -405,8 +413,23 @@ useRestaurantOrders(restaurantId.value, {
                     </button>
                 </div>
 
-                <!-- أزرار الإشعارات والصوت -->
-                <div class="flex items-center gap-3">
+                <!-- أزرار الإشعارات والصوت وإبقاء الشاشة مضاءة -->
+                <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
+                    <!-- زر إبقاء الشاشة مضاءة دائماً لمنع نوم تابلت المطبخ -->
+                    <button
+                        v-if="isWakeLockSupported"
+                        @click="toggleWakeLock"
+                        type="button"
+                        :class="[
+                            'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all border cursor-pointer select-none',
+                            isWakeLockActive
+                                ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/40'
+                                : 'bg-stone-100 dark:bg-slate-800 text-stone-500 dark:text-slate-400 border-stone-200 dark:border-slate-700'
+                        ]"
+                        :title="isWakeLockActive ? 'الشاشة لن تنطفئ أبداً (مفعّل)' : 'انقر لإبقاء الشاشة مضاءة دائماً'"
+                    >
+                        <span>{{ isWakeLockActive ? '💡 الشاشة نشطة دائماً' : '💤 شاشة عادية' }}</span>
+                    </button>
                     <!-- زر تفعيل الصوت -->
                     <button
                         v-if="!audioUnlocked"

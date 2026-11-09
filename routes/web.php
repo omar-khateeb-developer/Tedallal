@@ -49,6 +49,7 @@ Route::middleware(['auth', 'verified', 'permission:manage_orders'])->group(funct
 
 Route::middleware(['auth', 'verified', 'permission:manage_orders'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/orders', [AdminDashboardController::class, 'orders'])->name('orders');
+    Route::get('/orders/shift-report', \App\Http\Controllers\Web\Admin\ShiftReportController::class)->name('orders.shift-report');
     Route::get('/orders/{order}/print', \App\Http\Controllers\Web\Admin\OrderPrintController::class)->name('orders.print');
 });
 
