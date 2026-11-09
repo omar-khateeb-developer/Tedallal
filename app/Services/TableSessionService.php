@@ -23,7 +23,21 @@ final class TableSessionService
                 ->first();
 
             if ($existing) {
-                return $existing;
+                // فحص انتهاء صلاحية الجلسة القديمة (جلسات الزبائن السابقين):
+                // إذا مضى على الجلسة أكثر من 4 ساعات (عمر الكوكي) ولا توجد بها طلبات قيد التحضير/الانتظار،
+                // أو إذا مضى عليها أكثر من 12 ساعة بغض النظر، تُعتبر منتهية ويتم إغلاقها لفتح جلسة جديدة نظيفة للزبون الجديد.
+                $hasActiveOrders = $existing->orders()
+                    ->whereNotIn('status', [\App\Enums\OrderStatus::Served, \App\Enums\OrderStatus::Cancelled])
+                    ->exists();
+
+                $isExpiredByTime = $existing->started_at && $existing->started_at->diffInHours(now()) >= 4 && !$hasActiveOrders;
+                $isHardExpired = $existing->started_at && $existing->started_at->diffInHours(now()) >= 12;
+
+                if ($isExpiredByTime || $isHardExpired) {
+                    $existing->close();
+                } else {
+                    return $existing;
+                }
             }
 
             return TableSession::query()->create([

@@ -15,6 +15,7 @@ final class CartService
     {
         $this->assertSessionActive($session);
         $this->assertItemOrderable($menuItem);
+        $this->assertItemBelongsToRestaurant($session, $menuItem);
 
         if ($quantity < 1) {
             throw ValidationException::withMessages([
@@ -105,6 +106,18 @@ final class CartService
         if (! $menuItem->isOrderable()) {
             throw ValidationException::withMessages([
                 'menu_item' => ["{$menuItem->name} غير متاح حالياً."],
+            ]);
+        }
+    }
+
+    private function assertItemBelongsToRestaurant(TableSession $session, MenuItem $menuItem): void
+    {
+        $tableRestaurantId = (int) $session->table?->restaurant_id;
+        $itemRestaurantId = (int) $menuItem->restaurant_id;
+
+        if ($tableRestaurantId > 0 && $itemRestaurantId > 0 && $tableRestaurantId !== $itemRestaurantId) {
+            throw ValidationException::withMessages([
+                'menu_item' => ['هذا الصنف غير تابع لهذا المطعم.'],
             ]);
         }
     }

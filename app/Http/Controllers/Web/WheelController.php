@@ -324,9 +324,22 @@ class WheelController extends Controller
     /**
      * Reset an order wheel token (for administrative testing).
      */
-    public function reset(string $token): JsonResponse
+    public function reset(Request $request, string $token): JsonResponse
     {
         $wheelToken = OrderWheelToken::where('token', $token)->firstOrFail();
+
+        $user = auth()->user();
+        if (!$user || (!$user->isSuperAdmin() && (int) $user->restaurant_id !== (int) $wheelToken->restaurant_id)) {
+            return response()->json(['success' => false, 'message' => 'غير مصرح.'], 403);
+        }
+
+        // Deactivate previously generated voucher if any to prevent abuse
+        if ($wheelToken->generated_promo_code_id) {
+            PromoCode::withoutGlobalScopes()
+                ->where('id', $wheelToken->generated_promo_code_id)
+                ->update(['is_active' => false]);
+        }
+
         $wheelToken->update([
             'is_claimed' => false,
             'claimed_at' => null,
