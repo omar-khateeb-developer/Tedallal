@@ -97,7 +97,10 @@ class BazerkanRestaurantSeeder extends Seeder
         $this->command?->info('✅ تم إنشاء مستخدمي الإدارة، الكاشير، وشاشة المطبخ KDS (كلمة المرور: password).');
 
         // 3. استيراد التصنيفات والأصناف من البيانات المستخلصة
-        $dataFile = 'C:/Users/ASUS/.gemini/antigravity/brain/d252c7a9-d1be-4051-9046-25eeac8a68b9/bazerkan_with_images.json';
+        $dataFile = database_path('seeders/data/bazerkan.json');
+        if (! file_exists($dataFile)) {
+            $dataFile = 'C:/Users/ASUS/.gemini/antigravity/brain/d252c7a9-d1be-4051-9046-25eeac8a68b9/bazerkan_with_images.json';
+        }
         if (! file_exists($dataFile)) {
             $dataFile = 'C:/Users/ASUS/.gemini/antigravity/brain/d252c7a9-d1be-4051-9046-25eeac8a68b9/bazerkan_parsed.json';
         }

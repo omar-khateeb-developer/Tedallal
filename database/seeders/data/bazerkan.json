@@ -1,0 +1,918 @@
+{
+  "10": {
+    "id": "10",
+    "name": "صاندويش",
+    "items": [
+      {
+        "name": "برغر سمك",
+        "description": null,
+        "price": 400,
+        "rawPrice": "400 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "بطاطا بانيه",
+        "description": null,
+        "price": 300,
+        "rawPrice": "300 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "زنجر",
+        "description": null,
+        "price": 500,
+        "rawPrice": "500 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "سبايسي",
+        "description": null,
+        "price": 450,
+        "rawPrice": "450 S.P",
+        "image": "https://bazerkan-out.sts-qrme.net/uploads/items/6a80a3426bbfd_1786815298.jpg",
+        "local_image": "/storage/menu/bazerkan/6a80a3426bbfd_1786815298.jpg"
+      },
+      {
+        "name": "سوبريم",
+        "description": null,
+        "price": 500,
+        "rawPrice": "500 S.P",
+        "image": "https://bazerkan-out.sts-qrme.net/uploads/items/6a80a352d0773_1786815314.jpg",
+        "local_image": "/storage/menu/bazerkan/6a80a352d0773_1786815314.jpg"
+      },
+      {
+        "name": "صندويش تويستر",
+        "description": null,
+        "price": 500,
+        "rawPrice": "500 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "غواصة",
+        "description": null,
+        "price": 500,
+        "rawPrice": "500 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "فاهيتا",
+        "description": null,
+        "price": 500,
+        "rawPrice": "500 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "فيلادلفيا",
+        "description": null,
+        "price": 450,
+        "rawPrice": "450 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "كريسبي",
+        "description": null,
+        "price": 450,
+        "rawPrice": "450 S.P",
+        "image": "https://bazerkan-out.sts-qrme.net/uploads/items/6a80a39977ad2_1786815385.jpg",
+        "local_image": "/storage/menu/bazerkan/6a80a39977ad2_1786815385.jpg"
+      },
+      {
+        "name": "مايتي بازركان",
+        "description": null,
+        "price": 600,
+        "rawPrice": "600 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "مكسيكانو",
+        "description": null,
+        "price": 450,
+        "rawPrice": "450 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "ناغيت",
+        "description": null,
+        "price": 450,
+        "rawPrice": "450 S.P",
+        "image": null,
+        "local_image": null
+      }
+    ]
+  },
+  "11": {
+    "id": "11",
+    "name": "وجبات",
+    "items": [
+      {
+        "name": "حلقات بصل - باربيكيو",
+        "description": "صوص باربيكيو",
+        "price": 200,
+        "rawPrice": "200 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "حلقات بصل - تشيدر",
+        "description": "صوص تشيدر",
+        "price": 200,
+        "rawPrice": "200 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "وجبة اسكالوب بانيه",
+        "description": null,
+        "price": 650,
+        "rawPrice": "650 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "وجبة زنجر",
+        "description": null,
+        "price": 800,
+        "rawPrice": "800 S.P",
+        "image": "https://bazerkan-out.sts-qrme.net/uploads/items/6a80a3b1502f2_1786815409.jpg",
+        "local_image": "/storage/menu/bazerkan/6a80a3b1502f2_1786815409.jpg"
+      },
+      {
+        "name": "وجبة سبايسي",
+        "description": null,
+        "price": 650,
+        "rawPrice": "650 S.P",
+        "image": "https://bazerkan-out.sts-qrme.net/uploads/items/6a80a3cbde0ab_1786815435.jpg",
+        "local_image": "/storage/menu/bazerkan/6a80a3cbde0ab_1786815435.jpg"
+      },
+      {
+        "name": "وجبة غواصة",
+        "description": null,
+        "price": 750,
+        "rawPrice": "750 S.P",
+        "image": "https://bazerkan-out.sts-qrme.net/uploads/items/6a80a3e35679b_1786815459.jpg",
+        "local_image": "/storage/menu/bazerkan/6a80a3e35679b_1786815459.jpg"
+      },
+      {
+        "name": "وجبة فاهيتا",
+        "description": null,
+        "price": 750,
+        "rawPrice": "750 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "وجبة فيلادلفيا",
+        "description": null,
+        "price": 800,
+        "rawPrice": "800 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "وجبة فيليه سمك",
+        "description": null,
+        "price": 680,
+        "rawPrice": "680 S.P",
+        "image": "https://bazerkan-out.sts-qrme.net/uploads/items/6a6505ab07024_1785005483.jpg",
+        "local_image": "/storage/menu/bazerkan/6a6505ab07024_1785005483.jpg"
+      },
+      {
+        "name": "وجبة كروكيت",
+        "description": "4 قطع كرات دجاج محشية موزاريلا",
+        "price": 750,
+        "rawPrice": "750 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "وجبة كريسبي",
+        "description": null,
+        "price": 650,
+        "rawPrice": "650 S.P",
+        "image": "https://bazerkan-out.sts-qrme.net/uploads/items/6a430e0fdb8af_1782779407.jpg",
+        "local_image": "/storage/menu/bazerkan/6a430e0fdb8af_1782779407.jpg"
+      },
+      {
+        "name": "وجبة مكسيكانو",
+        "description": null,
+        "price": 700,
+        "rawPrice": "700 S.P",
+        "image": "https://bazerkan-out.sts-qrme.net/uploads/items/6a80a44c6a608_1786815564.jpg",
+        "local_image": "/storage/menu/bazerkan/6a80a44c6a608_1786815564.jpg"
+      },
+      {
+        "name": "وجبة ناغيت",
+        "description": null,
+        "price": 650,
+        "rawPrice": "650 S.P",
+        "image": "https://bazerkan-out.sts-qrme.net/uploads/items/6a80a46dc3e8f_1786815597.jpg",
+        "local_image": "/storage/menu/bazerkan/6a80a46dc3e8f_1786815597.jpg"
+      }
+    ]
+  },
+  "12": {
+    "id": "12",
+    "name": "برغر",
+    "items": [
+      {
+        "name": "اونيون برغر",
+        "description": null,
+        "price": 500,
+        "rawPrice": "500 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "بازركان برغر",
+        "description": null,
+        "price": 600,
+        "rawPrice": "600 S.P",
+        "image": "https://bazerkan-out.sts-qrme.net/uploads/items/6a80a4b85f051_1786815672.jpg",
+        "local_image": "/storage/menu/bazerkan/6a80a4b85f051_1786815672.jpg"
+      },
+      {
+        "name": "برغر دجاج",
+        "description": null,
+        "price": 350,
+        "rawPrice": "350 S.P",
+        "image": "https://bazerkan-out.sts-qrme.net/uploads/items/6a80a4a7983c5_1786815655.jpg",
+        "local_image": "/storage/menu/bazerkan/6a80a4a7983c5_1786815655.jpg"
+      },
+      {
+        "name": "برغر دجاج دبل",
+        "description": null,
+        "price": 450,
+        "rawPrice": "450 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "تشيز برغر",
+        "description": null,
+        "price": 550,
+        "rawPrice": "550 S.P",
+        "image": "https://bazerkan-out.sts-qrme.net/uploads/items/6a80a4e232aa3_1786815714.jpg",
+        "local_image": "/storage/menu/bazerkan/6a80a4e232aa3_1786815714.jpg"
+      },
+      {
+        "name": "تشيز برغر دجاج",
+        "description": null,
+        "price": 400,
+        "rawPrice": "400 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "دبل برغر",
+        "description": null,
+        "price": 700,
+        "rawPrice": "700 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "كلاسيك برغر",
+        "description": null,
+        "price": 500,
+        "rawPrice": "500 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "ماشروم برغر لحم",
+        "description": null,
+        "price": 550,
+        "rawPrice": "550 S.P",
+        "image": null,
+        "local_image": null
+      }
+    ]
+  },
+  "13": {
+    "id": "13",
+    "name": "صندويش شاورما لحم",
+    "items": [
+      {
+        "name": "صندويش شاورما لحم",
+        "description": null,
+        "price": 500,
+        "rawPrice": "500 S.P",
+        "image": null,
+        "local_image": null
+      }
+    ]
+  },
+  "14": {
+    "id": "14",
+    "name": "فروج",
+    "items": [
+      {
+        "name": "فروج بروستد",
+        "description": null,
+        "price": 1600,
+        "rawPrice": "1600 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "فروج مشوي",
+        "description": null,
+        "price": 1400,
+        "rawPrice": "1400 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "نصف فروج بروستد",
+        "description": null,
+        "price": 850,
+        "rawPrice": "850 S.P",
+        "image": "https://bazerkan-out.sts-qrme.net/uploads/items/6a430d57103ee_1782779223.jpg",
+        "local_image": "/storage/menu/bazerkan/6a430d57103ee_1782779223.jpg"
+      },
+      {
+        "name": "نصف فروج مشوي",
+        "description": null,
+        "price": 800,
+        "rawPrice": "800 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "وجبة جوانح بروستد",
+        "description": "6 قطع",
+        "price": 650,
+        "rawPrice": "650 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "وجبة دبوس بروستد",
+        "description": "5 قطع",
+        "price": 850,
+        "rawPrice": "850 S.P",
+        "image": "https://bazerkan-out.sts-qrme.net/uploads/items/6a430d75926c8_1782779253.jpg",
+        "local_image": "/storage/menu/bazerkan/6a430d75926c8_1782779253.jpg"
+      }
+    ]
+  },
+  "15": {
+    "id": "15",
+    "name": "صندويش شاورما دجاج",
+    "items": [
+      {
+        "name": "صندويش شاورما اكسترا",
+        "description": null,
+        "price": 400,
+        "rawPrice": "400 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "صندويش شاورما بانيه",
+        "description": null,
+        "price": 450,
+        "rawPrice": "450 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "صندويش شاورما دبل",
+        "description": null,
+        "price": 350,
+        "rawPrice": "350 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "صندويش شاورما دجاج",
+        "description": null,
+        "price": 250,
+        "rawPrice": "250 S.P",
+        "image": null,
+        "local_image": null
+      }
+    ]
+  },
+  "16": {
+    "id": "16",
+    "name": "وجبات شاورما",
+    "items": [
+      {
+        "name": "شاورما اكسترا",
+        "description": null,
+        "price": 650,
+        "rawPrice": "650 S.P",
+        "image": "https://bazerkan-out.sts-qrme.net/uploads/items/6a430d0e64736_1782779150.jpg",
+        "local_image": "/storage/menu/bazerkan/6a430d0e64736_1782779150.jpg"
+      },
+      {
+        "name": "شاورما بازركان",
+        "description": null,
+        "price": 750,
+        "rawPrice": "750 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "شاورما بانيه",
+        "description": null,
+        "price": 650,
+        "rawPrice": "650 S.P",
+        "image": "https://bazerkan-out.sts-qrme.net/uploads/items/6a430ce5d8471_1782779109.jpg",
+        "local_image": "/storage/menu/bazerkan/6a430ce5d8471_1782779109.jpg"
+      },
+      {
+        "name": "شاورما خراطيش",
+        "description": "4 خراطيش",
+        "price": 750,
+        "rawPrice": "750 S.P",
+        "image": "https://bazerkan-out.sts-qrme.net/uploads/items/6a42d59f5ad4e_1782764959.jpg",
+        "local_image": "/storage/menu/bazerkan/6a42d59f5ad4e_1782764959.jpg"
+      },
+      {
+        "name": "شاورما ربع كيلو",
+        "description": null,
+        "price": 650,
+        "rawPrice": "650 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "شاورما عربي",
+        "description": null,
+        "price": 500,
+        "rawPrice": "500 S.P",
+        "image": "https://bazerkan-out.sts-qrme.net/uploads/items/6a430cfe3214f_1782779134.jpg",
+        "local_image": "/storage/menu/bazerkan/6a430cfe3214f_1782779134.jpg"
+      },
+      {
+        "name": "شاورما عربي دبل",
+        "description": null,
+        "price": 800,
+        "rawPrice": "800 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "شاورما نصف كيلو",
+        "description": null,
+        "price": 1000,
+        "rawPrice": "1000 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "وجبة خراطيش ميكس",
+        "description": "2 خراطيش دجاج + 2 خراطيش لحم",
+        "price": 900,
+        "rawPrice": "900 S.P",
+        "image": null,
+        "local_image": null
+      }
+    ]
+  },
+  "17": {
+    "id": "17",
+    "name": "صندويش عالبارد",
+    "items": [
+      {
+        "name": "اقراص نعناع",
+        "description": null,
+        "price": 200,
+        "rawPrice": "200 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "بسطرما",
+        "description": null,
+        "price": 350,
+        "rawPrice": "350 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "سجق",
+        "description": null,
+        "price": 200,
+        "rawPrice": "200 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "سجق مع جبنة",
+        "description": null,
+        "price": 250,
+        "rawPrice": "250 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "صاصيجو",
+        "description": null,
+        "price": 250,
+        "rawPrice": "250 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "صندويش خاروف",
+        "description": null,
+        "price": 350,
+        "rawPrice": "350 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "طوشكا",
+        "description": null,
+        "price": 350,
+        "rawPrice": "350 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "قلوبات",
+        "description": null,
+        "price": 200,
+        "rawPrice": "200 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "لسانات",
+        "description": null,
+        "price": 300,
+        "rawPrice": "300 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "لسانات مع اقراص نعناع",
+        "description": null,
+        "price": 350,
+        "rawPrice": "350 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "مرتديلا حلبية",
+        "description": null,
+        "price": 250,
+        "rawPrice": "250 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "مروش",
+        "description": null,
+        "price": 250,
+        "rawPrice": "250 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "نخاعات",
+        "description": null,
+        "price": 300,
+        "rawPrice": "300 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "نخاعات مع اقراص نعناع",
+        "description": null,
+        "price": 350,
+        "rawPrice": "350 S.P",
+        "image": null,
+        "local_image": null
+      }
+    ]
+  },
+  "18": {
+    "id": "18",
+    "name": "مقبلات",
+    "items": [
+      {
+        "name": "بابا غنوج",
+        "description": null,
+        "price": 150,
+        "rawPrice": "150 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "حمص",
+        "description": null,
+        "price": 150,
+        "rawPrice": "150 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "خبز سياحي",
+        "description": null,
+        "price": 150,
+        "rawPrice": "150 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "روسية",
+        "description": null,
+        "price": 150,
+        "rawPrice": "150 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "سلطة روكا",
+        "description": null,
+        "price": 550,
+        "rawPrice": "550 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "سيزر",
+        "description": null,
+        "price": 450,
+        "rawPrice": "450 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "صحن رز",
+        "description": null,
+        "price": 200,
+        "rawPrice": "200 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "علبة كريم توم",
+        "description": null,
+        "price": 100,
+        "rawPrice": "100 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "علبة مخلل",
+        "description": null,
+        "price": 100,
+        "rawPrice": "100 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "فتوش",
+        "description": null,
+        "price": 450,
+        "rawPrice": "450 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "كبة نية هبرة - صغيرة",
+        "description": null,
+        "price": 450,
+        "rawPrice": "450 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "كبة نية هبرة - كبيرة",
+        "description": null,
+        "price": 900,
+        "rawPrice": "900 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "متبل",
+        "description": null,
+        "price": 150,
+        "rawPrice": "150 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "محمرة",
+        "description": "200 غرام",
+        "price": 150,
+        "rawPrice": "150 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "يلانجي",
+        "description": null,
+        "price": 250,
+        "rawPrice": "250 S.P",
+        "image": null,
+        "local_image": null
+      }
+    ]
+  },
+  "19": {
+    "id": "19",
+    "name": "معكرونات",
+    "items": [
+      {
+        "name": "بشاميل - حبش",
+        "description": null,
+        "price": 650,
+        "rawPrice": "650 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "بشاميل - دجاج",
+        "description": null,
+        "price": 700,
+        "rawPrice": "700 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "بشاميل - فطر",
+        "description": null,
+        "price": 650,
+        "rawPrice": "650 S.P",
+        "image": null,
+        "local_image": null
+      }
+    ]
+  },
+  "20": {
+    "id": "20",
+    "name": "وجبات شاورما لحم",
+    "items": [
+      {
+        "name": "شاورما عربي لحم",
+        "description": null,
+        "price": 800,
+        "rawPrice": "800 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "شاورما عربي لحم دبل",
+        "description": null,
+        "price": 1300,
+        "rawPrice": "1300 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "شاورما لحم نصف كيلو",
+        "description": null,
+        "price": 2500,
+        "rawPrice": "2500 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "شاورما لحمة ربع كيلو",
+        "description": null,
+        "price": 1350,
+        "rawPrice": "1350 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "وجبة خراطيش لحم",
+        "description": "4 خراطيش",
+        "price": 1000,
+        "rawPrice": "1000 S.P",
+        "image": "https://bazerkan-out.sts-qrme.net/uploads/items/6a6505edba88f_1785005549.jpg",
+        "local_image": "/storage/menu/bazerkan/6a6505edba88f_1785005549.jpg"
+      }
+    ]
+  },
+  "21": {
+    "id": "21",
+    "name": "بطاطا",
+    "items": [
+      {
+        "name": "بطاطا صحن",
+        "description": null,
+        "price": 350,
+        "rawPrice": "350 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "بطاطا فريت",
+        "description": null,
+        "price": 200,
+        "rawPrice": "200 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "كورنييه فريت",
+        "description": null,
+        "price": 150,
+        "rawPrice": "150 S.P",
+        "image": null,
+        "local_image": null
+      }
+    ]
+  },
+  "22": {
+    "id": "22",
+    "name": "وجبات برغر",
+    "items": [
+      {
+        "name": "برغر عربي دجاج",
+        "description": null,
+        "price": 550,
+        "rawPrice": "550 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "وجبة برغر بازركان",
+        "description": null,
+        "price": 800,
+        "rawPrice": "800 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "وجبة برغر لحم",
+        "description": null,
+        "price": 700,
+        "rawPrice": "700 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "وجبة تشيز برغر لحم",
+        "description": null,
+        "price": 750,
+        "rawPrice": "750 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "وجبة دبل برغر لحم",
+        "description": null,
+        "price": 900,
+        "rawPrice": "900 S.P",
+        "image": null,
+        "local_image": null
+      }
+    ]
+  },
+  "23": {
+    "id": "23",
+    "name": "بيتزا",
+    "items": [
+      {
+        "name": "بيتزا فصول اربعة",
+        "description": null,
+        "price": 700,
+        "rawPrice": "700 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "بيتزا فطر",
+        "description": null,
+        "price": 700,
+        "rawPrice": "700 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "بيتزا كابري",
+        "description": "فطر + سجق",
+        "price": 750,
+        "rawPrice": "750 S.P",
+        "image": null,
+        "local_image": null
+      },
+      {
+        "name": "بيتزا مرغريتا",
+        "description": null,
+        "price": 650,
+        "rawPrice": "650 S.P",
+        "image": null,
+        "local_image": null
+      }
+    ]
+  }
+}
