@@ -41,6 +41,11 @@ class PromoCode extends Model
         return $this->hasMany(Order::class);
     }
 
+    public function isDemoCode(): bool
+    {
+        return str_starts_with($this->code, 'DEMO-');
+    }
+
     public function isValid(?float $orderTotal = null): bool
     {
         // 1. التحقق أولاً وقبل أي فحص زمني: إذا كان الكوبون أحادي الاستخدام، هل هو مستهلك أو تالف أو تم استخدامه مسبقاً؟
@@ -59,7 +64,8 @@ class PromoCode extends Model
             return false;
         }
 
-        if ($this->starts_at && $this->starts_at->isFuture()) {
+        // الكوبونات التجريبية تفعل فوراً بدون أي انتظار
+        if (!$this->isDemoCode() && $this->starts_at && $this->starts_at->isFuture()) {
             return false;
         }
 
@@ -80,7 +86,7 @@ class PromoCode extends Model
     public function getValidationDiagnostics(?float $orderTotal = null, string $currency = 'SYP'): array
     {
         $now = now();
-        $isFuture = $this->starts_at && $this->starts_at->isFuture();
+        $isFuture = !$this->isDemoCode() && $this->starts_at && $this->starts_at->isFuture();
         $isPast = $this->expires_at && $this->expires_at->isPast();
 
         // 1. التحقق من الكوبونات الفردية وأحادية الاستخدام (قسائم عجلة الحظ): هل الكوبون مُستهلك مسبقاً؟

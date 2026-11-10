@@ -52,14 +52,19 @@ class PromoCodeController extends ApiController
         // If it is a demo code generated during preview that was not persisted yet (e.g. DEMO-6GMLWZ),
         // register and activate it automatically for this restaurant so testing works seamlessly!
         if (!$promoCode && str_starts_with($cleanCode, 'DEMO-')) {
+            $sourceDemo = PromoCode::withoutGlobalScopes()->where('code', $cleanCode)->first();
+            $discountType = $sourceDemo ? $sourceDemo->discount_type : 'percentage';
+            $discountValue = $sourceDemo ? $sourceDemo->discount_value : 15;
+            $minOrderValue = $sourceDemo ? $sourceDemo->min_order_value : 0;
+
             $promoCode = PromoCode::create([
                 'restaurant_id' => $restaurant->id,
                 'code' => $cleanCode,
-                'discount_type' => 'percentage',
-                'discount_value' => 15,
-                'min_order_value' => 0,
+                'discount_type' => $discountType,
+                'discount_value' => $discountValue,
+                'min_order_value' => $minOrderValue,
                 'is_active' => true,
-                'starts_at' => now()->subMinute(),
+                'starts_at' => now()->subHours(2), // Immediately active without 2-hour delay
                 'expires_at' => now()->addDays(14),
                 'is_single_use' => true,
                 'times_used' => 0,

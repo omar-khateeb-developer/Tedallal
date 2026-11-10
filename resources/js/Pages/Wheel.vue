@@ -65,9 +65,13 @@ const whatsappShareUrl = computed(() => {
     }
     const restaurantName = props.restaurant.name || 'المطعم';
     const discountText = formatVoucherDisplay(voucher.value.discount_text);
+    const isDemo = voucher.value.is_demo || props.is_demo;
+    const validityText = isDemo
+        ? 'مفعّل فوراً للتجربة (بدون انتظار)'
+        : (voucher.value.starts_at || 'الآن');
     const text = `🎁 مبارك! لقد حصلت على ${discountText} من ${restaurantName}.\n\n` +
         `🎟️ كود الخصم: ${voucher.value.code}\n` +
-        `⏳ صالح ابتداءً من: ${voucher.value.starts_at || 'الآن'}\n` +
+        `⏳ الصلاحية: ${validityText}\n` +
         `📅 ينتهي في: ${voucher.value.expires_at}\n` +
         (voucher.value.min_order_value > 0 ? `🛒 الحد الأدنى للطلب: ${voucher.value.min_order_value} ${props.restaurant.currency}\n` : '') +
         (props.restaurant.menu_url ? `\n🍽️ رابط قائمة الطعام:\n${props.restaurant.menu_url}\n` : '') +
@@ -860,7 +864,8 @@ onUnmounted(() => {
                             <div class="space-y-1.5 text-xs text-[#9CA3AF] text-start bg-black/40 p-3 rounded-xl border border-white/5">
                                 <div class="flex items-center gap-2 text-[#FCF6BA]">
                                     <span>📅</span>
-                                    <span>صالح لزيارتك القادمة ابتداءً من: {{ voucher.starts_at || 'الآن' }}</span>
+                                    <span v-if="voucher.is_demo || props.is_demo" class="text-emerald-400 font-bold">✓ مفعّل فوراً للتجربة: يمكنك استخدامه في السلة الآن مباشرة</span>
+                                    <span v-else>صالح لزيارتك القادمة ابتداءً من: {{ voucher.starts_at || 'الآن' }}</span>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <span>⏳</span>

@@ -197,7 +197,7 @@ class WheelController extends Controller
                     'discount_value' => $discountValue,
                     'min_order_value' => $minOrderValue,
                     'is_active' => true,
-                    'starts_at' => now()->subMinute(), // Immediately active for testing
+                    'starts_at' => now()->subHours(2), // Immediately active for testing
                     'expires_at' => now()->addDays(14),
                     'is_single_use' => true,
                     'times_used' => 0,
@@ -211,7 +211,7 @@ class WheelController extends Controller
                 'voucher' => [
                     'code' => $demoCode,
                     'discount_text' => $wonSlice['label'],
-                    'starts_at' => now()->format('Y-m-d h:i A'),
+                    'starts_at' => 'مفعّل فوراً (الآن)',
                     'expires_at' => now()->addDays(14)->format('Y-m-d'),
                     'min_order_value' => $minOrderValue,
                     'is_demo' => true,
