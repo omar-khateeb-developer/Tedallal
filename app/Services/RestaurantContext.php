@@ -10,20 +10,17 @@ final class RestaurantContext
 
     public function current(): Restaurant
     {
-        // 1. If admin is logged in, use their restaurant
-        if (auth()->check() && auth()->user()->restaurant_id) {
-            if ($this->cached && $this->cached->id === auth()->user()->restaurant_id) {
-                return $this->cached;
+        // 1. If table_session attribute was already validated and attached by ValidateTableSession middleware
+        if (request()->attributes->has('table_session')) {
+            /** @var \App\Models\TableSession|null $session */
+            $session = request()->attributes->get('table_session');
+            if ($session && $session->table && $session->table->restaurant) {
+                return $this->cached = $session->table->restaurant;
             }
-            return $this->cached = auth()->user()->restaurant;
         }
 
-        if ($this->cached) {
-            return $this->cached;
-        }
-
-        // 2. If it's a public customer request, use the session token
-        $sessionToken = request()->cookie('tedallal_session') ?? request()->header('X-Session-Token');
+        // 2. If it is a public customer request, check X-Session-Token header first (takes precedence over stale cookie)
+        $sessionToken = request()->header('X-Session-Token') ?? request()->cookie('tedallal_session');
         if ($sessionToken) {
             $tableSession = \App\Models\TableSession::query()
                 ->where('session_token', $sessionToken)
@@ -36,7 +33,19 @@ final class RestaurantContext
             }
         }
 
-        // 3. No valid context found - throw instead of leaking another tenant's data
+        // 3. If admin is logged in (and this is not a conflicting customer session), use their restaurant
+        if (auth()->check() && auth()->user()->restaurant_id) {
+            if ($this->cached && $this->cached->id === auth()->user()->restaurant_id) {
+                return $this->cached;
+            }
+            return $this->cached = auth()->user()->restaurant;
+        }
+
+        if ($this->cached) {
+            return $this->cached;
+        }
+
+        // 4. No valid context found - throw instead of leaking another tenant's data
         throw new \RuntimeException('No restaurant context found. Cannot resolve tenant.');
     }
 

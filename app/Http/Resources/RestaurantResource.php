@@ -21,6 +21,7 @@ class RestaurantResource extends JsonResource
             'phone' => $this->phone,
             'address' => $this->address,
             'currency' => $this->currency,
+            'auto_print_on_ready' => (bool) (($this->features ?? [])['auto_print_on_ready'] ?? false),
         ];
     }
 }

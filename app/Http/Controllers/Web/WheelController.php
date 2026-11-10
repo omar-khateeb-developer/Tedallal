@@ -182,16 +182,38 @@ class WheelController extends Controller
             $winningIndex = $this->pickWeightedSliceIndex($slices);
             $wonSlice = $slices[$winningIndex];
 
+            // Generate a real persisted demo promo code so the restaurant manager/customer can test it in cart immediately
+            $demoCode = 'DEMO-' . strtoupper(Str::random(6));
+
+            $discountType = $wonSlice['discount_type'] ?? 'percentage';
+            $discountValue = (float) ($wonSlice['discount_value'] ?? 15);
+            $minOrderValue = (float) ($wonSlice['min_order_value'] ?? 0);
+
+            if ($restaurant) {
+                PromoCode::create([
+                    'restaurant_id' => $restaurant->id,
+                    'code' => $demoCode,
+                    'discount_type' => $discountType,
+                    'discount_value' => $discountValue,
+                    'min_order_value' => $minOrderValue,
+                    'is_active' => true,
+                    'starts_at' => now()->subMinute(), // Immediately active for testing
+                    'expires_at' => now()->addDays(14),
+                    'is_single_use' => true,
+                    'times_used' => 0,
+                ]);
+            }
+
             return response()->json([
                 'success' => true,
                 'won_id' => $wonSlice['id'],
                 'won_index' => $winningIndex,
                 'voucher' => [
-                    'code' => 'DEMO-' . strtoupper(Str::random(6)),
+                    'code' => $demoCode,
                     'discount_text' => $wonSlice['label'],
                     'starts_at' => now()->format('Y-m-d h:i A'),
                     'expires_at' => now()->addDays(14)->format('Y-m-d'),
-                    'min_order_value' => 0,
+                    'min_order_value' => $minOrderValue,
                     'is_demo' => true,
                 ],
             ]);

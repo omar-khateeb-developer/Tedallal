@@ -34,6 +34,13 @@ class RestaurantController extends ApiController
             $validated['logo'] = '/storage/' . $path;
         }
 
+        if ($request->has('auto_print_on_ready')) {
+            $features = $restaurant->features ?? [];
+            $features['auto_print_on_ready'] = (bool) $request->boolean('auto_print_on_ready');
+            $validated['features'] = $features;
+            unset($validated['auto_print_on_ready']);
+        }
+
         $restaurant->update($validated);
         $this->restaurantContext->forget();
 

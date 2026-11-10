@@ -78,9 +78,13 @@ final class OrderCreationService
                 if (!$restaurant->hasOffersFeature()) {
                     throw ValidationException::withMessages(['promo_code' => ['نظام العروض غير مفعل في هذا المطعم.']]);
                 }
+                $cleanPromoStr = strtoupper(trim($promoCodeStr));
                 $promoCode = \App\Models\PromoCode::withoutGlobalScopes()
                     ->where('restaurant_id', $restaurant->id)
-                    ->where('code', $promoCodeStr)
+                    ->where(function ($q) use ($promoCodeStr, $cleanPromoStr) {
+                        $q->where('code', $promoCodeStr)
+                          ->orWhere('code', $cleanPromoStr);
+                    })
                     ->lockForUpdate()
                     ->first();
                 if (!$promoCode || !$promoCode->isValid((float)$subtotal)) {

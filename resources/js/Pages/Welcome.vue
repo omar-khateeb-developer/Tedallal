@@ -593,6 +593,18 @@ onUnmounted(() => {
                         <a href="#faqs" class="hover:text-amber-400 transition-colors">
                             {{ currentLocale === 'ar' ? 'الأسئلة الشائعة' : 'FAQs' }}
                         </a>
+                        <a
+                            href="/presentation"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="hover:text-amber-400 transition-colors flex items-center gap-1.5 font-bold"
+                            :class="isDark ? 'text-amber-300' : 'text-[#8C6010]'"
+                            :title="currentLocale === 'ar' ? 'عرض الملف التعريفي الشامل لملاك المطاعم' : 'Executive Pitch Deck'"
+                        >
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                            <span>{{ currentLocale === 'ar' ? 'الملف التعريفي' : 'Pitch Deck' }}</span>
+                            <span class="text-[10px] opacity-70">↗</span>
+                        </a>
                     </nav>
 
                     <!-- Header Utility Tools -->
@@ -771,6 +783,20 @@ onUnmounted(() => {
                                     <span>{{ currentLocale === 'ar' ? 'تدلّل - للمطاعم' : 'Tedallal - For Restaurants' }}</span>
                                     <span class="text-stone-950">✦</span>
                                 </button>
+                                <a
+                                    href="/presentation"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="px-6 py-3.5 rounded-full border border-amber-500/50 hover:border-amber-400 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 hover:text-amber-200 text-xs sm:text-sm font-black flex items-center gap-2 transition-all shadow-sm hover:shadow-amber-500/15 hover:scale-105 active:scale-95"
+                                    :class="!isDark && 'bg-amber-50/90 border-[#C5A059]/60 text-[#7A5208] hover:bg-amber-100'"
+                                    :title="currentLocale === 'ar' ? 'عرض الملف التعريفي الشامل لملاك ومستثمري المطاعم' : 'Restaurant Owner Pitch Deck'"
+                                >
+                                    <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                                    </svg>
+                                    <span>{{ currentLocale === 'ar' ? 'الملف التعريفي لملاك المطاعم' : 'Pitch Deck' }}</span>
+                                    <span class="text-xs">↗</span>
+                                </a>
                                 <a
                                     href="#platform-mockups"
                                     :class="isDark ? 'border-white/20 text-stone-200 hover:bg-white/10' : 'border-stone-300 text-stone-900 bg-white/90 hover:bg-stone-100 shadow-xs'" class="px-5 py-3 rounded-full border text-xs sm:text-sm font-bold transition-colors"
@@ -1594,6 +1620,32 @@ onUnmounted(() => {
                     <p class="text-center text-[11px] text-stone-500 mt-6">
                         {{ currentLocale === 'ar' ? '* الحساب تقريبي مبني على متوسط عمولة 20% لتطبيقات الطلب مقارنة باشتراك تدلل الرمزي.' : '* Calculation based on standard 20% delivery app fees vs. Tedallal flat subscription.' }}
                     </p>
+
+                    <!-- Executive Pitch Deck Banner for Restaurant Decision Makers -->
+                    <div class="mt-8 p-5 sm:p-6 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-4 transition-all"
+                        :class="isDark ? 'bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border-amber-500/30' : 'bg-gradient-to-r from-amber-50 via-amber-100/50 to-white border-[#C5A059]/40'"
+                    >
+                        <div class="flex items-center gap-3 text-center sm:text-right">
+                            <span class="text-2xl">📊</span>
+                            <div>
+                                <p class="text-sm font-black" :class="isDark ? 'text-amber-300' : 'text-[#7A5208]'">
+                                    {{ currentLocale === 'ar' ? 'هل أنت صاحب مطعم أو مدير تشغيل وترغب بدراسة الجدوى؟' : 'Are you a Restaurant Owner or GM?' }}
+                                </p>
+                                <p class="text-xs" :class="isDark ? 'text-stone-300' : 'text-stone-600'">
+                                    {{ currentLocale === 'ar' ? 'استعرض العرض التقديمي التنفيذي الشامل (12 شريحة تفاعلية مع حاسبة العوائد ومحاكاة الصالة).' : 'Explore the 12-slide interactive pitch deck with floor simulators & ROI analysis.' }}
+                                </p>
+                            </div>
+                        </div>
+                        <a
+                            href="/presentation"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="px-5 py-2.5 rounded-full bg-gradient-to-r from-[#BF953F] via-[#E8C265] to-[#B38728] text-stone-950 font-black text-xs shadow-md hover:scale-105 active:scale-95 transition-all whitespace-nowrap flex items-center gap-1.5"
+                        >
+                            <span>{{ currentLocale === 'ar' ? 'فتح الملف التعريفي التنفيذي' : 'Open Pitch Deck' }}</span>
+                            <span>↗</span>
+                        </a>
+                    </div>
                 </div>
             </div>
         </section>
@@ -1835,6 +1887,16 @@ onUnmounted(() => {
                         <button type="button" class="hover:text-amber-400 transition-colors" @click="isDemoModalOpen = true">
                             {{ currentLocale === 'ar' ? 'طلب حساب جديد' : 'New Account' }}
                         </button>
+                        <a
+                            href="/presentation"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="hover:text-amber-400 transition-colors flex items-center gap-1 font-bold text-amber-400"
+                        >
+                            <span>📊</span>
+                            <span>{{ currentLocale === 'ar' ? 'الملف التعريفي' : 'Pitch Deck' }}</span>
+                            <span class="text-[10px]">↗</span>
+                        </a>
                     </div>
 
                     <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-stone-800 bg-stone-900 text-[11px] font-bold text-emerald-400">

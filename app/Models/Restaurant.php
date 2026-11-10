@@ -231,4 +231,9 @@ class Restaurant extends Model
     {
         return $this->hasFeature('menu_engineering');
     }
+
+    public function shouldAutoPrintOnReady(): bool
+    {
+        return (bool) (($this->features ?? [])['auto_print_on_ready'] ?? false);
+    }
 }

@@ -34,13 +34,23 @@ class CartController extends ApiController
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'menu_item_id' => ['required', 'integer', 'exists:menu_items,id'],
+            'menu_item_id' => ['required', 'integer'],
             'quantity' => ['sometimes', 'integer', 'min:1'],
             'note' => ['nullable', 'string', 'max:500'],
         ]);
 
         $session = ValidateTableSession::sessionFrom($request);
-        $menuItem = MenuItem::query()->findOrFail($validated['menu_item_id']);
+        $restaurantId = $session->table?->restaurant_id;
+
+        $menuItem = MenuItem::withoutGlobalScopes()
+            ->where('restaurant_id', $restaurantId)
+            ->where('is_available', true)
+            ->where('is_active', true)
+            ->find($validated['menu_item_id']);
+
+        if (! $menuItem) {
+            return $this->error('عذراً، هذا الصنف غير متوفر حالياً.', 404);
+        }
 
         $cartItem = $this->cartService->addItem(
             $session,

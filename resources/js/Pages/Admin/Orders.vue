@@ -94,6 +94,28 @@ function shareOnWhatsApp(order: Order) {
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
 }
 
+// الطباعة التلقائية للفاتورة عند اكتمال التحضير (جاهز)
+const isAutoPrintActive = ref<boolean>(
+    !!((page.props.auth as any)?.restaurant?.effective_features?.auto_print_on_ready ?? (page.props.auth as any)?.restaurant?.features?.auto_print_on_ready)
+);
+
+function triggerAutoPrint(orderId: number) {
+    let iframe = document.getElementById('auto-print-receipt-frame') as HTMLIFrameElement;
+    if (!iframe) {
+        iframe = document.createElement('iframe');
+        iframe.id = 'auto-print-receipt-frame';
+        iframe.style.position = 'fixed';
+        iframe.style.right = '0';
+        iframe.style.bottom = '0';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = '0';
+        iframe.style.opacity = '0';
+        document.body.appendChild(iframe);
+    }
+    iframe.src = `/admin/orders/${orderId}/print`;
+}
+
 const updatingIds = ref<Set<number>>(new Set());
 
 async function updateStatus(order: Order, status: string, pickupWindow?: number | null) {
@@ -110,6 +132,11 @@ async function updateStatus(order: Order, status: string, pickupWindow?: number 
         const index = orders.value.findIndex(o => o.id === order.id);
         if (index !== -1) {
             orders.value[index] = data.data ?? { ...order, status, pickup_window: payload.pickup_window };
+        }
+
+        // تشغيل الطباعة التلقائية فور تحويل الطلب إلى "جاهز / تم التحضير" لتوضع الفاتورة مع الوجبة
+        if (status === 'ready' && isAutoPrintActive.value) {
+            triggerAutoPrint(order.id);
         }
     } catch (error: any) {
         showToast('خطأ', error.response?.data?.message ?? 'تعذّر تحديث حالة الطلب', 'error');
@@ -133,10 +160,16 @@ useRestaurantOrders(restaurantId.value, {
     },
     onOrderUpdated: (updatedOrder) => {
         const index = orders.value.findIndex(o => o.id === updatedOrder.id);
+        const prevStatus = index !== -1 ? orders.value[index].status : null;
         if (index !== -1) {
             orders.value[index] = updatedOrder as Order;
         } else {
             orders.value.unshift(updatedOrder as Order);
+        }
+
+        // إذا تم تحويل الطلب إلى "جاهز" من شاشة المطبخ مثلاً وكان خيار الطباعة التلقائية مفعلاً
+        if (updatedOrder.status === 'ready' && prevStatus !== 'ready' && isAutoPrintActive.value) {
+            triggerAutoPrint(updatedOrder.id);
         }
     }
 });
@@ -205,6 +238,22 @@ useRestaurantOrders(restaurantId.value, {
                         :title="isWakeLockActive ? 'الشاشة لن تنطفئ (مفعل)' : 'انقر لإبقاء الشاشة مضاءة دائماً'"
                     >
                         <span>{{ isWakeLockActive ? '💡 الشاشة نشطة' : '💤 شاشة عادية' }}</span>
+                    </button>
+
+                    <!-- زر تفعيل/إيقاف الطباعة التلقائية عند تم التحضير -->
+                    <button
+                        @click="isAutoPrintActive = !isAutoPrintActive"
+                        type="button"
+                        :class="[
+                            'flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all select-none cursor-pointer shrink-0',
+                            isAutoPrintActive
+                                ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/40'
+                                : 'bg-stone-50 dark:bg-slate-900 text-stone-500 dark:text-slate-400 border-stone-200 dark:border-slate-800'
+                        ]"
+                        :title="isAutoPrintActive ? 'الطباعة التلقائية عند تم التحضير مفعّلة' : 'انقر لتفعيل الطباعة التلقائية عند تم التحضير'"
+                    >
+                        <span>🖨️</span>
+                        <span>{{ isAutoPrintActive ? 'طباعة تلقائية: مفعّلة' : 'طباعة تلقائية: متوقفة' }}</span>
                     </button>
 
                     <button
@@ -308,8 +357,9 @@ useRestaurantOrders(restaurantId.value, {
                                 <span class="hidden sm:inline">واتساب</span>
                             </button>
 
-                            <!-- طباعة الفاتورة -->
+                            <!-- طباعة الفاتورة (فقط عند مرحلة التسليم: جاهز أو مسلّم) -->
                             <a
+                                v-if="['ready', 'served'].includes(order.status)"
                                 :href="`/admin/orders/${order.id}/print`"
                                 target="_blank"
                                 class="rounded-lg bg-stone-100 dark:bg-slate-800 px-3 py-2 text-sm text-stone-700 dark:text-stone-200 hover:bg-stone-200 dark:hover:bg-slate-700 transition-colors flex items-center gap-1 border border-stone-200 dark:border-slate-700"

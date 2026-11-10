@@ -133,5 +133,10 @@ Route::get('/storage/qr/{restaurantId}/{filename}', function ($restaurantId, $fi
     ]);
 })->where('filename', '[A-Za-z0-9_-]+\.png');
 
+// العرض التقديمي التنفيذي الشامل لمنظومة تدلل
+Route::get('/presentation', function () {
+    return response()->file(public_path('presentation.html'));
+})->name('presentation');
+
 require __DIR__.'/auth.php';
 

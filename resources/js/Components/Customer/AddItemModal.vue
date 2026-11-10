@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, onUnmounted } from 'vue';
 
 export interface MenuItemOption {
     id: number;
@@ -21,9 +21,18 @@ const emit = defineEmits<{
 const quantity = ref(1);
 const note = ref('');
 
-watch(() => props.item, () => {
+watch(() => props.item, (newItem) => {
     quantity.value = 1;
     note.value = '';
+    if (newItem) {
+        document.body.style.overflow = 'hidden';
+    } else {
+        document.body.style.overflow = '';
+    }
+});
+
+onUnmounted(() => {
+    document.body.style.overflow = '';
 });
 
 function onImageError(event: Event) {
@@ -41,10 +50,10 @@ function onImageError(event: Event) {
     <Teleport to="body">
         <div
             v-if="item"
-            class="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-xs sm:items-center"
+            class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs p-0 sm:p-4 overflow-y-auto"
             @click.self="emit('close')"
         >
-            <div class="w-full max-w-lg rounded-t-3xl bg-white dark:bg-[#0a0f1d] p-6 shadow-2xl sm:rounded-3xl border-t sm:border border-stone-200/80 dark:border-slate-800 transition-colors" dir="rtl">
+            <div class="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#0a0f1d] p-5 sm:p-6 shadow-2xl border-t sm:border border-stone-200/80 dark:border-slate-800 transition-colors max-h-[92dvh] overflow-y-auto pb-[max(1.25rem,env(safe-area-inset-bottom))]" dir="rtl">
                 <div class="mb-4 aspect-video w-full overflow-hidden rounded-2xl border border-stone-100 dark:border-slate-800 flex items-center justify-center bg-gradient-to-br from-amber-50 to-stone-100 dark:from-slate-900 dark:to-[#070709]">
                     <img
                         :src="(item as any).image || '/images/tedallal-golden-logo-pure.png'"
@@ -63,7 +72,7 @@ function onImageError(event: Event) {
                 <div class="mt-5 flex items-center justify-center gap-4">
                     <button
                         type="button"
-                        class="flex h-11 w-11 items-center justify-center rounded-xl bg-stone-100 dark:bg-slate-800 text-stone-900 dark:text-white hover:bg-stone-200 dark:hover:bg-slate-700 active:scale-95 transition-all text-lg font-bold"
+                        class="flex h-11 w-11 items-center justify-center rounded-xl bg-stone-100 dark:bg-slate-800 text-stone-900 dark:text-white hover:bg-stone-200 dark:hover:bg-slate-700 active:scale-95 transition-all text-lg font-bold select-none"
                         @click="quantity = Math.max(1, quantity - 1)"
                     >
                         −
@@ -71,7 +80,7 @@ function onImageError(event: Event) {
                     <span class="min-w-[2rem] text-center text-xl font-black text-stone-900 dark:text-white">{{ quantity }}</span>
                     <button
                         type="button"
-                        class="flex h-11 w-11 items-center justify-center rounded-xl bg-stone-100 dark:bg-slate-800 text-stone-900 dark:text-white hover:bg-stone-200 dark:hover:bg-slate-700 active:scale-95 transition-all text-lg font-bold"
+                        class="flex h-11 w-11 items-center justify-center rounded-xl bg-stone-100 dark:bg-slate-800 text-stone-900 dark:text-white hover:bg-stone-200 dark:hover:bg-slate-700 active:scale-95 transition-all text-lg font-bold select-none"
                         @click="quantity += 1"
                     >
                         +
@@ -83,7 +92,7 @@ function onImageError(event: Event) {
                     <textarea
                         v-model="note"
                         rows="2"
-                        class="w-full rounded-xl border-stone-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-slate-500 text-sm focus:border-amber-500 focus:ring-amber-500 transition-colors"
+                        class="w-full rounded-xl border-stone-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-slate-500 text-[16px] sm:text-sm focus:border-amber-500 focus:ring-amber-500 transition-colors"
                         placeholder="مثال: بدون بصل، زيادة صوص..."
                     />
                 </div>

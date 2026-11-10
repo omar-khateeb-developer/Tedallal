@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, onUnmounted } from 'vue';
 import axios from 'axios';
 
 export interface CartLine {
@@ -61,7 +61,16 @@ function close() {
 }
 
 watch(() => props.open, (isOpen) => {
-    if (isOpen) load();
+    if (isOpen) {
+        document.body.style.overflow = 'hidden';
+        load();
+    } else {
+        document.body.style.overflow = '';
+    }
+});
+
+onUnmounted(() => {
+    document.body.style.overflow = '';
 });
 
 defineExpose({ load, count, subtotal });
@@ -76,10 +85,10 @@ defineExpose({ load, count, subtotal });
         />
         <div
             v-if="open"
-            class="fixed inset-x-0 bottom-0 z-50 max-h-[85vh] overflow-y-auto rounded-t-3xl bg-white dark:bg-[#0a0f1d] text-stone-900 dark:text-white shadow-2xl border-t border-stone-200/80 dark:border-slate-800 transition-colors"
+            class="fixed inset-x-0 bottom-0 z-50 flex flex-col max-h-[85dvh] rounded-t-3xl bg-white dark:bg-[#0a0f1d] text-stone-900 dark:text-white shadow-2xl border-t border-stone-200/80 dark:border-slate-800 transition-colors"
             dir="rtl"
         >
-            <div class="sticky top-0 z-10 flex items-center justify-between border-b border-stone-100 dark:border-slate-800 bg-white/95 dark:bg-[#0a0f1d]/95 backdrop-blur-md px-4 py-4">
+            <div class="shrink-0 flex items-center justify-between border-b border-stone-100 dark:border-slate-800 bg-white/95 dark:bg-[#0a0f1d]/95 backdrop-blur-md px-4 py-4">
                 <h2 class="text-lg font-bold text-stone-900 dark:text-white flex items-center gap-2">
                     <span>السلة</span>
                     <span class="text-xs px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-black">({{ count }})</span>
@@ -93,7 +102,7 @@ defineExpose({ load, count, subtotal });
                 السلة فارغة
             </div>
 
-            <div v-else class="space-y-3 p-4 pb-32">
+            <div v-else class="flex-1 overflow-y-auto space-y-3 p-4">
                 <article
                     v-for="item in items"
                     :key="item.id"
@@ -109,7 +118,7 @@ defineExpose({ load, count, subtotal });
                         <div class="flex items-center gap-1.5 bg-white dark:bg-slate-800/80 border border-stone-200 dark:border-slate-700 rounded-full p-0.5 shadow-2xs">
                             <button
                                 type="button"
-                                class="h-8 w-8 rounded-full bg-stone-50 dark:bg-slate-700 text-stone-800 dark:text-slate-100 font-bold flex items-center justify-center hover:bg-stone-200 dark:hover:bg-slate-600 active:scale-90 transition-all text-sm"
+                                class="h-8 w-8 rounded-full bg-stone-50 dark:bg-slate-700 text-stone-800 dark:text-slate-100 font-bold flex items-center justify-center hover:bg-stone-200 dark:hover:bg-slate-600 active:scale-90 transition-all text-sm select-none"
                                 @click="updateQty(item, item.quantity - 1)"
                             >
                                 −
@@ -117,7 +126,7 @@ defineExpose({ load, count, subtotal });
                             <span class="w-6 text-center font-black text-sm text-stone-900 dark:text-white">{{ item.quantity }}</span>
                             <button
                                 type="button"
-                                class="h-8 w-8 rounded-full bg-amber-600 dark:bg-amber-500 text-white font-bold flex items-center justify-center hover:bg-amber-700 dark:hover:bg-amber-400 active:scale-90 transition-all text-sm"
+                                class="h-8 w-8 rounded-full bg-amber-600 dark:bg-amber-500 text-white font-bold flex items-center justify-center hover:bg-amber-700 dark:hover:bg-amber-400 active:scale-90 transition-all text-sm select-none"
                                 @click="updateQty(item, item.quantity + 1)"
                             >
                                 +
@@ -127,7 +136,7 @@ defineExpose({ load, count, subtotal });
                     <input
                         :value="item.note ?? ''"
                         type="text"
-                        class="mt-3 w-full rounded-xl border-stone-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-slate-500 text-xs focus:border-amber-500 focus:ring-amber-500"
+                        class="mt-3 w-full rounded-xl border-stone-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-slate-500 text-[16px] sm:text-xs focus:border-amber-500 focus:ring-amber-500"
                         placeholder="ملاحظة على الصنف (مثال: بدون ثوم)..."
                         @change="updateNote(item, ($event.target as HTMLInputElement).value)"
                     />
@@ -136,7 +145,7 @@ defineExpose({ load, count, subtotal });
 
             <div
                 v-if="items.length > 0 && !loading"
-                class="fixed inset-x-0 bottom-0 border-t border-stone-200 dark:border-slate-800 bg-white/95 dark:bg-[#0a0f1d]/95 backdrop-blur-md p-4 transition-colors"
+                class="shrink-0 border-t border-stone-200 dark:border-slate-800 bg-white/95 dark:bg-[#0a0f1d]/95 backdrop-blur-md p-4 pb-[max(1rem,env(safe-area-inset-bottom))] transition-colors"
             >
                 <div class="mb-3 flex justify-between text-lg font-bold text-stone-900 dark:text-white">
                     <span>المجموع الإجمالي</span>

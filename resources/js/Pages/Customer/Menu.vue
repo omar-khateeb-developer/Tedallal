@@ -5,7 +5,7 @@ import CartDrawer from '@/Components/Customer/CartDrawer.vue';
 import CheckoutModal from '@/Components/Customer/CheckoutModal.vue';
 import CustomerLayout from '@/Layouts/CustomerLayout.vue';
 import { router } from '@inertiajs/vue3';
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import axios from 'axios';
 
 interface MenuItem {
@@ -196,7 +196,11 @@ async function confirmAdd(payload: { quantity: number; note: string | null }) {
         showAddFeedback(item.name);
         // تجربة مستخدم عصرية: نبقي السلة عائمة دون حجب الشاشة بالنافذة الكبيرة
     } catch (e: any) {
-        errorMessage.value = e.response?.data?.message || 'تعذر إضافة الصنف. قد يكون غير متاح.';
+        if (e.response?.status === 404 || e.response?.data?.message?.includes('Model') || e.response?.data?.message?.includes('query results')) {
+            errorMessage.value = 'عذراً، هذا الصنف غير متوفر حالياً.';
+        } else {
+            errorMessage.value = e.response?.data?.message || 'تعذر إضافة الصنف. قد يكون غير متاح.';
+        }
     } finally {
         adding.value = false;
     }
@@ -215,7 +219,11 @@ async function quickAdd(item: MenuItem) {
         await refreshCartSummary();
         showAddFeedback(item.name);
     } catch (e: any) {
-        errorMessage.value = e.response?.data?.message || 'تعذر إضافة الصنف.';
+        if (e.response?.status === 404 || e.response?.data?.message?.includes('Model') || e.response?.data?.message?.includes('query results')) {
+            errorMessage.value = 'عذراً، هذا الصنف غير متوفر حالياً.';
+        } else {
+            errorMessage.value = e.response?.data?.message || 'تعذر إضافة الصنف.';
+        }
     } finally {
         updatingItemIds.value.delete(item.id);
     }
@@ -238,7 +246,11 @@ async function quickIncrement(item: MenuItem) {
         await refreshCartSummary();
         triggerCartAnimation();
     } catch (e: any) {
-        errorMessage.value = e.response?.data?.message || 'تعذر زيادة الكمية.';
+        if (e.response?.status === 404 || e.response?.data?.message?.includes('Model') || e.response?.data?.message?.includes('query results')) {
+            errorMessage.value = 'عذراً، هذا الصنف غير متوفر حالياً.';
+        } else {
+            errorMessage.value = e.response?.data?.message || 'تعذر زيادة الكمية.';
+        }
     } finally {
         updatingItemIds.value.delete(item.id);
     }
@@ -272,7 +284,9 @@ async function quickDecrement(item: MenuItem) {
 
 function openCheckout() {
     cartOpen.value = false;
-    checkoutOpen.value = true;
+    nextTick(() => {
+        checkoutOpen.value = true;
+    });
 }
 
 async function submitOrder() {
@@ -715,8 +729,8 @@ onMounted(() => {
         <!-- سلة عائمة عصرية وأنيقة تظهر بالأسفل دون حجب الشاشة -->
         <Transition name="cart-bar">
             <div
-                v-if="cartCount > 0"
-                class="fixed inset-x-0 bottom-3 z-30 mx-auto max-w-lg px-4"
+                v-if="cartCount > 0 && !cartOpen && !checkoutOpen"
+                class="fixed inset-x-0 bottom-3 z-30 mx-auto max-w-lg px-4 pb-[env(safe-area-inset-bottom,0px)]"
             >
                 <button
                     type="button"

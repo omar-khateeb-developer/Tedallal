@@ -241,10 +241,7 @@ const deleteOffer = async (id: number) => {
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    قيمة الخصم
-                                    <span class="text-[10px] text-amber-600 dark:text-amber-400 font-semibold mr-1">← على العجلة</span>
-                                </label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">قيمة الخصم</label>
                                 <TextInput v-model="form.discount_value" type="number" step="0.01" class="w-full" placeholder="مثال: 15" required />
                             </div>
                             <div>
@@ -272,7 +269,6 @@ const deleteOffer = async (id: number) => {
                         <table class="w-full text-right text-sm">
                             <thead class="bg-stone-50 dark:bg-slate-800/80 text-stone-600 dark:text-slate-400 border-b border-stone-100 dark:border-slate-800">
                                 <tr>
-                                    <th class="py-3 px-4 font-semibold">🎡 ما يراه الزبون على العجلة</th>
                                     <th class="py-3 px-4 font-semibold">قيمة الخصم</th>
                                     <th class="py-3 px-4 font-semibold">الحد الأدنى للطلب</th>
                                     <th class="py-3 px-4 font-semibold">كود النظام</th>
@@ -283,10 +279,10 @@ const deleteOffer = async (id: number) => {
                             </thead>
                             <tbody class="divide-y divide-stone-100 dark:divide-slate-800">
                                 <tr v-if="offers.length === 0">
-                                    <td colspan="7" class="py-6 text-center text-stone-400 dark:text-slate-500">لا توجد كوبونات مسجلة. أضف كوبوناً أعلاه ليظهر كجائزة في عجلة الحظ.</td>
+                                    <td colspan="6" class="py-6 text-center text-stone-400 dark:text-slate-500">لا توجد كوبونات مسجلة. أضف كوبوناً أعلاه ليظهر كجائزة في عجلة الحظ.</td>
                                 </tr>
                                 <tr v-for="offer in offers" :key="offer.id" class="hover:bg-stone-50/50 dark:hover:bg-slate-800/40 transition-colors">
-                                    <!-- What customer sees on wheel — built from real values, never from code name -->
+                                    <!-- Discount value (as displayed on the wheel) -->
                                     <td class="py-3 px-4">
                                         <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-sm"
                                               :class="offer.is_active ? 'bg-amber-100 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border border-amber-300/50 dark:border-amber-700/40' : 'bg-stone-100 dark:bg-slate-800 text-stone-400 dark:text-slate-500'">
@@ -298,13 +294,6 @@ const deleteOffer = async (id: number) => {
                                                     : `${formatDiscountVal(offer.discount_value)} ${formatCurr($page.props.auth.restaurant?.currency)}` }}
                                             </span>
                                         </span>
-                                    </td>
-
-                                    <!-- Actual discount value -->
-                                    <td class="py-3 px-4 font-bold text-gray-800 dark:text-white">
-                                        {{ formatDiscountVal(offer.discount_value) }}
-                                        {{ offer.discount_type === 'percentage' ? '%' : formatCurr($page.props.auth.restaurant?.currency) }}
-                                        <span class="text-[10px] font-normal text-stone-400 mr-1">({{ offer.discount_type === 'percentage' ? 'نسبة' : 'مبلغ ثابت' }})</span>
                                     </td>
 
                                     <!-- Minimum Order Safety Threshold -->

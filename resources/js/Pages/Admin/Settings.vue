@@ -12,6 +12,7 @@ const restaurant = ref<{
     phone: string | null;
     address: string | null;
     currency: string;
+    auto_print_on_ready?: boolean;
 } | null>(null);
 
 const form = ref({
@@ -20,6 +21,7 @@ const form = ref({
     address: '',
     currency: 'SYP',
     windows_count: 1,
+    auto_print_on_ready: false,
     navbar_image: null as File | null,
     logo: null as File | null,
 });
@@ -36,6 +38,7 @@ async function load() {
         address: data.data.address ?? '',
         currency: data.data.currency,
         windows_count: data.data.windows_count ?? 1,
+        auto_print_on_ready: !!data.data.auto_print_on_ready,
         navbar_image: null,
         logo: null,
     };
@@ -51,6 +54,7 @@ async function save() {
         formData.append('phone', form.value.phone);
         formData.append('address', form.value.address);
         formData.append('currency', form.value.currency);
+        formData.append('auto_print_on_ready', form.value.auto_print_on_ready ? '1' : '0');
         if (restaurant.value?.type === 'prepaid') {
             formData.append('windows_count', form.value.windows_count.toString());
         }
@@ -220,6 +224,31 @@ onMounted(load);
                 <div>
                     <label class="mb-1 block text-sm font-medium text-stone-600 dark:text-stone-300">صورة الـ NavBar المخصصة (اختياري)</label>
                     <input type="file" @change="e => handleFileUpload(e, 'navbar_image')" accept="image/*" class="w-full rounded-lg border border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-700 dark:text-stone-300 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 dark:file:bg-amber-950/60 file:text-amber-700 dark:file:text-amber-400 hover:file:bg-amber-100 dark:hover:file:bg-amber-900/60" />
+                </div>
+
+                <!-- إعدادات الطباعة والتشغيل -->
+                <div class="rounded-xl border border-stone-200 dark:border-slate-800 bg-stone-50/70 dark:bg-slate-900/60 p-4 space-y-3">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xl">🖨️</span>
+                        <div>
+                            <h4 class="font-bold text-sm text-stone-800 dark:text-stone-200">إعدادات الطباعة والتشغيل</h4>
+                            <p class="text-xs text-stone-500 dark:text-slate-400">تخصيص سلوك الطابعة الحرارية وتجهيز الفواتير في الصالة والمطبخ</p>
+                        </div>
+                    </div>
+
+                    <label class="flex items-start gap-3 cursor-pointer p-3 rounded-lg bg-white dark:bg-slate-800 border border-stone-200 dark:border-slate-700 hover:border-amber-400 transition-colors">
+                        <input
+                            type="checkbox"
+                            v-model="form.auto_print_on_ready"
+                            class="mt-1 h-4 w-4 rounded border-stone-300 dark:border-slate-600 text-amber-600 focus:ring-amber-500"
+                        />
+                        <div class="select-none">
+                            <span class="block text-sm font-bold text-stone-800 dark:text-stone-100">الطباعة التلقائية عند تم التحضير</span>
+                            <span class="block text-xs text-stone-500 dark:text-slate-400 mt-0.5">
+                                إرسال الفاتورة الحرارية للطابعة تلقائياً فور تحويل الطلب إلى «تم التحضير» (جاهز)، لتوضع الفاتورة فوراً مع الصينية أو كيس الطلب قبل التسليم.
+                            </span>
+                        </div>
+                    </label>
                 </div>
 
                 <p v-if="message" class="text-sm font-medium" :class="message.includes('نجاح') ? 'text-green-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'">

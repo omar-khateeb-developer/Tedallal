@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch, onUnmounted } from 'vue';
 import axios from 'axios';
 
 const props = defineProps<{
@@ -77,6 +77,18 @@ function removePromo() {
     promoDebug.value = null;
 }
 
+watch(() => props.open, (isOpen) => {
+    if (isOpen) {
+        document.body.style.overflow = 'hidden';
+    } else {
+        document.body.style.overflow = '';
+    }
+});
+
+onUnmounted(() => {
+    document.body.style.overflow = '';
+});
+
 const emit = defineEmits<{
     close: [];
     confirm: [];
@@ -87,10 +99,10 @@ const emit = defineEmits<{
     <Teleport to="body">
         <div
             v-if="open"
-            class="fixed inset-0 z-[60] flex items-end justify-center bg-black/60 backdrop-blur-xs sm:items-center"
+            class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs p-0 sm:p-4 overflow-y-auto"
             @click.self="emit('close')"
         >
-            <div class="w-full max-w-lg rounded-t-3xl bg-white dark:bg-[#0a0f1d] p-6 shadow-2xl sm:rounded-3xl border-t sm:border border-stone-200/80 dark:border-slate-800 transition-colors max-h-[90vh] overflow-y-auto scrollbar-hide" dir="rtl">
+            <div class="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#0a0f1d] p-5 sm:p-6 shadow-2xl border-t sm:border border-stone-200/80 dark:border-slate-800 transition-colors max-h-[90dvh] overflow-y-auto scrollbar-hide pb-[max(1.25rem,env(safe-area-inset-bottom))]" dir="rtl">
                 <div class="flex items-center justify-between pb-3 border-b border-stone-100 dark:border-slate-800">
                     <div>
                         <h3 class="text-xl font-bold text-stone-900 dark:text-white">تأكيد وإرسال الطلب</h3>
@@ -161,7 +173,7 @@ const emit = defineEmits<{
                             type="text"
                             placeholder="أدخل كود الكوبون..."
                             :disabled="!!appliedCode"
-                            class="flex-1 rounded-xl border-stone-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white placeholder:text-stone-400 text-xs uppercase font-bold focus:border-amber-500 focus:ring-amber-500"
+                            class="flex-1 rounded-xl border-stone-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white placeholder:text-stone-400 text-[16px] sm:text-xs uppercase font-bold focus:border-amber-500 focus:ring-amber-500"
                             dir="ltr"
                         />
                         <button
@@ -230,7 +242,7 @@ const emit = defineEmits<{
                     <textarea
                         v-model="customerNote"
                         rows="2"
-                        class="w-full rounded-xl border-stone-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-slate-500 text-xs focus:border-amber-500 focus:ring-amber-500 transition-colors"
+                        class="w-full rounded-xl border-stone-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-slate-500 text-[16px] sm:text-xs focus:border-amber-500 focus:ring-amber-500 transition-colors"
                         placeholder="أي تفضيلات أو ملاحظات خاصة بالطاولة أو التقديم..."
                     />
                 </div>

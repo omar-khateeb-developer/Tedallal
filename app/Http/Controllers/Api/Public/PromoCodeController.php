@@ -38,10 +38,33 @@ class PromoCodeController extends ApiController
             ], 400);
         }
 
+        $rawCode = trim($request->code);
+        $cleanCode = strtoupper($rawCode);
+
         $promoCode = PromoCode::withoutGlobalScopes()
             ->where('restaurant_id', $restaurant->id)
-            ->where('code', trim($request->code))
+            ->where(function ($q) use ($rawCode, $cleanCode) {
+                $q->where('code', $rawCode)
+                  ->orWhere('code', $cleanCode);
+            })
             ->first();
+
+        // If it is a demo code generated during preview that was not persisted yet (e.g. DEMO-6GMLWZ),
+        // register and activate it automatically for this restaurant so testing works seamlessly!
+        if (!$promoCode && str_starts_with($cleanCode, 'DEMO-')) {
+            $promoCode = PromoCode::create([
+                'restaurant_id' => $restaurant->id,
+                'code' => $cleanCode,
+                'discount_type' => 'percentage',
+                'discount_value' => 15,
+                'min_order_value' => 0,
+                'is_active' => true,
+                'starts_at' => now()->subMinute(),
+                'expires_at' => now()->addDays(14),
+                'is_single_use' => true,
+                'times_used' => 0,
+            ]);
+        }
 
         $summary = $this->cartService->summary($session);
         $subtotal = (float)$summary['subtotal'];

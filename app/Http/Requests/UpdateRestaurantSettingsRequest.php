@@ -22,6 +22,7 @@ class UpdateRestaurantSettingsRequest extends FormRequest
             'windows_count' => ['nullable', 'integer', 'min:1', 'max:50'],
             'navbar_image' => ['nullable', 'image', 'max:2048'],
             'logo' => ['nullable', 'image', 'max:2048'],
+            'auto_print_on_ready' => ['nullable', 'boolean'],
         ];
     }
 }

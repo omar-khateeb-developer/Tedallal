@@ -534,6 +534,7 @@ useRestaurantOrders(restaurantId.value, {
                                         </div>
                                         <div class="flex items-center gap-1.5">
                                             <a
+                                                v-if="['ready', 'served'].includes(order.status)"
                                                 :href="`/admin/orders/${order.id}/print`"
                                                 target="_blank"
                                                 class="p-1 text-stone-400 dark:text-slate-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
