@@ -68,10 +68,15 @@ class Restaurant extends Model
         return \Illuminate\Database\Eloquent\Casts\Attribute::make(
             get: function (?string $value) {
                 if (! $value) return null;
-                if (str_starts_with($value, 'http')) {
-                    $value = parse_url($value, PHP_URL_PATH);
+                if (str_starts_with($value, 'http://') || str_starts_with($value, 'https://')) {
+                    return $value;
                 }
-                return '/' . ltrim($value, '/');
+                $clean = ltrim(parse_url($value, PHP_URL_PATH) ?? '', '/');
+                $publicFile = public_path($clean);
+                if (file_exists($publicFile) && is_file($publicFile)) {
+                    return '/' . $clean;
+                }
+                return null;
             },
         );
     }

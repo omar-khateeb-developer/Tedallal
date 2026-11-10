@@ -2,8 +2,9 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { translations, type Locale } from '@/locales/landing';
-import { useTheme } from '@/composables/useTheme'
+import { useTheme } from '@/composables/useTheme';
 import TedallalHeroLogo from '@/Components/TedallalHeroLogo.vue';
+import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 
 interface Props {
     canLogin?: boolean;
@@ -18,12 +19,12 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 // =========================================================================
-// Theme System (Light / Dark Mode)
+// 1. Theme System (Dark Obsidian & Royal Gold / Pristine Alabaster Light)
 // =========================================================================
 const { isDark, toggleTheme, setTheme, initTheme } = useTheme();
 
 // =========================================================================
-// Bilingual System (Arabic / English)
+// 2. Bilingual System (Arabic Default & English)
 // =========================================================================
 const currentLocale = ref<Locale>('ar');
 const t = computed(() => translations[currentLocale.value]);
@@ -36,13 +37,11 @@ function setLocale(loc: Locale) {
     currentLocale.value = loc;
     try {
         localStorage.setItem('tedallal_locale', loc);
-    } catch {
-        // ignore
-    }
+    } catch {}
 }
 
 // =========================================================================
-// Arab Multi-Currency & Geolocation Detection System
+// 3. Arab Multi-Currency & Geolocation System
 // =========================================================================
 export interface CountryCurrencyConfig {
     code: string;
@@ -50,7 +49,7 @@ export interface CountryCurrencyConfig {
     currencyName: { ar: string; en: string };
     symbol: { ar: string; en: string };
     flag: string;
-    rate: number; // 1 SAR = X
+    rate: number;
     decimals: number;
 }
 
@@ -61,7 +60,7 @@ const supportedArabCurrencies: Record<string, CountryCurrencyConfig> = {
         currencyName: { ar: 'ليرة سورية', en: 'Syrian Pound' },
         symbol: { ar: 'ل.س', en: 'SYP' },
         flag: '🇸🇾',
-        rate: 1.0, // Primary Base Currency!
+        rate: 1.0,
         decimals: 0,
     },
     SA: {
@@ -149,7 +148,6 @@ const supportedArabCurrencies: Record<string, CountryCurrencyConfig> = {
 
 const currentCountryCode = ref('SY');
 const isCurrencyMenuOpen = ref(false);
-const isMoreMenuOpen = ref(false);
 
 const currentCurrency = computed(() => {
     return supportedArabCurrencies[currentCountryCode.value] || supportedArabCurrencies.SY;
@@ -159,33 +157,239 @@ const currentCurrencySymbol = computed(() => {
     return currentCurrency.value.symbol[currentLocale.value];
 });
 
-function resolveArabCountryCode(code: string | null | undefined): string {
-    if (!code) return 'SY';
-    const c = code.toUpperCase();
-    if (supportedArabCurrencies[c]) return c;
-    return 'SY';
-}
-
-function detectTimezoneCountry(): string | null {
-    try {
-        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
-        if (tz.includes('Damascus')) return 'SY';
-        if (tz.includes('Riyadh')) return 'SA';
-        if (tz.includes('Dubai')) return 'AE';
-        if (tz.includes('Kuwait')) return 'KW';
-        if (tz.includes('Qatar')) return 'QA';
-        if (tz.includes('Bahrain')) return 'BH';
-        if (tz.includes('Muscat')) return 'OM';
-        if (tz.includes('Amman')) return 'JO';
-        if (tz.includes('Cairo')) return 'EG';
-        if (tz.includes('Baghdad')) return 'IQ';
-    } catch {
-        return null;
+function setCurrency(code: string) {
+    if (supportedArabCurrencies[code]) {
+        currentCountryCode.value = code;
+        try {
+            localStorage.setItem('tedallal_currency', code);
+        } catch {}
+        demoForm.value.country = supportedArabCurrencies[code].countryName[currentLocale.value];
+        isCurrencyMenuOpen.value = false;
     }
-    return null;
 }
 
-// Demo Modal State (declared early for setter sync)
+function formatPrice(amountInSyp: number, forceDecimals?: number): string {
+    const rate = currentCurrency.value.rate;
+    const dec = forceDecimals !== undefined ? forceDecimals : currentCurrency.value.decimals;
+    const val = amountInSyp * rate;
+    if (dec === 0) {
+        return Math.round(val).toLocaleString('en-US');
+    }
+    return val.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+}
+
+// =========================================================================
+// 4. Restoria Grand Culinary Showcase (Interactive Haute Cuisine)
+// =========================================================================
+const activeCulinaryCategory = ref<'grills' | 'appetizers' | 'desserts' | 'drinks'>('grills');
+
+interface RestoriaDish {
+    id: number;
+    name: string;
+    category: 'grills' | 'appetizers' | 'desserts' | 'drinks';
+    price: number;
+    description: string;
+    image: string;
+    badge: { label: string; icon: string; style: string };
+    prepTime: string;
+}
+
+const restoriaDishes = computed<RestoriaDish[]>(() => [
+    {
+        id: 1,
+        name: currentLocale.value === 'ar' ? 'كباب حلبي فاخر بالكرز الطبيعي' : 'Aleppo Cherry Glazed Kebab',
+        category: 'grills',
+        price: 85000,
+        description: currentLocale.value === 'ar'
+            ? 'لحم ضأن بلدي مفروم على السيخ، مُتبل بالكرز الطبيعي وصنوبر محمص وخلطة البهارات الحلبية الأصيلة.'
+            : 'Prime lamb skewers glazed with mountain cherries, roasted pine nuts & heritage spices.',
+        image: '/storage/menu/grills.jpg',
+        badge: { label: currentLocale.value === 'ar' ? 'توصية الشيف' : 'Chef Signature', icon: '⭐', style: 'bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 font-black' },
+        prepTime: '14 دقيقة',
+    },
+    {
+        id: 2,
+        name: currentLocale.value === 'ar' ? 'أوصال لحم عجل بلدي مشوي' : 'Charcoal Grilled Veal Skewers',
+        category: 'grills',
+        price: 75000,
+        description: currentLocale.value === 'ar'
+            ? 'قطع لحم عجل طرية منقوعة بزيت الزيتون البكر وإكليل الجبل، مشوية على الفحم الطبيعي الهادئ.'
+            : 'Tender veal cubes infused with virgin olive oil & fresh rosemary, charcoal grilled.',
+        image: '/storage/menu/aleppo-grills.jpg',
+        badge: { label: currentLocale.value === 'ar' ? 'الأكثر طلباً' : 'Top Seller', icon: '👑', style: 'bg-gradient-to-r from-amber-600 to-orange-500 text-white font-bold' },
+        prepTime: '12 دقيقة',
+    },
+    {
+        id: 3,
+        name: currentLocale.value === 'ar' ? 'كبة مشوية حلبية بالجوز والرمان' : 'Aleppo Grilled Kibbeh with Walnuts',
+        category: 'grills',
+        price: 55000,
+        description: currentLocale.value === 'ar'
+            ? 'أقراص الكبة الحلبية المحشوة باللحم المفروم والدهن البلدي ودبس الرمان وحبات الجوز المحمص.'
+            : 'Bulgur shell packed with minced lamb, pomegranate molasses & toasted walnuts.',
+        image: '/storage/menu/aleppo-kibbeh.jpg',
+        badge: { label: currentLocale.value === 'ar' ? 'تراثي فاخر' : 'Heritage Special', icon: '🏛️', style: 'bg-stone-800 text-amber-400 font-bold border border-amber-500/30' },
+        prepTime: '15 دقيقة',
+    },
+    {
+        id: 4,
+        name: currentLocale.value === 'ar' ? 'مازة ومقبلات مشكلة شهباء' : 'Grand Aleppo Mezza Platter',
+        category: 'appetizers',
+        price: 42000,
+        description: currentLocale.value === 'ar'
+            ? 'تشكيلة راقية من متبل الباذنجان المدخن، حمص بيروتي، يلنجي بدبس الرمان، ومحمرة بالجوز.'
+            : 'Smoked aubergine moutabal, Beirut hummus, stuffed vine leaves & spicy walnut dip.',
+        image: '/storage/menu/aleppo-appetizers.jpg',
+        badge: { label: currentLocale.value === 'ar' ? 'نباتي / صحي' : 'Vegan Choice', icon: '🥗', style: 'bg-emerald-600 text-white font-bold' },
+        prepTime: '5 دقائق',
+    },
+    {
+        id: 5,
+        name: currentLocale.value === 'ar' ? 'كنافة نابلسية ذهبية بالجبن الفاخر' : 'Hot Golden Nabulsi Kunafa',
+        category: 'desserts',
+        price: 38000,
+        description: currentLocale.value === 'ar'
+            ? 'كنافة ذهبية مقرمشة محشوة بالجبن العكاوي الذائب، مُزينة بالفستق الحلبي والقطر الخفيف المعطر.'
+            : 'Crisp golden pastry layered with melted Akkawi cheese, pistachios & fragrant syrup.',
+        image: '/storage/menu/aleppo-desserts.jpg',
+        badge: { label: currentLocale.value === 'ar' ? 'ساخن ومقرمش' : 'Served Warm', icon: '🔥', style: 'bg-amber-500 text-stone-950 font-black' },
+        prepTime: '8 دقائق',
+    },
+    {
+        id: 6,
+        name: currentLocale.value === 'ar' ? 'عصير رمان طبيعي مثلج 100%' : '100% Fresh Ruby Pomegranate',
+        category: 'drinks',
+        price: 22000,
+        description: currentLocale.value === 'ar'
+            ? 'عصير رمان طازج معصور على البارد بدون سكر مضاف، يُقدم مع حبات الرمان الطبيعية والنعناع.'
+            : 'Cold-pressed ruby pomegranates, pure & unsweetened, served with mint & seeds.',
+        image: '/storage/menu/drinks.jpg',
+        badge: { label: currentLocale.value === 'ar' ? 'طبيعي طازج' : '100% Pure', icon: '🍹', style: 'bg-rose-600 text-white font-bold' },
+        prepTime: '3 دقائق',
+    },
+]);
+
+const visibleDishes = computed(() => {
+    return restoriaDishes.value.filter(d => d.category === activeCulinaryCategory.value);
+});
+
+// Interactive Showcase Cart Simulator
+const simulatedCart = ref<Record<number, number>>({ 1: 1, 4: 1 });
+const lastAddedName = ref<string | null>(null);
+
+function addDishToSimulatedCart(dish: RestoriaDish) {
+    simulatedCart.value[dish.id] = (simulatedCart.value[dish.id] || 0) + 1;
+    lastAddedName.value = dish.name;
+    setTimeout(() => {
+        lastAddedName.value = null;
+    }, 2500);
+}
+
+function removeDishFromSimulatedCart(dishId: number) {
+    if (simulatedCart.value[dishId] && simulatedCart.value[dishId] > 0) {
+        simulatedCart.value[dishId]--;
+        if (simulatedCart.value[dishId] === 0) {
+            delete simulatedCart.value[dishId];
+        }
+    }
+}
+
+const simulatedCartCount = computed(() => {
+    return Object.values(simulatedCart.value).reduce((a, b) => a + b, 0);
+});
+
+const simulatedCartTotalSyp = computed(() => {
+    let sum = 0;
+    for (const [idStr, qty] of Object.entries(simulatedCart.value)) {
+        const dish = restoriaDishes.value.find(d => d.id === Number(idStr));
+        if (dish) sum += dish.price * qty;
+    }
+    return sum;
+});
+
+// =========================================================================
+// 5. Floor-to-Kitchen Live Bridge State (Tabs: QR Scan vs Chef KDS)
+// =========================================================================
+const activeBridgeTab = ref<'dining' | 'kitchen'>('dining');
+
+// =========================================================================
+// 6. Interactive Bento & Operating Mode
+// =========================================================================
+const selectedOperatingMode = ref<'postpaid' | 'prepaid'>('postpaid');
+const luckyWheelSpinning = ref(false);
+const luckyWheelWonVoucher = ref<string | null>('VIP-WELCOME-15%');
+
+function spinLuckyWheel() {
+    if (luckyWheelSpinning.value) return;
+    luckyWheelSpinning.value = true;
+    luckyWheelWonVoucher.value = null;
+    setTimeout(() => {
+        luckyWheelSpinning.value = false;
+        luckyWheelWonVoucher.value = 'ROYAL-DINE-20%';
+    }, 1400);
+}
+
+// =========================================================================
+// 7. Single-Slider Commission Savings Calculator (ROI)
+// =========================================================================
+const monthlySalesSyp = ref(60000000); // 60 Million SYP base
+
+const deliveryCommissionLost = computed(() => {
+    return monthlySalesSyp.value * 0.20;
+});
+
+const tedallalMonthlyFee = computed(() => {
+    return 350000;
+});
+
+const netProfitsPreserved = computed(() => {
+    return deliveryCommissionLost.value - tedallalMonthlyFee.value;
+});
+
+// =========================================================================
+// 8. Progressive Disclosure Accordion (FAQs)
+// =========================================================================
+const openFaqIndex = ref<number | null>(0);
+function toggleFaq(index: number) {
+    openFaqIndex.value = openFaqIndex.value === index ? null : index;
+}
+
+const faqItems = computed(() => [
+    {
+        q: currentLocale.value === 'ar' ? 'هل يحتاج رواد المطعم أو طاقم المطبخ إلى تحميل أي تطبيق؟' : 'Do diners or kitchen staff need to install any apps?',
+        a: currentLocale.value === 'ar'
+            ? 'إطلاقاً! منصة تدلل تعمل بتقنية الويب السحابية الفائقة (PWA). يمسح الزبون رمز الـ QR لتفتح القائمة الملكية في المتصفح فوراً، ويفتح الشيف شاشة المطبخ KDS على أي تابلت أو شاشة بضغطة زر واحدة.'
+            : 'Never! Tedallal is an ultra-fast Progressive Web App (PWA). Diners scan the QR to open the luxury menu in their mobile browser instantly, and chefs access the KDS queue from any tablet.',
+    },
+    {
+        q: currentLocale.value === 'ar' ? 'هل تقتطع منصة تدلل أي نسبة أو عمولة من مبيعات المطعم؟' : 'Does Tedallal take any commission on restaurant sales?',
+        a: currentLocale.value === 'ar'
+            ? 'صفر عمولة على الإطلاق! أرباحك وعرق جبينك ملك لك وحدك 100%. اشتراك تدلل شهري أو سنوي ثابت بدون أي نسبة استقطاع من الفواتير مهما بلغت مبيعاتك.'
+            : '0% commission! Your hard-earned revenue is 100% yours. Tedallal charges a predictable flat subscription with zero cut from your order receipts.',
+    },
+    {
+        q: currentLocale.value === 'ar' ? 'ماذا يحدث إذا انقطع اتصال الإنترنت في الصالة فجأة؟' : 'What happens if the internet disconnects briefly?',
+        a: currentLocale.value === 'ar'
+            ? 'تتضمن المنصة خوارزمية ذكية لاحتواء انقطاع الشبكة (Offline Recovery)، حيث تحفظ حالة الجلسة وتستأنف الربط اللحظي مع الـ WebSockets فور استقرار الإنترنت دون فقدان أي طلب.'
+            : 'The platform incorporates resilient offline recovery, preserving active sessions and seamlessly re-establishing WebSocket sync upon reconnection with zero order loss.',
+    },
+    {
+        q: currentLocale.value === 'ar' ? 'هل تدعم المنصة طباعة الإيصالات الحرارية 80mm وتقارير الإغلاق Z؟' : 'Does it support 80mm thermal receipts and Z-Reports?',
+        a: currentLocale.value === 'ar'
+            ? 'نعم بكل تأكيد! تم تصميم قوالب حرارية مخصصة قياس 80mm لفواتير الزبائن وتقارير نهاية الوردية (Z-Report) مع تفصيل الإيرادات النقدية والشبكة، مع إمكانية مشاركة التقرير عبر واتساب بلمسة واحدة.'
+            : 'Yes! Tedallal provides bespoke 80mm thermal templates for dining receipts and shift closing Z-Reports with cash/card breakdowns and 1-click WhatsApp dispatch.',
+    },
+    {
+        q: currentLocale.value === 'ar' ? 'كم يستغرق إعداد وتفعيل المنظومة داخل المطعم؟' : 'How long does onboarding and deployment take?',
+        a: currentLocale.value === 'ar'
+            ? 'أقل من 30 دقيقة! واجهتنا مصممة ومختبرة لتكون بديهية للغاية، ولا تحتاج إلى أي تدريب تقني معقد للمضيفين أو طاقم المطبخ.'
+            : 'Under 30 minutes! Our interface is crafted to be as intuitive as everyday messaging apps, requiring zero technical training for your service team.',
+    },
+]);
+
+// =========================================================================
+// 9. Consultation Demo Request Modal
+// =========================================================================
 const isDemoModalOpen = ref(false);
 const demoForm = ref({
     restaurantName: '',
@@ -196,359 +400,63 @@ const demoForm = ref({
 });
 const isSubmitted = ref(false);
 
-function setCurrency(code: string) {
-    if (supportedArabCurrencies[code]) {
-        currentCountryCode.value = code;
-        try {
-            localStorage.setItem('tedallal_currency', code);
-        } catch {
-            // ignore
-        }
-        demoForm.value.country = supportedArabCurrencies[code].countryName[currentLocale.value];
-        isCurrencyMenuOpen.value = false;
-    }
-}
-
-function formatPrice(amountInSar: number, forceDecimals?: number): string {
-    const rate = currentCurrency.value.rate;
-    const dec = forceDecimals !== undefined ? forceDecimals : currentCurrency.value.decimals;
-    const val = amountInSar * rate;
-    if (dec === 0) {
-        return Math.round(val).toLocaleString('en-US');
-    }
-    return val.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec });
-}
-
-// Navigation state
-const isMobileMenuOpen = ref(false);
-const activeNav = ref('home');
-
-// Workflow Operating Mode Switcher (Postpaid vs Prepaid)
-const selectedOperatingMode = ref<'postpaid' | 'prepaid'>('postpaid');
-const activeWorkflow = computed(() => {
-    return selectedOperatingMode.value === 'prepaid'
-        ? t.value.workflow.prepaid
-        : t.value.workflow.postpaid;
-});
-
-// Interactive Demo State
-const activeDemoTab = ref<'customer' | 'kds' | 'qr' | 'analytics'>('customer');
-
-// Customer Simulator State
-const activeCategory = ref<'grills' | 'appetizers' | 'desserts' | 'drinks'>('grills');
-interface MenuItemSim {
-    id: number;
-    name: string;
-    category: 'grills' | 'appetizers' | 'desserts' | 'drinks';
-    price: number;
-    description: string;
-    image: string;
-    badge?: string;
-}
-
-const menuItems = computed<MenuItemSim[]>(() => [
-    {
-        id: 1,
-        name: currentLocale.value === 'ar' ? 'كباب حلبي فاخر بالكرز' : 'Aleppo Cherry Kebab',
-        category: 'grills',
-        price: 85000,
-        description: currentLocale.value === 'ar'
-            ? 'لحم بلدي طازج مفروم مع حبّات الكرز والبهارات الحلبية التراثية وصنوبر محمص'
-            : 'Fresh minced lamb glazed with tart cherries, roasted pine nuts, and heritage Aleppo spices',
-        image: '/storage/menu/aleppo-kebab.jpg',
-        badge: currentLocale.value === 'ar' ? 'الأكثر طلباً 🔥' : 'Top Seller 🔥',
-    },
-    {
-        id: 2,
-        name: currentLocale.value === 'ar' ? 'أوصال لحم عجل مشوي' : 'Charcoal Grilled Veal Skewers',
-        category: 'grills',
-        price: 75000,
-        description: currentLocale.value === 'ar'
-            ? 'قطع لحم طرية متبلة بزيت الزيتون وإكليل الجبل ومشوية على الفحم الطبيعي'
-            : 'Tender veal cubes marinated in virgin olive oil & rosemary, grilled over natural charcoal',
-        image: '/storage/menu/aleppo-grills.jpg',
-    },
-    {
-        id: 3,
-        name: currentLocale.value === 'ar' ? 'كبة مشوية حلبية بالجوز' : 'Grilled Aleppo Kibbeh with Walnuts',
-        category: 'grills',
-        price: 55000,
-        description: currentLocale.value === 'ar'
-            ? 'أقراص الكبة المحشوة باللحم المفروم والدهن والرمان والجوز البلدي'
-            : 'Bulgur shell stuffed with spiced minced meat, pomegranate molasses & toasted walnuts',
-        image: '/storage/menu/aleppo-kibbeh.jpg',
-        badge: currentLocale.value === 'ar' ? 'تراثي مميز' : 'Chef Special',
-    },
-    {
-        id: 4,
-        name: currentLocale.value === 'ar' ? 'مقبلات مشكلة شهباء' : 'Assorted Grand Mezza Platter',
-        category: 'appetizers',
-        price: 42000,
-        description: currentLocale.value === 'ar'
-            ? 'متبل باذنجان، حمص بيروتي، يلنجي، ومحمرة بالجوز'
-            : 'Smoked moutabal, Beirut hummus, stuffed vine leaves, and spicy walnut muhammara',
-        image: '/storage/menu/aleppo-appetizers.jpg',
-    },
-    {
-        id: 5,
-        name: currentLocale.value === 'ar' ? 'كنافة نابلسية بالجبن الفاخر' : 'Hot Nabulsi Cheese Kunafa',
-        category: 'desserts',
-        price: 38000,
-        description: currentLocale.value === 'ar'
-            ? 'كنافة ساخنة بجبنة عكاوية أصيلة وفستق حلبي مع القطر الخفيف'
-            : 'Crisp golden spun pastry layered with Akkawi melted cheese, pistachio & fragrant syrup',
-        image: '/storage/menu/aleppo-desserts.jpg',
-        badge: currentLocale.value === 'ar' ? 'ساخن ولذيذ' : 'Served Warm',
-    },
-    {
-        id: 6,
-        name: currentLocale.value === 'ar' ? 'عصير رمان طبيعي مثلج' : 'Fresh Iced Pomegranate Juice',
-        category: 'drinks',
-        price: 22000,
-        description: currentLocale.value === 'ar'
-            ? 'عصير رمان طازج 100% مع حبات الرمان الطبيعية'
-            : '100% freshly pressed ruby pomegranate with hand-picked seeds',
-        image: '/storage/menu/drinks.jpg',
-    },
+// =========================================================================
+// 8. INTERCONNECTED LUXURY SIMULATOR STATE
+// =========================================================================
+const interactiveActiveDish = ref<string | null>(null);
+const interactiveRevenue = ref(12450);
+const interactiveRevenueDiff = ref<number | null>(null);
+const interactiveFlashActive = ref(false);
+const interactiveTickets = ref([
+    { id: 102, table: 'طاولة VIP #1', dish: 'سالمون مشوي مع زبدة الشبت', time: 'منذ 3 دقائق', status: 'prep', statusText: 'قيد التحضير ⏳' },
+    { id: 101, table: 'طاولة #3', dish: 'سوفليه الشوكولاتة الساخنة', time: 'منذ 8 دقائق', status: 'ready', statusText: 'مكتمل وجاهز للتقديم ✓' }
 ]);
+let ticketIdCounter = 103;
 
-// Cart state in simulator
-const cartQuantities = ref<Record<number, number>>({
-    1: 2,
-    3: 1,
-});
+function triggerLiveSimulationOrder(dishName: string, price: number) {
+    interactiveActiveDish.value = dishName;
+    interactiveRevenue.value += price;
+    interactiveRevenueDiff.value = price;
+    interactiveFlashActive.value = true;
 
-const filteredMenuItems = computed(() => {
-    return menuItems.value.filter(item => item.category === activeCategory.value);
-});
+    // Play subtle haute cuisine chime
+    try {
+        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15); // A5
+        gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.35);
+    } catch (e) {}
 
-const totalCartCount = computed(() => {
-    return Object.values(cartQuantities.value).reduce((sum, q) => sum + q, 0);
-});
-
-const totalCartPrice = computed(() => {
-    let total = 0;
-    for (const [idStr, qty] of Object.entries(cartQuantities.value)) {
-        const item = menuItems.value.find(i => i.id === Number(idStr));
-        if (item) total += item.price * qty;
-    }
-    return total;
-});
-
-function addItem(id: number) {
-    cartQuantities.value[id] = (cartQuantities.value[id] || 0) + 1;
-}
-
-function removeItem(id: number) {
-    if (cartQuantities.value[id] && cartQuantities.value[id] > 0) {
-        cartQuantities.value[id]--;
-        if (cartQuantities.value[id] === 0) {
-            delete cartQuantities.value[id];
-        }
-    }
-}
-
-// KDS Simulator State
-interface KdsOrderSim {
-    id: number;
-    table: string;
-    time: string;
-    items: Array<{ name: string; qty: number; note?: string }>;
-    status: 'new' | 'cooking' | 'ready' | 'served';
-    total: number;
-}
-
-const kdsOrders = ref<KdsOrderSim[]>([
-    {
-        id: 101,
-        table: 'طاولة 04',
-        time: 'منذ 3 دقائق',
-        items: [
-            { name: 'كباب حلبي بالكرز', qty: 2, note: 'بدون بصل مع صوص إضافي' },
-            { name: 'مقبلات مشكلة', qty: 1 },
-            { name: 'عصير رمان مثلج', qty: 2 },
-        ],
+    // Add new ticket to KDS
+    interactiveTickets.value.unshift({
+        id: ticketIdCounter++,
+        table: 'طاولة VIP #4',
+        dish: dishName,
+        time: 'ورد للتو (مباشر)',
         status: 'new',
-        total: 256000,
-    },
-    {
-        id: 102,
-        table: 'طاولة 12',
-        time: 'منذ 8 دقائق',
-        items: [
-            { name: 'أوصال لحم عجل مشوي', qty: 1 },
-            { name: 'كنافة نابلسية بالجبن', qty: 1, note: 'قطر خفيف جداً' },
-        ],
-        status: 'cooking',
-        total: 113000,
-    },
-    {
-        id: 103,
-        table: 'طاولة 08',
-        time: 'منذ 14 دقيقة',
-        items: [
-            { name: 'كبة مشوية بالجوز', qty: 2 },
-            { name: 'عصير رمان طبيعي', qty: 2 },
-        ],
-        status: 'ready',
-        total: 154000,
-    },
-]);
+        statusText: 'طلب جديد 🔥'
+    });
 
-function advanceKdsOrder(id: number) {
-    const order = kdsOrders.value.find(o => o.id === id);
-    if (!order) return;
-    if (order.status === 'new') order.status = 'cooking';
-    else if (order.status === 'cooking') order.status = 'ready';
-    else if (order.status === 'ready') order.status = 'served';
-    else if (order.status === 'served') order.status = 'new';
-}
-
-// Live Simulated Order Notifications
-const liveToasts = computed(() => {
-    if (currentLocale.value === 'en') {
-        return [
-            { table: 'Table 05', text: `Confirmed order (2x Aleppo Kebab, Mezza) for ${formatPrice(212000)} ${currentCurrencySymbol.value}`, time: 'Just now' },
-            { table: 'Kitchen & Chef', text: 'Table 12 order prepared in record time: 7 minutes! ⚡', time: '1 min ago' },
-            { table: 'Table 08', text: 'Applied promo TEDALLAL15 for instant 15% discount', time: '2 mins ago' },
-            { table: 'Table 03', text: 'Added 3 items to cart without waiting for a server', time: '4 mins ago' },
-        ];
+    if (interactiveTickets.value.length > 5) {
+        interactiveTickets.value.pop();
     }
-    return [
-        { table: 'طاولة 05', text: `أكدت طلب (2x كباب حلبي، مقبلات مشكلة) بقيمة ${formatPrice(212000)} ${currentCurrencySymbol.value}`, time: 'الآن' },
-        { table: 'المطبخ والشيف', text: 'تم تجهيز طلب طاولة 12 في زمن قياسي: 7 دقائق فقط! ⚡', time: 'قبل دقيقة' },
-        { table: 'طاولة 08', text: 'فعلت كود خصم TEDALLAL15 وحصلت على خصم فوري 15%', time: 'قبل دقيقتين' },
-        { table: 'طاولة 03', text: 'أضافت 3 أصناف جديدة إلى سلة الطاولة بدون استدعاء النادل', time: 'قبل 4 دقائق' },
-    ];
-});
 
-const currentToastIndex = ref(0);
-const showToast = ref(true);
-const isToastPermanentlyDismissed = ref(false);
-let toastInterval: ReturnType<typeof setInterval> | null = null;
-
-function dismissToast() {
-    isToastPermanentlyDismissed.value = true;
-    showToast.value = false;
-    if (toastInterval) {
-        clearInterval(toastInterval);
-        toastInterval = null;
-    }
-}
-
-// =========================================================================
-// INTERACTIVE HERO TOGGLE EXPERIENCE STATE
-// =========================================================================
-const heroMode = ref<'traditional' | 'smart'>('traditional');
-const isEmeraldFlashing = ref(false);
-let heroAutoSwitchTimer: ReturnType<typeof setTimeout> | null = null;
-let heroFlashTimeout: ReturnType<typeof setTimeout> | null = null;
-
-function setHeroMode(mode: 'traditional' | 'smart', isManual = true) {
-    if (isManual && heroAutoSwitchTimer) {
-        clearTimeout(heroAutoSwitchTimer);
-        heroAutoSwitchTimer = null;
-    }
-    if (heroMode.value === mode) return;
-
-    heroMode.value = mode;
-
-    if (mode === 'smart') {
-        triggerEmeraldFlash();
-    }
-}
-
-function triggerEmeraldFlash() {
-    isEmeraldFlashing.value = true;
-    if (heroFlashTimeout) clearTimeout(heroFlashTimeout);
-    heroFlashTimeout = setTimeout(() => {
-        isEmeraldFlashing.value = false;
+    setTimeout(() => {
+        interactiveFlashActive.value = false;
     }, 900);
+
+    setTimeout(() => {
+        interactiveRevenueDiff.value = null;
+    }, 2200);
 }
-
-// Interactive Analytics State & Live Traffic Simulation
-const selectedAnalyticsFilter = ref<'weekend' | 'weekday'>('weekend');
-const dynamicTrafficTick = ref(0);
-let trafficInterval: ReturnType<typeof setInterval> | null = null;
-
-const peakHoursData = computed(() => {
-    const tick = dynamicTrafficTick.value;
-    if (selectedAnalyticsFilter.value === 'weekend') {
-        return [
-            { time: currentLocale.value === 'ar' ? '1 م' : '1 PM', height: 35 + ((tick % 2 === 0) ? 3 : -1), orders: 24, volume: currentLocale.value === 'ar' ? 'خفيف' : 'Light' },
-            { time: currentLocale.value === 'ar' ? '3 م' : '3 PM', height: 55 + ((tick % 3 === 0) ? 4 : -2), orders: 48, volume: currentLocale.value === 'ar' ? 'متوسط' : 'Moderate' },
-            { time: currentLocale.value === 'ar' ? '5 م' : '5 PM', height: 45 + ((tick % 2 === 1) ? 3 : 0), orders: 36, volume: currentLocale.value === 'ar' ? 'متوسط' : 'Moderate' },
-            { time: currentLocale.value === 'ar' ? '7 م' : '7 PM', height: 78 + ((tick % 3 === 1) ? 4 : -1), orders: 74, volume: currentLocale.value === 'ar' ? 'مرتفع 🔥' : 'High 🔥' },
-            { time: currentLocale.value === 'ar' ? '9 م' : '9 PM', height: 96 + ((tick % 2 === 0) ? 2 : -2), orders: 98, isPeak: true, volume: currentLocale.value === 'ar' ? 'قمة الذروة 🔥🔥' : 'Peak Rush 🔥🔥' },
-            { time: currentLocale.value === 'ar' ? '11 م' : '11 PM', height: 82 + ((tick % 2 === 1) ? 3 : -1), orders: 79, volume: currentLocale.value === 'ar' ? 'مرتفع' : 'High' },
-            { time: currentLocale.value === 'ar' ? '1 ص' : '1 AM', height: 40 + ((tick % 3 === 2) ? 3 : 0), orders: 32, volume: currentLocale.value === 'ar' ? 'هادئ' : 'Quiet' },
-        ];
-    }
-    return [
-        { time: currentLocale.value === 'ar' ? '1 م' : '1 PM', height: 25 + ((tick % 2 === 0) ? 2 : 0), orders: 18, volume: currentLocale.value === 'ar' ? 'هادئ' : 'Quiet' },
-        { time: currentLocale.value === 'ar' ? '3 م' : '3 PM', height: 38 + ((tick % 3 === 0) ? 3 : -1), orders: 28, volume: currentLocale.value === 'ar' ? 'خفيف' : 'Light' },
-        { time: currentLocale.value === 'ar' ? '5 م' : '5 PM', height: 32 + ((tick % 2 === 1) ? 2 : 0), orders: 22, volume: currentLocale.value === 'ar' ? 'خفيف' : 'Light' },
-        { time: currentLocale.value === 'ar' ? '7 م' : '7 PM', height: 62 + ((tick % 3 === 1) ? 3 : 0), orders: 46, volume: currentLocale.value === 'ar' ? 'متوسط' : 'Moderate' },
-        { time: currentLocale.value === 'ar' ? '9 م' : '9 PM', height: 84 + ((tick % 2 === 0) ? 2 : -2), orders: 68, isPeak: true, volume: currentLocale.value === 'ar' ? 'ذروة منتصف الأسبوع 🔥' : 'Weekday Peak 🔥' },
-        { time: currentLocale.value === 'ar' ? '11 م' : '11 PM', height: 58 + ((tick % 2 === 1) ? 3 : 0), orders: 42, volume: currentLocale.value === 'ar' ? 'متوسط' : 'Moderate' },
-        { time: currentLocale.value === 'ar' ? '1 ص' : '1 AM', height: 22 + ((tick % 3 === 2) ? 2 : 0), orders: 14, volume: currentLocale.value === 'ar' ? 'هادئ' : 'Quiet' },
-    ];
-});
-
-const topDishesData = computed(() => {
-    if (selectedAnalyticsFilter.value === 'weekend') {
-        return [
-            { name: currentLocale.value === 'ar' ? 'كباب حلبي بالكرز' : 'Aleppo Cherry Kebab', percent: 42, color: 'bg-amber-500', orders: 142 },
-            { name: currentLocale.value === 'ar' ? 'أوصال لحم مشوي' : 'Grilled Veal Skewers', percent: 28, color: 'bg-orange-500', orders: 98 },
-            { name: currentLocale.value === 'ar' ? 'كبة مشوية بالجوز' : 'Grilled Walnut Kibbeh', percent: 18, color: 'bg-emerald-500', orders: 65 },
-            { name: currentLocale.value === 'ar' ? 'كنافة نابلسية بالجبن' : 'Nabulsi Cheese Kunafa', percent: 12, color: 'bg-amber-300', orders: 45 },
-        ];
-    }
-    return [
-        { name: currentLocale.value === 'ar' ? 'كباب حلبي بالكرز' : 'Aleppo Cherry Kebab', percent: 36, color: 'bg-amber-500', orders: 95 },
-        { name: currentLocale.value === 'ar' ? 'أوصال لحم مشوي' : 'Grilled Veal Skewers', percent: 32, color: 'bg-orange-500', orders: 84 },
-        { name: currentLocale.value === 'ar' ? 'كبة مشوية بالجوز' : 'Grilled Walnut Kibbeh', percent: 20, color: 'bg-emerald-500', orders: 52 },
-        { name: currentLocale.value === 'ar' ? 'كنافة نابلسية بالجبن' : 'Nabulsi Cheese Kunafa', percent: 12, color: 'bg-amber-300', orders: 31 },
-    ];
-});
-
-// CPA-Grade Financial Ledger Simulation for Tab 4
-const financialKpis = computed(() => {
-    const isWeekend = selectedAnalyticsFilter.value === 'weekend';
-    if (isWeekend) {
-        return {
-            netSales: 3450000,
-            grossSales: 3620000,
-            discounts: 170000,
-            ordersCount: 420,
-            aov: 8214,
-            dineInNet: 2450000,
-            takeawayNet: 1000000,
-            cancelledOrders: 0,
-            accuracyBadge: currentLocale.value === 'ar' ? 'دقة محاسبية 0% خطأ' : '0% Float Drift (CPA-Grade)',
-        };
-    }
-    return {
-        netSales: 1980000,
-        grossSales: 2060000,
-        discounts: 80000,
-        ordersCount: 260,
-        aov: 7615,
-        dineInNet: 1380000,
-        takeawayNet: 600000,
-        cancelledOrders: 0,
-        accuracyBadge: currentLocale.value === 'ar' ? 'دقة محاسبية 0% خطأ' : '0% Float Drift (CPA-Grade)',
-    };
-});
-
-// ROI Calculator State
-const tableCount = ref(30);
-const dailyOrdersPerTable = ref(6);
-
-const monthlyOrders = computed(() => tableCount.value * dailyOrdersPerTable.value * 30);
-const yearlyPaperSavings = computed(() => tableCount.value * 450000);
-const timeSavedHoursMonthly = computed(() => Math.round((monthlyOrders.value * 10) / 60));
-const estimatedRevenueBoost = computed(() => Math.round(monthlyOrders.value * 0.22 * 95000));
 
 function submitDemoRequest() {
     isSubmitted.value = true;
@@ -562,4387 +470,1605 @@ function submitDemoRequest() {
             country: currentCurrency.value.countryName[currentLocale.value],
             tablesCount: '15-35',
         };
-    }, 2500);
+    }, 2400);
 }
 
-// FAQ Accordion State
-const openFaqIndex = ref<number | null>(0);
-function toggleFaq(index: number) {
-    openFaqIndex.value = openFaqIndex.value === index ? null : index;
-}
-
-// Global click-outside listener
 function handleGlobalClick(e: MouseEvent) {
     const target = e.target as HTMLElement;
     if (!target.closest('[data-currency-dropdown]')) {
         isCurrencyMenuOpen.value = false;
     }
-    if (!target.closest('[data-more-nav-dropdown]')) {
-        isMoreMenuOpen.value = false;
-    }
 }
 
-onMounted(async () => {
-    // 0. Initialize theme preference (supports ?theme=light/dark or defaults to dark)
-    try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const themeParam = urlParams.get('theme');
-        if (themeParam === 'light' || themeParam === 'dark') {
-            setTheme(themeParam);
-        } else {
-            initTheme('dark');
-        }
-    } catch {
-        initTheme('dark');
-    }
-
-    // 1. Language preference check
+onMounted(() => {
+    initTheme('dark');
     try {
         const savedLocale = localStorage.getItem('tedallal_locale') as Locale | null;
-        if (savedLocale && (savedLocale === 'ar' || savedLocale === 'en')) {
+        if (savedLocale === 'ar' || savedLocale === 'en') {
             currentLocale.value = savedLocale;
         } else {
-            const navLang = navigator.language.toLowerCase();
-            if (navLang.startsWith('en')) {
-                currentLocale.value = 'en';
-            }
+            currentLocale.value = 'ar';
         }
-    } catch {
-        // default ar
-    }
-
-    // 2. Currency preference check
-    try {
         const savedCurr = localStorage.getItem('tedallal_currency');
         if (savedCurr && supportedArabCurrencies[savedCurr]) {
             currentCountryCode.value = savedCurr;
-            demoForm.value.country = supportedArabCurrencies[savedCurr].countryName[currentLocale.value];
-        } else if (props.detectedCountry) {
-            const resolved = resolveArabCountryCode(props.detectedCountry);
-            currentCountryCode.value = resolved;
-            demoForm.value.country = supportedArabCurrencies[resolved].countryName[currentLocale.value];
-        } else {
-            const tz = detectTimezoneCountry();
-            if (tz) {
-                currentCountryCode.value = tz;
-                demoForm.value.country = supportedArabCurrencies[tz].countryName[currentLocale.value];
-            } else {
-                // Non-blocking geo API
-                fetch('https://api.country.is/', { signal: AbortSignal.timeout(2000) })
-                    .then(r => r.json())
-                    .then(data => {
-                        if (data?.country) {
-                            const res = resolveArabCountryCode(data.country);
-                            currentCountryCode.value = res;
-                            demoForm.value.country = supportedArabCurrencies[res].countryName[currentLocale.value];
-                        }
-                    })
-                    .catch(() => {});
-            }
+        } else if (props.detectedCountry && supportedArabCurrencies[props.detectedCountry.toUpperCase()]) {
+            currentCountryCode.value = props.detectedCountry.toUpperCase();
         }
-    } catch {
-        // keep SA
-    }
-
-    // Attach click listener
+    } catch {}
     window.addEventListener('click', handleGlobalClick);
-
-    // Auto-Demo on load: show traditional mode for 1.8s, then smoothly auto-switch to smart mode
-    heroAutoSwitchTimer = setTimeout(() => {
-        setHeroMode('smart', false);
-        heroAutoSwitchTimer = null;
-    }, 1800);
-
-    // Live tickers
-    toastInterval = setInterval(() => {
-        if (isToastPermanentlyDismissed.value) return;
-        showToast.value = false;
-        setTimeout(() => {
-            if (!isToastPermanentlyDismissed.value) {
-                currentToastIndex.value = (currentToastIndex.value + 1) % liveToasts.value.length;
-                showToast.value = true;
-            }
-        }, 400);
-    }, 7000);
-
-    trafficInterval = setInterval(() => {
-        dynamicTrafficTick.value++;
-    }, 2800);
 });
 
 onUnmounted(() => {
     window.removeEventListener('click', handleGlobalClick);
-    if (heroAutoSwitchTimer) clearTimeout(heroAutoSwitchTimer);
-    if (heroFlashTimeout) clearTimeout(heroFlashTimeout);
-    if (toastInterval) clearInterval(toastInterval);
-    if (trafficInterval) clearInterval(trafficInterval);
 });
 </script>
 
 <template>
     <Head>
-        <title>{{ t.meta.title }}</title>
-        <meta name="description" :content="t.meta.description" />
+        <title>{{ currentLocale === 'ar' ? 'تدلّـل | المنظومة الملكية الفاخرة لإدارة المطاعم وقوائم QR' : 'Tedallal | The Luxury Restaurant OS & Smart QR Suite' }}</title>
+        <meta
+            name="description"
+            :content="currentLocale === 'ar'
+                ? 'حوّل مطعمك إلى تجربة ملكية لا تُنسى: منيو QR رقمي تفاعلي، شاشات مطبخ KDS فورية، عجلة ولاء الزبائن، وتقارير وردية حرارية بدون عمولات مجحفة.'
+                : 'Elevate your restaurant to a royal dining experience: interactive luxury QR menus, real-time KDS kitchen screens, and end-of-shift Z-reports with zero commission.'"
+        />
     </Head>
 
     <div
         :dir="currentLocale === 'ar' ? 'rtl' : 'ltr'"
         :class="[
-            'font-sans',
-            isDark ? 'dark-mode-theme bg-[#020b07] text-[#f8fafc]' : 'light-mode-theme bg-white text-[#0f172a]'
+            'font-sans min-h-screen selection:bg-amber-400 selection:text-black antialiased overflow-x-hidden relative transition-colors duration-500',
+            isDark ? 'dark-mode-theme bg-[#08080A] text-stone-100' : 'light-mode-theme bg-[#FAF8F5] text-stone-900'
         ]"
-        class="min-h-screen selection:bg-[#BF953F] selection:text-black antialiased overflow-x-hidden relative transition-colors duration-500"
     >
-        <!-- Physical Texture (The Carved Feel): Inline SVG Noise / Grain Pattern Overlay -->
-        <div
-            class="fixed inset-0 pointer-events-none z-50 opacity-[0.032] mix-blend-overlay"
-            style="background-image: url('data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noiseFilter\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.85\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noiseFilter)\'/%3E%3C/svg%3E');"
-        ></div>
-
-        <!-- Moorish Trefoil Islamic Arabesque Wallpaper (Dark Velvet Emerald & Light Royal Alabaster) -->
-        <div
-            v-if="isDark"
-            class="fixed inset-0 pointer-events-none z-0"
-            style="background-color: #020b07; background-image: radial-gradient(circle at 50% 18%, rgba(16, 185, 129, 0.14) 0%, transparent 60%), radial-gradient(circle at 80% 65%, rgba(212, 175, 55, 0.08) 0%, transparent 50%), url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%0A%20%20%3Cg%20stroke%3D%22%23D4AF37%22%20fill%3D%22none%22%20stroke-width%3D%220.85%22%20stroke-opacity%3D%220.32%22%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%2222%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%220%22%20cy%3D%220%22%20r%3D%2222%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2260%22%20cy%3D%220%22%20r%3D%2222%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%220%22%20cy%3D%2260%22%20r%3D%2222%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2260%22%20cy%3D%2260%22%20r%3D%2222%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2230%2C22%2036%2C30%2030%2C38%2024%2C30%22%20stroke-width%3D%220.7%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.1%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%222.5%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.45%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%220%2C22%206%2C30%200%2C38%20-6%2C30%22%20stroke-width%3D%220.7%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.1%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2260%2C22%2066%2C30%2060%2C38%2054%2C30%22%20stroke-width%3D%220.7%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.1%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2230%2C-8%2036%2C0%2030%2C8%2024%2C0%22%20stroke-width%3D%220.7%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.1%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2230%2C52%2036%2C60%2030%2C68%2024%2C60%22%20stroke-width%3D%220.7%22%20fill%3D%22%23D4AF37%22%20fill-opacity%3D%220.1%22/%3E%0A%20%20%3C/g%3E%0A%3C/svg%3E'); background-size: 100% 100%, 100% 100%, 37px 37px; background-repeat: no-repeat, no-repeat, repeat;"
-        ></div>
-        <div
-            v-else
-            class="fixed inset-0 pointer-events-none z-0"
-            style="background-color: #FAF7F2; background-image: radial-gradient(circle at 50% 18%, rgba(212, 175, 55, 0.12) 0%, transparent 60%), radial-gradient(circle at 80% 65%, rgba(16, 185, 129, 0.05) 0%, transparent 50%), url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%0A%20%20%3Cg%20stroke%3D%22%23A67C1E%22%20fill%3D%22none%22%20stroke-width%3D%220.85%22%20stroke-opacity%3D%220.18%22%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%2222%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%220%22%20cy%3D%220%22%20r%3D%2222%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2260%22%20cy%3D%220%22%20r%3D%2222%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%220%22%20cy%3D%2260%22%20r%3D%2222%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2260%22%20cy%3D%2260%22%20r%3D%2222%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2230%2C22%2036%2C30%2030%2C38%2024%2C30%22%20stroke-width%3D%220.7%22%20fill%3D%22%23A67C1E%22%20fill-opacity%3D%220.04%22/%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2230%22%20cy%3D%2230%22%20r%3D%222.5%22%20fill%3D%22%23A67C1E%22%20fill-opacity%3D%220.25%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%220%2C22%206%2C30%200%2C38%20-6%2C30%22%20stroke-width%3D%220.7%22%20fill%3D%22%23A67C1E%22%20fill-opacity%3D%220.04%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2260%2C22%2066%2C30%2060%2C38%2054%2C30%22%20stroke-width%3D%220.7%22%20fill%3D%22%23A67C1E%22%20fill-opacity%3D%220.04%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2230%2C-8%2036%2C0%2030%2C8%2024%2C0%22%20stroke-width%3D%220.7%22%20fill%3D%22%23A67C1E%22%20fill-opacity%3D%220.04%22/%3E%0A%20%20%20%20%3Cpolygon%20points%3D%2230%2C52%2036%2C60%2030%2C68%2024%2C60%22%20stroke-width%3D%220.7%22%20fill%3D%22%23A67C1E%22%20fill-opacity%3D%220.04%22/%3E%0A%20%20%3C/g%3E%0A%3C/svg%3E'); background-size: 100% 100%, 100% 100%, 37px 37px; background-repeat: no-repeat, no-repeat, repeat;"
-        ></div>
-
-        <!-- Ambient Atmospheric Deep Velvet Emerald & Gold Spotlight Aura Layers -->
-        <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-            <div class="absolute -top-40 left-1/2 -translate-x-1/2 w-[1400px] h-[700px] rounded-full bg-[radial-gradient(ellipse_at_top,rgba(16,185,129,0.08)_0%,rgba(212,175,55,0.06)_40%,transparent_70%)] blur-3xl"></div>
-            <div class="absolute top-1/4 -right-40 w-[900px] h-[900px] rounded-full bg-[radial-gradient(circle,rgba(16,185,129,0.045)_0%,transparent_65%)] blur-3xl"></div>
-            <div class="absolute top-2/4 -left-40 w-[900px] h-[900px] rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.04)_0%,transparent_65%)] blur-3xl"></div>
-            <div class="absolute top-3/4 -right-40 w-[900px] h-[900px] rounded-full bg-[radial-gradient(circle,rgba(16,185,129,0.045)_0%,transparent_65%)] blur-3xl"></div>
+        <!-- Background Wallpaper: Islamic Trefoil Arabesque Texture & Warm Ambient Spotlight -->
+        <div class="fixed inset-0 pointer-events-none z-0">
+            <div
+                class="absolute inset-0 transition-opacity duration-700"
+                :class="isDark ? 'opacity-[0.035] mix-blend-overlay filter grayscale' : 'opacity-[0.045] mix-blend-multiply filter contrast-125'"
+                style="background-image: url('/images/luxury-restaurant-hero-bg.jpg'); background-size: cover; background-position: center;"
+            ></div>
+            <!-- Radial Warm Gold Glows (Calm, Subtle Luxury Ambiance) -->
+            <div class="absolute -top-40 left-1/2 -translate-x-1/2 w-[1000px] h-[450px] rounded-full pointer-events-none transition-all duration-700"
+                 :class="isDark ? 'bg-[radial-gradient(ellipse_at_top,rgba(212,175,55,0.06)_0%,transparent_70%)] blur-3xl' : 'bg-[radial-gradient(ellipse_at_top,rgba(180,140,60,0.03)_0%,transparent_70%)] blur-3xl'"
+            ></div>
+            <div class="absolute top-1/3 -right-60 w-[600px] h-[600px] rounded-full pointer-events-none"
+                 :class="isDark ? 'bg-[radial-gradient(circle,rgba(212,175,55,0.03)_0%,transparent_65%)] blur-3xl' : 'bg-[radial-gradient(circle,rgba(197,160,89,0.02)_0%,transparent_65%)] blur-3xl'"
+            ></div>
         </div>
 
         <!-- ========================================================================= -->
-        <!-- TOP NAVBAR -->
+        <!-- 1. ROYAL GLASSMORPHISM NAVIGATION -->
         <!-- ========================================================================= -->
         <header
-            class="sticky top-0 z-40 backdrop-blur-2xl border-b border-emerald-500/10 bg-[#020b07]/85 shadow-[0_10px_35px_rgba(0,0,0,0.85)] transition-all duration-500"
+            class="sticky top-0 z-50 backdrop-blur-2xl border-b transition-all duration-300"
+            :class="isDark ? 'bg-[#08080A]/90 border-[rgba(226,196,133,0.18)] shadow-[0_10px_35px_rgba(0,0,0,0.95)]' : 'bg-[#FAF8F5]/92 border-b border-[#C5A059]/30 shadow-[0_8px_30px_rgba(180,140,60,0.09)]'"
         >
-            <div class="max-w-[1550px] w-full mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex items-center justify-between h-20 gap-2 xl:gap-4">
-
-                    <!-- Brand Logo -->
-                    <div class="flex items-center gap-3 shrink-0">
-                        <Link href="/" class="flex items-center gap-2.5 sm:gap-3 group">
-                            <div class="relative w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-white dark:bg-[#131722] border border-amber-500/25 dark:border-amber-500/35 p-1.5 shadow-sm group-hover:border-amber-500/60 transition-all duration-300 flex items-center justify-center">
-                                <img
-                                    src="/images/tedallal-luxury-transparent.png"
-                                    alt="تدلّل"
-                                    class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
-                                    onerror="this.src='/images/tedallal-golden-logo.png'"
-                                />
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-20">
+                    <!-- Brand Identity (Animated Royal Emblem + Tedallal Luxury Typography) -->
+                    <Link href="/" class="flex items-center gap-3 group">
+                        <div class="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-[#BF953F] via-[#FCF6BA] to-[#B38728] p-0.5 shadow-sm group-hover:scale-105 transition-transform duration-300">
+                            <div class="w-full h-full rounded-[14px] flex items-center justify-center p-1 overflow-hidden" :class="isDark ? 'bg-[#0C0C0E]' : 'bg-white'">
+                                <ApplicationLogo variant="emblem" :animated="true" class="w-full h-full" />
                             </div>
-                            <div class="flex flex-col">
-                                <div class="flex items-center gap-2">
-                                    <span class="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-[#f8fafc]">
-                                        {{ currentLocale === 'ar' ? 'تدلّـل' : 'Tedallal' }}
-                                    </span>
-                                    <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                                        {{ currentLocale === 'ar' ? 'تِـك' : 'Tech' }}
-                                    </span>
-                                </div>
-                                <span class="hidden 2xl:inline text-[11px] text-stone-500 dark:text-stone-400 font-medium truncate max-w-[220px]">{{ t.nav.brandSubtitle }}</span>
-                            </div>
-                        </Link>
-                    </div>
-
-                    <!-- Desktop Nav Links -->
-                    <nav class="hidden lg:flex items-center gap-2.5 xl:gap-4 2xl:gap-5 text-xs xl:text-sm font-semibold text-slate-300 whitespace-nowrap">
-                        <a href="#how-it-works" class="hover:text-amber-400 transition-colors whitespace-nowrap">{{ t.nav.howItWorks }}</a>
-                        <a href="#interactive-demo" class="hover:text-amber-400 transition-colors flex items-center gap-1.5 whitespace-nowrap">
-                            <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
-                            {{ t.nav.interactiveDemo }}
-                        </a>
-                        <a href="#features" class="hover:text-amber-400 transition-colors whitespace-nowrap">{{ t.nav.features }}</a>
-                        <a href="#roi-calculator" class="hover:text-amber-400 transition-colors whitespace-nowrap">{{ currentLocale === 'ar' ? 'حاسبة الأرباح' : t.nav.roiCalculator }}</a>
-                        <a href="#pricing" class="hover:text-amber-400 transition-colors font-bold whitespace-nowrap">{{ currentLocale === 'ar' ? 'الباقات والأسعار' : 'Pricing' }}</a>
-
-                        <!-- Dropdown: المزيد -->
-                        <div class="relative" data-more-nav-dropdown>
-                            <button
-                                @click="isMoreMenuOpen = !isMoreMenuOpen"
-                                type="button"
-                                class="flex items-center gap-1 hover:text-amber-400 transition-colors cursor-pointer py-1.5 whitespace-nowrap"
-                                :class="{ 'text-amber-400 font-bold': isMoreMenuOpen }"
-                            >
-                                <span>{{ currentLocale === 'ar' ? 'المزيد' : 'More' }}</span>
-                                <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="{ 'rotate-180': isMoreMenuOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </button>
-
-                            <transition
-                                enter-active-class="transition duration-150 ease-out"
-                                enter-from-class="transform scale-95 opacity-0"
-                                enter-to-class="transform scale-100 opacity-100"
-                                leave-active-class="transition duration-100 ease-in"
-                                leave-from-class="transform scale-100 opacity-100"
-                                leave-to-class="transform scale-95 opacity-0"
-                            >
-                                <div
-                                    v-if="isMoreMenuOpen"
-                                    class="absolute mt-2 w-52 rounded-2xl shadow-2xl backdrop-blur-xl p-2 z-50 space-y-1 text-xs border"
-                                    :class="[
-                                        currentLocale === 'ar' ? 'right-0' : 'left-0',
-                                        isDark ? 'bg-slate-900/95 border-slate-700/80 text-slate-200' : 'bg-white border-slate-200 text-slate-800 shadow-xl'
-                                    ]"
-                                >
-                                    <a
-                                        href="#solutions"
-                                        @click="isMoreMenuOpen = false"
-                                        class="flex items-center gap-2.5 px-3 py-2 rounded-xl transition-colors hover:bg-amber-500/10 hover:text-amber-400"
-                                    >
-                                        <span class="text-base">🏢</span>
-                                        <span class="font-medium whitespace-nowrap">{{ t.nav.solutions }}</span>
-                                    </a>
-                                    <a
-                                        href="#directory"
-                                        @click="isMoreMenuOpen = false"
-                                        class="flex items-center gap-2.5 px-3 py-2 rounded-xl transition-colors hover:bg-amber-500/10 hover:text-amber-400"
-                                    >
-                                        <span class="text-base">📖</span>
-                                        <span class="font-medium whitespace-nowrap">{{ t.nav.directory }}</span>
-                                    </a>
-                                    <a
-                                        href="#comparison"
-                                        @click="isMoreMenuOpen = false"
-                                        class="flex items-center gap-2.5 px-3 py-2 rounded-xl transition-colors hover:bg-amber-500/10 hover:text-amber-400"
-                                    >
-                                        <span class="text-base">⚖️</span>
-                                        <span class="font-medium whitespace-nowrap">{{ t.nav.comparison }}</span>
-                                    </a>
-                                    <a
-                                        href="#faqs"
-                                        @click="isMoreMenuOpen = false"
-                                        class="flex items-center gap-2.5 px-3 py-2 rounded-xl transition-colors hover:bg-amber-500/10 hover:text-amber-400"
-                                    >
-                                        <span class="text-base">❓</span>
-                                        <span class="font-medium whitespace-nowrap">{{ t.nav.faqs }}</span>
-                                    </a>
-                                </div>
-                            </transition>
                         </div>
+                        <div class="flex flex-col">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-xl sm:text-2xl font-black tracking-tight" :class="isDark ? 'text-white' : 'text-stone-900'">
+                                    {{ currentLocale === 'ar' ? 'تَدلَّـل' : 'Tedallal' }}
+                                </span>
+                                <span class="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                                    ROYAL
+                                </span>
+                            </div>
+                            <span class="text-[10px] font-bold text-amber-400/80 tracking-widest uppercase">
+                                TEDALLAL
+                            </span>
+                        </div>
+                    </Link>
 
-                        <!-- Standout Assessment CTA -->
-                        <Link
-                            href="/consultation"
-                            class="text-amber-400 font-bold hover:text-amber-300 hover:bg-amber-500/20 transition-all inline-flex items-center gap-1.5 bg-amber-500/10 px-2.5 xl:px-3 py-1.5 rounded-xl border border-amber-500/30 whitespace-nowrap shadow-xs"
-                        >
-                            <span>📋</span>
-                            <span>{{ currentLocale === 'ar' ? 'استمارة المتطلبات' : 'Assessment' }}</span>
-                        </Link>
+                    <!-- Navigation Links -->
+                    <nav class="hidden lg:flex items-center gap-7 text-xs xl:text-sm font-bold" :class="isDark ? 'text-stone-300' : 'text-stone-700'">
+                        <a href="#platform-mockups" class="hover:text-amber-400 transition-colors">
+                            {{ currentLocale === 'ar' ? 'للمطاعم' : 'For Restaurants' }}
+                        </a>
+                        <a href="#platform-mockups" class="hover:text-amber-400 transition-colors">
+                            {{ currentLocale === 'ar' ? 'المزايا' : 'Features' }}
+                        </a>
+                        <a href="#showcase" class="hover:text-amber-400 transition-colors">
+                            {{ currentLocale === 'ar' ? 'القوائم الذكية' : 'Digital Menus' }}
+                        </a>
+                        <a href="#floor-to-kitchen" class="hover:text-amber-400 transition-colors flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                            {{ currentLocale === 'ar' ? 'من الصالة للمطبخ' : 'Floor to Kitchen' }}
+                        </a>
+                        <a href="#bento" class="hover:text-amber-400 transition-colors">
+                            {{ currentLocale === 'ar' ? 'رؤوس الخدمة' : 'Operations' }}
+                        </a>
+                        <a href="#roi" class="hover:text-amber-400 transition-colors">
+                            {{ currentLocale === 'ar' ? 'الضرائب والعمولات' : 'ROI & Profit' }}
+                        </a>
+                        <a href="#faqs" class="hover:text-amber-400 transition-colors">
+                            {{ currentLocale === 'ar' ? 'الأسئلة الشائعة' : 'FAQs' }}
+                        </a>
                     </nav>
 
-                    <!-- Language, Currency & Theme Controls + Auth CTAs -->
-                    <div class="hidden lg:flex items-center gap-2 xl:gap-2.5 shrink-0">
-                        <!-- Theme Toggle Button (Light / Dark) -->
-                        <button
-                            id="theme-toggle-btn"
-                            @click="toggleTheme"
-                            type="button"
-                            class="p-2 rounded-xl transition-all shadow-sm border cursor-pointer select-none shrink-0"
-                            :class="isDark
-                                ? 'bg-slate-900/90 hover:bg-slate-800 border-slate-700/80 hover:border-amber-500/50 text-amber-400'
-                                : 'bg-white hover:bg-slate-100 border-slate-200 hover:border-amber-500/50 text-slate-700 shadow-xs'"
-                            :title="isDark ? (currentLocale === 'ar' ? 'التبديل إلى الوضع الفاتح' : 'Switch to Light Mode') : (currentLocale === 'ar' ? 'التبديل إلى الوضع الداكن' : 'Switch to Dark Mode')"
-                            :aria-label="isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
-                        >
-                            <svg v-if="isDark" class="h-4 w-4 text-amber-400 transition-transform duration-300 hover:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                            </svg>
-                            <svg v-else class="h-4 w-4 text-slate-700 transition-transform duration-300 hover:-rotate-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                            </svg>
-                        </button>
-
-                        <!-- Language Switcher Toggle -->
-                        <button
-                            @click="toggleLocale"
-                            type="button"
-                            class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border text-xs font-semibold transition-all shadow-sm cursor-pointer whitespace-nowrap shrink-0"
-                            :class="isDark
-                                ? 'bg-slate-900/90 hover:bg-slate-800 border-slate-700/80 hover:border-amber-500/50 text-slate-200'
-                                : 'bg-white hover:bg-slate-100 border-slate-200 hover:border-amber-500/50 text-slate-700 shadow-xs'"
-                            :title="currentLocale === 'ar' ? 'Switch to English' : 'التحويل إلى العربية'"
-                        >
-                            <span class="text-xs">🌐</span>
-                            <span class="font-bold text-amber-500">{{ currentLocale === 'ar' ? 'EN' : 'عربي' }}</span>
-                        </button>
-
-                        <!-- Arab Currency Switcher Dropdown -->
-                        <div class="relative shrink-0" data-currency-dropdown>
+                    <!-- Header Utility Tools -->
+                    <div class="flex items-center gap-2 sm:gap-3">
+                        <!-- Arab Currency Selector -->
+                        <div class="relative" data-currency-dropdown>
                             <button
-                                @click="isCurrencyMenuOpen = !isCurrencyMenuOpen"
                                 type="button"
-                                class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold transition-all shadow-sm cursor-pointer whitespace-nowrap"
-                                :class="isDark
-                                    ? 'bg-slate-900/90 hover:bg-slate-800 border-slate-700/80 hover:border-amber-500/50 text-slate-200'
-                                    : 'bg-white hover:bg-slate-100 border-slate-200 hover:border-amber-500/50 text-slate-700 shadow-xs'"
-                                :title="t.nav.currencyTitle"
+                                class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors shadow-2xs"
+                                :class="isDark ? 'glass-ultra text-stone-200 hover:border-amber-500/50' : 'bg-white border-stone-200 text-stone-700 hover:border-amber-400'"
+                                @click="isCurrencyMenuOpen = !isCurrencyMenuOpen"
                             >
                                 <span>{{ currentCurrency.flag }}</span>
-                                <span class="font-bold text-amber-500 font-mono">{{ currentCurrencySymbol }}</span>
-                                <svg class="w-3 h-3 text-slate-400 transition-transform duration-200" :class="{ 'rotate-180': isCurrencyMenuOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <span class="hidden sm:inline font-black">{{ currentCurrencySymbol }}</span>
+                                <svg class="w-3.5 h-3.5 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                 </svg>
                             </button>
 
-                            <!-- Dropdown Menu -->
-                            <transition
-                                enter-active-class="transition duration-150 ease-out"
-                                enter-from-class="transform scale-95 opacity-0"
-                                enter-to-class="transform scale-100 opacity-100"
-                                leave-active-class="transition duration-100 ease-in"
-                                leave-from-class="transform scale-100 opacity-100"
-                                leave-to-class="transform scale-95 opacity-0"
+                            <div
+                                v-if="isCurrencyMenuOpen"
+                                class="absolute end-0 mt-2 w-56 rounded-2xl border shadow-2xl py-2 z-50 backdrop-blur-2xl max-h-72 overflow-y-auto"
+                                :class="isDark ? 'bg-[#0c1222] border-[rgba(226,196,133,0.18)] text-stone-200' : 'bg-white border-stone-200 text-stone-800'"
                             >
-                                <div
-                                    v-if="isCurrencyMenuOpen"
-                                    class="absolute mt-2 w-56 rounded-2xl shadow-2xl backdrop-blur-xl p-2 z-50 space-y-1 text-xs border"
-                                    :class="[
-                                        currentLocale === 'ar' ? 'left-0' : 'right-0',
-                                        isDark ? 'bg-slate-900/95 border-slate-700 text-slate-200' : 'bg-white border-slate-200 text-slate-800 shadow-xl'
-                                    ]"
-                                >
-                                    <div class="px-2.5 py-1 text-[10px] font-bold border-b flex items-center justify-between" :class="isDark ? 'text-slate-400 border-white/5' : 'text-slate-500 border-slate-100'">
-                                        <span>{{ t.nav.currencyTitle }}</span>
-                                        <span class="text-emerald-500 text-[9px]">{{ t.nav.autoDetect }}</span>
-                                    </div>
-                                    <div class="max-h-60 overflow-y-auto space-y-0.5 custom-scrollbar">
-                                        <button
-                                            v-for="c in Object.values(supportedArabCurrencies)"
-                                            :key="c.code"
-                                            @click="setCurrency(c.code)"
-                                            type="button"
-                                            class="w-full flex items-center justify-between px-2.5 py-2 rounded-xl transition-colors cursor-pointer"
-                                            :class="[
-                                                currentLocale === 'ar' ? 'text-right' : 'text-left',
-                                                currentCountryCode === c.code
-                                                    ? (isDark ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30' : 'bg-amber-50 text-amber-800 font-bold border border-amber-200')
-                                                    : (isDark ? 'text-slate-300 hover:bg-white/5' : 'text-slate-700 hover:bg-slate-100')
-                                            ]"
-                                        >
-                                            <div class="flex items-center gap-2">
-                                                <span class="text-base">{{ c.flag }}</span>
-                                                <span class="truncate">{{ c.countryName[currentLocale] }}</span>
-                                            </div>
-                                            <span class="font-mono text-amber-500 text-xs shrink-0 font-bold">{{ c.symbol[currentLocale] }}</span>
-                                        </button>
-                                    </div>
+                                <div class="px-3 py-1.5 text-[11px] font-black uppercase tracking-wider text-amber-500 border-b border-stone-700/30">
+                                    {{ currentLocale === 'ar' ? 'اختر عملة بلدك' : 'Select Currency' }}
                                 </div>
-                            </transition>
+                                <button
+                                    v-for="curr in supportedArabCurrencies"
+                                    :key="curr.code"
+                                    type="button"
+                                    class="w-full flex items-center justify-between px-3 py-2 text-xs hover:bg-amber-500/10 transition-colors text-right"
+                                    :class="currentCountryCode === curr.code ? 'font-black text-amber-400' : ''"
+                                    @click="setCurrency(curr.code)"
+                                >
+                                    <span class="flex items-center gap-2">
+                                        <span>{{ curr.flag }}</span>
+                                        <span>{{ curr.countryName[currentLocale] }}</span>
+                                    </span>
+                                    <span class="text-stone-400 font-bold">{{ curr.symbol[currentLocale] }}</span>
+                                </button>
+                            </div>
                         </div>
 
-                        <!-- Auth Actions -->
-                        <template v-if="$page.props.auth?.user">
-                            <Link
-                                :href="route('dashboard')"
-                                class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-bold text-xs shadow-md shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all whitespace-nowrap shrink-0"
-                            >
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                                </svg>
-                                <span>{{ t.nav.dashboard }}</span>
-                            </Link>
-                        </template>
-                        <template v-else>
-                            <Link
-                                :href="route('login')"
-                                class="text-xs font-semibold px-2.5 py-1.5 rounded-xl transition-all whitespace-nowrap shrink-0"
-                                :class="isDark ? 'text-slate-300 hover:text-white hover:bg-white/5' : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'"
-                            >
-                                {{ t.nav.signIn }}
-                            </Link>
-                            <button
-                                @click="isDemoModalOpen = true"
-                                class="hidden xl:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-bold text-xs shadow-md shadow-amber-500/20 hover:shadow-amber-500/35 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer whitespace-nowrap shrink-0"
-                            >
-                                <span>{{ t.nav.bookDemo }}</span>
-                                <svg class="w-3 h-3 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-                                </svg>
-                            </button>
-                        </template>
-                    </div>
-
-                    <!-- Mobile Menu Hamburger & Quick Actions -->
-                    <div class="flex lg:hidden items-center gap-2">
-                        <!-- Mobile Theme Toggle -->
+                        <!-- Language Switcher -->
                         <button
-                            @click="toggleTheme"
                             type="button"
-                            class="p-2 rounded-lg border text-xs font-bold transition-all cursor-pointer"
-                            :class="isDark ? 'bg-slate-900 border-slate-700 text-amber-400' : 'bg-white border-slate-200 text-slate-700 shadow-xs'"
-                            :title="isDark ? (currentLocale === 'ar' ? 'التبديل إلى الوضع الفاتح' : 'Switch to Light Mode') : (currentLocale === 'ar' ? 'التبديل إلى الوضع الداكن' : 'Switch to Dark Mode')"
-                        >
-                            <svg v-if="isDark" class="h-4 w-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                            </svg>
-                            <svg v-else class="h-4 w-4 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                            </svg>
-                        </button>
-
-                        <!-- Mobile Lang Switcher -->
-                        <button
+                            class="px-2.5 py-1.5 rounded-xl text-xs font-bold border transition-colors shadow-2xs"
+                            :class="isDark ? 'glass-ultra text-stone-200 hover:border-amber-500/50' : 'bg-white border-stone-200 text-stone-700 hover:border-amber-400'"
                             @click="toggleLocale"
-                            type="button"
-                            class="px-2.5 py-1.5 rounded-lg border text-xs font-bold transition-all cursor-pointer"
-                            :class="isDark ? 'bg-slate-900 border-slate-700 text-amber-400' : 'bg-white border-slate-200 text-amber-600 shadow-xs'"
+                            :title="currentLocale === 'ar' ? 'Switch to English' : 'التحويل إلى العربية'"
                         >
                             {{ currentLocale === 'ar' ? 'EN' : 'عربي' }}
                         </button>
 
+                        <!-- Theme Toggle -->
                         <button
+                            type="button"
+                            class="p-2 rounded-xl text-xs border transition-colors shadow-2xs"
+                            :class="isDark ? 'glass-ultra text-amber-400 hover:border-amber-500/50' : 'bg-white border-stone-200 text-stone-700 hover:border-amber-400'"
+                            @click="toggleTheme"
+                            title="تبديل المظهر"
+                        >
+                            <svg v-if="isDark" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                            </svg>
+                            <svg v-else class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                            </svg>
+                        </button>
+
+                        <!-- Primary VIP Booking CTA (Pill Button, Refined Luxury without Glare) -->
+                        <button
+                            type="button"
+                            class="hidden sm:inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-gradient-to-r from-[#BF953F] via-[#E8C265] to-[#B38728] text-stone-950 font-black text-xs sm:text-sm shadow-sm hover:shadow-md hover:shadow-amber-500/15 hover:scale-105 active:scale-95 transition-all"
                             @click="isDemoModalOpen = true"
-                            class="px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-bold text-xs shadow-sm cursor-pointer"
                         >
-                            {{ currentLocale === 'ar' ? 'عرض حي' : 'Demo' }}
+                            <span>{{ currentLocale === 'ar' ? 'جرّب الآن' : 'Get Started' }}</span>
+                            <span class="text-stone-950">✦</span>
                         </button>
 
-                        <button
-                            @click="isMobileMenuOpen = !isMobileMenuOpen"
-                            class="p-2 rounded-xl transition-all cursor-pointer"
-                            :class="isDark ? 'text-slate-400 hover:text-white hover:bg-white/5' : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'"
-                            aria-label="Menu"
-                        >
-                            <svg v-if="!isMobileMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/>
-                            </svg>
-                            <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
-                        </button>
-                    </div>
-
-                </div>
-            </div>
-
-            <!-- Mobile Navigation Drawer -->
-            <div
-                v-if="isMobileMenuOpen"
-                class="lg:hidden border-t backdrop-blur-2xl px-6 py-6 space-y-4"
-                :class="isDark ? 'bg-[#020b07]/95 border-emerald-500/20 shadow-2xl' : 'bg-white/95 border-slate-200 shadow-xl'"
-            >
-                <!-- Theme Mode row for mobile -->
-                <div class="flex items-center justify-between pb-3 border-b text-xs" :class="isDark ? 'border-white/10' : 'border-slate-100'">
-                    <span :class="isDark ? 'text-slate-400' : 'text-slate-500'">{{ currentLocale === 'ar' ? 'مظهر الصفحة' : 'Theme Mode' }}:</span>
-                    <button
-                        @click="toggleTheme"
-                        type="button"
-                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold cursor-pointer"
-                        :class="isDark ? 'bg-slate-800 border-slate-700 text-amber-300' : 'bg-slate-100 border-slate-200 text-slate-800'"
-                    >
-                        <span>{{ isDark ? '🌙 ' + (currentLocale === 'ar' ? 'الوضع الداكن' : 'Dark Mode') : '☀️ ' + (currentLocale === 'ar' ? 'الوضع الفاتح' : 'Light Mode') }}</span>
-                    </button>
-                </div>
-
-                <!-- Country & Currency selector row for mobile -->
-                <div class="flex items-center justify-between pb-3 border-b text-xs" :class="isDark ? 'border-white/10' : 'border-slate-100'">
-                    <span :class="isDark ? 'text-slate-400' : 'text-slate-500'">{{ t.nav.currencyTitle }}:</span>
-                    <div class="flex items-center gap-2">
-                        <select
-                            v-model="currentCountryCode"
-                            @change="setCurrency(currentCountryCode)"
-                            class="rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:border-amber-500 border"
-                            :class="isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'"
-                        >
-                            <option
-                                v-for="c in Object.values(supportedArabCurrencies)"
-                                :key="c.code"
-                                :value="c.code"
-                            >
-                                {{ c.flag }} {{ c.countryName[currentLocale] }} ({{ c.symbol[currentLocale] }})
-                            </option>
-                        </select>
-                    </div>
-                </div>
-
-                <a @click="isMobileMenuOpen = false" href="#how-it-works" class="block font-medium py-1.5" :class="isDark ? 'text-slate-200' : 'text-slate-700'">{{ t.nav.howItWorks }}</a>
-                <a @click="isMobileMenuOpen = false" href="#solutions" class="block font-medium py-1.5" :class="isDark ? 'text-slate-200' : 'text-slate-700'">{{ t.nav.solutions }}</a>
-                <a @click="isMobileMenuOpen = false" href="#interactive-demo" class="block text-amber-500 font-medium py-1.5">{{ t.nav.interactiveDemo }}</a>
-                <a @click="isMobileMenuOpen = false" href="#features" class="block font-medium py-1.5" :class="isDark ? 'text-slate-200' : 'text-slate-700'">{{ t.nav.features }}</a>
-                <a @click="isMobileMenuOpen = false" href="#directory" class="block font-medium py-1.5" :class="isDark ? 'text-slate-200' : 'text-slate-700'">{{ t.nav.directory }}</a>
-                <a @click="isMobileMenuOpen = false" href="#roi-calculator" class="block font-medium py-1.5" :class="isDark ? 'text-slate-200' : 'text-slate-700'">{{ t.nav.roiCalculator }}</a>
-                <a @click="isMobileMenuOpen = false" href="#comparison" class="block font-medium py-1.5" :class="isDark ? 'text-slate-200' : 'text-slate-700'">{{ t.nav.comparison }}</a>
-                <a @click="isMobileMenuOpen = false" href="#pricing" class="block font-bold py-1.5 text-amber-500">{{ currentLocale === 'ar' ? 'الباقات والأسعار' : 'Pricing Plans' }}</a>
-                <a @click="isMobileMenuOpen = false" href="#faqs" class="block font-medium py-1.5" :class="isDark ? 'text-slate-200' : 'text-slate-700'">{{ t.nav.faqs }}</a>
-                <Link @click="isMobileMenuOpen = false" href="/consultation" class="block font-bold py-2 text-amber-400 bg-amber-500/10 px-3 rounded-xl border border-amber-500/20">
-                    📋 {{ currentLocale === 'ar' ? 'استمارة متطلبات مطعمك (دراسة ما قبل البيع)' : 'Restaurant Assessment Form' }}
-                </Link>
-
-                <div class="pt-4 border-t flex flex-col gap-3" :class="isDark ? 'border-white/10' : 'border-slate-100'">
-                    <template v-if="$page.props.auth?.user">
-                        <Link :href="route('dashboard')" class="text-center w-full py-3 rounded-xl bg-amber-500 text-slate-950 font-bold text-sm">
-                            {{ t.nav.dashboard }}
-                        </Link>
-                    </template>
-                    <template v-else>
+                        <!-- Login Link -->
                         <Link
-                            :href="route('login')"
-                            class="text-center w-full py-2.5 rounded-xl font-medium text-sm border"
-                            :class="isDark ? 'border-white/10 text-white' : 'border-slate-200 text-slate-800 bg-slate-50'"
+                            v-if="canLogin"
+                            href="/login"
+                            class="px-3.5 py-1.5 rounded-xl font-bold text-xs sm:text-sm border transition-all"
+                            :class="isDark ? 'border-amber-500/40 text-amber-400 hover:bg-amber-500/10' : 'border-stone-300 text-stone-800 hover:bg-stone-100'"
                         >
-                            {{ t.nav.signIn }}
+                            {{ currentLocale === 'ar' ? 'تسجيل الدخول' : 'Sign In' }}
                         </Link>
-                        <button @click="isDemoModalOpen = true; isMobileMenuOpen = false" class="w-full py-3 rounded-xl bg-amber-500 text-slate-950 font-bold text-sm">
-                            {{ t.nav.bookDemo }}
-                        </button>
-                    </template>
+                    </div>
                 </div>
             </div>
         </header>
 
         <!-- ========================================================================= -->
-        <!-- HERO SECTION: CINEMATIC FULL-SCREEN BACKGROUND + CENTERED ROYAL CONTENT -->
+        <!-- 2. EXECUTIVE CHEF LUXURY HERO STAGE (Matching High-End Mockup) -->
         <!-- ========================================================================= -->
-        <section
-            id="hero-luxury"
-            dir="rtl"
-            class="relative min-h-screen flex flex-col items-center justify-center overflow-hidden z-10"
-        >
-            <!-- Luxury Velvet Emerald Stage Lighting & Vignette Layer (Transparent so Wallpaper flows through) -->
-            <div class="absolute inset-0 z-0 bg-transparent overflow-hidden pointer-events-none">
-                <!-- Center Warm Champagne & Emerald Lighting Glow -->
-                <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(212,175,55,0.18)_0%,rgba(16,185,129,0.12)_35%,transparent_75%)]"></div>
-            </div>
+        <section class="relative pt-4 pb-10 md:pt-8 md:pb-16 overflow-hidden z-10">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <!-- Widescreen Framing Card with Executive Chef Background -->
+                <div :class="isDark ? 'border-[rgba(226,196,133,0.18)] bg-[#0C0C0E] shadow-[0_20px_60px_rgba(0,0,0,0.85)]' : 'border-stone-200/90 bg-[#FBF9F5] shadow-[0_15px_45px_rgba(28,25,23,0.06)]'" class="relative rounded-[2.5rem] overflow-hidden border min-h-[500px] lg:min-h-[620px] flex flex-col lg:flex-row items-center transition-colors">
+                    <!-- High-Resolution Executive Chef Plating Image (Desktop) -->
+                    <img
+                        src="/images/tedallal-chef-hero.jpg"
+                        alt="Executive Chef Plating Exquisite Cuisine"
+                        class="hidden lg:block absolute inset-0 w-full h-full object-cover object-[16%_center] transform scale-[1.03] transition-transform duration-1000"
+                    />
 
-            <!-- Centered Content -->
-            <div class="relative z-10 w-full max-w-6xl mx-auto px-6 sm:px-12 py-24 flex flex-col items-center text-center">
+                    <!-- Atmospheric Cinematic Gradients for Desktop (Gentle, Natural Contrast - No Overly Glowing Wash) -->
+                    <div
+                        class="hidden lg:block absolute inset-0 pointer-events-none"
+                        :class="isDark
+                            ? (currentLocale === 'ar' ? 'bg-gradient-to-l from-[#0C0C0E]/90 via-[#0C0C0E]/55 to-transparent' : 'bg-gradient-to-r from-transparent via-[#0C0C0E]/55 to-[#0C0C0E]/90')
+                            : (currentLocale === 'ar' ? 'bg-gradient-to-l from-stone-900/60 via-stone-900/20 to-transparent' : 'bg-gradient-to-r from-transparent via-stone-900/20 to-stone-900/60')"
+                    ></div>
+                    <div class="hidden lg:block absolute inset-0 pointer-events-none bg-gradient-to-t from-stone-950/40 via-transparent to-transparent"></div>
 
-                <!-- Tedallal Bespoke Animated Vector Assembly & 3D Emblem Showcase -->
-                <div class="mb-6 w-full flex flex-col items-center">
-                    <TedallalHeroLogo width-class="w-64 sm:w-80 md:w-96 lg:w-[420px]" />
-                </div>
-
-                <!-- Royal Badge with Live Engine Status -->
-                <div class="relative inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-black/60 backdrop-blur-xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_10px_30px_rgba(0,0,0,0.5)] mb-8 before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/50 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm transition-all duration-500 hover:border-[#D4AF37]/40 hover:shadow-[0_0_25px_rgba(212,175,55,0.25)]">
-                    <svg class="w-4 h-4 text-[#D4AF37]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z"/>
-                        <circle cx="12" cy="18" r="1" fill="#D4AF37"/>
-                    </svg>
-                    <span class="text-xs sm:text-sm font-semibold tracking-widest text-[#FCF6BA]">
-                        {{ currentLocale === 'ar' ? 'منظومة تدلَّل السحابية • لأرقى المطاعم والفنادق' : 'TEDALLAL BESPOKE RESTAURANT CLOUD' }}
-                    </span>
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-[10px] text-emerald-300 font-bold tracking-normal">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
-                        <span>{{ currentLocale === 'ar' ? 'مباشر' : 'Live' }}</span>
-                    </span>
-                </div>
-
-                <!-- Before/After Mode Switcher — centered -->
-                <div class="relative inline-flex items-center p-2 rounded-2xl bg-black/50 backdrop-blur-xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] mb-10 before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/30 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm">
-                    <button
-                        @click="setHeroMode('traditional', true)"
-                        type="button"
-                        :class="heroMode === 'traditional'
-                            ? 'bg-rose-950/70 text-rose-200 border border-rose-500/50 font-bold shadow-lg'
-                            : 'text-stone-400 hover:text-rose-300 border border-transparent font-medium'"
-                        class="relative flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm transition-all duration-500 cursor-pointer"
-                    >
-                        <span class="w-2 h-2 rounded-full" :class="heroMode === 'traditional' ? 'bg-rose-500' : 'bg-stone-500/40'"></span>
-                        <span>{{ currentLocale === 'ar' ? 'النمط التقليدي' : 'Legacy Model' }}</span>
-                    </button>
-                    <button
-                        @click="setHeroMode('smart', true)"
-                        type="button"
-                        :class="heroMode === 'smart'
-                            ? 'bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] text-black font-extrabold shadow-xl shadow-[#D4AF37]/25'
-                            : 'text-stone-400 hover:text-[#FCF6BA] border border-transparent font-medium'"
-                        class="relative flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm transition-all duration-500 cursor-pointer"
-                    >
-                        <span class="w-2 h-2 rounded-full" :class="heroMode === 'smart' ? 'bg-black' : 'bg-[#D4AF37]/50'"></span>
-                        <span>{{ currentLocale === 'ar' ? 'منظومة تدلّل (تحكم كامل)' : 'Tedallal Platform' }}</span>
-                    </button>
-                </div>
-
-                <!-- Massive Royal Headline: Centered, Typography As Art with Crisp Contours -->
-                <Transition name="hero-mode" mode="out-in">
-                    <div :key="heroMode" class="space-y-6 max-w-5xl mx-auto">
-                        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.25] text-white">
-                            <template v-if="heroMode === 'traditional'">
-                                <span class="block text-2xl sm:text-4xl lg:text-5xl text-stone-100 leading-relaxed font-bold drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] [text-shadow:_0_2px_10px_rgba(0,0,0,0.9),_0_0_1px_rgba(0,0,0,0.9)]">
-                                    <template v-if="currentLocale === 'ar'">
-                                        <span class="inline-block">مطبخ مزدحم،</span>
-                                        <span class="inline-block">مبيعات تتصاعد..</span>
-                                    </template>
-                                    <template v-else>
-                                        <span class="inline-block">Crowded Kitchen,</span>
-                                        <span class="inline-block">Surging Sales..</span>
-                                    </template>
-                                </span>
-                                <span class="block mt-4 sm:mt-6 text-3xl sm:text-5xl lg:text-6xl font-extrabold text-rose-400 leading-[1.8] sm:leading-[1.9] lg:leading-[2.0] py-2 drop-shadow-[0_4px_24px_rgba(244,63,94,0.35)] [text-shadow:_0_2px_12px_rgba(0,0,0,0.95),_0_0_1px_rgba(0,0,0,0.95)]">
-                                    <template v-if="currentLocale === 'ar'">
-                                        <span class="inline-block">وأرباحك الحقيقية</span>
-                                        <span class="inline-block">تتبخر بين التطبيقات والهَدْر!</span>
-                                    </template>
-                                    <template v-else>
-                                        <span class="inline-block">Yet Your Real Profits</span>
-                                        <span class="inline-block">Vanish In Delivery Fees & Waste!</span>
-                                    </template>
-                                </span>
-                            </template>
-                            <template v-else>
-                                <span class="block text-2xl sm:text-4xl lg:text-5xl text-white leading-relaxed font-bold drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] [text-shadow:_0_2px_10px_rgba(0,0,0,0.95),_0_0_1px_rgba(255,255,255,0.4)]">
-                                    <template v-if="currentLocale === 'ar'">
-                                        <span class="inline-block">مطبخ مُنظَّم كالساعة،</span>
-                                        <span class="inline-block">طلبات مباشرة..</span>
-                                    </template>
-                                    <template v-else>
-                                        <span class="inline-block">Clockwork Kitchen,</span>
-                                        <span class="inline-block">Direct Table Orders..</span>
-                                    </template>
-                                </span>
-                                <span class="block mt-4 sm:mt-6 text-3xl sm:text-5xl lg:text-6xl font-black bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-transparent leading-[1.8] sm:leading-[1.9] lg:leading-[2.0] py-2 filter drop-shadow-[0_4px_20px_rgba(0,0,0,0.95)] drop-shadow-[0_0_30px_rgba(212,175,55,0.45)]">
-                                    <template v-if="currentLocale === 'ar'">
-                                        <span class="inline-block">وكل قرش من أرباحك</span>
-                                        <span class="inline-block">يدخل جيبك بالكامل!</span>
-                                    </template>
-                                    <template v-else>
-                                        <span class="inline-block">And Every Cent of Profit</span>
-                                        <span class="inline-block">Goes Straight to Your Pocket!</span>
-                                    </template>
-                                </span>
-                            </template>
-                        </h1>
-
-                        <p class="text-base sm:text-lg text-slate-300 dark:text-stone-300 max-w-2xl mx-auto leading-relaxed pt-2">
-                            <template v-if="heroMode === 'traditional'">
-                                {{ currentLocale === 'ar'
-                                    ? 'عمولات وساطة تلتهم 25% من إيراداتك، أخطاء متكررة في تذاكر المطبخ، ومخزون يتسرب يومياً دون رقابة دقيقة.'
-                                    : 'Intermediary apps cutting 25% of your revenue, recurring kitchen ticket mistakes, and unaccounted daily stock loss.'
-                                }}
-                            </template>
-                            <template v-else>
-                                {{ currentLocale === 'ar'
-                                    ? 'نظام سحابي نخبوي يوقف استنزاف العمولات، يربط الصالة بالمطبخ لحظياً بهندسة دقيقة، ويمنحك سيطرة تشغيلية ومالية بنسبة 100%.'
-                                    : 'A bespoke cloud architecture eliminating app cuts, connecting floor to kitchen instantly, and providing 100% financial and operational control.'
-                                }}
-                            </template>
-                        </p>
-                    </div>
-                </Transition>
-
-                <!-- Micro Metrics Trio: 3 Carved Glass Cards — centered row -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 mt-12 w-full max-w-3xl">
-                    <!-- Metric 1: 0% Commission -->
-                    <div class="relative p-6 rounded-2xl bg-black/50 backdrop-blur-xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_20px_40px_rgba(0,0,0,0.6)] before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/40 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm transition-all duration-500 hover:before:from-[#D4AF37]/80 hover:shadow-[0_0_35px_rgba(212,175,55,0.2)] hover:-translate-y-1 flex flex-col items-center justify-center text-center">
-                        <!-- Icon -->
-                        <div class="w-9 h-9 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center mb-3">
-                            <svg class="w-5 h-5 text-[#D4AF37]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="8"/><path d="M9 15l6-6M9.5 9.5h.01M14.5 14.5h.01"/></svg>
+                    <!-- Mobile Chef Upper Visual Banner (< lg) -->
+                    <div class="block lg:hidden relative w-full h-64 sm:h-80 overflow-hidden">
+                        <img
+                            src="/images/tedallal-chef-hero.jpg"
+                            alt="Executive Chef Plating Exquisite Cuisine"
+                            class="w-full h-full object-cover object-[center_28%]"
+                        />
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#0C0C0E] via-transparent to-black/30"></div>
+                        <div class="absolute bottom-3 start-4 flex items-center gap-2 px-3 py-1 rounded-full bg-black/70 border border-amber-500/40 backdrop-blur-md">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                            <span class="text-[11px] font-black text-amber-300">ميشلان ستار • أعلى معايير الضيافة</span>
                         </div>
-                        <span class="text-xs text-stone-300 font-medium mb-1">{{ currentLocale === 'ar' ? 'عمولة وسيط' : 'Intermediary Cut' }}</span>
-                        <span class="text-3xl font-extrabold bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] bg-clip-text text-transparent" dir="ltr">0%</span>
-                        <span class="text-[11px] font-bold text-emerald-400 mt-1.5">{{ currentLocale === 'ar' ? 'أرباحك كاملة 100% لك' : '100% direct revenue' }}</span>
                     </div>
 
-                    <!-- Metric 2: Real-Time Cost -->
-                    <div class="relative p-6 rounded-2xl bg-black/50 backdrop-blur-xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_20px_40px_rgba(0,0,0,0.6)] before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/40 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm transition-all duration-500 hover:before:from-[#D4AF37]/80 hover:shadow-[0_0_35px_rgba(212,175,55,0.2)] hover:-translate-y-1 flex flex-col items-center justify-center text-center">
-                        <!-- Icon -->
-                        <div class="w-9 h-9 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center mb-3">
-                            <svg class="w-5 h-5 text-[#D4AF37]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20V10M6 20V14M18 20V4"/></svg>
-                        </div>
-                        <span class="text-xs text-stone-300 font-medium mb-1">{{ currentLocale === 'ar' ? 'ضبط التكاليف' : 'Cost Control' }}</span>
-                        <span class="text-2xl font-bold text-[#FCF6BA]">{{ currentLocale === 'ar' ? 'فوري ولحظي' : 'Real-Time' }}</span>
-                        <span class="text-[11px] font-bold text-stone-300 mt-1.5">{{ currentLocale === 'ar' ? 'ربط المطبخ بالوصفات آلياً' : 'Recipe-level inventory sync' }}</span>
-                    </div>
-
-                    <!-- Metric 3: Profit Growth -->
-                    <div class="relative p-6 rounded-2xl bg-black/50 backdrop-blur-xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_20px_40px_rgba(0,0,0,0.6)] before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/40 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm transition-all duration-500 hover:before:from-[#D4AF37]/80 hover:shadow-[0_0_35px_rgba(212,175,55,0.2)] hover:-translate-y-1 flex flex-col items-center justify-center text-center">
-                        <!-- Icon -->
-                        <div class="w-9 h-9 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center mb-3">
-                            <svg class="w-5 h-5 text-[#D4AF37]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22,7 13.5,15.5 8.5,10.5 2,17"/><polyline points="16,7 22,7 22,13"/></svg>
-                        </div>
-                        <span class="text-xs text-stone-300 font-medium mb-1">{{ currentLocale === 'ar' ? 'النتيجة' : 'Bottom-Line Growth' }}</span>
-                        <span class="text-2xl font-bold text-[#FCF6BA]">{{ currentLocale === 'ar' ? 'مضاعفة صافي الأرباح' : '+100% Margin Boost' }}</span>
-                        <span class="text-[11px] font-bold text-[#D4AF37] mt-1.5">{{ currentLocale === 'ar' ? 'نمو وسيطرة مالية كاملة' : 'Total operational command' }}</span>
-                    </div>
-                </div>
-
-                <!-- CTA Buttons Row — centered -->
-                <div class="flex flex-col sm:flex-row items-center justify-center gap-5 mt-10">
-                    <!-- Primary Gold CTA with Shimmer Effect -->
-                    <button
-                        @click="isDemoModalOpen = true"
-                        type="button"
-                        class="relative group overflow-hidden px-10 py-4 rounded-full bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] text-black font-extrabold text-base shadow-[0_12px_40px_rgba(212,175,55,0.4)] hover:shadow-[0_18px_50px_rgba(212,175,55,0.55)] transition-all duration-500 hover:-translate-y-1 active:translate-y-0 cursor-pointer flex items-center gap-3"
+                    <!-- Floating Glassmorphism Hero Box (Placed on the RIGHT side on Desktop) -->
+                    <div
+                        class="relative z-10 w-full lg:w-[48%] xl:w-[46%] p-4 sm:p-8 lg:p-12"
+                        :class="currentLocale === 'ar' ? 'lg:me-auto lg:ms-6' : 'lg:ms-auto lg:me-6'"
                     >
-                        <div class="absolute inset-0 -translate-x-full group-hover:translate-x-full duration-1000 bg-gradient-to-r from-transparent via-white/35 to-transparent transition-transform"></div>
-                        <span>{{ currentLocale === 'ar' ? 'ابدأ بتأمين أرباحك وتجربة النظام' : 'Start Securing Your Profits Free' }}</span>
-                        <span class="text-xs px-2.5 py-0.5 rounded-md font-black bg-black/15">
-                            14 {{ currentLocale === 'ar' ? 'يوماً تجربة' : 'Days Free' }}
-                        </span>
-                    </button>
-
-                    <!-- Secondary Glass CTA -->
-                    <a
-                        href="#features-bespoke"
-                        class="relative px-8 py-4 rounded-full bg-black/40 backdrop-blur-xl border border-white/20 text-stone-200 hover:border-[#D4AF37]/50 hover:text-[#FCF6BA] hover:shadow-[0_0_30px_rgba(212,175,55,0.15)] transition-all duration-500 flex items-center gap-3 text-sm font-semibold cursor-pointer"
-                    >
-                        <span>{{ currentLocale === 'ar' ? 'استكشف المزايا' : 'Explore Features' }}</span>
-                        <span class="text-xs rtl:rotate-180">→</span>
-                    </a>
-
-                    <!-- Consultation link -->
-                    <Link
-                        href="/consultation"
-                        class="text-stone-400 hover:text-[#FCF6BA] transition-all duration-500 text-sm font-semibold flex items-center gap-2 group cursor-pointer"
-                    >
-                        <span>{{ currentLocale === 'ar' ? 'دراسة متطلبات مطعمك' : 'Request Consultation' }}</span>
-                        <span class="text-xs rtl:rotate-180 group-hover:translate-x-[-4px] rtl:group-hover:translate-x-1 transition-transform duration-500">→</span>
-                    </Link>
-                </div>
-
-                <!-- Scroll hint -->
-                <div class="mt-16 flex flex-col items-center gap-2 text-stone-500 animate-bounce">
-                    <span class="text-xs font-medium tracking-widest">{{ currentLocale === 'ar' ? 'اكتشف المزيد' : 'EXPLORE' }}</span>
-                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
-                </div>
-
-            </div>
-        </section>
-
-        <!-- ========================================================================= -->
-        <!-- BESPOKE TOP FEATURES: CARVED SCULPTURAL ARCHITECTURE (NON-GRID) -->
-        <!-- ========================================================================= -->
-        <section
-            id="features-bespoke"
-            dir="rtl"
-            class="py-32 lg:py-44 px-6 sm:px-12 lg:px-24 relative z-10 border-t border-white/5"
-        >
-            <div class="max-w-[1600px] mx-auto">
-
-                <!-- Section Editorial Header (Typography As Art) -->
-                <div class="max-w-3xl mb-24 space-y-5 text-start">
-                    <div class="relative inline-flex items-center gap-2.5 px-4.5 py-1.5 rounded-full bg-black/40 backdrop-blur-xl border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_20px_40px_rgba(0,0,0,0.5)] before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/50 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm text-[#FCF6BA] text-xs font-semibold">
-                        <span class="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-pulse"></span>
-                        <span>{{ currentLocale === 'ar' ? 'هندسة الضيافة الرقمية • قيادة معمارية متكاملة' : 'BESPOKE PLATFORM ARCHITECTURE' }}</span>
-                    </div>
-
-                    <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-[#FCF6BA] to-[#D4AF37] leading-tight py-1">
-                        {{ currentLocale === 'ar' ? 'أركان المنظومة المصممة يدوياً لرواد الضيافة الفاخرة' : 'Bespoke Pillars for Elite Restaurant Operations' }}
-                    </h2>
-
-                    <p class="text-base sm:text-lg text-slate-300 dark:text-stone-300 leading-relaxed max-w-2xl">
-                        {{ currentLocale === 'ar'
-                            ? 'نرفض القوالب البرمجية المكررة. بنينا كل تفصيلة في تدلّل لتجسيد الفخامة البصرية ودقة الأتمتة اللحظية لصالتك ومطبخك.'
-                            : 'Rejecting generic SaaS templates. Every element is crafted to unify visual majesty with real-time operational precision.'
-                        }}
-                    </p>
-                </div>
-
-                <!-- Asymmetrical Sculptural Composition with Overlapping Monoliths -->
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-
-                    <!-- Monolith 1: Grand Tall Carved Glass Structure (Col-span 7) -->
-                    <div class="lg:col-span-7 relative p-10 sm:p-14 rounded-3xl bg-black/40 backdrop-blur-xl border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_30px_70px_rgba(0,0,0,0.7)] before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/50 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm transition-all duration-500 hover:before:from-[#D4AF37]/85 hover:shadow-[0_0_40px_rgba(212,175,55,0.25)] hover:-translate-y-1 group text-start overflow-hidden">
-                        <!-- Top Ambient Golden Shimmer -->
-                        <div class="absolute top-0 right-0 w-96 h-96 bg-[radial-gradient(ellipse_at_top_right,rgba(212,175,55,0.08),transparent_70%)] pointer-events-none"></div>
-
-                        <div class="space-y-7 relative z-10">
-                            <!-- Minimalist Gold Wireframe Icon -->
-                            <div class="w-16 h-16 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] flex items-center justify-center text-[#D4AF37] transition-all duration-500 group-hover:scale-105">
-                                <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="3" y="3" width="7" height="7" rx="1.5" />
-                                    <rect x="14" y="3" width="7" height="7" rx="1.5" />
-                                    <rect x="3" y="14" width="7" height="7" rx="1.5" />
-                                    <path d="M14 14h3v3h-3z" />
-                                    <path d="M20 14v3h-3" />
-                                    <path d="M14 20h6" />
+                        <div :class="isDark ? 'glass-ultra text-white shadow-xl' : 'glass-ultra text-stone-900 shadow-[0_12px_30px_rgba(28,25,23,0.06)]'" class="rounded-3xl p-7 sm:p-10 relative overflow-hidden transition-all duration-300">
+                            <!-- Origami Crown Badge & Sub-label -->
+                            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border mb-4" :class="isDark ? 'bg-amber-500/10 border-amber-500/30 text-amber-300' : 'bg-amber-500/10 border-[#C5A059]/30 text-[#7A5208] shadow-2xs'">
+                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 18h18M4 18l2.5-11 4.5 6 3-8 3 8 4.5-6L20 18" />
+                                    <circle cx="6.5" cy="7" r="0.75" fill="currentColor" />
+                                    <circle cx="14" cy="5" r="0.75" fill="currentColor" />
+                                    <circle cx="21.5" cy="7" r="0.75" fill="currentColor" />
                                 </svg>
-                            </div>
-
-                            <div class="flex items-center gap-3">
-                                <span class="px-3.5 py-1 rounded-full text-xs font-bold bg-[#BF953F]/20 text-[#FCF6BA] border border-[#BF953F]/40">
-                                    {{ currentLocale === 'ar' ? 'الباقة المتكاملة (ماكس) الحصرية' : 'Max Plan Signature' }}
+                                <span class="text-xs font-black uppercase tracking-widest">
+                                    {{ currentLocale === 'ar' ? 'المنظومة السحابية الفاخرة للضيافة' : 'EXQUISITE HOSPITALITY OS' }}
                                 </span>
-                                <span class="text-xs text-slate-300 font-medium">{{ currentLocale === 'ar' ? 'بدون أي تطبيق — يعمل فوراً عبر المتصفح' : 'Zero App Downloads Required' }}</span>
                             </div>
 
-                            <h3 class="text-xl sm:text-2xl font-bold leading-snug text-white group-hover:text-[#FCF6BA] transition-colors duration-500">
-                                {{ currentLocale === 'ar' ? 'منيو الباركود التفاعلي — فخامة بصرية وشعار مخصص في قلب رمز الاستجابة السريع' : 'Interactive QR Dining & Centerpiece Logo Customization' }}
-                            </h3>
+                            <!-- Main Title (Matching the mockup exact wording) -->
+                            <h1 class="text-2xl sm:text-4xl lg:text-5xl font-black leading-tight mb-2 tracking-tight transition-colors" :class="isDark ? 'text-white' : 'text-stone-900'">
+                                {{ currentLocale === 'ar' ? 'تَدلَّل - لإدارةٍ راقيةٍ للمطاعم' : 'TEDALLAL - For Exquisite Restaurant Management' }}
+                            </h1>
 
-                            <p class="text-sm sm:text-base text-slate-300 dark:text-stone-300 leading-relaxed max-w-xl">
-                                {{ currentLocale === 'ar'
-                                    ? 'يتيح لضيوفك استعراض الأطباق بصور عالية الدقة فائقة الوضوح، والطلب المباشر من طاولتهم دون تنزيل أي تطبيق. يتضمن ميزة دمج شعار مطعمك الذهبي في منتصف الباركود مع دعم متعدد العملات واللغات.'
-                                    : 'Empowers patrons to explore high-res dishes and order directly from their table with zero app installs. Embeds your bespoke gold restaurant emblem in the QR center.'
-                                }}
+                            <!-- Subtitle / English line -->
+                            <p class="text-xs sm:text-sm font-bold tracking-wide mb-3" :class="isDark ? 'text-amber-400' : 'text-[#8C6010]'">
+                                TEDALLAL - For Exquisite Restaurant Management
                             </p>
 
-                            <!-- Interactive VIP Floor Ticket Preview -->
-                            <div class="pt-8 border-t border-white/10 flex flex-wrap items-center justify-between gap-4">
-                                <div class="flex items-center gap-3.5">
-                                    <div class="w-12 h-12 rounded-xl bg-black/40 border border-white/10 flex items-center justify-center text-[#D4AF37] font-bold text-xs">
-                                        {{ currentLocale === 'ar' ? 'باركود' : 'QR' }}
-                                    </div>
-                                    <div class="text-start">
-                                        <div class="text-xs font-bold text-white">{{ currentLocale === 'ar' ? 'طلب فوري من الطاولة • دقة 100%' : 'Instant Table Order • 100% Accuracy' }}</div>
-                                        <div class="text-[11px] text-stone-300 mt-0.5">{{ currentLocale === 'ar' ? 'توفير 40% من وقت النادل لكل دورة طاولة' : 'Saves 40% waiter time per table turn' }}</div>
-                                    </div>
-                                </div>
+                            <!-- Tagline -->
+                            <p class="text-xs sm:text-sm leading-relaxed mb-8 font-medium transition-colors" :class="isDark ? 'text-stone-300' : 'text-stone-700'">
+                                {{ currentLocale === 'ar'
+                                    ? 'تدلّل • الإدارة الراقية للمطاعم. تجربة طعام ملكية لرواد مطعمك، مع شاشات مطبخ KDS فورية، تحليلات مالية شفافة، و0% عمولات مجحفة.'
+                                    : 'Empowering fine-dining establishments with flawless digital QR menus, chef-centric kitchen automation, and full executive financial control.' }}
+                            </p>
 
+                            <!-- Golden Action Button (Pill matching mockup, Calm Luxury) -->
+                            <div class="flex flex-wrap items-center gap-3">
                                 <button
+                                    type="button"
+                                    class="px-8 py-3.5 rounded-full bg-gradient-to-r from-[#BF953F] via-[#E8C265] to-[#B38728] text-stone-950 font-black text-xs sm:text-sm shadow-sm hover:shadow-md hover:shadow-amber-500/15 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
                                     @click="isDemoModalOpen = true"
-                                    class="text-xs font-bold text-[#FCF6BA] flex items-center gap-1.5 transition-all duration-500 hover:text-white group-hover:translate-x-[-4px] rtl:group-hover:translate-x-1"
                                 >
-                                    <span>{{ currentLocale === 'ar' ? 'شاهد تجربة الطاولات' : 'Inspect Table Demo' }}</span>
-                                    <span class="rtl:rotate-180">→</span>
+                                    <span>{{ currentLocale === 'ar' ? 'تدلّل - للمطاعم' : 'Tedallal - For Restaurants' }}</span>
+                                    <span class="text-stone-950">✦</span>
                                 </button>
+                                <a
+                                    href="#platform-mockups"
+                                    :class="isDark ? 'border-white/20 text-stone-200 hover:bg-white/10' : 'border-stone-300 text-stone-900 bg-white/90 hover:bg-stone-100 shadow-xs'" class="px-5 py-3 rounded-full border text-xs sm:text-sm font-bold transition-colors"
+                                >
+                                    {{ currentLocale === 'ar' ? 'استكشف الواجهات الحية' : 'Explore Platform' }} ↓
+                                </a>
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </section>
 
-                    <!-- Monolith 2: Elevated Offset Carved Glass Card (Col-span 5 with -mt-10 overlap on lg) -->
-                    <div class="lg:col-span-5 lg:-mt-10 relative p-8 sm:p-12 rounded-3xl bg-black/40 backdrop-blur-xl border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_30px_70px_rgba(0,0,0,0.7)] before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/50 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm transition-all duration-500 hover:before:from-[#D4AF37]/85 hover:shadow-[0_0_40px_rgba(212,175,55,0.25)] hover:-translate-y-1 group text-start overflow-hidden">
-                        <!-- Top Ambient Golden Shimmer -->
-                        <div class="absolute top-0 right-0 w-64 h-64 bg-[radial-gradient(ellipse_at_top_right,rgba(212,175,55,0.07),transparent_70%)] pointer-events-none"></div>
+        <!-- ========================================================================= -->
+        <!-- 3. TEDALLAL EXQUISITE PLATFORM MOCKUP SHOWCASE (BENTO SUITE) -->
+        <!-- ========================================================================= -->
+        <section id="platform-mockups" class="relative py-12 lg:py-20 z-10">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <!-- Section Header -->
+                <div class="text-center max-w-3xl mx-auto mb-10">
+                    <span class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[11px] font-black tracking-widest uppercase mb-3 border" :class="isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' : 'bg-amber-500/15 text-[#8C6010] border-[#C5A059]/40 shadow-xs'">
+                        {{ currentLocale === 'ar' ? 'الواجهات والمكونات الحية' : 'EXECUTIVE HARDWARE & SOFTWARE ECOSYSTEM' }}
+                    </span>
+                    <h2 class="text-2xl sm:text-3xl lg:text-4xl font-black mb-3" :class="isDark ? 'text-white' : 'text-stone-900'">
+                        {{ currentLocale === 'ar' ? 'منظومة تدلّل المتكاملة من الصالة إلى المطبخ والإدارة' : 'Seamless Integration from Dining Room to Kitchen' }}
+                    </h2>
+                    <div class="flex items-center justify-center gap-3 my-3">
+                        <div class="h-px w-12 bg-amber-500/50"></div>
+                        <span class="text-amber-400 text-sm">⚜️</span>
+                        <div class="h-px w-12 bg-amber-500/50"></div>
+                    </div>
+                </div>
 
-                        <div class="space-y-6 relative z-10">
-                            <!-- Minimalist Gold Wireframe Icon -->
-                            <div class="w-14 h-14 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] flex items-center justify-center text-[#D4AF37] transition-all duration-500 group-hover:scale-105">
-                                <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="2" y="3" width="20" height="14" rx="2" />
-                                    <line x1="8" y1="21" x2="16" y2="21" />
-                                    <line x1="12" y1="17" x2="12" y2="21" />
-                                    <path d="M6 8h4m-4 3h8" />
-                                </svg>
+                <!-- TOP ROW: 3 Large Mockup Cards matching the user's design (LTR order: Phone -> KDS -> Graph) -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6" dir="ltr">
+
+                    <!-- CARD 1: Luxury Digital QR Menu -->
+                    <div dir="rtl" :class="isDark ? 'glass-ultra text-white' : 'glass-ultra text-stone-900'" class="rounded-3xl p-5 sm:p-6 flex flex-col justify-between overflow-hidden transition-all duration-500 hover:-translate-y-1.5">
+                        <!-- Top Text -->
+                        <div class="flex items-start justify-between mb-4">
+                            <div>
+                                <span class="text-[11px] font-black tracking-widest uppercase text-amber-400/90 block">
+                                    Luxury Digital QR Menu
+                                </span>
+                                <h3 class="text-base sm:text-lg font-black mt-1" :class="isDark ? 'text-white' : 'text-stone-900'">
+                                    {{ currentLocale === 'ar' ? 'قائمة طعام رقمية فاخرة (QR)' : 'Interactive Luxury QR Menu' }}
+                                </h3>
                             </div>
-
-                            <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-white/5 text-[#FCF6BA] border border-white/10">
-                                {{ currentLocale === 'ar' ? 'تنظيم المطبخ اللحظي' : 'Cloud KDS Routing' }}
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                                PWA فوري
                             </span>
-
-                            <h3 class="text-xl sm:text-2xl font-bold leading-snug text-white group-hover:text-[#FCF6BA] transition-colors duration-500">
-                                {{ currentLocale === 'ar' ? 'شاشات المطبخ الذكية (محطات مطبخ متعددة)' : 'Multi-Station Cloud KDS Displays' }}
-                            </h3>
-
-                            <p class="text-sm sm:text-base text-slate-300 dark:text-stone-300 leading-relaxed">
-                                {{ currentLocale === 'ar'
-                                    ? 'توجيه آلي وفوري للطلبات بين خطوط التحضير (مشاوي، بار، سلطات) مع مؤقتات لونية تقضي تماماً على التذاكر الورقية وتمنع تأخير الأطباق.'
-                                    : 'Real-time automatic routing across preparation lines (Grill, Bar, Pastry) with color-coded timers eliminating paper ticket chaos.'
-                                }}
-                            </p>
-
-                            <!-- Mini Preparation Benchmark Widget -->
-                            <div class="pt-6 border-t border-white/10 flex items-center justify-between text-xs">
-                                <span class="text-stone-300">{{ currentLocale === 'ar' ? 'مؤقت التحضير المعياري' : 'Prep Benchmark' }}</span>
-                                <span class="font-mono font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-md border border-emerald-500/25">08:30 دقيقة</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Monolith 3: Panoramic Horizontal Carved Glass Plinth (Col-span 12 underneath, bridging both) -->
-                    <div class="lg:col-span-12 relative p-10 sm:p-14 rounded-3xl bg-black/40 backdrop-blur-xl border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_30px_70px_rgba(0,0,0,0.7)] before:absolute before:-inset-[1px] before:bg-gradient-to-b before:from-[#D4AF37]/50 before:to-transparent before:-z-10 before:rounded-[inherit] before:blur-sm transition-all duration-500 hover:before:from-[#D4AF37]/85 hover:shadow-[0_0_40px_rgba(212,175,55,0.25)] hover:-translate-y-1 group overflow-hidden">
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center text-start relative z-10">
-
-                            <!-- Left Sub-Wing: Financial Analytics & Zero Cut -->
-                            <div class="space-y-5">
-                                <div class="w-14 h-14 rounded-xl bg-black/40 border border-white/10 flex items-center justify-center text-[#D4AF37]">
-                                    <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                                        <circle cx="12" cy="12" r="10" stroke-dasharray="2 2" />
-                                    </svg>
-                                </div>
-                                <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
-                                    {{ currentLocale === 'ar' ? 'حماية الإيراد الكامل' : '100% Margin Retention' }}
-                                </span>
-                                <h4 class="text-lg sm:text-xl font-bold leading-snug text-white">
-                                    {{ currentLocale === 'ar' ? 'صفر عمولة وسيطة 0% — كل قرش يدخل حسابك' : 'Zero 0% Commission — Retain All Profits' }}
-                                </h4>
-                                <p class="text-sm text-slate-300 dark:text-stone-300 leading-relaxed">
-                                    {{ currentLocale === 'ar'
-                                        ? 'احتفظ بكامل أرباحك بدون استنزاف تطبيقات التوصيل (15%-25%). تقارير محاسبية فورية مع جرد آلي للمخزون يربط كل وجبة بمكوناتها بدقة الغرام.'
-                                        : 'Retain 100% of receipts without delivery app cuts. Real-time CPA reports and automated recipe-level inventory tracking.'
-                                    }}
-                                </p>
-                            </div>
-
-                            <!-- Right Sub-Wing: AI Smart Waiter Upselling -->
-                            <div class="space-y-5 lg:border-s lg:border-white/10 lg:ps-12">
-                                <div class="w-14 h-14 rounded-xl bg-black/40 border border-white/10 flex items-center justify-center text-[#D4AF37]">
-                                    <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6.4-4.8-6.4 4.8 2.4-7.2-6-4.8h7.6z" />
-                                    </svg>
-                                </div>
-                                <span class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-[#BF953F]/20 text-[#FCF6BA] border border-[#BF953F]/40">
-                                    {{ currentLocale === 'ar' ? 'زيادة المبيعات آلياً' : 'Automated Upselling AI' }}
-                                </span>
-                                <h4 class="text-lg sm:text-xl font-bold leading-snug text-white">
-                                    {{ currentLocale === 'ar' ? 'النادل الذكي — زيادة متوسط الفاتورة بنسبة 28%' : 'AI Concierge — +28% Average Ticket Growth' }}
-                                </h4>
-                                <p class="text-sm text-slate-300 dark:text-stone-300 leading-relaxed">
-                                    {{ currentLocale === 'ar'
-                                        ? 'محرك اقتراحات نخبوي يقترح الأطباق الجانبية والمشروبات المتناغمة بأسلوب راقٍ وتوقيت نفسي مثالي، لرفع قيمة الفاتورة دون أي إلحاح.'
-                                        : 'An intelligent recommendation engine presenting complementary pairings and desserts at the exact psychological moment.'
-                                    }}
-                                </p>
-                            </div>
-
-                        </div>
-                    </div>
-
-                </div>
-
-            </div>
-        </section>
-
-        <!-- ========================================================================= -->
-        <!-- ARCHITECTURE WORKFLOW: HOW IT WORKS (POSTPAID & PREPAID) -->
-        <!-- ========================================================================= -->
-        <section
-            id="how-it-works"
-            class="py-24 relative z-10 border-t backdrop-blur-xl transition-colors duration-500"
-            :class="isDark ? 'border-white/5 bg-[#020b07]/75 backdrop-blur-xl' : 'border-slate-200/90 bg-white'"
-        >
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-                <!-- Header & Tag -->
-                <div class="text-center max-w-3xl mx-auto mb-10 space-y-4">
-                    <div
-                        class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold border shadow-xs"
-                        :class="isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-amber-50 text-amber-800 border-amber-200/80'"
-                    >
-                        <span>{{ t.workflow.tag }}</span>
-                    </div>
-                    <h2
-                        class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight"
-                        :class="isDark ? 'text-white' : 'text-slate-900'"
-                    >
-                        {{ t.workflow.title }}
-                    </h2>
-                    <p
-                        class="text-sm sm:text-base leading-relaxed"
-                        :class="isDark ? 'text-slate-300' : 'text-slate-700'"
-                    >
-                        {{ t.workflow.subtitle }}
-                    </p>
-
-                    <!-- Interactive Restaurant Operating Model Switcher -->
-                    <div class="pt-4 flex justify-center">
-                        <div
-                            class="inline-flex p-1.5 rounded-2xl border shadow-xl backdrop-blur-2xl max-w-full overflow-x-auto transition-colors"
-                            :class="isDark ? 'bg-slate-950/90 border-white/10' : 'bg-slate-100 border-slate-200/90 shadow-inner'"
-                        >
-                            <button
-                                @click="selectedOperatingMode = 'postpaid'"
-                                type="button"
-                                class="px-5 py-2.5 rounded-xl font-extrabold text-xs sm:text-sm transition-all duration-300 flex items-center gap-2.5 whitespace-nowrap cursor-pointer"
-                                :class="selectedOperatingMode === 'postpaid'
-                                    ? 'bg-[#d4af37] text-slate-950 shadow-md font-black scale-[1.01]'
-                                    : (isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-white/5' : 'text-slate-600 hover:text-slate-900 hover:bg-white/80 font-bold')"
-                            >
-                                <span class="text-base sm:text-lg">🍽️</span>
-                                <span>{{ t.workflow.togglePostpaid }}</span>
-                            </button>
-
-                            <button
-                                @click="selectedOperatingMode = 'prepaid'"
-                                type="button"
-                                class="px-5 py-2.5 rounded-xl font-extrabold text-xs sm:text-sm transition-all duration-300 flex items-center gap-2.5 whitespace-nowrap cursor-pointer"
-                                :class="selectedOperatingMode === 'prepaid'
-                                    ? 'bg-[#d4af37] text-slate-950 shadow-md font-black scale-[1.01]'
-                                    : (isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-white/5' : 'text-slate-600 hover:text-slate-900 hover:bg-white/80 font-bold')"
-                            >
-                                <span class="text-base sm:text-lg">⚡</span>
-                                <span>{{ t.workflow.togglePrepaid }}</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Active Mode Overview Banner -->
-                <transition mode="out-in" enter-active-class="transition duration-300 ease-out" enter-from-class="opacity-0 -translate-y-2" enter-to-class="opacity-100 translate-y-0" leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0">
-                    <div
-                        :key="selectedOperatingMode"
-                        class="max-w-3xl mx-auto mb-14 p-5 rounded-2xl border shadow-sm flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-start transition-all"
-                        :class="selectedOperatingMode === 'prepaid'
-                            ? (isDark ? 'bg-[#121623] border-amber-500/30' : 'bg-[#fcfbf9] border-stone-200 shadow-xs')
-                            : (isDark ? 'bg-[#121623] border-amber-500/30' : 'bg-[#fcfbf9] border-stone-200 shadow-xs')"
-                    >
-                        <div
-                            class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0 shadow-xs"
-                            :class="selectedOperatingMode === 'prepaid'
-                                ? (isDark ? 'bg-amber-500/10 text-amber-400 border border-amber-500/25' : 'bg-amber-50 text-amber-800 border border-amber-200')
-                                : (isDark ? 'bg-amber-500/10 text-amber-400 border border-amber-500/25' : 'bg-amber-50 text-amber-800 border border-amber-200')"
-                        >
-                            {{ selectedOperatingMode === 'prepaid' ? '⚡' : '🍽️' }}
-                        </div>
-                        <div class="space-y-1">
-                            <h3
-                                class="text-base font-extrabold"
-                                :class="isDark ? 'text-white' : 'text-slate-900'"
-                            >
-                                {{ activeWorkflow.title }}
-                            </h3>
-                            <p
-                                class="text-xs sm:text-sm leading-relaxed"
-                                :class="isDark ? 'text-slate-300' : 'text-slate-700'"
-                            >
-                                {{ activeWorkflow.subtitle }}
-                            </p>
-                        </div>
-                    </div>
-                </transition>
-
-                <!-- 4 Steps Interactive Cards Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-
-                    <!-- Step 1 -->
-                    <div
-                        class="relative group p-6 rounded-3xl border transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between shadow-xl backdrop-blur-xl"
-                        :class="isDark
-                            ? 'bg-slate-900/70 border-white/5 hover:border-amber-500/40'
-                            : 'bg-white border-slate-200/90 hover:border-amber-400 hover:shadow-2xl shadow-sm'"
-                    >
-                        <div>
-                            <div class="flex items-center justify-between mb-5">
-                                <div
-                                    class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black border"
-                                    :class="isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-amber-50 text-amber-700 border-amber-200'"
-                                >
-                                    01
-                                </div>
-                                <span
-                                    class="text-[10px] font-bold px-2.5 py-1 rounded-full border"
-                                    :class="isDark ? 'bg-slate-800 text-slate-300 border-white/5' : 'bg-slate-100 text-slate-700 border-slate-200'"
-                                >
-                                    {{ selectedOperatingMode === 'prepaid' ? (currentLocale === 'ar' ? 'طلب فوري + كاشير' : 'Order & Cashier') : (currentLocale === 'ar' ? 'مسح رمز الطاولة' : 'Table QR Scan') }}
-                                </span>
-                            </div>
-                            <h3
-                                class="text-base sm:text-lg font-bold mb-2"
-                                :class="isDark ? 'text-white' : 'text-slate-900'"
-                            >
-                                {{ activeWorkflow.step1Title }}
-                            </h3>
-                            <p
-                                class="text-xs leading-relaxed"
-                                :class="isDark ? 'text-slate-300' : 'text-slate-700'"
-                            >
-                                {{ activeWorkflow.step1Desc }}
-                            </p>
                         </div>
 
-                        <!-- Simulation Callout -->
-                        <div
-                            class="mt-5 pt-4 border-t"
-                            :class="isDark ? 'border-white/5' : 'border-slate-100'"
-                        >
-                            <div
-                                v-if="selectedOperatingMode === 'prepaid'"
-                                class="p-3.5 rounded-2xl border text-xs leading-relaxed space-y-1.5"
-                                :class="isDark ? 'bg-amber-500/10 border-amber-500/30 text-amber-200' : 'bg-amber-50/90 border-amber-200 text-amber-900'"
-                            >
-                                <div
-                                    class="font-extrabold text-[11px] flex items-center gap-1.5"
-                                    :class="isDark ? 'text-amber-300' : 'text-amber-800'"
-                                >
-                                    <span>💬</span>
-                                    <span>{{ currentLocale === 'ar' ? 'رسالة تظهر للزبون بعد إرسال الطلب:' : 'Prompt shown to guest upon sending:' }}</span>
-                                </div>
-                                <div
-                                    class="font-bold p-2.5 rounded-xl border text-[11px] leading-snug"
-                                    :class="isDark ? 'text-white bg-slate-950/60 border-amber-500/20' : 'text-slate-900 bg-white border-amber-200 shadow-xs'"
-                                >
-                                    {{ currentLocale === 'ar'
-                                        ? '«يرجى التوجه للكاشير و اخباره برقم طلبك لتدفع الفاتورة ليتم تحضير طلبك»'
-                                        : '"Please head to the cashier and share your order number to settle your bill so prep can begin."'
-                                    }}
-                                </div>
-                            </div>
-                            <div
-                                v-else
-                                class="p-3 rounded-2xl border text-xs flex items-center gap-2"
-                                :class="isDark ? 'bg-slate-950/50 border-white/5 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-700'"
-                            >
-                                <span class="text-base" :class="isDark ? 'text-emerald-400' : 'text-emerald-600'">📲</span>
-                                <span class="text-[11px]">
-                                    {{ currentLocale === 'ar' ? 'فتح المنيو فوراً بدون أي تطبيق وإرسال الأصناف للمطبخ بنقرة' : 'Instant digital menu launch with zero app barrier; send items in a tap' }}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Step 2 -->
-                    <div
-                        class="relative group p-6 rounded-3xl border transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between shadow-xl backdrop-blur-xl"
-                        :class="isDark
-                            ? 'bg-slate-900/70 border-white/5 hover:border-orange-500/40'
-                            : 'bg-white border-slate-200/90 hover:border-orange-400 hover:shadow-2xl shadow-sm'"
-                    >
-                        <div>
-                            <div class="flex items-center justify-between mb-5">
-                                <div
-                                    class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black border"
-                                    :class="isDark ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : 'bg-orange-50 text-orange-700 border-orange-200'"
-                                >
-                                    02
-                                </div>
-                                <span
-                                    class="text-[10px] font-bold px-2.5 py-1 rounded-full border"
-                                    :class="isDark ? 'bg-slate-800 text-slate-300 border-white/5' : 'bg-slate-100 text-slate-700 border-slate-200'"
-                                >
-                                    {{ selectedOperatingMode === 'prepaid' ? (currentLocale === 'ar' ? 'محطة الكاشير' : 'Cashier Station') : (currentLocale === 'ar' ? 'شاشة وبونات المطبخ' : 'Kitchen KDS & Prints') }}
-                                </span>
-                            </div>
-                            <h3
-                                class="text-base sm:text-lg font-bold mb-2"
-                                :class="isDark ? 'text-white' : 'text-slate-900'"
-                            >
-                                {{ activeWorkflow.step2Title }}
-                            </h3>
-                            <p
-                                class="text-xs leading-relaxed"
-                                :class="isDark ? 'text-slate-300' : 'text-slate-700'"
-                            >
-                                {{ activeWorkflow.step2Desc }}
-                            </p>
+                        <!-- Image Mockup -->
+                        <div class="relative w-full aspect-[4/3] rounded-2xl overflow-hidden border border-white/10 bg-black/60 shadow-inner group-hover:scale-[1.02] transition-transform duration-500">
+                            <img
+                                src="/images/tedallal-qr-phone-mockup.jpg"
+                                alt="Luxury Digital QR Menu"
+                                class="w-full h-full object-cover"
+                            />
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none"></div>
                         </div>
 
-                        <!-- Simulation Callout -->
-                        <div
-                            class="mt-5 pt-4 border-t"
-                            :class="isDark ? 'border-white/5' : 'border-slate-100'"
-                        >
-                            <div
-                                v-if="selectedOperatingMode === 'prepaid'"
-                                class="p-3.5 rounded-2xl border text-xs leading-relaxed space-y-1.5"
-                                :class="isDark ? 'bg-orange-500/10 border-orange-500/30 text-orange-200' : 'bg-orange-50/90 border-orange-200 text-orange-900'"
-                            >
-                                <div
-                                    class="font-extrabold text-[11px] flex items-center gap-1.5"
-                                    :class="isDark ? 'text-orange-300' : 'text-orange-800'"
-                                >
-                                    <span>💰</span>
-                                    <span>{{ currentLocale === 'ar' ? 'تأكيد الكاشير اللحظي:' : 'Instant Cashier Confirmation:' }}</span>
-                                </div>
-                                <div
-                                    class="text-[11px] p-2 rounded-xl border leading-relaxed"
-                                    :class="isDark ? 'text-slate-200 bg-slate-950/60 border-orange-500/20' : 'text-slate-800 bg-white border-orange-200 shadow-xs'"
-                                >
-                                    {{ currentLocale === 'ar'
-                                        ? 'يؤكد الكاشير استلام المبلغ ➔ ينبثق الطلب فوراً على شاشات نوافذ المطبخ'
-                                        : 'Cashier confirms payment ➔ order immediately pops up on kitchen window screens'
-                                    }}
-                                </div>
-                            </div>
-                            <div
-                                v-else
-                                class="p-3 rounded-2xl border text-xs flex items-center gap-2"
-                                :class="isDark ? 'bg-slate-950/50 border-white/5 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-700'"
-                            >
-                                <span class="text-base" :class="isDark ? 'text-orange-400' : 'text-orange-600'">⚡</span>
-                                <span class="text-[11px]">
-                                    {{ currentLocale === 'ar' ? 'طباعة البونات وتقييد الحساب تلقائياً على رقم الطاولة' : 'Auto kitchen ticket printing and automatic bill binding to the table' }}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Step 3 -->
-                    <div
-                        class="relative group p-6 rounded-3xl border transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between shadow-xl backdrop-blur-xl"
-                        :class="isDark
-                            ? 'bg-slate-900/70 border-white/5 hover:border-emerald-500/40'
-                            : 'bg-white border-slate-200/90 hover:border-emerald-400 hover:shadow-2xl shadow-sm'"
-                    >
-                        <div>
-                            <div class="flex items-center justify-between mb-5">
-                                <div
-                                    class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black border"
-                                    :class="isDark ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-emerald-50 text-emerald-700 border-emerald-200'"
-                                >
-                                    03
-                                </div>
-                                <span
-                                    class="text-[10px] font-bold px-2.5 py-1 rounded-full border"
-                                    :class="isDark ? 'bg-slate-800 text-slate-300 border-white/5' : 'bg-slate-100 text-slate-700 border-slate-200'"
-                                >
-                                    {{ selectedOperatingMode === 'prepaid' ? (currentLocale === 'ar' ? 'استلام النافذة الذكي' : 'Window Claim') : (currentLocale === 'ar' ? 'تنظيم محطات الطهي' : 'Cook Station Sync') }}
-                                </span>
-                            </div>
-                            <h3
-                                class="text-base sm:text-lg font-bold mb-2"
-                                :class="isDark ? 'text-white' : 'text-slate-900'"
-                            >
-                                {{ activeWorkflow.step3Title }}
-                            </h3>
-                            <p
-                                class="text-xs leading-relaxed"
-                                :class="isDark ? 'text-slate-300' : 'text-slate-700'"
-                            >
-                                {{ activeWorkflow.step3Desc }}
-                            </p>
-                        </div>
-
-                        <!-- Simulation Callout -->
-                        <div
-                            class="mt-5 pt-4 border-t"
-                            :class="isDark ? 'border-white/5' : 'border-slate-100'"
-                        >
-                            <div
-                                v-if="selectedOperatingMode === 'prepaid'"
-                                class="p-3.5 rounded-2xl border text-xs leading-relaxed space-y-1.5"
-                                :class="isDark ? 'bg-sky-500/10 border-sky-500/30 text-sky-200' : 'bg-sky-50/90 border-sky-200 text-sky-900'"
-                            >
-                                <div
-                                    class="font-extrabold text-[11px] flex items-center gap-1.5"
-                                    :class="isDark ? 'text-sky-300' : 'text-sky-800'"
-                                >
-                                    <span>👨‍🍳</span>
-                                    <span>{{ currentLocale === 'ar' ? 'تنسيق النوافذ ومنع التضارب:' : 'Window Sync & Conflict Prevention:' }}</span>
-                                </div>
-                                <div
-                                    class="text-[11px] p-2 rounded-xl border leading-relaxed"
-                                    :class="isDark ? 'text-slate-200 bg-slate-950/60 border-sky-500/20' : 'text-slate-800 bg-white border-sky-200 shadow-xs'"
-                                >
-                                    {{ currentLocale === 'ar'
-                                        ? 'شيف النافذة يستلم الأوردر ➔ يظهر لباقي النوافذ فوراً أنه مستلم ومحجوز'
-                                        : 'Window chef claims ticket ➔ immediately shows as claimed to all other windows'
-                                    }}
-                                </div>
-                            </div>
-                            <div
-                                v-else
-                                class="p-3 rounded-2xl border text-xs flex items-center gap-2"
-                                :class="isDark ? 'bg-slate-950/50 border-white/5 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-700'"
-                            >
-                                <span class="text-base" :class="isDark ? 'text-emerald-400' : 'text-emerald-600'">⏱️</span>
-                                <span class="text-[11px]">
-                                    {{ currentLocale === 'ar' ? 'مؤقتات دقيقة ومراحل طهي واضحة تضمن تقديم الطعام ساخناً' : 'Precise prep timers and clear stages ensuring piping hot food delivery' }}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Step 4 -->
-                    <div
-                        class="relative group p-6 rounded-3xl border transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between shadow-xl backdrop-blur-xl"
-                        :class="isDark
-                            ? 'bg-slate-900/70 border-white/5 hover:border-amber-400/40'
-                            : 'bg-white border-slate-200/90 hover:border-amber-400 hover:shadow-2xl shadow-sm'"
-                    >
-                        <div>
-                            <div class="flex items-center justify-between mb-5">
-                                <div
-                                    class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black border"
-                                    :class="isDark ? 'bg-amber-400/10 text-amber-300 border-amber-400/20' : 'bg-amber-50 text-amber-700 border-amber-200'"
-                                >
-                                    04
-                                </div>
-                                <span
-                                    class="text-[10px] font-bold px-2.5 py-1 rounded-full border"
-                                    :class="isDark ? 'bg-slate-800 text-slate-300 border-white/5' : 'bg-slate-100 text-slate-700 border-slate-200'"
-                                >
-                                    {{ selectedOperatingMode === 'prepaid' ? (currentLocale === 'ar' ? 'جوال الزبون والاستلام' : 'Guest Phone & Pickup') : (currentLocale === 'ar' ? 'دفع الحساب والمغادرة' : 'Bill Pay & Departure') }}
-                                </span>
-                            </div>
-                            <h3
-                                class="text-base sm:text-lg font-bold mb-2"
-                                :class="isDark ? 'text-white' : 'text-slate-900'"
-                            >
-                                {{ activeWorkflow.step4Title }}
-                            </h3>
-                            <p
-                                class="text-xs leading-relaxed"
-                                :class="isDark ? 'text-slate-300' : 'text-slate-700'"
-                            >
-                                {{ activeWorkflow.step4Desc }}
-                            </p>
-                        </div>
-
-                        <!-- Simulation Callout -->
-                        <div
-                            class="mt-5 pt-4 border-t"
-                            :class="isDark ? 'border-white/5' : 'border-slate-100'"
-                        >
-                            <div
-                                v-if="selectedOperatingMode === 'prepaid'"
-                                class="p-3.5 rounded-2xl border text-xs leading-relaxed space-y-1.5"
-                                :class="isDark ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200' : 'bg-emerald-50/90 border-emerald-200 text-emerald-900'"
-                            >
-                                <div
-                                    class="font-extrabold text-[11px] flex items-center gap-1.5"
-                                    :class="isDark ? 'text-emerald-300' : 'text-emerald-800'"
-                                >
-                                    <span>📱</span>
-                                    <span>{{ currentLocale === 'ar' ? 'شاشة جوال الزبون المباشرة:' : 'Live Guest Mobile Tracker:' }}</span>
-                                </div>
-                                <div
-                                    class="font-bold p-2.5 rounded-xl border text-[11px] leading-snug"
-                                    :class="isDark ? 'text-white bg-slate-950/60 border-emerald-500/20' : 'text-slate-900 bg-white border-emerald-200 shadow-xs'"
-                                >
-                                    {{ currentLocale === 'ar'
-                                        ? '«تم استلام طلبك من قِبَل النافذة رقم 2» ثم يظهر تتبع حالة طلب الزبون'
-                                        : '"Your order was received by Window #2" followed by live customer order tracking'
-                                    }}
-                                </div>
-                            </div>
-                            <div
-                                v-else
-                                class="p-3 rounded-2xl border text-xs flex items-center gap-2"
-                                :class="isDark ? 'bg-slate-950/50 border-white/5 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-700'"
-                            >
-                                <span class="text-base" :class="isDark ? 'text-amber-400' : 'text-amber-600'">💳</span>
-                                <span class="text-[11px]">
-                                    {{ currentLocale === 'ar' ? 'طلب الفاتورة بلمسة واحدة وسداد المبلغ كاش أو شبكة وإغلاق الطاولة' : 'One-tap bill request, seamless cash or card payment, and auto table closing' }}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-
-            </div>
-        </section>
-
-        <!-- ========================================================================= -->
-        <!-- TAILORED RESTAURANT SOLUTIONS: POSTPAID & PREPAID -->
-        <!-- ========================================================================= -->
-        <section
-            id="solutions"
-            class="py-24 relative z-10 border-t transition-colors duration-500"
-            :class="isDark ? 'border-white/5 bg-[#03110a]/70 backdrop-blur-xl' : 'border-slate-200/90 bg-slate-50/70'"
-        >
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-                <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
-                    <div
-                        class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold border shadow-xs"
-                        :class="isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-amber-50 text-amber-800 border-amber-200/80'"
-                    >
-                        <span>{{ t.solutions.tag }}</span>
-                    </div>
-                    <h2
-                        class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight"
-                        :class="isDark ? 'text-white' : 'text-slate-900'"
-                    >
-                        {{ t.solutions.title }}
-                    </h2>
-                    <p
-                        class="text-base sm:text-lg"
-                        :class="isDark ? 'text-slate-300' : 'text-slate-700'"
-                    >
-                        {{ t.solutions.subtitle }}
-                    </p>
-                </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
-
-                    <!-- Solution 1: Postpaid (Dine-in / Hall) -->
-                    <div
-                        class="relative group p-8 sm:p-10 rounded-3xl border transition-all duration-300 flex flex-col justify-between shadow-2xl backdrop-blur-xl"
-                        :class="isDark
-                            ? 'bg-slate-900/70 border-amber-500/20 hover:border-amber-500/40'
-                            : 'bg-white border-slate-200/90 hover:border-amber-400 hover:shadow-2xl shadow-md'"
-                    >
-                        <div class="space-y-6">
-                            <div class="flex items-center justify-between flex-wrap gap-3">
-                                <div
-                                    class="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shadow-lg border"
-                                    :class="isDark
-                                        ? 'bg-amber-500/15 text-amber-400 border-amber-500/30 shadow-amber-500/10'
-                                        : 'bg-amber-50 text-amber-700 border-amber-200 shadow-amber-500/5'"
-                                >
-                                    🍽️
-                                </div>
-                                <span
-                                    class="px-3 py-1 rounded-full text-xs font-bold border"
-                                    :class="isDark
-                                        ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
-                                        : 'bg-amber-50 text-amber-800 border-amber-200'"
-                                >
-                                    {{ t.solutions.postpaidBadge }}
-                                </span>
-                            </div>
-
-                            <div>
-                                <h3
-                                    class="text-xl sm:text-2xl font-bold leading-snug mb-2"
-                                    :class="isDark ? 'text-white' : 'text-slate-900'"
-                                >
-                                    {{ t.solutions.postpaidTitle }}
-                                </h3>
-                                <p
-                                    class="text-sm leading-relaxed"
-                                    :class="isDark ? 'text-slate-300' : 'text-slate-600'"
-                                >
-                                    {{ t.solutions.postpaidDesc }}
-                                </p>
-                            </div>
-
-                            <ul class="space-y-3.5 pt-2">
-                                <li
-                                    v-for="(point, idx) in t.solutions.postpaidPoints"
-                                    :key="idx"
-                                    class="flex items-start gap-3 text-xs sm:text-sm leading-relaxed"
-                                    :class="isDark ? 'text-slate-300' : 'text-slate-700'"
-                                >
-                                    <span
-                                        class="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5"
-                                        :class="isDark ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-100 text-emerald-800 font-black'"
-                                    >
-                                        ✓
-                                    </span>
-                                    <span>{{ point }}</span>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div
-                            class="pt-8 mt-8 border-t flex items-center justify-between flex-wrap gap-3"
-                            :class="isDark ? 'border-white/5' : 'border-slate-100'"
-                        >
-                            <div
-                                class="text-xs font-semibold flex items-center gap-2"
-                                :class="isDark ? 'text-amber-400' : 'text-amber-800'"
-                            >
-                                <span>⭐</span>
-                                <span>{{ currentLocale === 'ar' ? 'مثالي للمطاعم العائلية والمقاهي الراقية' : 'Ideal for Fine Dining & Family Lounges' }}</span>
-                            </div>
-                            <button
-                                @click="isDemoModalOpen = true"
-                                class="px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer"
-                                :class="isDark
-                                    ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border-amber-500/30'
-                                    : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-300 shadow-xs'"
-                            >
-                                {{ currentLocale === 'ar' ? 'طلب عرض مخصص' : 'Request Demo' }}
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Solution 2: Prepaid (Fast Food & Counters) -->
-                    <div
-                        class="relative group p-8 sm:p-10 rounded-3xl border transition-all duration-300 flex flex-col justify-between shadow-2xl backdrop-blur-xl"
-                        :class="isDark
-                            ? 'bg-slate-900/70 border-orange-500/20 hover:border-orange-500/40'
-                            : 'bg-white border-slate-200/90 hover:border-orange-400 hover:shadow-2xl shadow-md'"
-                    >
-                        <div class="space-y-6">
-                            <div class="flex items-center justify-between flex-wrap gap-3">
-                                <div
-                                    class="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shadow-lg border"
-                                    :class="isDark
-                                        ? 'bg-orange-500/15 text-orange-400 border-orange-500/30 shadow-orange-500/10'
-                                        : 'bg-orange-50 text-orange-700 border-orange-200 shadow-orange-500/5'"
-                                >
-                                    ⚡
-                                </div>
-                                <span
-                                    class="px-3 py-1 rounded-full text-xs font-bold border"
-                                    :class="isDark
-                                        ? 'bg-orange-500/10 text-orange-300 border-orange-500/30'
-                                        : 'bg-orange-50 text-orange-800 border-orange-200'"
-                                >
-                                    {{ t.solutions.prepaidBadge }}
-                                </span>
-                            </div>
-
-                            <div>
-                                <h3
-                                    class="text-xl sm:text-2xl font-bold leading-snug mb-2"
-                                    :class="isDark ? 'text-white' : 'text-slate-900'"
-                                >
-                                    {{ t.solutions.prepaidTitle }}
-                                </h3>
-                                <p
-                                    class="text-sm leading-relaxed"
-                                    :class="isDark ? 'text-slate-300' : 'text-slate-600'"
-                                >
-                                    {{ t.solutions.prepaidDesc }}
-                                </p>
-                            </div>
-
-                            <ul class="space-y-3.5 pt-2">
-                                <li
-                                    v-for="(point, idx) in t.solutions.prepaidPoints"
-                                    :key="idx"
-                                    class="flex items-start gap-3 text-xs sm:text-sm leading-relaxed"
-                                    :class="isDark ? 'text-slate-300' : 'text-slate-700'"
-                                >
-                                    <span
-                                        class="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5"
-                                        :class="isDark ? 'bg-orange-500/20 text-orange-400' : 'bg-orange-100 text-orange-800 font-black'"
-                                    >
-                                        ✓
-                                    </span>
-                                    <span>{{ point }}</span>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div
-                            class="pt-8 mt-8 border-t flex items-center justify-between flex-wrap gap-3"
-                            :class="isDark ? 'border-white/5' : 'border-slate-100'"
-                        >
-                            <div
-                                class="text-xs font-semibold flex items-center gap-2"
-                                :class="isDark ? 'text-orange-400' : 'text-orange-800'"
-                            >
-                                <span>🚀</span>
-                                <span>{{ currentLocale === 'ar' ? 'مثالي للبرجر، الشاورما، والوجبات السريعة' : 'Ideal for Burgers, Shawarma & Quick Cafés' }}</span>
-                            </div>
-                            <button
-                                @click="isDemoModalOpen = true"
-                                class="px-4 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer"
-                                :class="isDark
-                                    ? 'bg-orange-500/10 hover:bg-orange-500/20 text-orange-300 border-orange-500/30'
-                                    : 'bg-orange-50 hover:bg-orange-100 text-orange-800 border-orange-300 shadow-xs'"
-                            >
-                                {{ currentLocale === 'ar' ? 'طلب عرض مخصص' : 'Request Demo' }}
-                            </button>
-                        </div>
-                    </div>
-
-                </div>
-
-            </div>
-        </section>
-
-        <!-- ========================================================================= -->
-        <!-- INTERACTIVE LIVE SHOWCASE (4 MODULES) -->
-        <!-- ========================================================================= -->
-        <section
-            id="interactive-demo"
-            class="py-24 relative z-10 border-t transition-colors duration-500"
-            :class="isDark ? 'border-white/5 bg-transparent' : 'border-slate-200/90 bg-white'"
-        >
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-                <div class="text-center max-w-3xl mx-auto mb-12 space-y-4">
-                    <div
-                        class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold border shadow-xs"
-                        :class="isDark ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-300 border-amber-500/30' : 'bg-amber-50 text-amber-800 border-amber-200/90'"
-                    >
-                        <span>{{ t.demo.tag }}</span>
-                    </div>
-                    <h2
-                        class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight"
-                        :class="isDark ? 'text-white' : 'text-slate-900'"
-                    >
-                        {{ t.demo.title }}
-                    </h2>
-                    <p
-                        class="text-base sm:text-lg"
-                        :class="isDark ? 'text-slate-300' : 'text-slate-700'"
-                    >
-                        {{ t.demo.subtitle }}
-                    </p>
-                </div>
-
-                <!-- Showcase Module Switcher Tabs -->
-                <div class="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-10">
-                    <button
-                        @click="activeDemoTab = 'customer'"
-                        class="px-5 py-3 rounded-2xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2 cursor-pointer"
-                        :class="activeDemoTab === 'customer'
-                            ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-lg shadow-amber-500/25 font-black scale-[1.02]'
-                            : (isDark ? 'bg-slate-900/80 text-slate-300 hover:bg-slate-800 border border-white/5' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/90 shadow-xs font-bold')"
-                    >
-                        <span>📱</span>
-                        <span>{{ t.demo.tabCustomer }}</span>
-                    </button>
-
-                    <button
-                        @click="activeDemoTab = 'kds'"
-                        class="px-5 py-3 rounded-2xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2 cursor-pointer"
-                        :class="activeDemoTab === 'kds'
-                            ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-lg shadow-amber-500/25 font-black scale-[1.02]'
-                            : (isDark ? 'bg-slate-900/80 text-slate-300 hover:bg-slate-800 border border-white/5' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/90 shadow-xs font-bold')"
-                    >
-                        <span>👨‍🍳</span>
-                        <span>{{ t.demo.tabKds }}</span>
-                    </button>
-
-                    <button
-                        @click="activeDemoTab = 'qr'"
-                        class="px-5 py-3 rounded-2xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2 cursor-pointer"
-                        :class="activeDemoTab === 'qr'
-                            ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-lg shadow-amber-500/25 font-black scale-[1.02]'
-                            : (isDark ? 'bg-slate-900/80 text-slate-300 hover:bg-slate-800 border border-white/5' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/90 shadow-xs font-bold')"
-                    >
-                        <span>🧾</span>
-                        <span>{{ t.demo.tabQr }}</span>
-                    </button>
-
-                    <button
-                        @click="activeDemoTab = 'analytics'"
-                        class="px-5 py-3 rounded-2xl font-bold text-xs sm:text-sm transition-all flex items-center gap-2 cursor-pointer"
-                        :class="activeDemoTab === 'analytics'
-                            ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-lg shadow-amber-500/25 font-black scale-[1.02]'
-                            : (isDark ? 'bg-slate-900/80 text-slate-300 hover:bg-slate-800 border border-white/5' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200/90 shadow-xs font-bold')"
-                    >
-                        <span>📊</span>
-                        <span>{{ t.demo.tabAnalytics }}</span>
-                    </button>
-                </div>
-
-                <!-- Showcase Stage -->
-                <div
-                    class="relative rounded-3xl border shadow-2xl backdrop-blur-2xl p-4 sm:p-8 overflow-hidden min-h-[580px] transition-colors"
-                    :class="isDark ? 'bg-slate-950/80 border-white/10' : 'bg-slate-50/70 border-slate-200/90 shadow-xl'"
-                >
-
-                    <!-- TAB 1: CUSTOMER MOBILE MENU SIMULATOR -->
-                    <div v-if="activeDemoTab === 'customer'" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-                        <div class="lg:col-span-5 space-y-5">
-                            <div
-                                class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold border shadow-xs"
-                                :class="isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-amber-100/80 text-amber-900 border-amber-200'"
-                            >
-                                <span>{{ t.demo.tabCustomer }}</span>
-                            </div>
-                            <h3
-                                class="text-xl sm:text-2xl font-bold leading-snug"
-                                :class="isDark ? 'text-white' : 'text-slate-900'"
-                            >
-                                {{ currentLocale === 'ar' ? 'منيو رقمي فوري على الطاولة' : 'Instant Tabletop Digital Menu' }}
-                            </h3>
-                            <p
-                                class="text-sm leading-relaxed"
-                                :class="isDark ? 'text-slate-300' : 'text-slate-600'"
-                            >
-                                {{ currentLocale === 'ar'
-                                    ? 'بدون الحاجة لتحميل تطبيقات، يتصفح العميل قائمة الطعام بصور احترافية عالية الدقة، مع خيارات الإضافة، التخصيص، وسلة طاولة تفاعلية تتيح له إرسال الأوردر فوراً إلى المطبخ.'
-                                    : 'With zero app friction, guests browse appetizing menu items with high-resolution photography, customizations, dietary tags, and a floating interactive cart that routes tickets straight to the kitchen.'
-                                }}
-                            </p>
-
-                            <!-- Category Switcher in simulation -->
-                            <div class="flex flex-wrap gap-2 pt-2">
+                        <!-- Interactive Quick Tap Order Simulator -->
+                        <div class="mt-3 p-2.5 rounded-2xl border backdrop-blur-md transition-colors" :class="isDark ? 'bg-black/40 border-white/10' : 'bg-amber-50/70 border-amber-900/15 shadow-2xs'">
+                            <span class="text-[10px] font-bold block mb-1.5" :class="isDark ? 'text-amber-300' : 'text-amber-900'">👆 انقر لتجربة الطلب المباشر للمطبخ:</span>
+                            <div class="grid grid-cols-2 gap-2">
                                 <button
-                                    @click="activeCategory = 'grills'"
-                                    class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
-                                    :class="activeCategory === 'grills'
-                                        ? 'bg-amber-500 text-slate-950 font-bold'
-                                        : (isDark ? 'bg-slate-900 text-slate-300 hover:bg-slate-800' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 shadow-xs font-semibold')"
+                                    type="button"
+                                    @click="triggerLiveSimulationOrder('ستيك واغيو A5', 280)"
+                                    :class="isDark ? 'border-amber-500/30 bg-white/5 hover:bg-amber-500/20' : 'border-amber-600/20 bg-stone-50 hover:bg-amber-500/10'" class="p-2 rounded-xl border text-right transition-all flex items-center justify-between group active:scale-95"
                                 >
-                                    {{ t.demo.catGrills }}
+                                    <span class="text-xs font-bold group-hover:text-amber-500" :class="isDark ? 'text-white' : 'text-stone-900'">🥩 ستيك واغيو</span>
+                                    <span class="text-[10px] font-mono text-amber-400 font-bold">+280</span>
                                 </button>
                                 <button
-                                    @click="activeCategory = 'appetizers'"
-                                    class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
-                                    :class="activeCategory === 'appetizers'
-                                        ? 'bg-amber-500 text-slate-950 font-bold'
-                                        : (isDark ? 'bg-slate-900 text-slate-300 hover:bg-slate-800' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 shadow-xs font-semibold')"
+                                    type="button"
+                                    @click="triggerLiveSimulationOrder('كافيار إمبريال', 420)"
+                                    :class="isDark ? 'border-amber-500/30 bg-white/5 hover:bg-amber-500/20' : 'border-amber-600/20 bg-stone-50 hover:bg-amber-500/10'" class="p-2 rounded-xl border text-right transition-all flex items-center justify-between group active:scale-95"
                                 >
-                                    {{ t.demo.catAppetizers }}
-                                </button>
-                                <button
-                                    @click="activeCategory = 'desserts'"
-                                    class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
-                                    :class="activeCategory === 'desserts'
-                                        ? 'bg-amber-500 text-slate-950 font-bold'
-                                        : (isDark ? 'bg-slate-900 text-slate-300 hover:bg-slate-800' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 shadow-xs font-semibold')"
-                                >
-                                    {{ t.demo.catDesserts }}
-                                </button>
-                                <button
-                                    @click="activeCategory = 'drinks'"
-                                    class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
-                                    :class="activeCategory === 'drinks'
-                                        ? 'bg-amber-500 text-slate-950 font-bold'
-                                        : (isDark ? 'bg-slate-900 text-slate-300 hover:bg-slate-800' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 shadow-xs font-semibold')"
-                                >
-                                    {{ t.demo.catDrinks }}
+                                    <span class="text-xs font-bold group-hover:text-amber-500" :class="isDark ? 'text-white' : 'text-stone-900'">✨ كافيار ملكي</span>
+                                    <span class="text-[10px] font-mono text-amber-400 font-bold">+420</span>
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Phone Mockup Container -->
-                        <div class="lg:col-span-7 flex justify-center">
-                            <div
-                                class="w-full max-w-[340px] sm:max-w-[360px] h-[550px] rounded-[44px] shadow-2xl overflow-hidden relative flex flex-col transition-all"
-                                :class="isDark ? 'bg-slate-900 border-[6px] border-slate-800' : 'bg-white border-[6px] border-slate-300 shadow-2xl'"
-                            >
-                                <!-- Phone Notch -->
-                                <div
-                                    class="h-6 flex items-center justify-between px-6 text-[10px] font-mono shrink-0"
-                                    :class="isDark ? 'bg-slate-950 text-slate-400' : 'bg-slate-100 text-slate-600 border-b border-slate-200/60'"
-                                >
-                                    <span>9:41</span>
-                                    <div class="w-16 h-3.5 bg-black rounded-full mx-auto"></div>
-                                    <span>5G</span>
-                                </div>
-
-                                <!-- Mobile App Header -->
-                                <div
-                                    class="px-4 py-3 border-b flex items-center justify-between shrink-0"
-                                    :class="isDark ? 'bg-slate-900/90 border-white/5' : 'bg-slate-50 border-slate-200'"
-                                >
-                                    <div class="flex items-center gap-2">
-                                        <div
-                                            class="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs"
-                                            :class="isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-800'"
-                                        >
-                                            04
-                                        </div>
-                                        <div>
-                                            <div
-                                                class="text-xs font-bold"
-                                                :class="isDark ? 'text-white' : 'text-slate-900'"
-                                            >
-                                                {{ currentLocale === 'ar' ? 'طاولة رقم 04' : 'Table 04' }}
-                                            </div>
-                                            <div
-                                                class="text-[10px]"
-                                                :class="isDark ? 'text-emerald-400' : 'text-emerald-700 font-bold'"
-                                            >
-                                                {{ currentLocale === 'ar' ? 'متصل بالخدمة الحية ⚡' : 'Connected to Live Service ⚡' }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <span
-                                        class="text-xs font-bold"
-                                        :class="isDark ? 'text-amber-400' : 'text-amber-700'"
-                                    >
-                                        {{ currentCurrencySymbol }}
-                                    </span>
-                                </div>
-
-                                <!-- Scrollable Menu Items -->
-                                <div class="p-3 space-y-2.5 overflow-y-auto flex-1 custom-scrollbar pb-24">
-                                    <div
-                                        v-for="item in filteredMenuItems"
-                                        :key="item.id"
-                                        class="p-2.5 rounded-2xl border flex items-center gap-3 transition-all"
-                                        :class="isDark
-                                            ? 'bg-slate-950/90 border-white/5 hover:border-amber-500/30'
-                                            : 'bg-white border-slate-200 hover:border-amber-300 shadow-xs'"
-                                    >
-                                        <img :src="item.image" :alt="item.name" class="w-14 h-14 rounded-xl object-cover shrink-0" onerror="this.src='/images/logo.jpg'" />
-                                        <div class="flex-1 min-w-0">
-                                            <div class="flex items-center gap-1.5">
-                                                <h5
-                                                    class="text-xs font-bold truncate"
-                                                    :class="isDark ? 'text-white' : 'text-slate-900'"
-                                                >
-                                                    {{ item.name }}
-                                                </h5>
-                                                <span
-                                                    v-if="item.badge"
-                                                    class="text-[9px] px-1.5 py-0.2 rounded shrink-0 font-bold"
-                                                    :class="isDark ? 'bg-amber-500/20 text-amber-300' : 'bg-amber-50 text-amber-800 border border-amber-200'"
-                                                >
-                                                    {{ item.badge }}
-                                                </span>
-                                            </div>
-                                            <p
-                                                class="text-[10px] line-clamp-1 mt-0.5"
-                                                :class="isDark ? 'text-slate-400' : 'text-slate-500'"
-                                            >
-                                                {{ item.description }}
-                                            </p>
-                                            <div
-                                                class="text-xs mt-1 font-mono"
-                                                :class="isDark ? 'text-amber-400 font-bold' : 'text-amber-700 font-extrabold'"
-                                            >
-                                                {{ formatPrice(item.price) }} {{ currentCurrencySymbol }}
-                                            </div>
-                                        </div>
-
-                                        <!-- Stepper or Add button -->
-                                        <div class="shrink-0">
-                                            <div
-                                                v-if="cartQuantities[item.id]"
-                                                class="flex items-center gap-1.5 border rounded-xl px-1.5 py-1"
-                                                :class="isDark ? 'bg-slate-800 border-amber-500/30' : 'bg-slate-50 border-amber-300'"
-                                            >
-                                                <button
-                                                    @click="removeItem(item.id)"
-                                                    class="w-5 h-5 rounded-lg text-xs flex items-center justify-center cursor-pointer transition-colors"
-                                                    :class="isDark ? 'bg-slate-700 text-white hover:bg-slate-600' : 'bg-white text-slate-800 border border-slate-200 shadow-xs hover:bg-slate-100'"
-                                                >
-                                                    -
-                                                </button>
-                                                <span
-                                                    class="text-xs font-bold font-mono px-1"
-                                                    :class="isDark ? 'text-white' : 'text-slate-900'"
-                                                >
-                                                    {{ cartQuantities[item.id] }}
-                                                </span>
-                                                <button
-                                                    @click="addItem(item.id)"
-                                                    class="w-5 h-5 rounded-lg bg-amber-500 text-slate-950 text-xs font-bold flex items-center justify-center hover:bg-amber-400 cursor-pointer"
-                                                >
-                                                    +
-                                                </button>
-                                            </div>
-                                            <button
-                                                v-else
-                                                @click="addItem(item.id)"
-                                                class="w-8 h-8 rounded-xl flex items-center justify-center font-bold text-sm transition-all cursor-pointer"
-                                                :class="isDark
-                                                    ? 'bg-amber-500/10 hover:bg-amber-500 text-amber-400 hover:text-slate-950 border border-amber-500/30'
-                                                    : 'bg-amber-50 hover:bg-amber-500 text-amber-700 hover:text-slate-950 border border-amber-200'"
-                                            >
-                                                +
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Floating Glassmorphism Cart Bar -->
-                                <div
-                                    v-if="totalCartCount > 0"
-                                    class="absolute bottom-2.5 right-2.5 left-2.5 p-3 rounded-2xl border shadow-2xl backdrop-blur-xl flex items-center justify-between z-20 transition-all"
-                                    :class="isDark
-                                        ? 'bg-[#03130c]/95 border-amber-500/40 text-white'
-                                        : 'bg-white/95 border-amber-400 text-slate-900 shadow-2xl'"
-                                >
-                                    <div class="flex items-center gap-2.5">
-                                        <div class="relative w-8 h-8 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold shadow-md shadow-amber-500/30">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-                                            </svg>
-                                            <span class="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-emerald-500 text-slate-950 text-[9px] font-extrabold flex items-center justify-center">
-                                                {{ totalCartCount }}
-                                            </span>
-                                        </div>
-                                        <div>
-                                            <div
-                                                class="text-[10px]"
-                                                :class="isDark ? 'text-slate-400' : 'text-slate-500 font-semibold'"
-                                            >
-                                                {{ t.demo.cartTitle }}
-                                            </div>
-                                            <div
-                                                class="text-xs font-mono font-black"
-                                                :class="isDark ? 'text-amber-400' : 'text-amber-800'"
-                                            >
-                                                {{ formatPrice(totalCartPrice) }} {{ currentCurrencySymbol }}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <button
-                                        @click="activeDemoTab = 'kds'"
-                                        class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 text-xs font-bold hover:scale-105 active:scale-95 transition-all shadow cursor-pointer"
-                                    >
-                                        {{ t.demo.sendToKitchenBtn }}
-                                    </button>
-                                </div>
-
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- TAB 2: KITCHEN DISPLAY SYSTEM (KDS) -->
-                    <div v-else-if="activeDemoTab === 'kds'" class="space-y-6">
-                        <div
-                            class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4"
-                            :class="isDark ? 'border-white/5' : 'border-slate-200'"
-                        >
-                            <div>
-                                <h4
-                                    class="text-lg font-bold flex items-center gap-2"
-                                    :class="isDark ? 'text-white' : 'text-slate-900'"
-                                >
-                                    <span>👨‍🍳</span>
-                                    <span>{{ t.demo.kdsHeaderTitle }}</span>
-                                </h4>
-                                <p
-                                    class="text-xs mt-1"
-                                    :class="isDark ? 'text-slate-300' : 'text-slate-700'"
-                                >
-                                    {{ t.demo.kdsHeaderSubtitle }}
-                                </p>
-                            </div>
-                            <div class="flex items-center gap-2 text-xs">
-                                <span
-                                    class="px-3 py-1 rounded-full border font-bold flex items-center gap-1.5"
-                                    :class="isDark
-                                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                                        : 'bg-emerald-50 text-emerald-800 border-emerald-200'"
-                                >
-                                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-                                    {{ currentLocale === 'ar' ? 'مزامنة سحابية لحظية ومباشرة' : 'Live Real-Time Cloud Sync' }}
-                                </span>
-                            </div>
-                        </div>
-
-                        <!-- Kanban Columns -->
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <!-- New Orders -->
-                            <div
-                                class="rounded-2xl border p-3 space-y-3"
-                                :class="isDark ? 'bg-slate-900/70 border-amber-500/20' : 'bg-amber-50/70 border-amber-200 shadow-xs'"
-                            >
-                                <div
-                                    class="flex items-center justify-between border-b pb-2"
-                                    :class="isDark ? 'border-white/5' : 'border-amber-200/80'"
-                                >
-                                    <span
-                                        class="text-xs font-bold flex items-center gap-1.5"
-                                        :class="isDark ? 'text-amber-400' : 'text-amber-900 font-extrabold'"
-                                    >
-                                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                                        {{ t.demo.colNew }}
-                                    </span>
-                                    <span
-                                        class="text-[10px] px-1.5 py-0.5 rounded font-mono font-bold"
-                                        :class="isDark ? 'bg-amber-500/20 text-amber-300' : 'bg-amber-100 text-amber-900'"
-                                    >
-                                        1
-                                    </span>
-                                </div>
-                                <div
-                                    v-for="order in kdsOrders.filter(o => o.status === 'new')"
-                                    :key="order.id"
-                                    class="p-3 rounded-xl border shadow-lg space-y-2.5"
-                                    :class="isDark ? 'bg-slate-950 border-amber-500/40' : 'bg-white border-amber-300 shadow-sm'"
-                                >
-                                    <div class="flex items-center justify-between text-xs font-bold">
-                                        <span :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'">{{ order.table }}</span>
-                                        <span
-                                            class="text-[10px] px-2 py-0.5 rounded-full font-mono font-bold"
-                                            :class="isDark ? 'text-amber-400 bg-amber-500/10' : 'text-amber-800 bg-amber-50 border border-amber-200'"
-                                        >
-                                            {{ order.time }}
-                                        </span>
-                                    </div>
-                                    <div class="space-y-1.5 text-xs">
-                                        <div
-                                            v-for="(it, idx) in order.items"
-                                            :key="idx"
-                                            class="border-b pb-1"
-                                            :class="isDark ? 'border-white/5' : 'border-slate-100'"
-                                        >
-                                            <div
-                                                class="flex justify-between font-semibold"
-                                                :class="isDark ? 'text-slate-200' : 'text-slate-800 font-bold'"
-                                            >
-                                                <span>{{ it.qty }}x {{ it.name }}</span>
-                                            </div>
-                                            <div
-                                                v-if="it.note"
-                                                class="text-[10px] px-1.5 py-0.5 rounded mt-1 font-semibold"
-                                                :class="isDark ? 'text-amber-300 bg-amber-500/10' : 'text-amber-900 bg-amber-100/90'"
-                                            >
-                                                {{ it.note }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div
-                                        class="pt-2 flex items-center justify-between border-t"
-                                        :class="isDark ? 'border-white/5' : 'border-slate-100'"
-                                    >
-                                        <span
-                                            class="text-xs font-mono font-bold"
-                                            :class="isDark ? 'text-slate-300' : 'text-slate-900'"
-                                        >
-                                            {{ formatPrice(order.total) }} {{ currentCurrencySymbol }}
-                                        </span>
-                                        <button
-                                            @click="advanceKdsOrder(order.id)"
-                                            class="px-3 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold text-xs hover:bg-amber-400 transition-all cursor-pointer"
-                                        >
-                                            {{ t.demo.btnStartCooking }}
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Cooking -->
-                            <div
-                                class="rounded-2xl border p-3 space-y-3"
-                                :class="isDark ? 'bg-slate-900/70 border-orange-500/20' : 'bg-orange-50/70 border-orange-200 shadow-xs'"
-                            >
-                                <div
-                                    class="flex items-center justify-between border-b pb-2"
-                                    :class="isDark ? 'border-white/5' : 'border-orange-200/80'"
-                                >
-                                    <span
-                                        class="text-xs font-bold flex items-center gap-1.5"
-                                        :class="isDark ? 'text-orange-400' : 'text-orange-900 font-extrabold'"
-                                    >
-                                        <span class="w-2 h-2 rounded-full bg-orange-500"></span>
-                                        {{ t.demo.colCooking }}
-                                    </span>
-                                    <span
-                                        class="text-[10px] px-1.5 py-0.5 rounded font-mono font-bold"
-                                        :class="isDark ? 'bg-orange-500/20 text-orange-300' : 'bg-orange-100 text-orange-900'"
-                                    >
-                                        1
-                                    </span>
-                                </div>
-                                <div
-                                    v-for="order in kdsOrders.filter(o => o.status === 'cooking')"
-                                    :key="order.id"
-                                    class="p-3 rounded-xl border shadow-lg space-y-2.5"
-                                    :class="isDark ? 'bg-slate-950 border-orange-500/40' : 'bg-white border-orange-300 shadow-sm'"
-                                >
-                                    <div class="flex items-center justify-between text-xs font-bold">
-                                        <span :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'">{{ order.table }}</span>
-                                        <span
-                                            class="text-[10px] px-2 py-0.5 rounded-full font-mono font-bold"
-                                            :class="isDark ? 'text-orange-400 bg-orange-500/10' : 'text-orange-800 bg-orange-50 border border-orange-200'"
-                                        >
-                                            {{ order.time }}
-                                        </span>
-                                    </div>
-                                    <div class="space-y-1.5 text-xs">
-                                        <div
-                                            v-for="(it, idx) in order.items"
-                                            :key="idx"
-                                            class="border-b pb-1"
-                                            :class="isDark ? 'border-white/5' : 'border-slate-100'"
-                                        >
-                                            <div
-                                                class="flex justify-between font-semibold"
-                                                :class="isDark ? 'text-slate-200' : 'text-slate-800 font-bold'"
-                                            >
-                                                <span>{{ it.qty }}x {{ it.name }}</span>
-                                            </div>
-                                            <div
-                                                v-if="it.note"
-                                                class="text-[10px] px-1.5 py-0.5 rounded mt-1 font-semibold"
-                                                :class="isDark ? 'text-amber-300 bg-amber-500/10' : 'text-amber-900 bg-amber-100/90'"
-                                            >
-                                                {{ it.note }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div
-                                        class="pt-2 flex items-center justify-between border-t"
-                                        :class="isDark ? 'border-white/5' : 'border-slate-100'"
-                                    >
-                                        <span
-                                            class="text-xs font-mono font-bold"
-                                            :class="isDark ? 'text-slate-300' : 'text-slate-900'"
-                                        >
-                                            {{ formatPrice(order.total) }} {{ currentCurrencySymbol }}
-                                        </span>
-                                        <button
-                                            @click="advanceKdsOrder(order.id)"
-                                            class="px-3 py-1 rounded-lg bg-orange-500 text-slate-950 font-bold text-xs hover:bg-orange-400 transition-all cursor-pointer"
-                                        >
-                                            {{ t.demo.btnMarkReady }}
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Ready -->
-                            <div
-                                class="rounded-2xl border p-3 space-y-3"
-                                :class="isDark ? 'bg-slate-900/70 border-emerald-500/20' : 'bg-emerald-50/70 border-emerald-200 shadow-xs'"
-                            >
-                                <div
-                                    class="flex items-center justify-between border-b pb-2"
-                                    :class="isDark ? 'border-white/5' : 'border-emerald-200/80'"
-                                >
-                                    <span
-                                        class="text-xs font-bold flex items-center gap-1.5"
-                                        :class="isDark ? 'text-emerald-400' : 'text-emerald-900 font-extrabold'"
-                                    >
-                                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                        {{ t.demo.colReady }}
-                                    </span>
-                                    <span
-                                        class="text-[10px] px-1.5 py-0.5 rounded font-mono font-bold"
-                                        :class="isDark ? 'bg-emerald-500/20 text-emerald-300' : 'bg-emerald-100 text-emerald-900'"
-                                    >
-                                        1
-                                    </span>
-                                </div>
-                                <div
-                                    v-for="order in kdsOrders.filter(o => o.status === 'ready')"
-                                    :key="order.id"
-                                    class="p-3 rounded-xl border shadow-lg space-y-2.5"
-                                    :class="isDark ? 'bg-slate-950 border-emerald-500/40' : 'bg-white border-emerald-300 shadow-sm'"
-                                >
-                                    <div class="flex items-center justify-between text-xs font-bold">
-                                        <span :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'">{{ order.table }}</span>
-                                        <span
-                                            class="text-[10px] px-2 py-0.5 rounded-full font-mono font-bold"
-                                            :class="isDark ? 'text-emerald-400 bg-emerald-500/10' : 'text-emerald-800 bg-emerald-50 border border-emerald-200'"
-                                        >
-                                            {{ order.time }}
-                                        </span>
-                                    </div>
-                                    <div class="space-y-1.5 text-xs">
-                                        <div
-                                            v-for="(it, idx) in order.items"
-                                            :key="idx"
-                                            class="border-b pb-1"
-                                            :class="isDark ? 'border-white/5' : 'border-slate-100'"
-                                        >
-                                            <div
-                                                class="flex justify-between font-semibold"
-                                                :class="isDark ? 'text-slate-200' : 'text-slate-800 font-bold'"
-                                            >
-                                                <span>{{ it.qty }}x {{ it.name }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div
-                                        class="pt-2 flex items-center justify-between border-t"
-                                        :class="isDark ? 'border-white/5' : 'border-slate-100'"
-                                    >
-                                        <span
-                                            class="text-xs font-mono font-bold"
-                                            :class="isDark ? 'text-slate-300' : 'text-slate-900'"
-                                        >
-                                            {{ formatPrice(order.total) }} {{ currentCurrencySymbol }}
-                                        </span>
-                                        <button
-                                            @click="advanceKdsOrder(order.id)"
-                                            class="px-3 py-1 rounded-lg bg-emerald-500 text-slate-950 font-bold text-xs hover:bg-emerald-400 transition-all cursor-pointer"
-                                        >
-                                            {{ t.demo.btnMarkServed }}
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- TAB 3: TABLE QR & THERMAL PRINTING -->
-                    <div v-else-if="activeDemoTab === 'qr'" class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                        <!-- Left: Acrylic Stand -->
-                        <div class="flex flex-col items-center text-center space-y-4">
-                            <div
-                                class="w-64 p-6 rounded-3xl border-2 shadow-2xl relative transition-all"
-                                :class="isDark ? 'bg-gradient-to-b from-slate-800 to-slate-900 border-amber-500/40' : 'bg-white border-amber-300 shadow-xl'"
-                            >
-                                <div class="text-center space-y-2">
-                                    <span
-                                        class="font-bold text-sm tracking-widest block uppercase"
-                                        :class="isDark ? 'text-amber-400' : 'text-amber-700'"
-                                    >
-                                        TEDALLAL
-                                    </span>
-                                    <h5
-                                        class="text-base font-extrabold"
-                                        :class="isDark ? 'text-white' : 'text-slate-900'"
-                                    >
-                                        {{ t.demo.qrCardTitle }}
-                                    </h5>
-                                    <div class="w-40 h-40 bg-white rounded-2xl p-2 mx-auto shadow-inner flex items-center justify-center border border-slate-200">
-                                        <img src="/images/qr-sample.png" alt="QR" class="w-full h-full object-contain" />
-                                    </div>
-                                    <div
-                                        class="text-xs font-bold pt-1"
-                                        :class="isDark ? 'text-amber-300' : 'text-amber-800 font-extrabold'"
-                                    >
-                                        {{ currentLocale === 'ar' ? 'طاولة رقم 04' : 'Table #04' }}
-                                    </div>
-                                    <p
-                                        class="text-[10px] leading-tight"
-                                        :class="isDark ? 'text-slate-400' : 'text-slate-500'"
-                                    >
-                                        {{ t.demo.qrCardHint }}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Right: Thermal Receipt -->
-                        <div class="flex flex-col items-center space-y-4">
-                            <div class="w-72 bg-white text-slate-950 p-6 rounded-xl shadow-2xl font-mono text-xs space-y-3 border-t-8 border-amber-500 border border-slate-200">
-                                <div class="text-center border-b border-dashed border-slate-400 pb-3">
-                                    <div class="font-extrabold text-sm tracking-wider">مطعم حلب الشهباء الفاخر</div>
-                                    <div class="text-[10px] text-slate-600">{{ t.demo.receiptHeader }}</div>
-                                    <div class="text-[9px] text-slate-500">{{ t.demo.receiptTaxNo }}</div>
-                                </div>
-
-                                <div class="flex justify-between text-[11px] border-b border-slate-300 pb-1">
-                                    <span>{{ currentLocale === 'ar' ? 'طاولة: 04' : 'Table: 04' }}</span>
-                                    <span>{{ currentLocale === 'ar' ? 'فاتورة #9402' : '#INV-9402' }}</span>
-                                </div>
-
-                                <div class="space-y-1.5 border-b border-dashed border-slate-400 pb-3 text-xs">
-                                    <div class="flex justify-between font-bold">
-                                        <span>2x كباب حلبي بالكرز</span>
-                                        <span>{{ formatPrice(170000) }}</span>
-                                    </div>
-                                    <div class="flex justify-between font-bold">
-                                        <span>1x مقبلات مشكلة</span>
-                                        <span>{{ formatPrice(42000) }}</span>
-                                    </div>
-                                    <div class="flex justify-between font-bold">
-                                        <span>2x عصير رمان مثلج</span>
-                                        <span>{{ formatPrice(44000) }}</span>
-                                    </div>
-                                </div>
-
-                                <div class="space-y-1 text-xs">
-                                    <div class="flex justify-between">
-                                        <span>{{ t.demo.receiptSubtotal }}</span>
-                                        <span>{{ formatPrice(256000) }} {{ currentCurrencySymbol }}</span>
-                                    </div>
-                                    <div class="flex justify-between text-emerald-700 font-bold">
-                                        <span>{{ t.demo.receiptDiscount }}</span>
-                                        <span>-{{ formatPrice(38400) }} {{ currentCurrencySymbol }}</span>
-                                    </div>
-                                    <div class="flex justify-between font-black text-sm border-t border-slate-400 pt-1">
-                                        <span>{{ t.demo.receiptTotal }}</span>
-                                        <span>{{ formatPrice(217600) }} {{ currentCurrencySymbol }}</span>
-                                    </div>
-                                </div>
-
-                                <div class="text-center text-[10px] text-slate-500 border-t border-dashed border-slate-400 pt-2">
-                                    {{ t.demo.receiptFooter }}
-                                </div>
-                            </div>
-                            <p
-                                class="text-xs text-center max-w-sm mx-auto"
-                                :class="isDark ? 'text-slate-400' : 'text-slate-500'"
-                            >
-                                {{ t.demo.receiptHint }}
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- TAB 4: SMART ANALYTICS & BI -->
-                    <div v-else-if="activeDemoTab === 'analytics'" class="space-y-6">
-                        <div
-                            class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-4"
-                            :class="isDark ? 'border-white/5' : 'border-slate-200'"
-                        >
-                            <div>
-                                <h4
-                                    class="text-lg font-bold flex items-center gap-2"
-                                    :class="isDark ? 'text-white' : 'text-slate-900'"
-                                >
-                                    <span>📊</span>
-                                    <span>{{ t.demo.analyticsTitle }}</span>
-                                </h4>
-                                <p
-                                    class="text-xs mt-1"
-                                    :class="isDark ? 'text-slate-300' : 'text-slate-700'"
-                                >
-                                    {{ t.demo.analyticsSubtitle }}
-                                </p>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <button
-                                    @click="selectedAnalyticsFilter = 'weekend'"
-                                    class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
-                                    :class="selectedAnalyticsFilter === 'weekend'
-                                        ? 'bg-amber-500 text-slate-950 font-bold shadow-xs'
-                                        : (isDark ? 'bg-slate-900 text-slate-400 border border-white/5' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 shadow-xs')"
-                                >
-                                    {{ t.demo.filterWeekend }}
-                                </button>
-                                <button
-                                    @click="selectedAnalyticsFilter = 'weekday'"
-                                    class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
-                                    :class="selectedAnalyticsFilter === 'weekday'
-                                        ? 'bg-amber-500 text-slate-950 font-bold shadow-xs'
-                                        : (isDark ? 'bg-slate-900 text-slate-400 border border-white/5' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 shadow-xs')"
-                                >
-                                    {{ t.demo.filterWeekday }}
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- CPA Financial Sales Summary Cards -->
-                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                            <!-- Net Realized Sales -->
-                            <div
-                                class="p-4 rounded-2xl border shadow-lg relative overflow-hidden"
-                                :class="isDark
-                                    ? 'bg-gradient-to-br from-emerald-500/15 via-slate-900 to-slate-950 border-emerald-500/40'
-                                    : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50 border-emerald-200 shadow-sm'"
-                            >
-                                <div
-                                    class="flex items-center justify-between text-[11px] font-bold mb-1"
-                                    :class="isDark ? 'text-emerald-400' : 'text-emerald-800 font-extrabold'"
-                                >
-                                    <span>{{ currentLocale === 'ar' ? 'صافي المبيعات المحقق' : 'Net Realized Sales' }}</span>
-                                    <span
-                                        class="px-1.5 py-0.5 rounded text-[9px] font-bold"
-                                        :class="isDark ? 'bg-emerald-500/20 text-emerald-300' : 'bg-emerald-100 text-emerald-900'"
-                                    >
-                                        0% خطأ
-                                    </span>
-                                </div>
-                                <div
-                                    class="text-xl sm:text-2xl font-black font-mono"
-                                    :class="isDark ? 'text-white' : 'text-slate-950'"
-                                >
-                                    {{ formatPrice(financialKpis.netSales) }}
-                                    <span
-                                        class="text-xs font-normal"
-                                        :class="isDark ? 'text-amber-400' : 'text-amber-700 font-bold'"
-                                    >
-                                        {{ currentCurrencySymbol }}
-                                    </span>
-                                </div>
-                                <div
-                                    class="text-[10px] mt-1 flex items-center gap-1"
-                                    :class="isDark ? 'text-slate-400' : 'text-slate-600 font-medium'"
-                                >
-                                    <span>{{ currentLocale === 'ar' ? 'إجمالي الطلبات:' : 'Total Orders:' }}</span>
-                                    <span
-                                        class="font-mono font-bold"
-                                        :class="isDark ? 'text-white' : 'text-slate-900'"
-                                    >
-                                        {{ financialKpis.ordersCount }}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <!-- Gross Sales & Discounts -->
-                            <div
-                                class="p-4 rounded-2xl border shadow-lg"
-                                :class="isDark ? 'bg-slate-900/80 border-white/10' : 'bg-white border-slate-200 shadow-sm'"
-                            >
-                                <div
-                                    class="text-[11px] font-semibold mb-1"
-                                    :class="isDark ? 'text-slate-300' : 'text-slate-700'"
-                                >
-                                    {{ currentLocale === 'ar' ? 'إجمالي المبيعات والخصومات' : 'Gross Sales & Discounts' }}
-                                </div>
-                                <div
-                                    class="text-lg sm:text-xl font-bold font-mono"
-                                    :class="isDark ? 'text-slate-200' : 'text-slate-900 font-extrabold'"
-                                >
-                                    {{ formatPrice(financialKpis.grossSales) }}
-                                    <span class="text-xs font-normal" :class="isDark ? 'text-slate-400' : 'text-slate-500'">{{ currentCurrencySymbol }}</span>
-                                </div>
-                                <div class="text-[10px] text-rose-600 dark:text-rose-400 mt-1 flex items-center justify-between font-bold">
-                                    <span>{{ currentLocale === 'ar' ? 'الخصومات:' : 'Discounts:' }}</span>
-                                    <span class="font-mono">-{{ formatPrice(financialKpis.discounts) }} {{ currentCurrencySymbol }}</span>
-                                </div>
-                            </div>
-
-                            <!-- Average Order Value (AOV) -->
-                            <div
-                                class="p-4 rounded-2xl border shadow-lg"
-                                :class="isDark ? 'bg-slate-900/80 border-white/10' : 'bg-white border-slate-200 shadow-sm'"
-                            >
-                                <div
-                                    class="text-[11px] font-semibold mb-1"
-                                    :class="isDark ? 'text-slate-300' : 'text-slate-700'"
-                                >
-                                    {{ currentLocale === 'ar' ? 'متوسط قيمة الطلب' : 'Avg Order Value (AOV)' }}
-                                </div>
-                                <div
-                                    class="text-lg sm:text-xl font-bold font-mono"
-                                    :class="isDark ? 'text-amber-400' : 'text-amber-800 font-extrabold'"
-                                >
-                                    {{ formatPrice(financialKpis.aov) }}
-                                    <span class="text-xs font-normal" :class="isDark ? 'text-amber-300' : 'text-amber-700'">{{ currentCurrencySymbol }}</span>
-                                </div>
-                                <div
-                                    class="text-[10px] mt-1 flex items-center gap-1 font-bold"
-                                    :class="isDark ? 'text-emerald-400' : 'text-emerald-700'"
-                                >
-                                    <span>▲ +28%</span>
-                                    <span :class="isDark ? 'text-slate-400' : 'text-slate-600 font-normal'">{{ currentLocale === 'ar' ? 'نمو سلة الشراء' : 'Upsell Growth' }}</span>
-                                </div>
-                            </div>
-
-                            <!-- Dine-in vs Takeaway Breakdown -->
-                            <div
-                                class="p-4 rounded-2xl border shadow-lg"
-                                :class="isDark ? 'bg-slate-900/80 border-white/10' : 'bg-white border-slate-200 shadow-sm'"
-                            >
-                                <div
-                                    class="text-[11px] font-semibold mb-1"
-                                    :class="isDark ? 'text-slate-300' : 'text-slate-700'"
-                                >
-                                    {{ currentLocale === 'ar' ? 'الصالة مقابل السفري' : 'Dine-In vs Takeaway' }}
-                                </div>
-                                <div class="text-xs space-y-1 font-mono pt-0.5">
-                                    <div
-                                        class="flex justify-between"
-                                        :class="isDark ? 'text-slate-300' : 'text-slate-800 font-semibold'"
-                                    >
-                                        <span class="text-[10px]" :class="isDark ? 'text-slate-400' : 'text-slate-500'">{{ currentLocale === 'ar' ? '🍽️ صالة:' : '🍽️ Dine-in:' }}</span>
-                                        <span class="font-bold">{{ formatPrice(financialKpis.dineInNet) }} {{ currentCurrencySymbol }}</span>
-                                    </div>
-                                    <div
-                                        class="flex justify-between"
-                                        :class="isDark ? 'text-slate-300' : 'text-slate-800 font-semibold'"
-                                    >
-                                        <span class="text-[10px]" :class="isDark ? 'text-slate-400' : 'text-slate-500'">{{ currentLocale === 'ar' ? '⚡ سفري:' : '⚡ Takeaway:' }}</span>
-                                        <span class="font-bold">{{ formatPrice(financialKpis.takeawayNet) }} {{ currentCurrencySymbol }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                            <!-- Peak Hours Chart -->
-                            <div
-                                class="lg:col-span-7 p-5 rounded-2xl border space-y-4"
-                                :class="isDark ? 'bg-slate-900/60 border-white/5' : 'bg-white border-slate-200 shadow-sm'"
-                            >
-                                <h5
-                                    class="text-sm font-bold flex items-center justify-between"
-                                    :class="isDark ? 'text-white' : 'text-slate-900'"
-                                >
-                                    <span>{{ t.demo.chartPeakTitle }}</span>
-                                    <span
-                                        class="text-xs font-mono font-bold"
-                                        :class="isDark ? 'text-amber-400' : 'text-amber-700'"
-                                    >
-                                        {{ t.demo.ordersUnit }} / hr
-                                    </span>
-                                </h5>
-
-                                <div
-                                    class="h-44 pt-4 flex items-end justify-between gap-2 border-b pb-2"
-                                    :class="isDark ? 'border-white/10' : 'border-slate-200'"
-                                >
-                                    <div
-                                        v-for="(bar, idx) in peakHoursData"
-                                        :key="idx"
-                                        class="flex-1 flex flex-col items-center gap-1 group relative cursor-pointer"
-                                    >
-                                        <div class="w-full h-36 flex items-end justify-center">
-                                            <div
-                                                class="w-full max-w-[28px] rounded-t-lg transition-all duration-500 group-hover:brightness-125"
-                                                :class="bar.isPeak
-                                                    ? 'bg-gradient-to-t from-orange-500 to-amber-400 shadow-lg shadow-amber-500/30'
-                                                    : (isDark ? 'bg-slate-800 hover:bg-slate-700' : 'bg-slate-200 hover:bg-slate-300')"
-                                                :style="{ height: `${bar.height}%` }"
-                                            ></div>
-                                        </div>
-                                        <span
-                                            class="text-[11px] font-mono"
-                                            :class="bar.isPeak
-                                                ? (isDark ? 'text-amber-400 font-extrabold' : 'text-amber-800 font-black')
-                                                : (isDark ? 'text-slate-400' : 'text-slate-600')"
-                                        >
-                                            {{ bar.time }}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Top Dishes -->
-                            <div
-                                class="lg:col-span-5 p-5 rounded-2xl border space-y-4"
-                                :class="isDark ? 'bg-slate-900/60 border-white/5' : 'bg-white border-slate-200 shadow-sm'"
-                            >
-                                <h5
-                                    class="text-sm font-bold"
-                                    :class="isDark ? 'text-white' : 'text-slate-900'"
-                                >
-                                    {{ t.demo.chartTopDishesTitle }}
-                                </h5>
-                                <div class="space-y-3 pt-2">
-                                    <div v-for="(dish, idx) in topDishesData" :key="idx" class="space-y-1">
-                                        <div class="flex justify-between text-xs font-semibold">
-                                            <span :class="isDark ? 'text-slate-200' : 'text-slate-800 font-bold'">{{ dish.name }}</span>
-                                            <span
-                                                class="font-mono font-bold"
-                                                :class="isDark ? 'text-amber-400' : 'text-amber-700'"
-                                            >
-                                                {{ dish.percent }}% ({{ dish.orders }} {{ t.demo.ordersUnit }})
-                                            </span>
-                                        </div>
-                                        <div
-                                            class="w-full h-2 rounded-full overflow-hidden"
-                                            :class="isDark ? 'bg-slate-800' : 'bg-slate-200'"
-                                        >
-                                            <div class="h-full rounded-full transition-all duration-700" :class="dish.color" :style="{ width: `${dish.percent}%` }"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Rule-Based Smart Advice Engine -->
-                        <div
-                            class="p-4 rounded-2xl border flex items-start gap-3 shadow-xs"
-                            :class="isDark ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-50/90 border-amber-200 text-amber-950'"
-                        >
-                            <span class="text-xl">💡</span>
-                            <div>
-                                <h5
-                                    class="text-sm font-bold"
-                                    :class="isDark ? 'text-amber-300' : 'text-amber-900 font-extrabold'"
-                                >
-                                    {{ t.demo.aiInsightTitle }}
-                                </h5>
-                                <p
-                                    class="text-xs mt-1 leading-relaxed"
-                                    :class="isDark ? 'text-slate-300' : 'text-slate-700'"
-                                >
-                                    {{ t.demo.aiInsightText }} {{ formatPrice(35000) }} {{ currentCurrencySymbol }}.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-
-            </div>
-        </section>
-
-        <!-- ========================================================================= -->
-        <!-- CORE SAAS TECHNICAL FEATURES -->
-        <!-- ========================================================================= -->
-        <section
-            id="features"
-            class="py-20 relative z-10 border-t transition-colors duration-500"
-            :class="isDark ? 'border-white/5 bg-[#020b07]/65 backdrop-blur-xl' : 'border-slate-200/90 bg-white'"
-        >
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-                <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
-                    <div
-                        class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold border shadow-xs"
-                        :class="isDark ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : 'bg-orange-50 text-orange-800 border-orange-200/90'"
-                    >
-                        <span>{{ t.features.tag }}</span>
-                    </div>
-                    <h2
-                        class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight"
-                        :class="isDark ? 'text-white' : 'text-slate-900'"
-                    >
-                        {{ t.features.title }}
-                    </h2>
-                    <p
-                        class="text-base sm:text-lg"
-                        :class="isDark ? 'text-slate-300' : 'text-slate-700'"
-                    >
-                        {{ t.features.subtitle }}
-                    </p>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    <!-- Feature 1 -->
-                    <div
-                        class="p-8 rounded-3xl border transition-all duration-300 hover:-translate-y-1 group"
-                        :class="isDark ? 'bg-slate-900/60 border-white/5 hover:border-amber-500/30' : 'bg-white border-slate-200/90 hover:border-amber-400 hover:shadow-xl shadow-xs'"
-                    >
-                        <div
-                            class="w-14 h-14 rounded-2xl border flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform shadow-xs"
-                            :class="isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-amber-50 text-amber-700 border-amber-200/90'"
-                        >
-                            ⚡
-                        </div>
-                        <h4
-                            class="text-lg sm:text-xl font-bold leading-snug mb-3"
-                            :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'"
-                        >{{ t.features.f1Title }}</h4>
-                        <p
-                            class="text-sm leading-relaxed"
-                            :class="isDark ? 'text-slate-300' : 'text-slate-700'"
-                        >{{ t.features.f1Desc }}</p>
-                    </div>
-
-                    <!-- Feature 2 -->
-                    <div
-                        class="p-8 rounded-3xl border transition-all duration-300 hover:-translate-y-1 group"
-                        :class="isDark ? 'bg-slate-900/60 border-white/5 hover:border-amber-500/30' : 'bg-white border-slate-200/90 hover:border-amber-400 hover:shadow-xl shadow-xs'"
-                    >
-                        <div
-                            class="w-14 h-14 rounded-2xl border flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform shadow-xs"
-                            :class="isDark ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : 'bg-orange-50 text-orange-700 border-orange-200/90'"
-                        >
-                            📱
-                        </div>
-                        <h4
-                            class="text-lg sm:text-xl font-bold leading-snug mb-3"
-                            :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'"
-                        >{{ t.features.f2Title }}</h4>
-                        <p
-                            class="text-sm leading-relaxed"
-                            :class="isDark ? 'text-slate-300' : 'text-slate-700'"
-                        >{{ t.features.f2Desc }}</p>
-                    </div>
-
-                    <!-- Feature 3 -->
-                    <div
-                        class="p-8 rounded-3xl border transition-all duration-300 hover:-translate-y-1 group"
-                        :class="isDark ? 'bg-slate-900/60 border-white/5 hover:border-amber-500/30' : 'bg-white border-slate-200/90 hover:border-amber-400 hover:shadow-xl shadow-xs'"
-                    >
-                        <div
-                            class="w-14 h-14 rounded-2xl border flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform shadow-xs"
-                            :class="isDark ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-emerald-50 text-emerald-700 border-emerald-200/90'"
-                        >
-                            👨‍🍳
-                        </div>
-                        <h4
-                            class="text-lg sm:text-xl font-bold leading-snug mb-3"
-                            :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'"
-                        >{{ t.features.f3Title }}</h4>
-                        <p
-                            class="text-sm leading-relaxed"
-                            :class="isDark ? 'text-slate-300' : 'text-slate-700'"
-                        >{{ t.features.f3Desc }}</p>
-                    </div>
-
-                    <!-- Feature 4 -->
-                    <div
-                        class="p-8 rounded-3xl border transition-all duration-300 hover:-translate-y-1 group"
-                        :class="isDark ? 'bg-slate-900/60 border-white/5 hover:border-amber-500/30' : 'bg-white border-slate-200/90 hover:border-amber-400 hover:shadow-xl shadow-xs'"
-                    >
-                        <div
-                            class="w-14 h-14 rounded-2xl border flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform shadow-xs"
-                            :class="isDark ? 'bg-amber-400/10 text-amber-300 border-amber-400/20' : 'bg-amber-50 text-amber-700 border-amber-200/90'"
-                        >
-                            🖨️
-                        </div>
-                        <h4
-                            class="text-lg sm:text-xl font-bold leading-snug mb-3"
-                            :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'"
-                        >{{ t.features.f4Title }}</h4>
-                        <p
-                            class="text-sm leading-relaxed"
-                            :class="isDark ? 'text-slate-300' : 'text-slate-700'"
-                        >{{ t.features.f4Desc }}</p>
-                    </div>
-
-                    <!-- Feature 5 -->
-                    <div
-                        class="p-8 rounded-3xl border transition-all duration-300 hover:-translate-y-1 group"
-                        :class="isDark ? 'bg-slate-900/60 border-white/5 hover:border-amber-500/30' : 'bg-white border-slate-200/90 hover:border-amber-400 hover:shadow-xl shadow-xs'"
-                    >
-                        <div
-                            class="w-14 h-14 rounded-2xl border flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform shadow-xs"
-                            :class="isDark ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' : 'bg-indigo-50 text-indigo-700 border-indigo-200/90'"
-                        >
-                            🏢
-                        </div>
-                        <h4
-                            class="text-lg sm:text-xl font-bold leading-snug mb-3"
-                            :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'"
-                        >{{ t.features.f5Title }}</h4>
-                        <p
-                            class="text-sm leading-relaxed"
-                            :class="isDark ? 'text-slate-300' : 'text-slate-700'"
-                        >{{ t.features.f5Desc }}</p>
-                    </div>
-
-                    <!-- Feature 6: CPA Reports -->
-                    <div
-                        class="p-8 rounded-3xl border transition-all duration-300 hover:-translate-y-1 group relative overflow-hidden"
-                        :class="isDark ? 'bg-slate-900/60 border-white/5 hover:border-emerald-500/40' : 'bg-white border-slate-200/90 hover:border-emerald-500 hover:shadow-xl shadow-xs'"
-                    >
-                        <div
-                            class="w-14 h-14 rounded-2xl border flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform shadow-xs"
-                            :class="isDark ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-emerald-50 text-emerald-700 border-emerald-200/90'"
-                        >
-                            📊
-                        </div>
-                        <h4
-                            class="text-lg sm:text-xl font-bold leading-snug mb-3 flex items-center gap-2"
-                            :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'"
-                        >
-                            <span>{{ t.features.f6Title }}</span>
-                        </h4>
-                        <p
-                            class="text-sm leading-relaxed"
-                            :class="isDark ? 'text-slate-300' : 'text-slate-700'"
-                        >{{ t.features.f6Desc }}</p>
-                    </div>
-                </div>
-
-            </div>
-        </section>
-
-        <!-- ========================================================================= -->
-        <!-- RESTAURANT DIRECTORY & FREE PROMOTION -->
-        <!-- ========================================================================= -->
-        <!-- ========================================================================= -->
-        <!-- RESTAURANT DIRECTORY & FREE PROMOTION -->
-        <!-- ========================================================================= -->
-        <section
-            id="directory"
-            class="py-24 relative z-10 border-t transition-colors duration-500"
-            :class="isDark ? 'border-white/5 bg-[#03110a]/75 backdrop-blur-xl' : 'border-slate-200/90 bg-slate-50/60'"
-        >
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-                <div
-                    class="relative overflow-hidden rounded-3xl border p-8 sm:p-14 backdrop-blur-2xl transition-all"
-                    :class="isDark
-                        ? 'bg-gradient-to-br from-amber-500/10 via-slate-900/90 to-orange-500/10 border-amber-500/30 shadow-2xl'
-                        : 'bg-gradient-to-br from-amber-50/80 via-white to-orange-50/80 border-amber-300/80 shadow-2xl'"
-                >
-                    <div
-                        class="absolute -top-24 -right-24 w-80 h-80 rounded-full blur-3xl pointer-events-none"
-                        :class="isDark ? 'bg-amber-500/15' : 'bg-amber-300/30'"
-                    ></div>
-                    <div
-                        class="absolute -bottom-24 -left-24 w-80 h-80 rounded-full blur-3xl pointer-events-none"
-                        :class="isDark ? 'bg-orange-500/15' : 'bg-orange-300/30'"
-                    ></div>
-
-                    <div class="relative z-10 max-w-3xl mx-auto text-center space-y-5 mb-12">
-                        <div
-                            class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold border shadow-xs"
-                            :class="isDark ? 'bg-amber-500/15 text-amber-300 border-amber-500/30' : 'bg-amber-100/90 text-amber-900 border-amber-300 font-bold'"
-                        >
-                            <span>{{ t.directoryPromo.tag }}</span>
-                        </div>
-                        <h2
-                            class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight"
-                            :class="isDark ? 'text-white' : 'text-slate-950'"
-                        >
-                            {{ t.directoryPromo.title }}
-                        </h2>
-                        <p
-                            class="text-sm sm:text-base leading-relaxed"
-                            :class="isDark ? 'text-slate-300' : 'text-slate-700'"
-                        >
-                            {{ t.directoryPromo.subtitle }}
+                        <!-- Bottom Tagline -->
+                        <p :class="isDark ? 'text-stone-400' : 'text-stone-600 font-medium'" class="text-xs mt-3 leading-relaxed transition-colors">
+                            {{ currentLocale === 'ar'
+                                ? 'رمز QR مذهب على طاولات الرخام يمنح ضيوفك تصفحاً ملكياً فائق السرعة وتحديد التفضيلات بدون تطبيقات.'
+                                : 'Guests browse exquisitely formatted dishes, dietary badges, and submit orders directly without app downloads.' }}
                         </p>
-                        <div
-                            class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold border shadow-xs"
-                            :class="isDark ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' : 'bg-emerald-100/90 text-emerald-900 border-emerald-300'"
-                        >
-                            <span>✨</span>
-                            <span>{{ t.directoryPromo.badge }}</span>
-                        </div>
                     </div>
 
-                    <!-- 3 Benefit Pillars -->
-                    <div class="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div
-                            class="p-6 rounded-2xl border transition-all"
-                            :class="isDark ? 'bg-slate-950/70 border-white/5 hover:border-amber-500/30' : 'bg-white border-slate-200/90 hover:border-amber-400 hover:shadow-xl shadow-xs'"
-                        >
-                            <div
-                                class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-4 shadow-xs"
-                                :class="isDark ? 'bg-amber-500/15 text-amber-400' : 'bg-amber-100/90 text-amber-800'"
-                            >
-                                📍
+                    <!-- CARD 2: Kitchen Display System (KDS) -->
+                    <div dir="rtl" :class="isDark ? 'glass-ultra text-white' : 'glass-ultra text-stone-900'" class="rounded-3xl p-5 sm:p-6 flex flex-col justify-between overflow-hidden transition-all duration-500 hover:-translate-y-1.5">
+                        <!-- Top Text -->
+                        <div class="flex items-start justify-between mb-4">
+                            <div>
+                                <span class="text-[11px] font-black tracking-widest uppercase text-amber-400/90 block">
+                                    Kitchen Display System (KDS)
+                                </span>
+                                <h3 class="text-base sm:text-lg font-black mt-1" :class="isDark ? 'text-white' : 'text-stone-900'">
+                                    {{ currentLocale === 'ar' ? 'شاشات المطبخ الذكية (KDS)' : 'Executive Chef Display System' }}
+                                </h3>
                             </div>
-                            <h4
-                                class="text-base font-bold mb-2"
-                                :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'"
-                            >{{ t.directoryPromo.benefit1Title }}</h4>
-                            <p
-                                class="text-xs leading-relaxed"
-                                :class="isDark ? 'text-slate-300' : 'text-slate-700'"
-                            >{{ t.directoryPromo.benefit1Desc }}</p>
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                لحظي 0.2s
+                            </span>
                         </div>
 
-                        <div
-                            class="p-6 rounded-2xl border transition-all"
-                            :class="isDark ? 'bg-slate-950/70 border-white/5 hover:border-amber-500/30' : 'bg-white border-slate-200/90 hover:border-amber-400 hover:shadow-xl shadow-xs'"
-                        >
-                            <div
-                                class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-4 shadow-xs"
-                                :class="isDark ? 'bg-orange-500/15 text-orange-400' : 'bg-orange-100/90 text-orange-800'"
-                            >
-                                🎟️
-                            </div>
-                            <h4
-                                class="text-base font-bold mb-2"
-                                :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'"
-                            >{{ t.directoryPromo.benefit2Title }}</h4>
-                            <p
-                                class="text-xs leading-relaxed"
-                                :class="isDark ? 'text-slate-300' : 'text-slate-700'"
-                            >{{ t.directoryPromo.benefit2Desc }}</p>
+                        <!-- Image Mockup -->
+                        <div class="relative w-full aspect-[4/3] rounded-2xl overflow-hidden border border-white/10 bg-black/60 shadow-inner group-hover:scale-[1.02] transition-transform duration-500">
+                            <img
+                                src="/images/tedallal-kds-tablet-mockup.jpg"
+                                alt="Kitchen Display System KDS"
+                                class="w-full h-full object-cover"
+                            />
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none"></div>
                         </div>
 
-                        <div
-                            class="p-6 rounded-2xl border transition-all"
-                            :class="isDark ? 'bg-slate-950/70 border-white/5 hover:border-amber-500/30' : 'bg-white border-slate-200/90 hover:border-amber-400 hover:shadow-xl shadow-xs'"
-                        >
+                        <!-- Live Kitchen Ticket Stream -->
+                        <div class="mt-3 space-y-1.5">
                             <div
-                                class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-4 shadow-xs"
-                                :class="isDark ? 'bg-emerald-500/15 text-emerald-400' : 'bg-emerald-100/90 text-emerald-800'"
+                                v-for="ticket in interactiveTickets.slice(0, 2)"
+                                :key="ticket.id"
+                                class="p-2.5 rounded-xl border flex items-center justify-between transition-all duration-300"
+                                :class="ticket.status === 'new' ? (isDark ? 'bg-amber-500/20 border-amber-400/50 flash-active-gold' : 'bg-amber-100 border-amber-400/60 flash-active-gold') : (isDark ? 'bg-black/40 border-white/10' : 'bg-white border-stone-200/90 shadow-2xs')"
                             >
-                                💰
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[10px] font-bold font-mono" :class="isDark ? 'text-amber-300' : 'text-amber-800'">#{{ ticket.id }}</span>
+                                    <span class="text-xs font-bold" :class="isDark ? 'text-white' : 'text-stone-900'">{{ ticket.dish }}</span>
+                                </div>
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded" :class="ticket.status === 'new' ? 'bg-amber-500 text-stone-950 font-black' : 'text-emerald-400 bg-emerald-500/10'">
+                                    {{ ticket.statusText }}
+                                </span>
                             </div>
-                            <h4
-                                class="text-base font-bold mb-2"
-                                :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'"
-                            >{{ t.directoryPromo.benefit3Title }}</h4>
-                            <p
-                                class="text-xs leading-relaxed"
-                                :class="isDark ? 'text-slate-300' : 'text-slate-700'"
-                            >{{ t.directoryPromo.benefit3Desc }}</p>
                         </div>
+
+                        <!-- Bottom Tagline -->
+                        <p :class="isDark ? 'text-stone-400' : 'text-stone-600 font-medium'" class="text-xs mt-3 leading-relaxed transition-colors">
+                            {{ currentLocale === 'ar'
+                                ? 'شاشات لوحية في كاونتر الطهاة تنظم التذاكر، مؤقتات التحضير، وتنبيهات صوتية فاخرة لمنع تأخير أي طبق.'
+                                : 'Kitchen tablets organizing cooking queues, prep timers, and audio cues to ensure Michelin-timed service.' }}
+                        </p>
                     </div>
 
-                    <!-- Join CTA -->
-                    <div class="relative z-10 pt-10 text-center">
+                    <!-- CARD 3: Executive Financial Analytics graph -->
+                    <div dir="rtl" :class="isDark ? 'glass-ultra text-white' : 'glass-ultra text-stone-900'" class="rounded-3xl p-5 sm:p-6 flex flex-col justify-between overflow-hidden transition-all duration-500 hover:-translate-y-1.5">
+                        <!-- Top Text -->
+                        <div class="flex items-start justify-between mb-4">
+                            <div>
+                                <span class="text-[11px] font-black tracking-widest uppercase text-amber-400/90 block">
+                                    Executive Financial Analytics graph
+                                </span>
+                                <h3 class="text-base sm:text-lg font-black mt-1" :class="isDark ? 'text-white' : 'text-stone-900'">
+                                    {{ currentLocale === 'ar' ? 'التحليلات المالية والبيانية' : 'Executive Financial Analytics' }}
+                                </h3>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                                0% عمولة
+                            </span>
+                        </div>
+
+                        <!-- Image Mockup -->
+                        <div class="relative w-full aspect-[4/3] rounded-2xl overflow-hidden border border-white/10 bg-black/60 shadow-inner group-hover:scale-[1.02] transition-transform duration-500">
+                            <img
+                                src="/images/tedallal-analytics-chart-mockup.jpg"
+                                alt="Executive Financial Analytics graph"
+                                class="w-full h-full object-cover"
+                            />
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none"></div>
+                        </div>
+
+                        <!-- Bottom Tagline -->
+                        <p :class="isDark ? 'text-stone-400' : 'text-stone-600 font-medium'" class="text-xs mt-4 leading-relaxed transition-colors">
+                            {{ currentLocale === 'ar'
+                                ? 'رؤية مالية واضحة بنسبة 100%: مراقبة نمو الإيرادات، مبيعات الأصناف الأكثر ربحية، وتوفير العمولات الشهرية.'
+                                : 'Real-time revenue metrics, profit drivers, and cost transparency with zero cut taken by middleman apps.' }}
+                        </p>
+                    </div>
+
+                </div>
+
+                <!-- BOTTOM ROW: 2 Cards (Floor Plan + Operations & Cashier) -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6" dir="ltr">
+
+                    <!-- CARD 4: Interactive Floor Plan & Tables -->
+                    <div dir="rtl" :class="isDark ? 'glass-ultra text-white' : 'glass-ultra text-stone-900'" class="rounded-3xl p-5 sm:p-6 flex flex-col justify-between overflow-hidden transition-all duration-500 hover:-translate-y-1.5">
+                        <div class="flex items-start justify-between mb-4">
+                            <div>
+                                <span class="text-[11px] font-black tracking-widest uppercase text-amber-400/90 block">
+                                    Interactive Floor Plan & Tables
+                                </span>
+                                <h3 class="text-base sm:text-lg font-black mt-1" :class="isDark ? 'text-white' : 'text-stone-900'">
+                                    {{ currentLocale === 'ar' ? 'خريطة الصالة وإدارة الطاولات وصالونات الـ VIP' : 'Interactive Table Floor Plan & VIP Lounges' }}
+                                </h3>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                                تحكم حي
+                            </span>
+                        </div>
+
+                        <div class="relative w-full aspect-[16/9] rounded-2xl overflow-hidden border border-white/10 bg-black/60 shadow-inner group-hover:scale-[1.01] transition-transform duration-500">
+                            <img
+                                src="/images/tedallal-floor-plan-mockup.jpg"
+                                alt="Interactive Table Floor Plan"
+                                class="w-full h-full object-cover"
+                            />
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none"></div>
+                        </div>
+
+                        <p :class="isDark ? 'text-stone-400' : 'text-stone-600 font-medium'" class="text-xs mt-4 leading-relaxed transition-colors">
+                            {{ currentLocale === 'ar'
+                                ? 'رسم تخطيطي تفاعلي لصالة مطعمك: متابعة حالة الطاولات لحظياً (مشغولة، متاحة، محجوزة)، وجلسات الصالونات الخاصة.'
+                                : 'Architectural visual overview of dining spaces, live occupancy rings, and personalized service for private rooms.' }}
+                        </p>
+                    </div>
+
+                    <!-- CARD 5: Operations & Cashier Automation -->
+                    <div dir="rtl" :class="isDark ? 'glass-ultra text-white' : 'glass-ultra text-stone-900'" class="rounded-3xl p-5 sm:p-6 flex flex-col justify-between overflow-hidden transition-all duration-500 hover:-translate-y-1.5">
+                        <div class="flex items-start justify-between mb-4">
+                            <div>
+                                <span class="text-[11px] font-black tracking-widest uppercase text-amber-400/90 block">
+                                    Point of Sale & Shift Z-Reports
+                                </span>
+                                <h3 class="text-base sm:text-lg font-black mt-1" :class="isDark ? 'text-white' : 'text-stone-900'">
+                                    {{ currentLocale === 'ar' ? 'نظام نقاط البيع والكاشير وتقارير الوردية' : 'Point of Sale & Shift Z-Report Closures' }}
+                                </h3>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                                80mm حراري
+                            </span>
+                        </div>
+
+                        <!-- Interactive Mini POS & Z-Report Card -->
+                        <div :class="isDark ? 'bg-black/70 border-white/10 text-white' : 'bg-amber-50/50 border-amber-900/15 text-stone-900 shadow-inner'" class="relative w-full aspect-[16/9] rounded-2xl overflow-hidden border p-5 flex flex-col justify-between">
+                            <div class="flex items-center justify-between pb-3 border-b border-[rgba(226,196,133,0.18)]">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-3 h-3 rounded-full bg-emerald-400 animate-pulse"></span>
+                                    <span class="text-xs font-black" :class="isDark ? 'text-white' : 'text-stone-900'">صندوق الكاشير الرئيسي • وردية الصباح</span>
+                                </div>
+                                <span class="text-[11px] font-mono text-amber-400 font-bold">Z-REPORT #2481</span>
+                            </div>
+
+                            <div class="grid grid-cols-3 gap-3 text-center py-2">
+                                <div class="p-2.5 rounded-xl border transition-colors" :class="isDark ? 'bg-stone-900/90 border-[rgba(226,196,133,0.18)]' : 'bg-white border-amber-900/15 shadow-2xs'">
+                                    <span class="text-[10px] block mb-0.5" :class="isDark ? 'text-stone-400' : 'text-stone-600 font-bold'">إجمالي المبيعات</span>
+                                    <span class="text-xs sm:text-sm font-black" :class="isDark ? 'text-emerald-400' : 'text-emerald-700'">SAR 12,450</span>
+                                </div>
+                                <div class="p-2.5 rounded-xl border transition-colors" :class="isDark ? 'bg-stone-900/90 border-[rgba(226,196,133,0.18)]' : 'bg-white border-amber-900/15 shadow-2xs'">
+                                    <span class="text-[10px] block mb-0.5" :class="isDark ? 'text-stone-400' : 'text-stone-600 font-bold'">عدد الطلبات</span>
+                                    <span class="text-xs sm:text-sm font-black" :class="isDark ? 'text-white' : 'text-stone-900'">84 طلب</span>
+                                </div>
+                                <div class="p-2.5 rounded-xl border transition-colors" :class="isDark ? 'bg-stone-900/90 border-[rgba(226,196,133,0.18)]' : 'bg-white border-amber-900/15 shadow-2xs'">
+                                    <span class="text-[10px] block mb-0.5" :class="isDark ? 'text-stone-400' : 'text-stone-600 font-bold'">وفورات العمولة</span>
+                                    <span class="text-xs sm:text-sm font-black" :class="isDark ? 'text-amber-400' : 'text-amber-700'">+SAR 2,490</span>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between pt-2 border-t border-[rgba(226,196,133,0.18)]">
+                                <span class="text-[11px]" :class="isDark ? 'text-stone-400' : 'text-stone-600 font-medium'">طباعة فورية بنقرة واحدة لطابعات Epson و Star</span>
+                                <button type="button" class="px-3 py-1 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-bold" @click="isDemoModalOpen = true">
+                                    معاينة الفاتورة 🧾
+                                </button>
+                            </div>
+                        </div>
+
+                        <p :class="isDark ? 'text-stone-400' : 'text-stone-600 font-medium'" class="text-xs mt-4 leading-relaxed transition-colors">
+                            {{ currentLocale === 'ar'
+                                ? 'إغلاق وردية دقيق بدون فروقات نقدية: تفصيل الدفع (نقدي، مدى، فيزا)، مع طباعة حرارية سريعة وإرسال الفواتير عبر الواتساب.'
+                                : 'Flawless cash drawer closures, multi-tender payment breakdown, and instant thermal receipt printing.' }}
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================================= -->
+        <!-- 3. RESTORIA GRAND CULINARY SHOWCASE (معرض الأطباق الفاخر) -->
+        <!-- ========================================================================= -->
+        <section id="showcase" class="py-16 md:py-28 border-y relative z-10 transition-colors"
+            :class="isDark ? 'bg-[#08080A] border-amber-500/15' : 'bg-[#F5F0E6]/75 border-[#C5A059]/25'"
+        >
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <!-- Section Header with Restoria Royal Ornaments -->
+                <div class="text-center max-w-3xl mx-auto mb-12">
+                    <span class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[11px] font-black tracking-widest uppercase mb-3 border" :class="isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' : 'bg-amber-500/15 text-[#8C6010] border-[#C5A059]/40 shadow-xs'">
+                        {{ currentLocale === 'ar' ? 'معرض التذوق والطهي الملكي' : 'HAUTE CUISINE EXHIBITION' }}
+                    </span>
+                    <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black mb-3" :class="isDark ? 'text-white' : 'text-stone-900'">
+                        {{ currentLocale === 'ar' ? 'قوائم أطباق فاخرة تُبهر الحواس وتزيد المبيعات' : 'Luxury Digital Menus That Captivate Diners' }}
+                    </h2>
+                    <div class="flex items-center justify-center gap-3 my-4">
+                        <div class="h-px w-12 bg-amber-500/50"></div>
+                        <span class="text-amber-400 text-sm">⚜️</span>
+                        <div class="h-px w-12 bg-amber-500/50"></div>
+                    </div>
+                    <p :class="isDark ? 'text-stone-400' : 'text-stone-600 font-medium'" class="text-sm sm:text-base max-w-xl mx-auto transition-colors">
+                        {{ currentLocale === 'ar'
+                            ? 'أضف لمطعمك تجربة بصرية شهية: صور أطباق عالية الوضوح، شارات توصية الشيف، واحتساب فوري بالعملة المحلية.'
+                            : 'Mouth-watering photography, chef signature badges, and live currency calculations in an ultra-luxurious grid.' }}
+                    </p>
+                </div>
+
+                <!-- Culinary Category Switcher Tabs -->
+                <div class="flex items-center justify-center mb-10 overflow-x-auto scrollbar-hide px-2">
+                    <div class="inline-flex p-1.5 rounded-2xl border backdrop-blur-md gap-1.5"
+                        :class="isDark ? 'glass-ultra' : 'glass-ultra shadow-sm'"
+                    >
                         <button
-                            @click="isDemoModalOpen = true"
-                            class="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-400 to-orange-500 text-slate-950 font-black text-sm sm:text-base shadow-xl shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+                            type="button"
+                            class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all shrink-0"
+                            :class="activeCulinaryCategory === 'grills'
+                                ? 'bg-gradient-to-r from-[#BF953F] to-[#B38728] text-stone-950 shadow-md shadow-amber-500/20'
+                                : (isDark ? 'text-stone-400 hover:text-white' : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100')"
+                            @click="activeCulinaryCategory = 'grills'"
                         >
-                            <span>{{ currentLocale === 'ar' ? 'سجّل مطعمك في دليل تدلّل الآن 🚀' : 'Feature Your Restaurant on Tedallal Now 🚀' }}</span>
+                            <span>🍢</span>
+                            <span>{{ currentLocale === 'ar' ? 'المشويات الحلبية الفاخرة' : 'Signature Grills' }}</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all shrink-0"
+                            :class="activeCulinaryCategory === 'appetizers'
+                                ? 'bg-gradient-to-r from-[#BF953F] to-[#B38728] text-stone-950 shadow-md shadow-amber-500/20'
+                                : (isDark ? 'text-stone-400 hover:text-white' : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100')"
+                            @click="activeCulinaryCategory = 'appetizers'"
+                        >
+                            <span>🥗</span>
+                            <span>{{ currentLocale === 'ar' ? 'المازة والمقبلات الشهباء' : 'Grand Mezza' }}</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all shrink-0"
+                            :class="activeCulinaryCategory === 'desserts'
+                                ? 'bg-gradient-to-r from-[#BF953F] to-[#B38728] text-stone-950 shadow-md shadow-amber-500/20'
+                                : (isDark ? 'text-stone-400 hover:text-white' : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100')"
+                            @click="activeCulinaryCategory = 'desserts'"
+                        >
+                            <span>🍯</span>
+                            <span>{{ currentLocale === 'ar' ? 'الحلويات التراثية الساخنة' : 'Warm Desserts' }}</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all shrink-0"
+                            :class="activeCulinaryCategory === 'drinks'
+                                ? 'bg-gradient-to-r from-[#BF953F] to-[#B38728] text-stone-950 shadow-md shadow-amber-500/20'
+                                : (isDark ? 'text-stone-400 hover:text-white' : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100')"
+                            @click="activeCulinaryCategory = 'drinks'"
+                        >
+                            <span>🍹</span>
+                            <span>{{ currentLocale === 'ar' ? 'العصائر الطبيعية المنعشة' : 'Fresh Juices' }}</span>
                         </button>
                     </div>
-
                 </div>
 
-            </div>
-        </section>
+                <!-- 3-Column Restoria Food Card Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <article
+                        v-for="dish in visibleDishes"
+                        :key="dish.id"
+                        class="group rounded-3xl border overflow-hidden flex flex-col justify-between transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 glass-ultra"
+                    >
+                        <!-- Gourmet Dish Photography -->
+                        <div class="relative w-full aspect-[16/10] overflow-hidden bg-stone-900">
+                            <img
+                                :src="dish.image"
+                                :alt="dish.name"
+                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
+                            <div class="absolute inset-0 bg-gradient-to-t from-[#0a0f1d] via-transparent to-transparent opacity-80"></div>
 
-        <!-- ========================================================================= -->
-        <!-- ROI & SAVINGS CALCULATOR -->
-        <!-- ========================================================================= -->
-        <!-- ========================================================================= -->
-        <!-- ROI & SAVINGS CALCULATOR -->
-        <!-- ========================================================================= -->
-        <section
-            id="roi-calculator"
-            class="py-24 relative z-10 border-t transition-colors duration-500"
-            :class="isDark ? 'border-white/5 bg-[#020b07]/75 backdrop-blur-xl' : 'border-slate-200/90 bg-white'"
-        >
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <!-- Chef Culinary Tag Badge -->
+                            <span class="absolute top-3 start-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] shadow-lg backdrop-blur-md"
+                                :class="dish.badge.style"
+                            >
+                                <span>{{ dish.badge.icon }}</span>
+                                <span>{{ dish.badge.label }}</span>
+                            </span>
 
-                <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
-                    <div
-                        class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold border shadow-xs"
-                        :class="isDark ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-emerald-50 text-emerald-800 border-emerald-200/90 font-bold'"
-                    >
-                        <span>{{ t.roi.tag }}</span>
-                    </div>
-                    <h2
-                        class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight"
-                        :class="isDark ? 'text-white' : 'text-slate-900'"
-                    >
-                        {{ t.roi.title }}
-                    </h2>
-                    <p
-                        class="text-base sm:text-lg"
-                        :class="isDark ? 'text-slate-300' : 'text-slate-700'"
-                    >
-                        {{ t.roi.subtitle }}
-                    </p>
+                            <!-- Preparation Time Badge -->
+                            <span class="absolute bottom-3 end-3 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-stone-950/80 text-stone-300 border border-stone-700/50 backdrop-blur-md">
+                                ⏱️ {{ dish.prepTime }}
+                            </span>
+                        </div>
+
+                        <!-- Dish Body -->
+                        <div class="p-5 flex-1 flex flex-col justify-between">
+                            <div>
+                                <h3 class="font-black text-lg mb-1 group-hover:text-amber-400 transition-colors" :class="isDark ? 'text-white' : 'text-stone-900'">
+                                    {{ dish.name }}
+                                </h3>
+                                <p :class="isDark ? 'text-stone-400' : 'text-stone-600'" class="text-xs line-clamp-2 leading-relaxed mb-4 transition-colors">
+                                    {{ dish.description }}
+                                </p>
+                            </div>
+
+                            <!-- Pricing & Interactive Quick Add Row -->
+                            <div class="pt-3 border-t border-[rgba(226,196,133,0.18)]/80 flex items-center justify-between">
+                                <div class="flex flex-col">
+                                    <span class="text-[10px] text-stone-500 uppercase font-bold">السعر</span>
+                                    <span class="text-base font-black text-amber-400">
+                                        {{ formatPrice(dish.price) }} {{ currentCurrencySymbol }}
+                                    </span>
+                                </div>
+
+                                <!-- Add / Counter Buttons -->
+                                <div class="flex items-center gap-2">
+                                    <template v-if="simulatedCart[dish.id]">
+                                        <button
+                                            type="button"
+                                            class="w-8 h-8 rounded-full bg-stone-800 text-stone-200 font-black flex items-center justify-center hover:bg-stone-700 active:scale-90 transition-all text-sm"
+                                            @click="removeDishFromSimulatedCart(dish.id)"
+                                        >
+                                            −
+                                        </button>
+                                        <span class="text-xs font-black min-w-[16px] text-center text-amber-300">
+                                            {{ simulatedCart[dish.id] }}
+                                        </span>
+                                    </template>
+                                    <button
+                                        type="button"
+                                        class="h-9 px-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-stone-950 font-black text-xs shadow-md shadow-amber-500/20 hover:from-amber-400 hover:to-amber-500 active:scale-95 transition-all flex items-center gap-1.5"
+                                        @click="addDishToSimulatedCart(dish)"
+                                    >
+                                        <span>+</span>
+                                        <span>{{ currentLocale === 'ar' ? 'إضافة للسلة' : 'Add' }}</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
                 </div>
 
-                <div
-                    class="max-w-4xl mx-auto p-8 sm:p-12 rounded-3xl border shadow-2xl backdrop-blur-xl transition-all"
-                    :class="isDark ? 'bg-slate-900/80 border-white/10' : 'bg-slate-50/70 border-slate-200/90 shadow-2xl'"
+                <!-- Floating Order Bar for Simulator -->
+                <div v-if="simulatedCartCount > 0" class="mt-8 max-w-xl mx-auto p-4 rounded-2xl border flex items-center justify-between shadow-2xl backdrop-blur-xl animate-bounce-short"
+                    :class="isDark ? 'bg-[#0c1222]/95 border-amber-500/40 text-white' : 'bg-white border-amber-400 shadow-xl'"
                 >
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
-
-                        <!-- Sliders Controls -->
-                        <div class="space-y-8">
-                            <!-- Table Count Slider -->
-                            <div class="space-y-3">
-                                <div class="flex justify-between items-center text-sm">
-                                    <span
-                                        class="font-bold"
-                                        :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'"
-                                    >{{ t.roi.tablesLabel }}</span>
-                                    <span
-                                        class="font-extrabold text-xl font-mono"
-                                        :class="isDark ? 'text-amber-400' : 'text-amber-800 font-black'"
-                                    >{{ tableCount }} {{ t.roi.tablesUnit }}</span>
-                                </div>
-                                <input
-                                    type="range"
-                                    min="5"
-                                    max="120"
-                                    step="5"
-                                    v-model.number="tableCount"
-                                    class="w-full accent-amber-500 h-2.5 rounded-lg cursor-pointer"
-                                    :class="isDark ? 'bg-slate-800' : 'bg-slate-200'"
-                                />
-                                <div
-                                    class="flex justify-between text-[11px] font-mono"
-                                    :class="isDark ? 'text-slate-500' : 'text-slate-400 font-semibold'"
-                                >
-                                    <span>5</span>
-                                    <span>120</span>
-                                </div>
-                            </div>
-
-                            <!-- Daily Orders Slider -->
-                            <div class="space-y-3">
-                                <div class="flex justify-between items-center text-sm">
-                                    <span
-                                        class="font-bold"
-                                        :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'"
-                                    >{{ t.roi.dailyOrdersLabel }}</span>
-                                    <span
-                                        class="font-extrabold text-xl font-mono"
-                                        :class="isDark ? 'text-amber-400' : 'text-amber-800 font-black'"
-                                    >{{ dailyOrdersPerTable }} {{ t.roi.dailyOrdersUnit }}</span>
-                                </div>
-                                <input
-                                    type="range"
-                                    min="2"
-                                    max="15"
-                                    step="1"
-                                    v-model.number="dailyOrdersPerTable"
-                                    class="w-full accent-amber-500 h-2.5 rounded-lg cursor-pointer"
-                                    :class="isDark ? 'bg-slate-800' : 'bg-slate-200'"
-                                />
-                                <div
-                                    class="flex justify-between text-[11px] font-mono"
-                                    :class="isDark ? 'text-slate-500' : 'text-slate-400 font-semibold'"
-                                >
-                                    <span>2</span>
-                                    <span>15</span>
-                                </div>
-                            </div>
-
-                            <div
-                                class="p-4 rounded-2xl border text-xs space-y-1"
-                                :class="isDark ? 'bg-white/[0.02] border-white/5 text-slate-400' : 'bg-white border-slate-200/90 text-slate-600 shadow-xs'"
-                            >
-                                <div class="flex justify-between">
-                                    <span>{{ t.roi.monthlyOrdersEst }}</span>
-                                    <strong
-                                        class="font-mono font-bold"
-                                        :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'"
-                                    >{{ monthlyOrders.toLocaleString('en-US') }} {{ t.roi.ordersCountUnit }}</strong>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span>{{ t.roi.avgTimeSavedLabel }}</span>
-                                    <strong
-                                        class="font-mono font-bold"
-                                        :class="isDark ? 'text-emerald-400' : 'text-emerald-700'"
-                                    >{{ t.roi.avgTimeSavedVal }}</strong>
-                                </div>
-                            </div>
+                    <div class="flex items-center gap-3">
+                        <span class="w-10 h-10 rounded-full bg-amber-500 text-stone-950 font-black flex items-center justify-center text-sm">
+                            {{ simulatedCartCount }}
+                        </span>
+                        <div>
+                            <p class="text-xs font-black">
+                                {{ currentLocale === 'ar' ? 'طلب الطاولة قيد المعاينة الحية' : 'Live Table Order Preview' }}
+                            </p>
+                            <p class="text-[11px] text-stone-400">
+                                {{ formatPrice(simulatedCartTotalSyp) }} {{ currentCurrencySymbol }} • يصل فوراً للمطبخ
+                            </p>
                         </div>
-
-                        <!-- Computed Impact Output -->
-                        <div
-                            class="space-y-4 p-6 rounded-2xl border"
-                            :class="isDark ? 'bg-slate-950 border-amber-500/20' : 'bg-white border-slate-200/90 shadow-md'"
-                        >
-
-                            <div
-                                class="p-4 rounded-xl border"
-                                :class="isDark ? 'bg-amber-500/10 border-amber-500/30' : 'bg-amber-50/90 border-amber-200 shadow-xs'"
-                            >
-                                <div
-                                    class="text-xs font-semibold"
-                                    :class="isDark ? 'text-amber-300' : 'text-amber-900 font-bold'"
-                                >{{ t.roi.paperSavingsTitle }}</div>
-                                <div
-                                    class="text-2xl sm:text-3xl font-black font-mono mt-1"
-                                    :class="isDark ? 'text-amber-400' : 'text-amber-800 font-black'"
-                                >
-                                    {{ formatPrice(yearlyPaperSavings) }} {{ currentCurrencySymbol }}
-                                </div>
-                                <div
-                                    class="text-[11px] mt-1"
-                                    :class="isDark ? 'text-slate-400' : 'text-slate-600 font-medium'"
-                                >{{ t.roi.paperSavingsNote }}</div>
-                            </div>
-
-                            <div
-                                class="p-4 rounded-xl border"
-                                :class="isDark ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-emerald-50/90 border-emerald-200 shadow-xs'"
-                            >
-                                <div
-                                    class="text-xs font-semibold"
-                                    :class="isDark ? 'text-emerald-300' : 'text-emerald-900 font-bold'"
-                                >{{ t.roi.laborHoursTitle }}</div>
-                                <div
-                                    class="text-2xl sm:text-3xl font-black font-mono mt-1"
-                                    :class="isDark ? 'text-emerald-400' : 'text-emerald-800 font-black'"
-                                >
-                                    {{ timeSavedHoursMonthly.toLocaleString('en-US') }} {{ t.roi.laborHoursUnit }}
-                                </div>
-                                <div
-                                    class="text-[11px] mt-1"
-                                    :class="isDark ? 'text-slate-400' : 'text-slate-600 font-medium'"
-                                >{{ t.roi.laborHoursNote }}</div>
-                            </div>
-
-                            <div
-                                class="p-4 rounded-xl border"
-                                :class="isDark ? 'bg-orange-500/10 border-orange-500/30' : 'bg-orange-50/90 border-orange-200 shadow-xs'"
-                            >
-                                <div
-                                    class="text-xs font-semibold"
-                                    :class="isDark ? 'text-orange-300' : 'text-orange-900 font-bold'"
-                                >{{ t.roi.revenueBoostTitle }}</div>
-                                <div
-                                    class="text-2xl sm:text-3xl font-black font-mono mt-1"
-                                    :class="isDark ? 'text-orange-400' : 'text-orange-800 font-black'"
-                                >
-                                    +{{ formatPrice(estimatedRevenueBoost) }} {{ currentCurrencySymbol }} {{ t.roi.revenueBoostPerMonth }}
-                                </div>
-                                <div
-                                    class="text-[11px] mt-1"
-                                    :class="isDark ? 'text-slate-400' : 'text-slate-600 font-medium'"
-                                >{{ t.roi.revenueBoostNote }}</div>
-                            </div>
-
-                        </div>
-
                     </div>
+                    <button
+                        type="button"
+                        class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs transition-all active:scale-95"
+                        @click="isDemoModalOpen = true"
+                    >
+                        {{ currentLocale === 'ar' ? 'فعّل المنظومة لمطعمك ➔' : 'Activate for Your Restaurant ➔' }}
+                    </button>
                 </div>
-
             </div>
         </section>
 
         <!-- ========================================================================= -->
-        <!-- COMPARISON: TRADITIONAL VS TEDALLAL -->
+        <!-- 4. THE FLOOR-TO-KITCHEN LIVE BRIDGE (من الصالة للمطبخ) -->
         <!-- ========================================================================= -->
-        <section
-            id="comparison"
-            class="py-20 border-t transition-colors duration-500 relative z-10"
-            :class="isDark ? 'border-white/5 bg-[#03110a]/70 backdrop-blur-xl' : 'border-slate-200/90 bg-slate-50/60'"
-        >
+        <section id="floor-to-kitchen" class="py-16 md:py-28 relative z-10">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-                <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
-                    <div
-                        class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold border shadow-xs"
-                        :class="isDark ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 'bg-rose-50 text-rose-800 border-rose-200/90 font-bold'"
-                    >
-                        <span>{{ t.comparison.tag }}</span>
-                    </div>
-                    <h2
-                        class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight"
-                        :class="isDark ? 'text-white' : 'text-slate-900'"
-                    >
-                        {{ t.comparison.title }}
+                <!-- Section Header -->
+                <div class="text-center max-w-3xl mx-auto mb-14">
+                    <span class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[11px] font-black tracking-widest uppercase mb-3 border" :class="isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' : 'bg-amber-500/15 text-[#8C6010] border-[#C5A059]/40 shadow-xs'">
+                        {{ currentLocale === 'ar' ? 'دورة الطلب الذكية' : 'THE SEAMLESS WORKFLOW' }}
+                    </span>
+                    <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black mb-3" :class="isDark ? 'text-white' : 'text-stone-900'">
+                        {{ currentLocale === 'ar' ? 'انسجام تام بين رواد الصالة وشيف المطبخ' : 'Floor to Kitchen in 0.2 Seconds' }}
                     </h2>
-                    <p
-                        class="text-base sm:text-lg"
-                        :class="isDark ? 'text-slate-300' : 'text-slate-700'"
-                    >
-                        {{ t.comparison.subtitle }}
+                    <p :class="isDark ? 'text-stone-400' : 'text-stone-600 font-medium'" class="text-sm max-w-xl mx-auto transition-colors">
+                        {{ currentLocale === 'ar'
+                            ? 'وداعاً للفواتير الورقية الضائعة والنداءات المتكررة. الطلب ينطلق من يد الزبون ليستقر أمام عيني الشيف فوراً.'
+                            : 'Eliminate missed tickets and chaotic communication with a direct digital link from seat to chef.' }}
                     </p>
                 </div>
 
-                <div
-                    class="max-w-4xl mx-auto overflow-hidden rounded-3xl border shadow-2xl transition-all"
-                    :class="isDark ? 'border-white/10 bg-slate-900/60 backdrop-blur-xl' : 'border-slate-200/90 bg-white shadow-xl'"
-                >
-                    <div
-                        class="grid grid-cols-12 border-b p-4 sm:p-6 text-xs sm:text-sm font-bold"
-                        :class="isDark ? 'bg-slate-950 border-white/10' : 'bg-slate-100/90 border-slate-200/90'"
+                <!-- 2 Grand Visual Cards: Dining QR vs Chef KDS -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+                    <!-- CARD 1: Dining QR Luxury Experience -->
+                    <div class="rounded-3xl border overflow-hidden flex flex-col justify-between transition-all glass-ultra"
                     >
-                        <div
-                            class="col-span-4 sm:col-span-4"
-                            :class="isDark ? 'text-slate-400' : 'text-slate-700 font-bold'"
-                        >{{ currentLocale === 'ar' ? 'المعيار التشغيلي' : 'Operational Metric' }}</div>
-                        <div
-                            class="col-span-4 sm:col-span-4"
-                            :class="isDark ? 'text-rose-400' : 'text-rose-700 font-bold'"
-                        >{{ t.comparison.colTraditional }}</div>
-                        <div
-                            class="col-span-4 sm:col-span-4 font-black"
-                            :class="isDark ? 'text-amber-400' : 'text-amber-800 font-black'"
-                        >{{ t.comparison.colTedallal }}</div>
+                        <div class="relative w-full aspect-[16/10] overflow-hidden">
+                            <img
+                                src="/images/storyboard/scene_3_tedallal_qr_solution_1793695540137.jpg"
+                                alt="مسح QR على طاولة رخامية"
+                                class="w-full h-full object-cover transform hover:scale-105 transition-transform duration-700"
+                            />
+                            <div class="absolute inset-0 bg-gradient-to-t from-[#0a0f1d] via-transparent to-transparent"></div>
+                            <span class="absolute top-4 start-4 px-3 py-1 rounded-full bg-stone-950/80 text-amber-300 text-xs font-black border border-amber-500/40 backdrop-blur-md">
+                                📱 تجربة رواد الصالة
+                            </span>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="text-xl font-black mb-2" :class="isDark ? 'text-white' : 'text-stone-900'">
+                                {{ currentLocale === 'ar' ? 'طلب فوري ومخصص بدون انتظار' : 'Instant In-Seat Dining' }}
+                            </h3>
+                            <p :class="isDark ? 'text-stone-400' : 'text-stone-600'" class="text-xs sm:text-sm leading-relaxed mb-4 transition-colors">
+                                {{ currentLocale === 'ar'
+                                    ? 'يتصفح الزبائن القائمة بأريحية، يحددون درجات الطهي والإضافات والملاحظات الخاصة، ويؤكدون الطلب بلمسة واحدة دون التلويح للنادل.'
+                                    : 'Guests browse dish photography, set custom notes (e.g., extra sauce), and place orders without waiting for waitstaff.' }}
+                            </p>
+                            <div class="flex items-center gap-2 text-xs font-bold text-amber-400">
+                                <span>✓ دعم أجهزة iOS وأندرويد</span>
+                                <span class="text-stone-600">•</span>
+                                <span>✓ بدون تحميل أي تطبيق</span>
+                            </div>
+                        </div>
                     </div>
 
-                    <div
-                        class="divide-y text-xs sm:text-sm"
-                        :class="isDark ? 'divide-white/5' : 'divide-slate-200/80'"
+                    <!-- CARD 2: Executive Chef KDS Display -->
+                    <div class="rounded-3xl border overflow-hidden flex flex-col justify-between transition-all glass-ultra"
                     >
-                        <!-- Row 1 -->
-                        <div
-                            class="grid grid-cols-12 p-4 sm:p-6 items-center transition-colors"
-                            :class="isDark ? 'hover:bg-white/[0.02]' : 'hover:bg-amber-50/40'"
-                        >
-                            <div
-                                class="col-span-4 font-bold"
-                                :class="isDark ? 'text-white' : 'text-slate-900 font-bold'"
-                            >{{ t.comparison.r1Label }}</div>
-                            <div
-                                class="col-span-4 leading-relaxed"
-                                :class="isDark ? 'text-slate-400' : 'text-slate-600 font-medium'"
-                            >{{ t.comparison.r1Trad }}</div>
-                            <div
-                                class="col-span-4 font-bold leading-relaxed"
-                                :class="isDark ? 'text-amber-300' : 'text-amber-800 font-extrabold'"
-                            >{{ t.comparison.r1Ted }}</div>
+                        <div class="relative w-full aspect-[16/10] overflow-hidden">
+                            <img
+                                src="/images/storyboard/scene_4_kitchen_kds_automation_1793695563497.jpg"
+                                alt="شاشة الشيف KDS في المطبخ"
+                                class="w-full h-full object-cover transform hover:scale-105 transition-transform duration-700"
+                            />
+                            <div class="absolute inset-0 bg-gradient-to-t from-[#0a0f1d] via-transparent to-transparent"></div>
+                            <span class="absolute top-4 start-4 px-3 py-1 rounded-full bg-emerald-950/80 text-emerald-300 text-xs font-black border border-emerald-500/40 backdrop-blur-md">
+                                👨‍🍳 شاشة المطبخ والشيف KDS
+                            </span>
                         </div>
-
-                        <!-- Row 2 -->
-                        <div
-                            class="grid grid-cols-12 p-4 sm:p-6 items-center transition-colors"
-                            :class="isDark ? 'hover:bg-white/[0.02]' : 'hover:bg-amber-50/40'"
-                        >
-                            <div
-                                class="col-span-4 font-bold"
-                                :class="isDark ? 'text-white' : 'text-slate-900 font-bold'"
-                            >{{ t.comparison.r2Label }}</div>
-                            <div
-                                class="col-span-4 leading-relaxed"
-                                :class="isDark ? 'text-slate-400' : 'text-slate-600 font-medium'"
-                            >{{ t.comparison.r2Trad }}</div>
-                            <div
-                                class="col-span-4 font-bold leading-relaxed"
-                                :class="isDark ? 'text-amber-300' : 'text-amber-800 font-extrabold'"
-                            >{{ t.comparison.r2Ted }}</div>
-                        </div>
-
-                        <!-- Row 3 -->
-                        <div
-                            class="grid grid-cols-12 p-4 sm:p-6 items-center transition-colors"
-                            :class="isDark ? 'hover:bg-white/[0.02]' : 'hover:bg-amber-50/40'"
-                        >
-                            <div
-                                class="col-span-4 font-bold"
-                                :class="isDark ? 'text-white' : 'text-slate-900 font-bold'"
-                            >{{ t.comparison.r3Label }}</div>
-                            <div
-                                class="col-span-4 leading-relaxed"
-                                :class="isDark ? 'text-slate-400' : 'text-slate-600 font-medium'"
-                            >{{ t.comparison.r3Trad }}</div>
-                            <div
-                                class="col-span-4 font-bold leading-relaxed"
-                                :class="isDark ? 'text-amber-300' : 'text-amber-800 font-extrabold'"
-                            >{{ t.comparison.r3Ted }}</div>
-                        </div>
-
-                        <!-- Row 4 -->
-                        <div
-                            class="grid grid-cols-12 p-4 sm:p-6 items-center transition-colors"
-                            :class="isDark ? 'hover:bg-white/[0.02]' : 'hover:bg-amber-50/40'"
-                        >
-                            <div
-                                class="col-span-4 font-bold"
-                                :class="isDark ? 'text-white' : 'text-slate-900 font-bold'"
-                            >{{ t.comparison.r4Label }}</div>
-                            <div
-                                class="col-span-4 leading-relaxed"
-                                :class="isDark ? 'text-slate-400' : 'text-slate-600 font-medium'"
-                            >{{ t.comparison.r4Trad }}</div>
-                            <div
-                                class="col-span-4 font-bold leading-relaxed"
-                                :class="isDark ? 'text-amber-300' : 'text-amber-800 font-extrabold'"
-                            >{{ t.comparison.r4Ted }}</div>
-                        </div>
-
-                        <!-- Row 5 -->
-                        <div
-                            class="grid grid-cols-12 p-4 sm:p-6 items-center transition-colors"
-                            :class="isDark ? 'hover:bg-white/[0.02]' : 'hover:bg-amber-50/40'"
-                        >
-                            <div
-                                class="col-span-4 font-bold"
-                                :class="isDark ? 'text-white' : 'text-slate-900 font-bold'"
-                            >{{ t.comparison.r5Label }}</div>
-                            <div
-                                class="col-span-4 leading-relaxed"
-                                :class="isDark ? 'text-slate-400' : 'text-slate-600 font-medium'"
-                            >{{ t.comparison.r5Trad }}</div>
-                            <div
-                                class="col-span-4 font-bold leading-relaxed"
-                                :class="isDark ? 'text-amber-300' : 'text-amber-800 font-extrabold'"
-                            >{{ t.comparison.r5Ted }}</div>
+                        <div class="p-6">
+                            <h3 class="text-xl font-black mb-2" :class="isDark ? 'text-white' : 'text-stone-900'">
+                                {{ currentLocale === 'ar' ? 'تحضير دقيق وتوقيت قياسي للطلبات' : 'Clockwork Kitchen Precision' }}
+                            </h3>
+                            <p class="text-xs sm:text-sm text-stone-400 leading-relaxed mb-4">
+                                {{ currentLocale === 'ar'
+                                    ? 'تظهر الطلبات بألوان متدرجة فور وصولها مع عداد زمني للتحضير، تنبيهات صوتية جرسية، وشاشة لا تنطفئ طوال الوردية.'
+                                    : 'Tickets arrive categorized by color with elapsed timers, sound alerts, and continuous Screen WakeLock throughout shifts.' }}
+                            </p>
+                            <div class="flex items-center gap-2 text-xs font-bold text-emerald-400">
+                                <span>✓ رنين تنبيهي للطلبات الجديدة</span>
+                                <span class="text-stone-600">•</span>
+                                <span>✓ شاشة لا تنطفئ (Wake Lock)</span>
+                            </div>
                         </div>
                     </div>
+
                 </div>
-
             </div>
         </section>
 
         <!-- ========================================================================= -->
-        <!-- TESTIMONIALS -->
+        <!-- 5. ASYMMETRIC BENTO GRID (4 Power Modules) -->
         <!-- ========================================================================= -->
-        <section
-            class="py-20 relative z-10 border-t transition-colors duration-500"
-            :class="isDark ? 'border-white/5 bg-[#020b07]/75 backdrop-blur-xl' : 'border-slate-200/90 bg-white'"
-        >
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-                <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
-                    <div
-                        class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold border shadow-xs"
-                        :class="isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-amber-50 text-amber-800 border-amber-200/90 font-bold'"
-                    >
-                        <span>{{ t.testimonials.tag }}</span>
-                    </div>
-                    <h2
-                        class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight"
-                        :class="isDark ? 'text-white' : 'text-slate-900'"
-                    >
-                        {{ t.testimonials.title }}
-                    </h2>
-                    <p
-                        class="text-base sm:text-lg"
-                        :class="isDark ? 'text-slate-300' : 'text-slate-700'"
-                    >
-                        {{ t.testimonials.subtitle }}
-                    </p>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <!-- Review 1 -->
-                    <div
-                        class="p-8 rounded-3xl border space-y-6 flex flex-col justify-between transition-all"
-                        :class="isDark ? 'bg-slate-900/60 border-white/5' : 'bg-white border-slate-200/90 shadow-sm hover:shadow-md'"
-                    >
-                        <p
-                            class="text-sm leading-relaxed italic"
-                            :class="isDark ? 'text-slate-300' : 'text-slate-700 font-medium'"
-                        >
-                            {{ t.testimonials.t1Text }}
-                        </p>
-                        <div
-                            class="flex items-center gap-4 pt-4 border-t"
-                            :class="isDark ? 'border-white/5' : 'border-slate-100'"
-                        >
-                            <div class="w-11 h-11 rounded-full bg-gradient-to-tr from-amber-500 to-orange-500 text-slate-950 font-bold flex items-center justify-center text-sm shadow-xs">
-                                TS
-                            </div>
-                            <div>
-                                <h5
-                                    class="text-sm font-bold"
-                                    :class="isDark ? 'text-white' : 'text-slate-900 font-bold'"
-                                >{{ t.testimonials.t1Author }}</h5>
-                                <p
-                                    class="text-xs"
-                                    :class="isDark ? 'text-amber-400/90' : 'text-amber-800 font-semibold'"
-                                >{{ t.testimonials.t1Role }}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Review 2 -->
-                    <div
-                        class="p-8 rounded-3xl border space-y-6 flex flex-col justify-between transition-all"
-                        :class="isDark ? 'bg-slate-900/60 border-white/5' : 'bg-white border-slate-200/90 shadow-sm hover:shadow-md'"
-                    >
-                        <p
-                            class="text-sm leading-relaxed italic"
-                            :class="isDark ? 'text-slate-300' : 'text-slate-700 font-medium'"
-                        >
-                            {{ t.testimonials.t2Text }}
-                        </p>
-                        <div
-                            class="flex items-center gap-4 pt-4 border-t"
-                            :class="isDark ? 'border-white/5' : 'border-slate-100'"
-                        >
-                            <div class="w-11 h-11 rounded-full bg-gradient-to-tr from-orange-500 to-rose-500 text-white font-bold flex items-center justify-center text-sm shadow-xs">
-                                SA
-                            </div>
-                            <div>
-                                <h5
-                                    class="text-sm font-bold"
-                                    :class="isDark ? 'text-white' : 'text-slate-900 font-bold'"
-                                >{{ t.testimonials.t2Author }}</h5>
-                                <p
-                                    class="text-xs"
-                                    :class="isDark ? 'text-amber-400/90' : 'text-amber-800 font-semibold'"
-                                >{{ t.testimonials.t2Role }}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Review 3 -->
-                    <div
-                        class="p-8 rounded-3xl border space-y-6 flex flex-col justify-between transition-all"
-                        :class="isDark ? 'bg-slate-900/60 border-white/5' : 'bg-white border-slate-200/90 shadow-sm hover:shadow-md'"
-                    >
-                        <p
-                            class="text-sm leading-relaxed italic"
-                            :class="isDark ? 'text-slate-300' : 'text-slate-700 font-medium'"
-                        >
-                            {{ t.testimonials.t3Text }}
-                        </p>
-                        <div
-                            class="flex items-center gap-4 pt-4 border-t"
-                            :class="isDark ? 'border-white/5' : 'border-slate-100'"
-                        >
-                            <div class="w-11 h-11 rounded-full bg-gradient-to-tr from-emerald-500 to-amber-500 text-slate-950 font-bold flex items-center justify-center text-sm shadow-xs">
-                                FT
-                            </div>
-                            <div>
-                                <h5
-                                    class="text-sm font-bold"
-                                    :class="isDark ? 'text-white' : 'text-slate-900 font-bold'"
-                                >{{ t.testimonials.t3Author }}</h5>
-                                <p
-                                    class="text-xs"
-                                    :class="isDark ? 'text-amber-400/90' : 'text-amber-800 font-semibold'"
-                                >{{ t.testimonials.t3Role }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </section>
-
-        <!-- ========================================================================= -->
-        <!-- PRICING & TAILORED PACKAGES (BASIC, PRO, MAX) -->
-        <!-- ========================================================================= -->
-        <section
-            id="pricing"
-            class="py-24 border-t transition-colors duration-500 relative z-10"
-            :class="isDark ? 'border-white/5 bg-[#020b07]/75 backdrop-blur-xl' : 'border-slate-200/90 bg-white'"
+        <section id="bento" class="py-16 md:py-28 border-t relative z-10 transition-colors"
+            :class="isDark ? 'bg-[#08080A] border-[rgba(226,196,133,0.18)]' : 'bg-[#F5F0E6]/75 border-[#C5A059]/25'"
         >
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <!-- Section Header -->
-                <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
-                    <div
-                        class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-black border shadow-xs"
-                        :class="isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-amber-50 text-amber-900 border-amber-200'"
-                    >
-                        <span>💎 {{ currentLocale === 'ar' ? 'باقات مرنة ومخصصة لأهداف مطعمك' : 'Flexible Packages Tailored For You' }}</span>
-                    </div>
-                    <h2
-                        class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight"
-                        :class="isDark ? 'text-white' : 'text-slate-900'"
-                    >
-                        {{ currentLocale === 'ar' ? 'استثمر في نمو مطعمك بعائد فوري ومباشر' : 'Invest in Growth with Immediate ROI' }}
+                <div class="text-center max-w-3xl mx-auto mb-14">
+                    <span class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[11px] font-black tracking-widest uppercase mb-3 border" :class="isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' : 'bg-amber-500/15 text-[#8C6010] border-[#C5A059]/40 shadow-xs'">
+                        {{ currentLocale === 'ar' ? 'هندسة المنظومة المتكاملة' : 'CORE CAPABILITIES' }}
+                    </span>
+                    <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black mb-3" :class="isDark ? 'text-white' : 'text-stone-900'">
+                        {{ currentLocale === 'ar' ? 'إدارة ذكية ومحاسبة حرارية بلا أخطاء' : 'Engineered for Flawless Operations' }}
                     </h2>
-                    <p
-                        class="text-base sm:text-lg leading-relaxed max-w-2xl mx-auto"
-                        :class="isDark ? 'text-slate-300' : 'text-slate-700'"
-                    >
-                        {{ currentLocale === 'ar'
-                            ? 'باقات مدروسة تمنحك الأتمتة الشاملة بدون اقتطاع أي عمولة من مبيعاتك (0% عمولة) — اختر الباقة التي تلائم نموذج تشغيلك.'
-                            : 'Transparent plans designed for measurable growth with 0% commissions on your food sales — pick what fits your operations.'
-                        }}
-                    </p>
                 </div>
 
-                <!-- 3 Packages Grid -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch max-w-7xl mx-auto">
-                    
-                    <!-- 1. PACKAGE BASIC -->
-                    <div
-                        class="rounded-3xl border p-7 sm:p-8 flex flex-col justify-between transition-all duration-300 relative"
-                        :class="isDark
-                            ? 'bg-slate-900/60 border-slate-800 hover:border-slate-700 hover:bg-slate-900/80'
-                            : 'bg-stone-50/70 border-slate-200 hover:border-amber-300 hover:bg-white shadow-xs hover:shadow-md'"
+                <!-- 4 Bento Modules -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                    <!-- MODULE 1 (Col Span 2): Full Service vs Fast Casual -->
+                    <div class="md:col-span-2 rounded-3xl border p-6 sm:p-8 flex flex-col justify-between transition-all"
+                        :class="isDark ? 'glass-ultra' : 'glass-ultra shadow-sm'"
                     >
                         <div>
                             <div class="flex items-center justify-between mb-4">
-                                <span class="text-xs font-black px-3 py-1 rounded-full bg-stone-200 text-stone-700 dark:bg-slate-800 dark:text-slate-300">
-                                    {{ currentLocale === 'ar' ? 'الباقة الأساسية' : 'Starter Plan' }}
+                                <span class="px-3 py-1 rounded-full text-xs font-black bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                                    {{ currentLocale === 'ar' ? 'مرونة تشغيلية تناسب نمط مطعمك' : 'Dual Operating Modes' }}
                                 </span>
-                                <span class="text-2xl">⚡</span>
+                                <!-- Mode Switcher Pill -->
+                                <div class="inline-flex p-1 rounded-xl border text-xs font-bold gap-1"
+                                    :class="isDark ? 'bg-stone-900 border-[rgba(226,196,133,0.18)]' : 'bg-stone-100 border-stone-200'"
+                                >
+                                    <button
+                                        type="button"
+                                        class="px-3 py-1 rounded-lg transition-all"
+                                        :class="selectedOperatingMode === 'postpaid' ? 'bg-amber-500 text-stone-950 font-black' : 'text-stone-400'"
+                                        @click="selectedOperatingMode = 'postpaid'"
+                                    >
+                                        {{ currentLocale === 'ar' ? 'خدمة كاملة (دفع لاحق)' : 'Dine-In Tab' }}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="px-3 py-1 rounded-lg transition-all"
+                                        :class="selectedOperatingMode === 'prepaid' ? 'bg-amber-500 text-stone-950 font-black' : 'text-stone-400'"
+                                        @click="selectedOperatingMode = 'prepaid'"
+                                    >
+                                        {{ currentLocale === 'ar' ? 'وجبات سريعة (دفع مسبق)' : 'Fast-Casual' }}
+                                    </button>
+                                </div>
                             </div>
-                            <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white mb-2">
-                                {{ currentLocale === 'ar' ? 'الباقة الأساسية' : 'Basic' }}
+
+                            <h3 class="text-xl sm:text-2xl font-black mb-2" :class="isDark ? 'text-white' : 'text-stone-900'">
+                                {{ selectedOperatingMode === 'postpaid'
+                                    ? (currentLocale === 'ar' ? 'نظام الخدمة الكاملة: فتح حساب طاولة وطلب متكرر' : 'Full-Service Dine-In: Open Tabs & Rounds')
+                                    : (currentLocale === 'ar' ? 'نظام الدفع السريع: تحصيل فوري عند الكاونتر قبل التجهيز' : 'Fast-Casual: Instant Payment Before Cooking') }}
                             </h3>
-                            <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 min-h-[40px] leading-relaxed mb-6">
-                                {{ currentLocale === 'ar'
-                                    ? 'إدارة الطلب والتشغيل الأساسي: الحل الأمثل لرقمنة الصالة والمطبخ والتخلص من فوضى الأوراق وأخطاء الفواتير.'
-                                    : 'Core Ordering Operations: Digitize table orders and kitchen flow, eliminating paper errors.'
-                                }}
+                            <p class="text-xs sm:text-sm text-stone-400 mb-6 leading-relaxed">
+                                {{ selectedOperatingMode === 'postpaid'
+                                    ? (currentLocale === 'ar' ? 'يجلس الزبائن، يطلبون مقبلات ثم وجبات رئيسية ثم حلويات، وتُجمع الفاتورة تلقائياً حتى المغادرة.' : 'Guests order multiple rounds over their visit, and the tab accumulates seamlessly until final checkout.')
+                                    : (currentLocale === 'ar' ? 'مثالي للكافيهات ومطاعم الوجبات السريعة: يدفع الزبون أولاً، وينطلق الطلب فوراً إلى شاشات المطبخ.' : 'Ideal for cafes and burger spots: pay first, then orders flow straight to kitchen preparation screens.') }}
                             </p>
-
-                            <!-- Direct Value Highlight -->
-                            <div class="mb-6 rounded-2xl p-3.5 border text-xs font-bold flex items-center gap-2.5"
-                                :class="isDark ? 'bg-amber-500/10 border-amber-500/20 text-amber-300' : 'bg-amber-50 border-amber-200 text-amber-900'">
-                                <span class="text-base shrink-0">🎯</span>
-                                <span>{{ currentLocale === 'ar' ? 'تسريع خدمة الطاولات بنسبة 35% ومنع أي طلب ضائع' : '35% faster table service with zero lost tickets' }}</span>
-                            </div>
-
-                            <!-- Features List -->
-                            <div class="space-y-3 mb-8 text-xs sm:text-sm">
-                                <div class="font-extrabold text-slate-900 dark:text-slate-200 mb-2">
-                                    {{ currentLocale === 'ar' ? 'تشمل هذه الباقة:' : 'What is included:' }}
-                                </div>
-                                <div class="flex items-start gap-2.5 text-slate-700 dark:text-slate-300">
-                                    <span class="text-emerald-500 font-bold shrink-0">✓</span>
-                                    <span>{{ currentLocale === 'ar' ? 'منيو الباركود التفاعلي فائق السرعة عبر رمز الاستجابة السريع دون الحاجة لتحميل تطبيقات' : 'Fast interactive QR menu without app download' }}</span>
-                                </div>
-                                <div class="flex items-start gap-2.5 text-slate-700 dark:text-slate-300">
-                                    <span class="text-emerald-500 font-bold shrink-0">✓</span>
-                                    <span>{{ currentLocale === 'ar' ? 'إدارة واستقبال طلبات الصالة والطاولات والطلبات السريعة' : 'Manage dine-in tables and quick takeaway orders' }}</span>
-                                </div>
-                                <div class="flex items-start gap-2.5 text-slate-700 dark:text-slate-300">
-                                    <span class="text-emerald-500 font-bold shrink-0">✓</span>
-                                    <span>{{ currentLocale === 'ar' ? 'شاشة المطبخ الرقمية لتنظيم وتتبع حالة تحضير الوجبات' : 'Digital kitchen display to organize food prep status' }}</span>
-                                </div>
-                                <div class="flex items-start gap-2.5 text-slate-700 dark:text-slate-300">
-                                    <span class="text-emerald-500 font-bold shrink-0">✓</span>
-                                    <span>{{ currentLocale === 'ar' ? 'إدارة جلسات الطاولات ونقاط البيع وإصدار الفواتير' : 'Table sessions, cashier workflow & instant invoicing' }}</span>
-                                </div>
-                                <div class="flex items-start gap-2.5 text-slate-700 dark:text-slate-300">
-                                    <span class="text-emerald-500 font-bold shrink-0">✓</span>
-                                    <span>{{ currentLocale === 'ar' ? 'تقارير يومية لمبيعات الصندوق والأصناف المباعة' : 'Daily cashier sales & top-item reports' }}</span>
-                                </div>
-                                <div class="flex items-start gap-2.5 text-slate-700 dark:text-slate-300">
-                                    <span class="text-emerald-500 font-bold shrink-0">✓</span>
-                                    <span>{{ currentLocale === 'ar' ? 'دعم فني وضمان استقرار وتشغيل المنظومة' : 'Continuous technical support & high availability' }}</span>
-                                </div>
-                            </div>
                         </div>
 
-                        <!-- CTA Button -->
-                        <Link
-                            href="/consultation"
-                            class="w-full text-center py-3.5 px-6 rounded-2xl font-bold text-sm border-2 transition-all cursor-pointer block"
-                            :class="isDark
-                                ? 'border-slate-700 hover:border-amber-400 bg-slate-800/80 text-white hover:bg-slate-800'
-                                : 'border-slate-300 hover:border-amber-500 bg-white text-slate-900 hover:bg-stone-50 shadow-xs'"
-                        >
-                            {{ currentLocale === 'ar' ? 'طلب الباقة الأساسية' : 'Select Basic Plan' }}
-                        </Link>
+                        <!-- 3-Step Micro Workflow -->
+                        <div class="grid grid-cols-3 gap-3 pt-4 border-t border-[rgba(226,196,133,0.18)] text-center">
+                            <div class="p-3 rounded-2xl" :class="isDark ? 'bg-stone-900/60' : 'bg-stone-50'">
+                                <span class="text-base font-black block text-amber-400">1</span>
+                                <span class="text-xs font-bold" :class="isDark ? 'text-stone-200' : 'text-stone-800'">
+                                    {{ currentLocale === 'ar' ? 'مسح QR' : 'Scan QR' }}
+                                </span>
+                            </div>
+                            <div class="p-3 rounded-2xl" :class="isDark ? 'bg-stone-900/60' : 'bg-stone-50'">
+                                <span class="text-base font-black block text-amber-400">2</span>
+                                <span class="text-xs font-bold" :class="isDark ? 'text-stone-200' : 'text-stone-800'">
+                                    {{ selectedOperatingMode === 'postpaid' ? (currentLocale === 'ar' ? 'تجهيز مباشر' : 'Direct Prep') : (currentLocale === 'ar' ? 'دفع فوري' : 'Quick Pay') }}
+                                </span>
+                            </div>
+                            <div class="p-3 rounded-2xl" :class="isDark ? 'bg-stone-900/60' : 'bg-stone-50'">
+                                <span class="text-base font-black block text-amber-400">3</span>
+                                <span class="text-xs font-bold" :class="isDark ? 'text-stone-200' : 'text-stone-800'">
+                                    {{ selectedOperatingMode === 'postpaid' ? (currentLocale === 'ar' ? 'سداد عند الخروج' : 'Pay at End') : (currentLocale === 'ar' ? 'استلام فوري' : 'Pick Up') }}
+                                </span>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- 2. PACKAGE PRO (MOST POPULAR) -->
-                    <div
-                        class="rounded-3xl border-2 p-7 sm:p-8 flex flex-col justify-between transition-all duration-300 relative shadow-xl"
-                        :class="isDark
-                            ? 'bg-gradient-to-b from-slate-900 via-slate-900/90 to-[#0c1326] border-amber-500 shadow-amber-950/20'
-                            : 'bg-white border-amber-500 shadow-amber-500/10 ring-2 ring-amber-500/20'"
-                    >
-                        <!-- Popular Floating Badge -->
-                        <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black text-xs shadow-md">
-                            {{ currentLocale === 'ar' ? '⭐ الأكثر طلباً واختياراً' : '⭐ Most Popular' }}
-                        </div>
-
-                        <div>
-                            <div class="flex items-center justify-between mb-4 mt-1">
-                                <span class="text-xs font-black px-3 py-1 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400">
-                                    {{ currentLocale === 'ar' ? 'النمو والتسويق' : 'Growth & Retention' }}
-                                </span>
-                                <span class="text-2xl">🔥</span>
-                            </div>
-                            <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white mb-2">
-                                {{ currentLocale === 'ar' ? 'الباقة الاحترافية' : 'Pro' }}
-                            </h3>
-                            <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 min-h-[40px] leading-relaxed mb-6">
-                                {{ currentLocale === 'ar'
-                                    ? 'إدارة الطلب + منظومة الكوبونات والتسويق الذكي: لمضاعفة ولاء الزبائن وتكرار زياراتهم وتنشيط المبيعات.'
-                                    : 'Ordering + Smart Marketing & Coupons: Boost customer loyalty and recurring visits.'
-                                }}
-                            </p>
-
-                            <!-- Direct Value Highlight -->
-                            <div class="mb-6 rounded-2xl p-3.5 border text-xs font-bold flex items-center gap-2.5"
-                                :class="isDark ? 'bg-amber-500/15 border-amber-500/30 text-amber-300' : 'bg-amber-50 border-amber-300 text-amber-950'">
-                                <span class="text-base shrink-0">📈</span>
-                                <span>{{ currentLocale === 'ar' ? 'زيادة تكرار زيارة الزبائن بنسبة 40% وتنشيط المبيعات اليومية' : '+40% recurring customer retention & active promotions' }}</span>
-                            </div>
-
-                            <!-- Features List -->
-                            <div class="space-y-3 mb-8 text-xs sm:text-sm">
-                                <div class="font-extrabold text-amber-700 dark:text-amber-400 mb-2">
-                                    {{ currentLocale === 'ar' ? 'تشمل كافة ميزات الباقة الأساسية، بالإضافة إلى:' : 'Everything in Basic, plus:' }}
-                                </div>
-                                <div class="flex items-start gap-2.5 text-slate-800 dark:text-slate-200 font-medium">
-                                    <span class="text-amber-500 font-black shrink-0">★</span>
-                                    <span>{{ currentLocale === 'ar' ? 'منظومة الكوبونات والعروض الترويجية الذكية المخصصة لزبائنك' : 'Smart promotional discount coupons for your guests' }}</span>
-                                </div>
-                                <div class="flex items-start gap-2.5 text-slate-800 dark:text-slate-200 font-medium">
-                                    <span class="text-amber-500 font-black shrink-0">★</span>
-                                    <span>{{ currentLocale === 'ar' ? 'أدوات تنشيط المبيعات ومكافأة الزبائن الدائمين لضمان عودتهم' : 'Sales stimulation tools & rewards to encourage repeat visits' }}</span>
-                                </div>
-                                <div class="flex items-start gap-2.5 text-slate-800 dark:text-slate-200 font-medium">
-                                    <span class="text-amber-500 font-black shrink-0">★</span>
-                                    <span>{{ currentLocale === 'ar' ? 'إدارة الصلاحيات متعددة الأدوار (كاشير، شيف المطبخ، مشرفين)' : 'Multi-role staff permission management (Cashier, Chef, Supervisor)' }}</span>
-                                </div>
-                                <div class="flex items-start gap-2.5 text-slate-800 dark:text-slate-200 font-medium">
-                                    <span class="text-amber-500 font-black shrink-0">★</span>
-                                    <span>{{ currentLocale === 'ar' ? 'تقارير تسويقية مباشرة للأصناف الأكثر جذباً وفعالية الخصومات' : 'Live promotional impact analytics & top dishes breakdown' }}</span>
-                                </div>
-                                <div class="flex items-start gap-2.5 text-slate-800 dark:text-slate-200 font-medium">
-                                    <span class="text-amber-500 font-black shrink-0">★</span>
-                                    <span>{{ currentLocale === 'ar' ? 'أولوية في الدعم الفني وتدريب طاقم المطعم على الاستخدام' : 'Priority customer support and team onboarding guidance' }}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- CTA Button -->
-                        <Link
-                            href="/consultation"
-                            class="w-full text-center py-3.5 px-6 rounded-2xl font-black text-sm bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-lg shadow-amber-500/25 hover:brightness-105 active:scale-95 transition-all block cursor-pointer"
-                        >
-                            {{ currentLocale === 'ar' ? 'اختر الباقة الاحترافية الأكثر طلباً' : 'Choose Pro Plan' }}
-                        </Link>
-                    </div>
-
-                    <!-- 3. PACKAGE MAX (FULL AI ECOSYSTEM) -->
-                    <div
-                        class="rounded-3xl border p-7 sm:p-8 flex flex-col justify-between transition-all duration-300 relative"
-                        :class="isDark
-                            ? 'bg-slate-900/60 border-slate-800 hover:border-slate-700 hover:bg-slate-900/80'
-                            : 'bg-stone-50/70 border-slate-200 hover:border-blue-300 hover:bg-white shadow-xs hover:shadow-md'"
+                    <!-- MODULE 2 (Col Span 1): Lucky Wheel Loyalty -->
+                    <div class="rounded-3xl border p-6 flex flex-col justify-between transition-all"
+                        :class="isDark ? 'glass-ultra' : 'glass-ultra shadow-sm'"
                     >
                         <div>
-                            <div class="flex items-center justify-between mb-4">
-                                <span class="text-xs font-black px-3 py-1 rounded-full bg-blue-500/15 text-blue-700 dark:text-blue-400">
-                                    {{ currentLocale === 'ar' ? 'المنظومة الكاملة الذكية' : 'Enterprise AI' }}
-                                </span>
-                                <span class="text-2xl">🤖</span>
-                            </div>
-                            <h3 class="text-2xl font-extrabold text-slate-900 dark:text-white mb-2">
-                                {{ currentLocale === 'ar' ? 'الباقة المتكاملة (ماكس)' : 'Max' }}
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-500/10 text-rose-400 border border-rose-500/30 mb-3 inline-block">
+                                {{ currentLocale === 'ar' ? 'برنامج ولاء تفاعلي' : 'Gamified Loyalty' }}
+                            </span>
+                            <h3 class="text-lg font-black mb-1" :class="isDark ? 'text-white' : 'text-stone-900'">
+                                {{ currentLocale === 'ar' ? 'عجلة الحظ ومضاعفة الزيارات' : 'Lucky Wheel Rewards' }}
                             </h3>
-                            <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 min-h-[40px] leading-relaxed mb-6">
-                                {{ currentLocale === 'ar'
-                                    ? 'كامل الخدمات والأتمتة الذكية: لأصحاب المطابخ الكبرى والسلاسل الراغبين في أقصى كفاءة ومضاعفة الفاتورة بالذكاء الاصطناعي.'
-                                    : 'Complete Full-Stack AI Ecosystem: Built for high-volume restaurants & chains seeking peak efficiency.'
-                                }}
+                            <p class="text-xs text-stone-400 mb-4 leading-relaxed">
+                                {{ currentLocale === 'ar' ? 'كافئ زبائنك بعد إنهاء الطلب بفرصة تدوير العجلة لربح كوبون يضمن زيارتهم القادمة.' : 'Delight diners after checkout with a fun spin that delivers vouchers for their next visit.' }}
                             </p>
-
-                            <!-- Direct Value Highlight -->
-                            <div class="mb-6 rounded-2xl p-3.5 border text-xs font-bold flex items-center gap-2.5"
-                                :class="isDark ? 'bg-blue-500/10 border-blue-500/20 text-blue-300' : 'bg-blue-50 border-blue-200 text-blue-900'">
-                                <span class="text-base shrink-0">🚀</span>
-                                <span>{{ currentLocale === 'ar' ? 'رفع متوسط قيمة الفاتورة حتى 25% وأتمتة تشغيلية شاملة' : '+25% average check size increase with full automation' }}</span>
-                            </div>
-
-                            <!-- Features List -->
-                            <div class="space-y-3 mb-8 text-xs sm:text-sm">
-                                <div class="font-extrabold text-blue-700 dark:text-blue-400 mb-2">
-                                    {{ currentLocale === 'ar' ? 'تشمل كافة ميزات الباقة الاحترافية، بالإضافة إلى:' : 'Everything in Pro, plus:' }}
-                                </div>
-                                <div class="flex items-start gap-2.5 text-slate-800 dark:text-slate-200 font-medium">
-                                    <span class="text-blue-500 font-black shrink-0">✦</span>
-                                    <span>{{ currentLocale === 'ar' ? 'الويتر الذكي بالذكاء الاصطناعي: محرك توصيات ذكي لمضاعفة قيمة كل طلب تلقائياً' : 'AI Digital Waiter: Smart recommendations engine boosting order totals' }}</span>
-                                </div>
-                                <div class="flex items-start gap-2.5 text-slate-800 dark:text-slate-200 font-medium">
-                                    <span class="text-blue-500 font-black shrink-0">✦</span>
-                                    <span>{{ currentLocale === 'ar' ? 'منظومة شاشات المطبخ المتعددة: توجيه تلقائي للأصناف بحسب أقسام التحضير' : 'Multi-station kitchen routing: Directing items to specific prep stations' }}</span>
-                                </div>
-                                <div class="flex items-start gap-2.5 text-slate-800 dark:text-slate-200 font-medium">
-                                    <span class="text-blue-500 font-black shrink-0">✦</span>
-                                    <span>{{ currentLocale === 'ar' ? 'لوحة تحليلات استراتيجية حية: مراقبة الأرباح وساعات الذروة وسرعة التحضير لحظياً' : 'Strategic executive analytics: Profit trends, peak hours & prep speed' }}</span>
-                                </div>
-                                <div class="flex items-start gap-2.5 text-slate-800 dark:text-slate-200 font-medium">
-                                    <span class="text-blue-500 font-black shrink-0">✦</span>
-                                    <span>{{ currentLocale === 'ar' ? 'تخصيص كامل لهوية علامتك التجارية وتصميم المنيو بما يناسب فخامة مطعمك' : 'Full custom branding tailored precisely to your restaurant identity' }}</span>
-                                </div>
-                                <div class="flex items-start gap-2.5 text-slate-800 dark:text-slate-200 font-medium">
-                                    <span class="text-blue-500 font-black shrink-0">✦</span>
-                                    <span>{{ currentLocale === 'ar' ? 'مدير حساب مخصص واستشارات تقنية دورية لتحسين كفاءة التشغيل' : 'Dedicated account manager & continuous operational consulting' }}</span>
-                                </div>
-                            </div>
                         </div>
 
-                        <!-- CTA Button -->
-                        <Link
-                            href="/consultation"
-                            class="w-full text-center py-3.5 px-6 rounded-2xl font-bold text-sm border-2 transition-all cursor-pointer block"
-                            :class="isDark
-                                ? 'border-blue-500/40 hover:border-blue-400 bg-blue-500/10 text-blue-300 hover:bg-blue-500/20'
-                                : 'border-blue-300 hover:border-blue-500 bg-blue-50 text-blue-900 hover:bg-blue-100 shadow-xs'"
+                        <!-- Mini Interactive Wheel Graphic -->
+                        <div class="p-4 rounded-2xl border text-center flex flex-col items-center justify-center my-2"
+                            :class="isDark ? 'bg-stone-900/50 border-[rgba(226,196,133,0.18)]' : 'bg-stone-50 border-stone-200'"
                         >
-                            {{ currentLocale === 'ar' ? 'احجز الباقة المتكاملة (ماكس)' : 'Book Max Plan' }}
-                        </Link>
+                            <div class="w-20 h-20 rounded-full border-4 border-amber-400 flex items-center justify-center mb-3 shadow-lg"
+                                :class="luckyWheelSpinning ? 'animate-spin' : ''"
+                            >
+                                <span class="text-2xl">🎡</span>
+                            </div>
+                            <button
+                                type="button"
+                                class="px-4 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs active:scale-95 transition-all shadow-xs"
+                                :disabled="luckyWheelSpinning"
+                                @click="spinLuckyWheel"
+                            >
+                                {{ luckyWheelSpinning ? 'جارٍ التدوير...' : (currentLocale === 'ar' ? 'جرّب التدوير الآن' : 'Spin Wheel') }}
+                            </button>
+                            <span v-if="luckyWheelWonVoucher" class="mt-2 text-[11px] font-black text-emerald-400">
+                                🎁 كود الهدية: {{ luckyWheelWonVoucher }}
+                            </span>
+                        </div>
                     </div>
 
-                </div>
+                    <!-- MODULE 3 (Col Span 1): Thermal Z-Report Printing -->
+                    <div class="rounded-3xl border p-6 flex flex-col justify-between transition-all"
+                        :class="isDark ? 'glass-ultra' : 'glass-ultra shadow-sm'"
+                    >
+                        <div>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-500/10 text-blue-400 border border-blue-500/30 mb-3 inline-block">
+                                {{ currentLocale === 'ar' ? 'محاسبة حرارية 80mm' : 'CPA 80mm Z-Report' }}
+                            </span>
+                            <h3 class="text-lg font-black mb-1" :class="isDark ? 'text-white' : 'text-stone-900'">
+                                {{ currentLocale === 'ar' ? 'إغلاق الوردية (تقرير Z)' : 'End-of-Shift Z-Reports' }}
+                            </h3>
+                            <p class="text-xs text-stone-400 mb-4 leading-relaxed">
+                                {{ currentLocale === 'ar' ? 'طباعة تقرير الإغلاق الحراري 80mm بلمسة زر ومشاركته عبر واتساب مع مالك المطعم مباشرة.' : 'Instant 80mm thermal shift closing receipts with cash/card breakdown and 1-click WhatsApp export.' }}
+                            </p>
+                        </div>
 
-                <!-- Bottom Assurance Note -->
-                <div class="mt-12 text-center text-xs sm:text-sm text-slate-500 dark:text-slate-400 flex flex-wrap items-center justify-center gap-6">
-                    <span class="inline-flex items-center gap-1.5 font-bold">
-                        <span class="text-emerald-500">✓</span>
-                        {{ currentLocale === 'ar' ? 'صفر عمولة مبيعات (أرباحك 100% لك)' : '0% Sales Commission (Keep 100% of Revenue)' }}
-                    </span>
-                    <span class="inline-flex items-center gap-1.5 font-bold">
-                        <span class="text-emerald-500">✓</span>
-                        {{ currentLocale === 'ar' ? 'تجربة مجانية 14 يوماً مع تدريب كامل لطاقمك' : '14-Day Free Trial With Full Staff Onboarding' }}
-                    </span>
-                    <span class="inline-flex items-center gap-1.5 font-bold">
-                        <span class="text-emerald-500">✓</span>
-                        {{ currentLocale === 'ar' ? 'إلغاء أو ترقية في أي وقت دون التزامات معقدة' : 'Upgrade or Cancel Anytime Without Lock-in' }}
-                    </span>
+                        <!-- Thermal Receipt Preview -->
+                        <div class="p-3 rounded-2xl border font-mono text-[11px] space-y-1"
+                            :class="isDark ? 'bg-stone-900 border-[rgba(226,196,133,0.18)] text-stone-300' : 'bg-amber-50/50 border-amber-200 text-stone-800'"
+                        >
+                            <div class="text-center pb-1 border-b border-stone-700/30 font-bold">
+                                --- تقرير إغلاق الوردية (Z) ---
+                            </div>
+                            <div class="flex justify-between">
+                                <span>إجمالي المبيعات:</span>
+                                <span class="font-bold text-amber-400">{{ formatPrice(2450000) }} {{ currentCurrencySymbol }}</span>
+                            </div>
+                            <div class="flex justify-between text-[10px] text-stone-400">
+                                <span>نقدي: 70% | شبكة: 30%</span>
+                                <span>عدد الفواتير: 48</span>
+                            </div>
+                            <div class="pt-1 text-center text-[10px] text-emerald-400 font-sans font-bold">
+                                📲 متوافق مع طابعات 80mm وإرسال الواتساب
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MODULE 4 (Col Span 2): Kitchen Screen WakeLock -->
+                    <div class="md:col-span-2 rounded-3xl border p-6 sm:p-8 flex flex-col justify-between transition-all"
+                        :class="isDark ? 'glass-ultra' : 'glass-ultra shadow-sm'"
+                    >
+                        <div>
+                            <span class="px-3 py-1 rounded-full text-xs font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 mb-3 inline-block">
+                                {{ currentLocale === 'ar' ? 'تشغيل مستمر بدون انطفاء' : 'Screen Wake Lock API' }}
+                            </span>
+                            <h3 class="text-xl sm:text-2xl font-black mb-2" :class="isDark ? 'text-white' : 'text-stone-900'">
+                                {{ currentLocale === 'ar' ? 'شاشات المطبخ لا تنطفئ أبداً طوال الوردية' : 'Kitchen Displays Never Sleep' }}
+                            </h3>
+                            <p class="text-xs sm:text-sm text-stone-400 mb-4 leading-relaxed">
+                                {{ currentLocale === 'ar'
+                                    ? 'يبقى تابلت الشيف والمطبخ مضاءً طوال الوردية بدون لمس الشاشة، مع اتصال دائم بالـ WebSockets وتنبيه صوتي بالرنين عند وصول كل طلب جديد.'
+                                    : 'Your kitchen tablets remain active continuously throughout shifts without sleep, with instant ring chimes on incoming orders.' }}
+                            </p>
+                        </div>
+
+                        <!-- Live Status Indicators -->
+                        <div class="flex items-center gap-3 pt-4 border-t border-[rgba(226,196,133,0.18)]">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-500/10 text-emerald-400 text-xs font-bold border border-emerald-500/30">
+                                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                                {{ currentLocale === 'ar' ? 'مانع انطفاء الشاشة نشط ⚡' : 'Screen WakeLock Active' }}
+                            </span>
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-500/10 text-amber-400 text-xs font-bold border border-amber-500/30">
+                                🔔 {{ currentLocale === 'ar' ? 'تنبيه جرس صوتي للطلبات' : 'Sound Alerts Enabled' }}
+                            </span>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </section>
 
         <!-- ========================================================================= -->
-        <!-- FAQS ACCORDION -->
+        <!-- 6. SINGLE-SLIDER COMMISSION SAVINGS CALCULATOR (ROI) -->
         <!-- ========================================================================= -->
-        <section
-            id="faqs"
-            class="py-20 relative z-10 border-t transition-colors duration-500"
-            :class="isDark ? 'border-white/5 bg-[#03110a]/80 backdrop-blur-xl' : 'border-slate-200/90 bg-slate-50/60'"
-        >
-            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section id="roi" class="py-16 md:py-28 relative z-10">
+            <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <span class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[11px] font-black tracking-widest uppercase mb-3 border" :class="isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' : 'bg-amber-500/15 text-[#8C6010] border-[#C5A059]/40 shadow-xs'">
+                    {{ currentLocale === 'ar' ? 'حاسبة استرداد الأرباح' : 'COMMISSION ROI CALCULATOR' }}
+                </span>
+                <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black mb-3" :class="isDark ? 'text-white' : 'text-stone-900'">
+                    {{ currentLocale === 'ar' ? 'كم توفر شهرياً بالتخلص من عمولات التطبيقات؟' : 'Calculate Your Monthly Net Savings' }}
+                </h2>
+                <p :class="isDark ? 'text-stone-400' : 'text-stone-600 font-medium'" class="text-sm sm:text-base mb-10 max-w-xl mx-auto transition-colors">
+                    {{ currentLocale === 'ar'
+                        ? 'تقتطع منصات وتطبيقات الطلب وسيطاً ما بين 15% إلى 25% من إيراداتك. مع تدلل، تدفع اشتراكاً ثابتاً وتسترد أرباحك كاملة 100%.'
+                        : 'Third-party delivery apps slash 15%-25% off every order. With Tedallal, you pay a flat fee and keep all profits.' }}
+                </p>
 
-                <div class="text-center mb-16 space-y-4">
-                    <div
-                        class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold border shadow-xs"
-                        :class="isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-amber-50 text-amber-800 border-amber-200/90 font-bold'"
-                    >
-                        <span>{{ t.faqs.tag }}</span>
+                <!-- Interactive Single-Slider Card -->
+                <div class="rounded-3xl border p-6 sm:p-10 shadow-2xl text-right max-w-2xl mx-auto"
+                    :class="isDark ? 'glass-ultra' : 'glass-ultra shadow-xl'"
+                >
+                    <!-- Slider Value -->
+                    <div class="flex items-center justify-between mb-4">
+                        <label class="text-xs sm:text-sm font-bold" :class="isDark ? 'text-stone-300' : 'text-stone-700'">
+                            {{ currentLocale === 'ar' ? 'مبيعات مطعمك الشهرية التقديرية:' : 'Approximate Monthly Sales:' }}
+                        </label>
+                        <span class="text-base sm:text-2xl font-black text-amber-400">
+                            {{ formatPrice(monthlySalesSyp) }} {{ currentCurrencySymbol }}
+                        </span>
                     </div>
-                    <h2
-                        class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight"
-                        :class="isDark ? 'text-white' : 'text-slate-900'"
-                    >
-                        {{ t.faqs.title }}
-                    </h2>
-                    <p
-                        class="text-base"
-                        :class="isDark ? 'text-slate-300' : 'text-slate-700'"
-                    >
-                        {{ t.faqs.subtitle }}
+
+                    <!-- Range Input -->
+                    <input
+                        v-model.number="monthlySalesSyp"
+                        type="range"
+                        min="10000000"
+                        max="250000000"
+                        step="5000000"
+                        :class="isDark ? 'bg-stone-700 accent-amber-500' : 'bg-stone-200 accent-amber-600'" class="w-full h-3 rounded-lg appearance-none cursor-pointer mb-8"
+                    />
+
+                    <!-- Comparative Calculation Breakdown -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-6 border-t border-[rgba(226,196,133,0.18)]">
+                        <div class="p-4 rounded-2xl border text-center"
+                            :class="isDark ? 'bg-red-500/10 border-red-500/30' : 'bg-red-50 border-red-200'"
+                        >
+                            <span class="text-xs text-red-400 font-bold block mb-1">
+                                {{ currentLocale === 'ar' ? 'عمولة التطبيقات المفقودة (20%)' : 'Commission Slashed (20%)' }}
+                            </span>
+                            <span class="text-lg sm:text-xl font-black text-red-500">
+                                -{{ formatPrice(deliveryCommissionLost) }} {{ currentCurrencySymbol }}
+                            </span>
+                        </div>
+
+                        <div class="p-4 rounded-2xl border text-center"
+                            :class="isDark ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-emerald-50 border-emerald-200'"
+                        >
+                            <span class="text-xs text-emerald-400 font-bold block mb-1">
+                                {{ currentLocale === 'ar' ? 'أرباح إضافية مستردة مع تدلل 💰' : 'Net Profits Preserved' }}
+                            </span>
+                            <span class="text-lg sm:text-xl font-black text-emerald-400">
+                                +{{ formatPrice(netProfitsPreserved) }} {{ currentCurrencySymbol }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <p class="text-center text-[11px] text-stone-500 mt-6">
+                        {{ currentLocale === 'ar' ? '* الحساب تقريبي مبني على متوسط عمولة 20% لتطبيقات الطلب مقارنة باشتراك تدلل الرمزي.' : '* Calculation based on standard 20% delivery app fees vs. Tedallal flat subscription.' }}
                     </p>
                 </div>
+            </div>
+        </section>
 
-                <div class="space-y-4">
+        <!-- ========================================================================= -->
+        <!-- 7. PROGRESSIVE DISCLOSURE ACCORDION (FAQs) -->
+        <!-- ========================================================================= -->
+        <section id="faqs" class="py-16 md:py-24 border-t relative z-10 transition-colors"
+            :class="isDark ? 'bg-[#08080A] border-[rgba(226,196,133,0.18)]' : 'bg-[#FAF8F5] border-[#C5A059]/25'"
+        >
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-xl mx-auto mb-12">
+                    <span class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[11px] font-black tracking-widest uppercase mb-3 border" :class="isDark ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' : 'bg-amber-500/15 text-[#8C6010] border-[#C5A059]/40 shadow-xs'">
+                        {{ currentLocale === 'ar' ? 'إجابات فورية' : 'FAQS' }}
+                    </span>
+                    <h2 class="text-3xl sm:text-4xl font-black mb-3" :class="isDark ? 'text-white' : 'text-stone-900'">
+                        {{ currentLocale === 'ar' ? 'الأسئلة الأكثر شيوعاً' : 'Frequently Asked Questions' }}
+                    </h2>
+                </div>
+
+                <div class="space-y-3">
                     <div
-                        v-for="(faq, idx) in t.faqs.items"
+                        v-for="(faq, idx) in faqItems"
                         :key="idx"
                         class="rounded-2xl border overflow-hidden transition-all"
-                        :class="isDark ? 'border-white/5 bg-slate-900/70' : 'border-slate-200/90 bg-white shadow-xs'"
+                        :class="isDark ? 'glass-ultra text-white' : 'glass-ultra text-stone-900 shadow-sm'"
                     >
                         <button
+                            type="button"
+                            class="w-full flex items-center justify-between p-4 sm:p-5 text-right font-black text-sm sm:text-base transition-colors"
+                            :class="isDark ? 'text-stone-100 hover:text-amber-400' : 'text-stone-900 hover:text-amber-600'"
                             @click="toggleFaq(idx)"
-                            class="w-full p-5 text-right flex items-center justify-between gap-4 font-bold text-sm sm:text-base transition-colors cursor-pointer"
-                            :class="[
-                                currentLocale === 'en' ? 'text-left' : 'text-right',
-                                isDark ? 'text-white hover:text-amber-400' : 'text-slate-900 hover:text-amber-700'
-                            ]"
                         >
                             <span>{{ faq.q }}</span>
-                            <span
-                                class="text-xl font-mono shrink-0 font-bold"
-                                :class="isDark ? 'text-amber-400' : 'text-amber-700'"
-                            >
-                                {{ openFaqIndex === idx ? '−' : '+' }}
+                            <span class="text-amber-400 text-lg transition-transform duration-200" :class="openFaqIndex === idx ? 'rotate-180' : ''">
+                                ▾
                             </span>
                         </button>
                         <div
                             v-if="openFaqIndex === idx"
-                            class="px-5 pb-5 text-xs sm:text-sm leading-relaxed border-t pt-4"
-                            :class="isDark ? 'border-white/5 text-slate-300' : 'border-slate-100 text-slate-600 bg-slate-50/50'"
+                            :class="isDark ? 'text-stone-300 border-stone-800' : 'text-stone-700 border-stone-200 font-medium'" class="px-4 pb-5 sm:px-5 sm:pb-6 text-xs sm:text-sm leading-relaxed border-t pt-3 transition-colors"
                         >
                             {{ faq.a }}
                         </div>
                     </div>
                 </div>
-
             </div>
         </section>
 
         <!-- ========================================================================= -->
-        <!-- SOCIAL PROOF LIVE ORDER TOAST TICKER -->
-        <!-- ========================================================================= -->
-        <transition
-            enter-active-class="transition duration-300 ease-out"
-            enter-from-class="transform translate-y-4 opacity-0"
-            enter-to-class="transform translate-y-0 opacity-100"
-            leave-active-class="transition duration-200 ease-in"
-            leave-from-class="transform translate-y-0 opacity-100"
-            leave-to-class="transform translate-y-4 opacity-0"
-        >
-            <div
-                v-if="!isToastPermanentlyDismissed && showToast && liveToasts[currentToastIndex]"
-                class="fixed bottom-6 z-40 max-w-sm w-[90%] sm:w-auto p-4 rounded-2xl border shadow-2xl backdrop-blur-2xl flex items-center gap-3.5 transition-all"
-                :class="[
-                    currentLocale === 'ar' ? 'right-6' : 'left-6',
-                    isDark ? 'bg-[#020b07]/95 border-emerald-500/30 text-white' : 'bg-white/95 border-amber-300 text-slate-900 shadow-xl'
-                ]"
-            >
-                <div
-                    class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-lg font-bold shadow-xs"
-                    :class="isDark ? 'bg-amber-500/20 text-amber-400' : 'bg-amber-100 text-amber-800'"
-                >
-                    🔔
-                </div>
-                <div class="flex-1 text-xs">
-                    <div class="flex items-center justify-between gap-2 mb-0.5">
-                        <span
-                            class="font-extrabold"
-                            :class="isDark ? 'text-amber-400' : 'text-amber-800'"
-                        >{{ liveToasts[currentToastIndex].table }}</span>
-                        <span
-                            class="text-[10px] font-mono"
-                            :class="isDark ? 'text-slate-400' : 'text-slate-500'"
-                        >{{ liveToasts[currentToastIndex].time }}</span>
-                    </div>
-                    <p :class="isDark ? 'text-slate-200' : 'text-slate-700 font-medium'" class="line-clamp-2">
-                        {{ liveToasts[currentToastIndex].text }}
-                    </p>
-                </div>
-                <button
-                    @click="dismissToast"
-                    type="button"
-                    class="p-1 rounded-lg transition-colors shrink-0 -mt-4 text-xs font-bold cursor-pointer"
-                    :class="isDark ? 'text-slate-400 hover:text-white hover:bg-white/10' : 'text-slate-400 hover:text-slate-900 hover:bg-slate-100'"
-                    :title="currentLocale === 'ar' ? 'إيقاف ظهور الإشعارات' : 'Dismiss notifications'"
-                    aria-label="Dismiss notifications"
-                >
-                    ✕
-                </button>
-            </div>
-        </transition>
-
-        <!-- ========================================================================= -->
-        <!-- DEMO REQUEST MODAL -->
+        <!-- 8. VIP CONSULTATION REQUEST MODAL -->
         <!-- ========================================================================= -->
         <div
             v-if="isDemoModalOpen"
             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
             @click.self="isDemoModalOpen = false"
         >
-            <div
-                class="relative w-full max-w-lg rounded-3xl border p-6 sm:p-8 shadow-2xl space-y-6 transition-all"
-                :class="isDark ? 'bg-slate-900 border-white/10' : 'bg-white border-slate-200/90 shadow-2xl'"
+            <div class="w-full max-w-lg rounded-3xl border p-6 sm:p-8 shadow-2xl relative transition-all"
+                :class="isDark ? 'bg-[#0c1222] border-amber-500/40 text-white' : 'glass-ultra text-stone-900'"
             >
-
                 <button
+                    type="button"
+                    class="absolute top-5 end-5 w-8 h-8 rounded-full border flex items-center justify-center text-stone-400 hover:text-white"
+                    :class="isDark ? 'border-[rgba(226,196,133,0.18)] hover:bg-stone-800' : 'border-stone-200 hover:bg-stone-100'"
                     @click="isDemoModalOpen = false"
-                    class="absolute top-5 text-xl font-bold p-2 transition-colors cursor-pointer"
-                    :class="[
-                        currentLocale === 'ar' ? 'left-5' : 'right-5',
-                        isDark ? 'text-slate-400 hover:text-white' : 'text-slate-400 hover:text-slate-900'
-                    ]"
                 >
                     ✕
                 </button>
 
-                <!-- Initial Form State -->
-                <div v-if="!isSubmitted" class="space-y-4">
-                    <div class="space-y-2">
-                        <span
-                            class="text-xs font-bold"
-                            :class="isDark ? 'text-amber-400' : 'text-amber-700'"
-                        >{{ t.modal.badge }}</span>
-                        <h3
-                            class="text-xl sm:text-2xl font-bold leading-snug"
-                            :class="isDark ? 'text-white' : 'text-slate-900'"
-                        >{{ t.modal.title }}</h3>
-                        <p
-                            class="text-xs"
-                            :class="isDark ? 'text-slate-300' : 'text-slate-700'"
-                        >
-                            {{ t.modal.subtitle }}
-                        </p>
-                    </div>
+                <div v-if="!isSubmitted">
+                    <span class="text-xs font-black uppercase tracking-wider text-amber-400 block mb-1">
+                        {{ currentLocale === 'ar' ? 'جلسة تجريبية خاصة' : 'VIP Consultation' }}
+                    </span>
+                    <h3 class="text-2xl font-black mb-2">
+                        {{ currentLocale === 'ar' ? 'احجز استشارتك المجانية لمطعمك' : 'Book Your Private Restaurant Demo' }}
+                    </h3>
+                    <p class="text-xs text-stone-400 mb-6">
+                        {{ currentLocale === 'ar' ? 'سيقوم مستشارنا بالتواصل معك عبر واتساب لتجهيز القائمة وتفعيل الطاولات فوراً.' : 'Our hospitality specialist will connect via WhatsApp to configure your menu & tables.' }}
+                    </p>
 
-                    <form @submit.prevent="submitDemoRequest" class="space-y-3.5 pt-2">
+                    <form class="space-y-4" @submit.prevent="submitDemoRequest">
                         <div>
-                            <label
-                                class="block text-xs font-semibold mb-1"
-                                :class="isDark ? 'text-slate-300' : 'text-slate-700 font-bold'"
-                            >{{ t.modal.restaurantName }}</label>
+                            <label class="block text-xs font-bold mb-1.5">
+                                {{ currentLocale === 'ar' ? 'اسم المطعم أو الكافيه' : 'Restaurant Name' }}
+                            </label>
                             <input
                                 v-model="demoForm.restaurantName"
-                                required
                                 type="text"
-                                :placeholder="t.modal.restaurantNamePlaceholder"
-                                class="w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none transition-colors"
-                                :class="isDark ? 'bg-slate-900 border-slate-700 text-white focus:border-amber-500' : 'bg-slate-50 border-slate-300 text-slate-900 focus:bg-white focus:border-amber-500 shadow-xs'"
+                                required
+                                class="w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-hidden focus:border-amber-500"
+                                :class="isDark ? 'bg-stone-900 border-[rgba(226,196,133,0.18)] text-white' : 'bg-stone-50 border-stone-200'"
+                                :placeholder="currentLocale === 'ar' ? 'مثال: قصر الشهباء الفاخر' : 'e.g. Al-Shahba Palace'"
                             />
                         </div>
 
                         <div>
-                            <label
-                                class="block text-xs font-semibold mb-1"
-                                :class="isDark ? 'text-slate-300' : 'text-slate-700 font-bold'"
-                            >{{ t.modal.contactPerson }}</label>
+                            <label class="block text-xs font-bold mb-1.5">
+                                {{ currentLocale === 'ar' ? 'اسم المسؤول أو المدير' : 'Contact Person' }}
+                            </label>
                             <input
                                 v-model="demoForm.contactPerson"
-                                required
                                 type="text"
-                                :placeholder="t.modal.contactPersonPlaceholder"
-                                class="w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none transition-colors"
-                                :class="isDark ? 'bg-slate-900 border-slate-700 text-white focus:border-amber-500' : 'bg-slate-50 border-slate-300 text-slate-900 focus:bg-white focus:border-amber-500 shadow-xs'"
+                                required
+                                class="w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-hidden focus:border-amber-500"
+                                :class="isDark ? 'bg-stone-900 border-[rgba(226,196,133,0.18)] text-white' : 'bg-stone-50 border-stone-200'"
+                                :placeholder="currentLocale === 'ar' ? 'الاسم الكريم' : 'Full Name'"
                             />
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold mb-1.5">
+                                {{ currentLocale === 'ar' ? 'رقم الهاتف أو الواتساب' : 'Phone / WhatsApp' }}
+                            </label>
+                            <input
+                                v-model="demoForm.phone"
+                                type="tel"
+                                required
+                                class="w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-hidden focus:border-amber-500 text-left"
+                                dir="ltr"
+                                :class="isDark ? 'bg-stone-900 border-[rgba(226,196,133,0.18)] text-white' : 'bg-stone-50 border-stone-200'"
+                                placeholder="+963 9xx xxx xxx"
+                            />
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label
-                                    class="block text-xs font-semibold mb-1"
-                                    :class="isDark ? 'text-slate-300' : 'text-slate-700 font-bold'"
-                                >{{ t.modal.phone }}</label>
+                                <label class="block text-xs font-bold mb-1.5">
+                                    {{ currentLocale === 'ar' ? 'الدولة' : 'Country' }}
+                                </label>
                                 <input
-                                    v-model="demoForm.phone"
-                                    required
-                                    type="tel"
-                                    :placeholder="t.modal.phonePlaceholder"
-                                    class="w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none transition-colors"
-                                    :class="isDark ? 'bg-slate-900 border-slate-700 text-white focus:border-amber-500' : 'bg-slate-50 border-slate-300 text-slate-900 focus:bg-white focus:border-amber-500 shadow-xs'"
+                                    v-model="demoForm.country"
+                                    type="text"
+                                    readonly
+                                    class="w-full px-3 py-2.5 rounded-xl border text-xs font-bold"
+                                    :class="isDark ? 'bg-stone-900/50 border-[rgba(226,196,133,0.18)] text-stone-300' : 'bg-stone-100 border-stone-200 text-stone-700'"
                                 />
                             </div>
                             <div>
-                                <label
-                                    class="block text-xs font-semibold mb-1"
-                                    :class="isDark ? 'text-slate-300' : 'text-slate-700 font-bold'"
-                                >{{ t.modal.country }}</label>
+                                <label class="block text-xs font-bold mb-1.5">
+                                    {{ currentLocale === 'ar' ? 'عدد الطاولات' : 'Tables Count' }}
+                                </label>
                                 <select
-                                    v-model="demoForm.country"
-                                    class="w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none transition-colors"
-                                    :class="isDark ? 'bg-slate-900 border-slate-700 text-white focus:border-amber-500' : 'bg-slate-50 border-slate-300 text-slate-900 focus:bg-white focus:border-amber-500 shadow-xs'"
+                                    v-model="demoForm.tablesCount"
+                                    class="w-full px-3 py-2.5 rounded-xl border text-xs font-bold"
+                                    :class="isDark ? 'bg-stone-900 border-[rgba(226,196,133,0.18)] text-white' : 'bg-stone-50 border-stone-200'"
                                 >
-                                    <option
-                                        v-for="c in Object.values(supportedArabCurrencies)"
-                                        :key="c.code"
-                                        :value="c.countryName[currentLocale]"
-                                    >
-                                        {{ c.countryName[currentLocale] }} {{ c.flag }}
-                                    </option>
+                                    <option value="1-15">1 - 15 {{ currentLocale === 'ar' ? 'طاولة' : 'tables' }}</option>
+                                    <option value="15-35">15 - 35 {{ currentLocale === 'ar' ? 'طاولة' : 'tables' }}</option>
+                                    <option value="35-70">35 - 70 {{ currentLocale === 'ar' ? 'طاولة' : 'tables' }}</option>
+                                    <option value="70+">70+ {{ currentLocale === 'ar' ? 'طاولة' : 'tables' }}</option>
                                 </select>
                             </div>
                         </div>
 
-                        <div>
-                            <label
-                                class="block text-xs font-semibold mb-1"
-                                :class="isDark ? 'text-slate-300' : 'text-slate-700 font-bold'"
-                            >{{ t.modal.tablesCount }}</label>
-                            <select
-                                v-model="demoForm.tablesCount"
-                                class="w-full px-4 py-2.5 rounded-xl border text-sm focus:outline-none transition-colors"
-                                :class="isDark ? 'bg-slate-900 border-slate-700 text-white focus:border-amber-500' : 'bg-slate-50 border-slate-300 text-slate-900 focus:bg-white focus:border-amber-500 shadow-xs'"
-                            >
-                                <option value="1-15">{{ t.modal.tablesOption1 }}</option>
-                                <option value="15-35">{{ t.modal.tablesOption2 }}</option>
-                                <option value="35-70">{{ t.modal.tablesOption3 }}</option>
-                                <option value="70+">{{ t.modal.tablesOption4 }}</option>
-                            </select>
-                        </div>
-
                         <button
                             type="submit"
-                            class="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-extrabold text-sm shadow-xl shadow-amber-500/25 hover:shadow-amber-500/40 hover:scale-[1.01] transition-all mt-2 cursor-pointer"
+                            class="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] text-stone-950 font-black text-sm shadow-lg shadow-amber-500/25 hover:from-amber-400 hover:to-amber-500 active:scale-95 transition-all mt-4"
                         >
-                            {{ t.modal.submitBtn }}
+                            {{ currentLocale === 'ar' ? 'إرسال الطلب والتواصل الفوري ✨' : 'Submit Consultation Request ✨' }}
                         </button>
+
+                        <div class="relative flex py-2 items-center">
+                            <div class="grow border-t border-stone-700/40"></div>
+                            <span class="shrink mx-3 text-[11px] text-stone-400 font-bold">{{ currentLocale === 'ar' ? 'أو تواصل فوراً' : 'Or connect instantly' }}</span>
+                            <div class="grow border-t border-stone-700/40"></div>
+                        </div>
+
+                        <a
+                            href="https://wa.me/963934578117?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%D8%8C%20%D8%A3%D8%B1%D8%BA%D8%A8%20%D9%81%D9%8A%20%D8%AD%D8%AC%D8%B2%20%D8%AC%D9%84%D8%B3%D8%A9%20%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A%D8%A9%20%D9%81%D9%88%D8%B1%D9%8A%D8%A9%20%D9%84%D9%85%D8%B7%D8%B9%D9%85%D9%8A%20%D8%B9%D8%A8%D8%B1%20%D9%85%D9%86%D8%B8%D9%88%D9%85%D8%A9%20%D8%AA%D8%AF%D9%84%D9%91%D9%84"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="w-full py-3 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white font-bold text-xs sm:text-sm shadow-md shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+                        >
+                            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.698c.969.587 1.961.921 3.009.922 3.176 0 5.766-2.587 5.767-5.767.001-3.187-2.575-5.77-6.082-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.275.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.099.824z"/>
+                            </svg>
+                            <span>{{ currentLocale === 'ar' ? 'محادثة مباشرة عبر واتساب' : 'Direct WhatsApp Chat' }} (<span dir="ltr">+963 934 578 117</span>)</span>
+                        </a>
                     </form>
                 </div>
 
-                <!-- Success Confirmation State -->
-                <div v-else class="text-center py-8 space-y-4">
-                    <div class="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 text-3xl flex items-center justify-center mx-auto animate-bounce">
+                <div v-else class="text-center py-8">
+                    <div class="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 text-3xl flex items-center justify-center mx-auto mb-4">
                         ✓
                     </div>
-                    <h3
-                        class="text-xl sm:text-2xl font-bold leading-snug"
-                        :class="isDark ? 'text-white' : 'text-slate-900'"
-                    >{{ t.modal.successTitle }}</h3>
-                    <p
-                        class="text-sm max-w-sm mx-auto"
-                        :class="isDark ? 'text-slate-300' : 'text-slate-600'"
-                    >
-                        {{ t.modal.successDesc }}
+                    <h3 class="text-xl font-black mb-2">
+                        {{ currentLocale === 'ar' ? 'تم استلام طلبك بنجاح!' : 'Request Received Successfully!' }}
+                    </h3>
+                    <p class="text-xs text-stone-400">
+                        {{ currentLocale === 'ar' ? 'سيتواصل معك خبير تدلل عبر واتساب خلال دقائق لتفعيل المنظومة.' : 'A specialist will contact you via WhatsApp shortly to set up your restaurant.' }}
                     </p>
                 </div>
-
             </div>
         </div>
 
         <!-- ========================================================================= -->
-        <!-- FOOTER -->
+        <!-- 9. MINIMALIST LUXURY FOOTER -->
         <!-- ========================================================================= -->
-        <footer
-            class="border-t py-12 relative z-10 text-sm transition-colors duration-500"
-            :class="isDark ? 'border-white/5 bg-[#010604]/90 backdrop-blur-xl text-slate-400' : 'border-slate-200/90 bg-slate-100 text-slate-600'"
+        <footer class="border-t py-12 relative z-10 text-xs transition-colors"
+            :class="isDark ? 'bg-[#03050a] border-[rgba(226,196,133,0.18)] text-stone-500' : 'bg-[#0D0D11] border-t border-[#C5A059]/35 text-stone-300'"
         >
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
-
-                    <!-- Col 1: Brand -->
-                    <div class="space-y-4 md:col-span-1">
-                        <div class="flex items-center gap-3">
-                            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 p-[1.5px]">
-                                <div
-                                    class="w-full h-full rounded-xl flex items-center justify-center overflow-hidden"
-                                    :class="isDark ? 'bg-[#020b07]' : 'bg-white'"
-                                >
-                                    <img src="/images/tedallal-brand-logo.jpg" alt="Logo" class="w-full h-full object-cover" onerror="this.src='/images/logo.jpg'" />
-                                </div>
-                            </div>
-                            <span
-                                class="text-2xl font-extrabold"
-                                :class="isDark ? 'text-white' : 'text-slate-900'"
-                            >تدلّل • Tedallal</span>
-                        </div>
-                        <p
-                            class="text-xs leading-relaxed max-w-sm"
-                            :class="isDark ? 'text-slate-300' : 'text-slate-700'"
-                        >
-                            {{ t.footer.brandDesc }}
-                        </p>
-                        <div
-                            class="flex items-center gap-2 text-xs font-semibold"
-                            :class="isDark ? 'text-emerald-400' : 'text-emerald-700'"
-                        >
-                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                            <span>{{ t.footer.serverStatus }}</span>
+                <div class="flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-right">
+                    <div class="flex items-center gap-3">
+                        <img src="/images/tedallal-luxury-transparent.png" alt="تدلل" class="w-9 h-9 object-contain" />
+                        <div>
+                            <p class="font-black text-sm text-white">
+                                {{ currentLocale === 'ar' ? 'منظومة تدلّـل الملكية للضيافة الفاخرة' : 'Tedallal Royal Hospitality Suite' }}
+                            </p>
+                            <p class="text-[11px] text-stone-400">
+                                {{ currentLocale === 'ar' ? 'جميع الحقوق محفوظة © 2026' : 'All rights reserved © 2026' }}
+                            </p>
                         </div>
                     </div>
 
-                    <!-- Col 2: Quick Links -->
-                    <div class="space-y-3">
-                        <h5
-                            class="text-xs font-bold uppercase tracking-wider"
-                            :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'"
-                        >{{ t.footer.quickLinksTitle }}</h5>
-                        <ul class="space-y-2 text-xs">
-                            <li><a href="#how-it-works" class="hover:text-amber-500 transition-colors">{{ t.nav.howItWorks }}</a></li>
-                            <li><a href="#solutions" class="hover:text-amber-500 transition-colors">{{ t.nav.solutions }}</a></li>
-                            <li><a href="#interactive-demo" class="hover:text-amber-500 transition-colors">{{ t.nav.interactiveDemo }}</a></li>
-                            <li><a href="#features" class="hover:text-amber-500 transition-colors">{{ t.nav.features }}</a></li>
-                            <li><a href="#directory" class="hover:text-amber-500 transition-colors">{{ t.nav.directory }}</a></li>
-                            <li><a href="#roi-calculator" class="hover:text-amber-500 transition-colors">{{ t.nav.roiCalculator }}</a></li>
-                            <li><a href="#faqs" class="hover:text-amber-500 transition-colors">{{ t.nav.faqs }}</a></li>
-                        </ul>
+                    <div class="flex flex-wrap items-center justify-center gap-4 sm:gap-6 font-bold text-xs">
+                        <a
+                            href="https://wa.me/963934578117?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%D8%8C%20%D8%A3%D8%B1%D8%BA%D8%A8%20%D9%81%D9%8A%20%D9%85%D8%B9%D8%B1%D9%81%D8%A9%20%D8%AA%D9%81%D8%A7%D8%B5%D9%8A%D9%84%20%D9%85%D9%86%D8%B8%D9%88%D9%85%D8%A9%20%D8%AA%D8%AF%D9%84%D9%91%D9%84%20%D9%84%D9%84%D9%85%D8%B7%D8%A7%D8%B9%D9%85"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="inline-flex items-center gap-1.5 text-[#25D366] hover:text-emerald-300 transition-colors"
+                        >
+                            <span>💬</span>
+                            <span>{{ currentLocale === 'ar' ? 'واتساب:' : 'WhatsApp:' }} <span dir="ltr">+963 934 578 117</span></span>
+                        </a>
+                        <a
+                            href="tel:+963934578117"
+                            class="inline-flex items-center gap-1.5 text-stone-300 hover:text-amber-400 transition-colors"
+                        >
+                            <span>📞</span>
+                            <span dir="ltr">+963 934 578 117</span>
+                        </a>
+                        <Link href="/login" class="hover:text-amber-400 transition-colors">
+                            {{ currentLocale === 'ar' ? 'بوابة الإدارة' : 'Admin Portal' }}
+                        </Link>
+                        <a href="#floor-to-kitchen" class="hover:text-amber-400 transition-colors">
+                            {{ currentLocale === 'ar' ? 'شاشة المطبخ KDS' : 'KDS Portal' }}
+                        </a>
+                        <button type="button" class="hover:text-amber-400 transition-colors" @click="isDemoModalOpen = true">
+                            {{ currentLocale === 'ar' ? 'طلب حساب جديد' : 'New Account' }}
+                        </button>
                     </div>
 
-                    <!-- Col 3: Portal Access -->
-                    <div class="space-y-3">
-                        <h5
-                            class="text-xs font-bold uppercase tracking-wider"
-                            :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'"
-                        >{{ t.footer.portalAccessTitle }}</h5>
-                        <ul class="space-y-2 text-xs">
-                            <li><Link :href="route('login')" class="hover:text-amber-500 transition-colors">{{ t.footer.adminPortal }}</Link></li>
-                            <li><Link :href="route('login')" class="hover:text-amber-500 transition-colors">{{ t.footer.kdsPortal }}</Link></li>
-                            <li><Link :href="route('login')" class="hover:text-amber-500 transition-colors">{{ t.footer.superAdminPortal }}</Link></li>
-                            <li><button @click="isDemoModalOpen = true" class="text-amber-600 dark:text-amber-400 font-bold hover:underline cursor-pointer">{{ t.footer.requestAccount }}</button></li>
-                        </ul>
-                    </div>
-
-                    <!-- Col 4: Direct Contact & WhatsApp -->
-                    <div class="space-y-3">
-                        <h5
-                            class="text-xs font-bold uppercase tracking-wider"
-                            :class="isDark ? 'text-white' : 'text-slate-900 font-extrabold'"
-                        >{{ currentLocale === 'ar' ? 'التواصل المباشر والاستفسارات' : 'Direct Support & Inquiries' }}</h5>
-                        <ul class="space-y-2.5 text-xs">
-                            <li>
-                                <a
-                                    href="https://wa.me/963934578117?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%D8%8C%20%D8%A3%D8%B1%D8%BA%D8%A8%20%D9%81%D9%8A%20%D9%85%D8%B9%D8%B1%D9%81%D8%A9%20%D8%AA%D9%81%D8%A7%D8%B5%D9%8A%D9%84%20%D9%85%D9%86%D8%B8%D9%88%D9%85%D8%A9%20%D8%AA%D8%AF%D9%84%D9%91%D9%84%20%D9%84%D9%84%D9%85%D8%B7%D8%A7%D8%B9%D9%85"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    class="inline-flex items-center gap-2 text-[#25d366] hover:text-emerald-400 font-bold transition-colors"
-                                >
-                                    <span class="text-base">💬</span>
-                                    <span>واتساب: <span dir="ltr">+963 934 578 117</span></span>
-                                </a>
-                            </li>
-                            <li>
-                                <a
-                                    href="tel:+963934578117"
-                                    class="inline-flex items-center gap-2 hover:text-amber-500 transition-colors"
-                                    :class="isDark ? 'text-slate-300' : 'text-slate-700 font-medium'"
-                                >
-                                    <span class="text-base">📞</span>
-                                    <span dir="ltr">+963 934 578 117</span>
-                                </a>
-                            </li>
-                            <li>
-                                <Link
-                                    href="/consultation"
-                                    class="inline-flex items-center gap-1.5 text-amber-500 hover:text-amber-400 font-semibold transition-colors"
-                                >
-                                    <span>📋</span>
-                                    <span>{{ currentLocale === 'ar' ? 'استمارة متطلبات المطعم' : 'Restaurant Assessment' }}</span>
-                                </Link>
-                            </li>
-                        </ul>
-                    </div>
-
-                </div>
-
-                <div
-                    class="pt-8 border-t flex flex-col sm:flex-row items-center justify-between gap-4 text-xs"
-                    :class="isDark ? 'border-white/5 text-slate-500' : 'border-slate-200 text-slate-500'"
-                >
-                    <div>
-                        {{ t.footer.rights }} {{ new Date().getFullYear() }}
-                    </div>
-                    <div class="flex items-center gap-6">
-                        <span class="hover:text-slate-700 dark:hover:text-slate-400 transition-colors">{{ currentLocale === 'ar' ? 'أعلى معايير حماية وأمان البيانات' : 'Enterprise Cloud Security' }}</span>
-                        <span class="hover:text-slate-700 dark:hover:text-slate-400 transition-colors">{{ currentLocale === 'ar' ? 'دعم فني واستجابة فورية على مدار الساعة' : '24/7 Dedicated Support' }}</span>
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-stone-800 bg-stone-900 text-[11px] font-bold text-emerald-400">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span>{{ currentLocale === 'ar' ? 'كافة الأنظمة السحابية تعمل بكفاءة 99.9%' : 'All Systems Operational' }}</span>
                     </div>
                 </div>
-
             </div>
         </footer>
 
-        <!-- Floating Direct WhatsApp Button -->
+        <!-- Floating Direct WhatsApp Button (Official Emerald Green & Royal Pulse) -->
         <a
             href="https://wa.me/963934578117?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%D9%8B%D8%8C%20%D8%A3%D8%B1%D8%BA%D8%A8%20%D9%81%D9%8A%20%D9%85%D8%B9%D8%B1%D9%81%D8%A9%20%D8%AA%D9%81%D8%A7%D8%B5%D9%8A%D9%84%20%D9%88%D8%B9%D8%B1%D8%B6%20%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A%20%D9%84%D9%85%D9%86%D8%B8%D9%88%D9%85%D8%A9%20%D8%AA%D8%AF%D9%84%D9%91%D9%84"
             target="_blank"
             rel="noopener noreferrer"
-            class="fixed bottom-6 z-40 inline-flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-[#25d366] hover:bg-[#20ba59] text-white font-bold text-xs shadow-2xl shadow-emerald-500/30 hover:scale-105 active:scale-95 transition-all duration-300 select-none cursor-pointer"
+            class="fixed bottom-6 z-50 inline-flex items-center gap-2.5 px-4 py-3 rounded-full bg-[#25D366] hover:bg-[#20ba59] text-white font-bold text-xs sm:text-sm shadow-xl shadow-emerald-600/35 hover:scale-105 active:scale-95 transition-all duration-300 select-none cursor-pointer group"
             :class="currentLocale === 'ar' ? 'left-6' : 'right-6'"
-            title="تواصل مباشر عبر واتساب"
+            title="تواصل مباشر عبر واتساب (+963 934 578 117)"
         >
-            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+            <span class="relative flex h-3 w-3">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+            </span>
+            <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
                 <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.698c.969.587 1.961.921 3.009.922 3.176 0 5.766-2.587 5.767-5.767.001-3.187-2.575-5.77-6.082-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.275.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.099.824z"/>
             </svg>
-            <span class="hidden sm:inline">{{ currentLocale === 'ar' ? 'محادثة واتساب مباشرة' : 'WhatsApp Chat' }}</span>
+            <span class="font-extrabold tracking-wide">{{ currentLocale === 'ar' ? 'محادثة واتساب مباشرة' : 'WhatsApp Direct' }}</span>
         </a>
-
     </div>
 </template>
 
 <style scoped>
-/* Tedallal Fluid Hero Emblem Levitation & Shimmer */
-.tedallal-hero-emblem {
-    animation: tedallalHeroFloat 4.6s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
-    will-change: transform;
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+@keyframes bounce-short {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+}
+.animate-bounce-short {
+    animation: bounce-short 2s ease-in-out infinite;
 }
 
-@keyframes tedallalHeroFloat {
-    0%, 100% {
-        transform: translateY(0px) rotate(0deg);
-    }
-    50% {
-        transform: translateY(-4px) rotate(0.4deg);
-    }
-}
-
-/* prefers-reduced-motion removed to allow continuous hero animation on all platforms */
-
-.font-english {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-.custom-scrollbar::-webkit-scrollbar {
-    width: 4px;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(245, 158, 11, 0.2);
-    border-radius: 4px;
-}
-
-/* Hero Mode Switch Transition (Zero Layout Shift Blur Fade) */
-.hero-mode-enter-active,
-.hero-mode-leave-active {
+/* ========================================================================= */
+/* TEDALLAL ULTRA-LUXURY GLASSMORPHISM SYSTEM (Haute Crystal & Gold)         */
+/* ========================================================================= */
+.glass-ultra {
+    background: radial-gradient(120% 120% at 50% 0%, rgba(32, 28, 22, 0.72) 0%, rgba(12, 12, 15, 0.92) 100%);
+    backdrop-filter: blur(28px) saturate(190%) contrast(105%);
+    -webkit-backdrop-filter: blur(28px) saturate(190%) contrast(105%);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.9), inset 0 1px 1px 0 rgba(255, 255, 255, 0.15);
+    position: relative;
+    border: 1px solid rgba(226, 196, 133, 0.15);
     transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.hero-mode-enter-from {
-    opacity: 0;
-    transform: translateY(10px) scale(0.99);
-    filter: blur(4px);
+.glass-ultra::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.25) 0%,
+        rgba(226, 196, 133, 0.40) 25%,
+        rgba(255, 255, 255, 0.03) 60%,
+        rgba(226, 196, 133, 0.15) 100%
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
 }
-.hero-mode-leave-to {
-    opacity: 0;
-    transform: translateY(-10px) scale(0.99);
-    filter: blur(4px);
+.glass-ultra:hover {
+    border-color: rgba(226, 196, 133, 0.35);
+    box-shadow: 0 30px 60px -10px rgba(0, 0, 0, 0.95), 0 0 15px 1px rgba(226, 196, 133, 0.08), inset 0 1px 1px 0 rgba(255, 255, 255, 0.25);
 }
 
-/* =========================================================================
-   LIGHT MODE DESIGN SYSTEM FOR TEDALLAL LANDING PAGE
-   ========================================================================= */
+.gold-glow-node {
+    background: radial-gradient(circle, rgba(226, 196, 133, 0.06) 0%, transparent 70%);
+    filter: blur(45px);
+    pointer-events: none;
+}
+
+.flash-active-gold {
+    animation: flashGold 0.85s ease-out;
+}
+@keyframes flashGold {
+    0% { box-shadow: 0 0 0 0 rgba(226, 196, 133, 0.6); }
+    70% { box-shadow: 0 0 20px 5px rgba(226, 196, 133, 0.2); }
+    100% { box-shadow: 0 0 0 0 rgba(226, 196, 133, 0); }
+}
+
+/* ========================================================================= */
+/* TEDALLAL ULTRA-LUXURY LIGHT MODE DESIGN SYSTEM                            */
+/* (Warm Alabaster Porcelain, Imperial Antique Gold, Obsidian Contrast)     */
+/* ========================================================================= */
+
 .light-mode-theme {
-    color-scheme: light;
-    background-color: #ffffff !important;
-    background-image: none !important;
-    color: #0f172a !important;
+    color: #12110F;
 }
 
-.light-mode-theme,
-.dark-mode-theme {
-    transition: background-color 0.35s ease, color 0.35s ease, border-color 0.35s ease;
+/* 1. Haute Imperial Glassmorphism in Light Mode (Crisp Porcelain, Calm & Elegant) */
+.light-mode-theme .glass-ultra {
+    background: rgba(255, 255, 255, 0.94) !important;
+    backdrop-filter: blur(20px) saturate(150%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(150%) !important;
+    border: 1px solid rgba(197, 160, 89, 0.22) !important;
+    box-shadow: 
+        0 10px 30px -5px rgba(28, 25, 23, 0.06),
+        0 2px 8px -2px rgba(0, 0, 0, 0.03),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
 }
 
-/* Light mode ambient background mesh & glowing warmth */
-.light-mode-theme .ambient-glow-layer .bg-radial-mesh {
-    background-image: radial-gradient(#cbd5e1 1.2px, transparent 1.2px) !important;
-    opacity: 0.35 !important;
+.light-mode-theme .glass-ultra::before {
+    display: none !important;
 }
 
-/* Header & Navigation in Light Mode */
-.light-mode-theme header {
-    background-color: rgba(255, 255, 255, 0.94) !important;
-    border-bottom-color: rgba(226, 232, 240, 0.9) !important;
-    box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.03);
+.light-mode-theme .glass-ultra:hover {
+    border-color: rgba(180, 140, 60, 0.45) !important;
+    box-shadow: 
+        0 16px 40px -8px rgba(28, 25, 23, 0.09),
+        0 4px 12px -2px rgba(0, 0, 0, 0.03),
+        inset 0 1px 1px 0 rgba(255, 255, 255, 1) !important;
 }
 
-.light-mode-theme header nav a {
-    color: #475569 !important;
-}
-.light-mode-theme header nav a:hover {
-    color: #b45309 !important;
-}
-
-/* Main section alternating backgrounds in Light Mode - Luminous and Revealing */
-.light-mode-theme section {
-    border-top-color: #e2e8f0 !important;
+/* 2. Text High Contrast & Readability */
+.light-mode-theme h1,
+.light-mode-theme h2,
+.light-mode-theme h3,
+.light-mode-theme h4,
+.light-mode-theme .text-stone-900,
+.light-mode-theme .text-white {
+    color: #12110F !important;
 }
 
-.light-mode-theme section#how-it-works,
-.light-mode-theme section#features,
-.light-mode-theme section#roi-calculator,
-.light-mode-theme section#features-bespoke,
-.light-mode-theme section#solutions,
-.light-mode-theme section#directory,
-.light-mode-theme section#comparison,
-.light-mode-theme section#pricing,
-.light-mode-theme section#faqs {
-    background-color: rgba(250, 247, 242, 0.82) !important;
-    backdrop-filter: blur(16px) !important;
-}
-
-/* Light mode headings & titles (High contrast #0f172a) */
-.light-mode-theme h1:not([class*="text-transparent"]):not([class*="bg-clip-text"]),
-.light-mode-theme h2:not([class*="text-transparent"]):not([class*="bg-clip-text"]),
-.light-mode-theme h3:not([class*="text-transparent"]):not([class*="bg-clip-text"]),
-.light-mode-theme h4:not([class*="text-transparent"]):not([class*="bg-clip-text"]),
-.light-mode-theme h5:not([class*="text-transparent"]):not([class*="bg-clip-text"]) {
-    color: #0f172a !important;
-}
-
-/* Hero section in Light Mode: Crisp Obsidian & Antique Gold Typography */
-.light-mode-theme #hero-luxury h1 span.block:first-child span {
-    color: #0f172a !important;
-    text-shadow: none !important;
-    filter: none !important;
-}
-
-.light-mode-theme #hero-luxury h1 span.bg-clip-text {
-    background-image: linear-gradient(135deg, #8a6218 0%, #b8860b 50%, #6d4c0c 100%) !important;
-    -webkit-background-clip: text !important;
-    -webkit-text-fill-color: transparent !important;
-    filter: drop-shadow(0 2px 6px rgba(184, 134, 11, 0.25)) !important;
-}
-
-.light-mode-theme #hero-luxury h1 .text-rose-400 span {
-    color: #e11d48 !important;
-    text-shadow: none !important;
-    filter: none !important;
-}
-
-.light-mode-theme #hero-luxury p {
-    color: #334155 !important;
-}
-
-.light-mode-theme #hero-luxury .relative.inline-flex.rounded-full.bg-black\/60 {
-    background-color: rgba(255, 255, 255, 0.88) !important;
-    border-color: rgba(184, 134, 11, 0.35) !important;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06) !important;
-}
-.light-mode-theme #hero-luxury .relative.inline-flex.rounded-full.bg-black\/60 span {
-    color: #1e293b !important;
-}
-
-.light-mode-theme #hero-luxury .relative.inline-flex.p-2.rounded-2xl.bg-black\/50 {
-    background-color: rgba(255, 255, 255, 0.88) !important;
-    border-color: rgba(226, 232, 240, 0.9) !important;
-}
-
-/* Metric cards in Light Mode */
-.light-mode-theme #hero-luxury .grid > div {
-    background: rgba(255, 255, 255, 0.88) !important;
-    border-color: rgba(184, 134, 11, 0.25) !important;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.02) !important;
-}
-.light-mode-theme #hero-luxury .grid > div span {
-    color: #475569 !important;
-}
-.light-mode-theme #hero-luxury .grid > div .text-emerald-400 {
-    color: #059669 !important;
-}
-.light-mode-theme #hero-luxury .grid > div .text-amber-400,
-.light-mode-theme #hero-luxury .grid > div .text-\[\#FCF6BA\] {
-    color: #b8860b !important;
-}
-
-/* Secondary CTA in Light Mode */
-.light-mode-theme #hero-luxury a[href="#features-bespoke"] {
-    background-color: rgba(255, 255, 255, 0.9) !important;
-    border-color: rgba(203, 213, 225, 0.9) !important;
-    color: #1e293b !important;
-}
-
-/* Bespoke features in Light Mode: Crisp Luminous Cards with Deep Slate & Gold Typography */
-.light-mode-theme #features-bespoke h2 {
-    color: #0f172a !important;
-    background: none !important;
-    -webkit-background-clip: unset !important;
-    -webkit-text-fill-color: #0f172a !important;
-}
-
-.light-mode-theme #features-bespoke p {
-    color: #475569 !important;
-}
-
-.light-mode-theme #features-bespoke .bg-black\/40,
-.light-mode-theme #features-bespoke .lg\:col-span-7,
-.light-mode-theme #features-bespoke .lg\:col-span-5 {
-    background-color: #ffffff !important;
-    border-color: #e2e8f0 !important;
-    box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.05), 0 0 0 1px rgba(226, 232, 240, 0.7) !important;
-}
-
-.light-mode-theme #features-bespoke h3 {
-    color: #0f172a !important;
-}
-
-.light-mode-theme #features-bespoke h4 {
-    color: #1e293b !important;
-}
-
-.light-mode-theme #features-bespoke .text-stone-300,
-.light-mode-theme #features-bespoke .text-stone-400 {
-    color: #64748b !important;
-}
-
-.light-mode-theme #features-bespoke .text-white {
-    color: #0f172a !important;
-}
-
-.light-mode-theme #features-bespoke .border-white\/5,
-.light-mode-theme #features-bespoke .border-white\/10 {
-    border-color: #e2e8f0 !important;
-}
-
-.light-mode-theme #features-bespoke .bg-black\/60,
-.light-mode-theme #features-bespoke .bg-black\/50 {
-    background-color: #f1f5f9 !important;
-}
-
-.light-mode-theme .text-slate-300 {
-    color: #334155 !important;
-}
-
+.light-mode-theme .text-stone-300,
+.light-mode-theme .text-slate-300,
+.light-mode-theme .text-stone-400,
 .light-mode-theme .text-slate-400 {
-    color: #64748b !important;
+    color: #38322B !important;
 }
 
-/* Light mode high-contrast color tokens for WCAG AA+ accessibility */
-.light-mode-theme .text-amber-400 {
-    color: #b45309 !important;
-}
-.light-mode-theme .text-amber-300 {
-    color: #92400e !important;
-}
-.light-mode-theme .text-emerald-400 {
-    color: #047857 !important;
-}
-.light-mode-theme .text-emerald-300 {
-    color: #065f46 !important;
-}
-.light-mode-theme .text-orange-400 {
-    color: #c2410c !important;
-}
-.light-mode-theme .text-orange-300 {
-    color: #9a3412 !important;
-}
-.light-mode-theme .text-rose-400 {
-    color: #be123c !important;
-}
-.light-mode-theme .text-rose-300 {
-    color: #9f1239 !important;
+.light-mode-theme .text-stone-500,
+.light-mode-theme .text-stone-600 {
+    color: #524B40 !important;
 }
 
-/* Catch-all for dark backgrounds in light mode */
-.light-mode-theme .bg-slate-900,
-.light-mode-theme .bg-slate-900\/60,
-.light-mode-theme .bg-slate-900\/70,
-.light-mode-theme .bg-slate-900\/80,
-.light-mode-theme .bg-slate-900\/90,
-.light-mode-theme .bg-slate-900\/95,
-.light-mode-theme .bg-slate-950,
-.light-mode-theme .bg-slate-950\/70,
-.light-mode-theme .bg-slate-950\/80,
-.light-mode-theme .bg-slate-950\/90,
-.light-mode-theme .bg-\[\#020b07\],
-.light-mode-theme .bg-\[\#020b07\]\/65,
-.light-mode-theme .bg-\[\#020b07\]\/70,
-.light-mode-theme .bg-\[\#020b07\]\/75,
-.light-mode-theme .bg-\[\#020b07\]\/80,
-.light-mode-theme .bg-\[\#020b07\]\/85,
-.light-mode-theme .bg-\[\#020b07\]\/95,
-.light-mode-theme .bg-\[\#03110a\]\/70,
-.light-mode-theme .bg-\[\#03110a\]\/75,
-.light-mode-theme .bg-\[\#03110a\]\/80,
-.light-mode-theme .bg-\[\#03130c\],
-.light-mode-theme .bg-\[\#03130c\]\/95,
-.light-mode-theme .bg-\[\#010604\]\/90,
-.light-mode-theme .bg-\[\#090e1c\],
-.light-mode-theme .bg-\[\#090e1c\]\/95,
-.light-mode-theme .bg-\[\#0b101d\],
-.light-mode-theme .bg-\[\#080d19\]\/80,
-.light-mode-theme .bg-\[\#080d19\]\/60,
-.light-mode-theme .bg-\[\#070b14\],
-.light-mode-theme .bg-\[\#060a13\] {
-    background-color: #ffffff !important;
-    border-color: #e2e8f0 !important;
-    box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.05), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
+/* Burnished Antique Gold Typography (WCAG Contrast 5:1+) */
+.light-mode-theme .text-amber-400,
+.light-mode-theme .text-amber-300,
+.light-mode-theme .text-amber-500,
+.light-mode-theme .text-yellow-400,
+.light-mode-theme .text-amber-400\/90,
+.light-mode-theme .text-amber-400\/80 {
+    color: #8C6010 !important;
 }
 
-/* Text white inside light cards */
-.light-mode-theme .bg-slate-900 span.text-white,
-.light-mode-theme .bg-slate-900 p.text-white,
-.light-mode-theme .bg-slate-900 h3.text-white,
-.light-mode-theme .bg-slate-900 h4.text-white,
-.light-mode-theme .bg-slate-950 span.text-white,
-.light-mode-theme .bg-slate-950 p.text-white,
-.light-mode-theme .bg-slate-950 h3.text-white,
-.light-mode-theme .bg-slate-950 h4.text-white,
-.light-mode-theme #comparison .text-white,
-.light-mode-theme #faqs .text-white {
-    color: #0f172a !important;
+/* 3. Capsule Badges in Light Mode */
+.light-mode-theme span[class*="bg-amber-500/10"],
+.light-mode-theme span[class*="bg-amber-500/15"],
+.light-mode-theme span[class*="bg-amber-500/20"] {
+    background-color: rgba(212, 175, 55, 0.14) !important;
+    border-color: rgba(180, 140, 60, 0.45) !important;
+    color: #8C6010 !important;
+    font-weight: 800 !important;
 }
 
-/* Comparison table alternate rows in light mode */
-.light-mode-theme #comparison tr:nth-child(even) {
-    background-color: #f8fafc !important;
-}
-.light-mode-theme #comparison tr:nth-child(odd) {
-    background-color: #ffffff !important;
-}
-.light-mode-theme #comparison td,
-.light-mode-theme #comparison th {
-    border-color: #e2e8f0 !important;
-}
-
-/* Light mode FAQ items */
-.light-mode-theme #faqs .rounded-2xl {
-    background-color: #ffffff !important;
-    border-color: #e2e8f0 !important;
-    box-shadow: 0 1px 2px 0 rgba(15, 23, 42, 0.04);
-}
-.light-mode-theme #faqs button span:first-child {
-    color: #0f172a !important;
+/* 4. Sub-cards and inner containers */
+.light-mode-theme .bg-black\/40,
+.light-mode-theme .bg-black\/60,
+.light-mode-theme .bg-black\/70,
+.light-mode-theme .bg-stone-900,
+.light-mode-theme .bg-stone-900\/50,
+.light-mode-theme .bg-stone-900\/60,
+.light-mode-theme .bg-stone-900\/90 {
+    background-color: rgba(255, 255, 255, 0.92) !important;
+    border-color: rgba(197, 160, 89, 0.30) !important;
+    color: #12110F !important;
 }
 
-/* Light mode form inputs & selects */
+.light-mode-theme .border-white\/10,
+.light-mode-theme .border-white\/20 {
+    border-color: rgba(197, 160, 89, 0.28) !important;
+}
+
+/* 5. Inputs & Dropdowns */
 .light-mode-theme input,
 .light-mode-theme select {
-    background-color: #f8fafc !important;
-    border-color: #cbd5e1 !important;
-    color: #0f172a !important;
+    background-color: #FFFFFF !important;
+    border-color: rgba(197, 160, 89, 0.40) !important;
+    color: #12110F !important;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 .light-mode-theme input:focus,
 .light-mode-theme select:focus {
-    border-color: #f59e0b !important;
-    background-color: #ffffff !important;
-    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15) !important;
+    border-color: #B48C3C !important;
+    box-shadow: 0 0 0 3px rgba(180, 140, 60, 0.20) !important;
 }
 
-/* Light mode mobile drawer */
-.light-mode-theme .lg\:hidden.bg-\[\#020b07\]\/95, .light-mode-theme .lg\:hidden.bg-\[\#090e1c\]\/95 {
-    background-color: rgba(255, 255, 255, 0.98) !important;
-    border-top-color: #e2e8f0 !important;
-}
-.light-mode-theme .lg\:hidden.bg-\[\#020b07\]\/95, .light-mode-theme .lg\:hidden.bg-\[\#090e1c\]\/95 a.text-slate-200 {
-    color: #1e293b !important;
-}
-
-/* Light mode floating toast */
-.light-mode-theme .fixed.bottom-6.bg-\[\#020b07\]\/95, .light-mode-theme .fixed.bottom-6.bg-\[\#090e1c\]\/95 {
-    background-color: rgba(255, 255, 255, 0.98) !important;
-    border-color: rgba(245, 158, 11, 0.4) !important;
-    box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.08);
-}
-.light-mode-theme .fixed.bottom-6 p.text-slate-200 {
-    color: #334155 !important;
-}
-
-/* Light mode modal card */
-.light-mode-theme .bg-slate-900.border-white\/10 {
-    background-color: #ffffff !important;
-    border-color: #e2e8f0 !important;
-    box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
-}
-
-/* Light mode footer */
+/* 6. Footer Luxury Anchor */
 .light-mode-theme footer {
-    background-color: #f1f5f9 !important;
-    border-top-color: #e2e8f0 !important;
-    color: #64748b !important;
+    background-color: #0E0E12 !important;
+    border-top-color: rgba(197, 160, 89, 0.35) !important;
+    color: #A3A19C !important;
 }
-.light-mode-theme footer h5 {
-    color: #0f172a !important;
+.light-mode-theme footer .text-white,
+.light-mode-theme footer .text-stone-900,
+.light-mode-theme footer p.font-black {
+    color: #FBF8F5 !important;
 }
 .light-mode-theme footer a {
-    color: #64748b !important;
+    color: #C5A059 !important;
 }
 .light-mode-theme footer a:hover {
-    color: #b45309 !important;
+    color: #E6C875 !important;
 }
-.light-mode-theme footer span.text-white {
-    color: #0f172a !important;
+
+/* 7. Action Secondary Buttons */
+.light-mode-theme button[class*="border-white\/20"],
+.light-mode-theme a[class*="border-white\/20"] {
+    background-color: #FFFFFF !important;
+    border-color: rgba(197, 160, 89, 0.45) !important;
+    color: #12110F !important;
+    box-shadow: 0 2px 8px rgba(180, 140, 60, 0.10) !important;
+}
+.light-mode-theme button[class*="border-white\/20"]:hover,
+.light-mode-theme a[class*="border-white\/20"]:hover {
+    background-color: #FAF5EB !important;
+    border-color: #B48C3C !important;
 }
 </style>

@@ -36,7 +36,7 @@ class OrderPrintController extends Controller
         if (!$wheelToken) {
             $wheelToken = $order->wheelToken()->create([
                 'restaurant_id' => $restaurant->id,
-                'token' => Str::random(32),
+                'token' => Str::random(16),
                 'expires_at' => now()->addDays(14),
             ]);
         }

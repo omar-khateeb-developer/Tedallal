@@ -13,7 +13,7 @@ class TableController extends ApiController
     {
         $table = RestaurantTable::withoutGlobalScopes()
             ->with('restaurant')
-            ->where('public_token', $token)
+            ->whereToken($token)
             ->first();
 
         if (! $table || ! $table->isActive()) {

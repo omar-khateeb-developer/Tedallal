@@ -25,6 +25,16 @@ watch(() => props.item, () => {
     quantity.value = 1;
     note.value = '';
 });
+
+function onImageError(event: Event) {
+    const img = event.target as HTMLImageElement;
+    if (img && !img.dataset.fallbackApplied) {
+        img.dataset.fallbackApplied = 'true';
+        img.src = '/images/tedallal-golden-logo-pure.png';
+        img.classList.remove('object-cover');
+        img.classList.add('object-contain', 'p-6', 'bg-gradient-to-br', 'from-amber-950/30', 'via-stone-900', 'to-black');
+    }
+}
 </script>
 
 <template>
@@ -35,8 +45,17 @@ watch(() => props.item, () => {
             @click.self="emit('close')"
         >
             <div class="w-full max-w-lg rounded-t-3xl bg-white dark:bg-[#0a0f1d] p-6 shadow-2xl sm:rounded-3xl border-t sm:border border-stone-200/80 dark:border-slate-800 transition-colors" dir="rtl">
-                <div v-if="(item as any).image" class="mb-4 aspect-video w-full overflow-hidden rounded-2xl border border-stone-100 dark:border-slate-800">
-                    <img :src="(item as any).image" :alt="item.name" class="h-full w-full object-cover" />
+                <div class="mb-4 aspect-video w-full overflow-hidden rounded-2xl border border-stone-100 dark:border-slate-800 flex items-center justify-center bg-gradient-to-br from-amber-50 to-stone-100 dark:from-slate-900 dark:to-[#070709]">
+                    <img
+                        :src="(item as any).image || '/images/tedallal-golden-logo-pure.png'"
+                        :alt="item.name"
+                        :class="[
+                            ((item as any).image && !(item as any).image.includes('tedallal-golden-logo'))
+                                ? 'h-full w-full object-cover'
+                                : 'h-full w-full object-contain p-6 bg-gradient-to-br from-amber-500/10 via-stone-900 to-[#070709] drop-shadow-[0_4px_16px_rgba(218,165,32,0.35)]'
+                        ]"
+                        @error="onImageError"
+                    />
                 </div>
                 <h3 class="text-xl font-bold text-stone-900 dark:text-white">{{ item.name }}</h3>
                 <p class="mt-1 text-amber-700 dark:text-amber-400 font-bold text-lg">{{ item.price }} {{ currency }}</p>

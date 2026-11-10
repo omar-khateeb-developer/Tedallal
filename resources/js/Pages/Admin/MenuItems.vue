@@ -120,11 +120,12 @@ onMounted(load);
                     <div class="flex flex-col gap-2">
                         <div class="flex flex-wrap items-center gap-3">
                             <img 
-                                v-if="item.image" 
+                                v-if="item.image"
                                 :src="item.image" 
                                 class="h-12 w-12 object-cover rounded-lg border border-stone-200 dark:border-slate-700 cursor-pointer hover:opacity-80 transition" 
                                 alt="صورة الصنف" 
                                 @click="selectedImage = item.image"
+                                @error="e => { const target = e.target as HTMLImageElement; if (target && !target.dataset.fallbackApplied) { target.dataset.fallbackApplied = 'true'; target.src = '/images/tedallal-golden-logo-pure.png'; } }"
                             />
                             <div v-else class="h-12 w-12 rounded-lg border border-stone-200 dark:border-slate-700 bg-stone-50 dark:bg-slate-800 flex items-center justify-center text-xs text-stone-400 dark:text-slate-500">بدون</div>
 

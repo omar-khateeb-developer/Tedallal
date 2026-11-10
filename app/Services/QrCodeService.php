@@ -31,21 +31,26 @@ final class QrCodeService
         return Storage::disk('public')->url($path);
     }
 
-    public function buildRawPng(RestaurantTable $table): string
+    public function buildRawPng(RestaurantTable $table, bool $allowLogo = false): string
     {
         $url = $table->publicUrl();
-        $logoPath = $this->resolveRestaurantLogoPath($table);
+        $logoPath = $allowLogo ? $this->resolveRestaurantLogoPath($table) : null;
+
+        // Optimization for simple printing and instant mobile camera reading:
+        // Use ErrorCorrectionLevel::Low (7%) without center logo punchout to produce
+        // large, bold, uncluttered square modules with minimal grid density.
+        $errorCorrectionLevel = $logoPath ? ErrorCorrectionLevel::Medium : ErrorCorrectionLevel::Low;
 
         return (new Builder(
             writer: new PngWriter,
             data: $url,
             encoding: new Encoding('UTF-8'),
-            errorCorrectionLevel: ErrorCorrectionLevel::High,
+            errorCorrectionLevel: $errorCorrectionLevel,
             size: 360,
-            margin: 12,
+            margin: 10,
             roundBlockSizeMode: RoundBlockSizeMode::Margin,
             logoPath: $logoPath ?? '',
-            logoResizeToWidth: $logoPath ? 72 : null,
+            logoResizeToWidth: $logoPath ? 56 : null,
             logoPunchoutBackground: (bool) $logoPath,
         ))->build()->getString();
     }
@@ -88,15 +93,16 @@ final class QrCodeService
         return null;
     }
 
-    public function generateBase64ForUrl(string $url, int $size = 200): string
+    public function generateBase64ForUrl(string $url, int $size = 200, ErrorCorrectionLevel $errorLevel = ErrorCorrectionLevel::Low): string
     {
+        // Minimal density, chunky modules, high-contrast white margins for 80mm/58mm thermal receipts
         $png = (new Builder(
             writer: new PngWriter,
             data: $url,
             encoding: new Encoding('UTF-8'),
-            errorCorrectionLevel: ErrorCorrectionLevel::High,
+            errorCorrectionLevel: $errorLevel,
             size: $size,
-            margin: 4,
+            margin: 6,
             roundBlockSizeMode: RoundBlockSizeMode::Margin,
         ))->build()->getString();
 

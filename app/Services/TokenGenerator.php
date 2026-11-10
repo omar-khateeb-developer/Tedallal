@@ -17,12 +17,13 @@ final class TokenGenerator
         return $this->generateUniqueToken('table_sessions', 'session_token');
     }
 
-    private function generateUniqueToken(string $table, string $column): string
+    private function generateUniqueToken(string $table, string $column, int $bytes = 16): string
     {
         // في حالة نادرة جداً يتولّد نفس الـ token من طلبين متزامنين،
         // نُعيد المحاولة بدلاً من رمي exception.
         for ($i = 0; $i < 5; $i++) {
-            $token = rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
+            // 16 بايت تُعطي 128 بت من الأمان الرياضي (22 حرفاً)، لتقصير رابط QR وتقليل كثافة النقاط
+            $token = rtrim(strtr(base64_encode(random_bytes($bytes)), '+/', '-_'), '=');
             if (! DB::table($table)->where($column, $token)->exists()) {
                 return $token;
             }

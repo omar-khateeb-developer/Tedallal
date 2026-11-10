@@ -66,6 +66,9 @@
             height: 180px;
             margin: 0 auto 16px;
             display: block;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
         }
         .instruction {
             font-size: 16px;

@@ -1,0 +1,4544 @@
+{
+  "scraped_at": "2026-11-10T13:41:53.707Z",
+  "total_items": 130,
+  "categories": [
+    {
+      "id": "0RX2132VY1MV7",
+      "name": "الشاورما"
+    },
+    {
+      "id": "0RX2132VJ1MZC",
+      "name": "البروستد"
+    },
+    {
+      "id": "0RX2132W21MZK",
+      "name": "الوجبات الغربي"
+    },
+    {
+      "id": "0RX2132WA1MV9",
+      "name": "السندويش الغربي"
+    },
+    {
+      "id": "0RX2132W61MV9",
+      "name": "المشويات"
+    },
+    {
+      "id": "0RX2132WJ1MVT",
+      "name": "السلطات"
+    },
+    {
+      "id": "0RX2132WA1MVA",
+      "name": "البيتزا"
+    },
+    {
+      "id": "0RX2132WE1MZC",
+      "name": "المقبلات"
+    },
+    {
+      "id": "0S296YKQ3JWXH",
+      "name": "البار"
+    },
+    {
+      "id": "0S298K323JXZG",
+      "name": "ميلك شيك"
+    },
+    {
+      "id": "0S299DRDZJWVH",
+      "name": "مشروبات ساخنة"
+    },
+    {
+      "id": "0S29DXTJZJWVJ",
+      "name": "عصائر"
+    },
+    {
+      "id": "0S29BQKPKJXZX",
+      "name": "حلويات"
+    },
+    {
+      "id": "0S29CTAQZJWZH",
+      "name": "موكتيل"
+    },
+    {
+      "id": "0S29EY2PKJXJA",
+      "name": "مشروبات باردة"
+    },
+    {
+      "id": "0S29FHGRZJY6W",
+      "name": "كوكتيلات"
+    },
+    {
+      "id": "0S29X2X0FJWYT",
+      "name": "سلطة فواكة"
+    },
+    {
+      "id": "0S30FZTZFJWZE",
+      "name": "مشويات على الفحم"
+    }
+  ],
+  "items": [
+    {
+      "id": "0RXGNEBJY1NZV",
+      "price": 300,
+      "tablePrice": 0,
+      "summary": "",
+      "hasVariants": true,
+      "hasExtras": false,
+      "variants": [
+        {
+          "id": "0RXGNEC0A1NZT",
+          "price": 340,
+          "tablePrice": null,
+          "label": "اكسترا",
+          "priceDiscount": null,
+          "calories": ""
+        },
+        {
+          "id": "0RXGNEC0A1NZV",
+          "price": 230,
+          "tablePrice": null,
+          "label": "وسط",
+          "priceDiscount": null,
+          "calories": ""
+        },
+        {
+          "id": "0RXGNEC0A1NZS",
+          "price": 300,
+          "tablePrice": null,
+          "label": "كبيرة",
+          "priceDiscount": null,
+          "calories": ""
+        }
+      ],
+      "name": "شاورما لف",
+      "imageUrl": "https://panel.menutek.net/api/public/images/85f8dbc1-18d1-46bc-8230-e8b3672a0f15.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": 0,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.839750Z",
+      "sections": [
+        {
+          "id": "0RX2132VY1MV7",
+          "name": "الشاورما",
+          "description": "Enjoy dajajati's shawarma done right with an enchanting smoky flavor, skillfully wrapped to take your senses on an authentic Eastern journey.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/8e1ae40e-cd1f-4014-9e8b-77b962bfd978.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132VY1MV7",
+      "category_name": "الشاورما",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBJY1NZV.webp"
+    },
+    {
+      "id": "0RXGNEBKE1NV6",
+      "price": 340,
+      "tablePrice": 0,
+      "summary": "شرائح الشاورما الذهبية مع كريم ثوم و مخلل",
+      "hasVariants": true,
+      "hasExtras": false,
+      "variants": [
+        {
+          "id": "0S5DSN48TA53Y",
+          "price": 160,
+          "tablePrice": null,
+          "label": "ساندويش شاورما صمون كايزر",
+          "priceDiscount": null,
+          "calories": ""
+        }
+      ],
+      "name": "شاورما لف صمون",
+      "imageUrl": "https://panel.menutek.net/api/public/images/52c0747d-3278-4af8-9a4a-1a2d85393532.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": 0,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.843180Z",
+      "sections": [
+        {
+          "id": "0RX2132VY1MV7",
+          "name": "الشاورما",
+          "description": "Enjoy dajajati's shawarma done right with an enchanting smoky flavor, skillfully wrapped to take your senses on an authentic Eastern journey.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/8e1ae40e-cd1f-4014-9e8b-77b962bfd978.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132VY1MV7",
+      "category_name": "الشاورما",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBKE1NV6.webp"
+    },
+    {
+      "id": "0RXGNEBKP1NVK",
+      "price": 520,
+      "tablePrice": 0,
+      "summary": "شرائح الشاورما الذهبية تقدم مع بطاطا مقرمشة ومحمرة مع كريم ثوم و مخلل و دبس الرمان",
+      "hasVariants": true,
+      "hasExtras": false,
+      "variants": [
+        {
+          "id": "0RXGNEC0A1NZX",
+          "price": 730,
+          "tablePrice": null,
+          "label": "دبل",
+          "priceDiscount": null,
+          "calories": ""
+        },
+        {
+          "id": "0RXGNEC0E1NVS",
+          "price": 570,
+          "tablePrice": null,
+          "label": "اكسترا",
+          "priceDiscount": null,
+          "calories": ""
+        }
+      ],
+      "name": "وجبة عربي",
+      "imageUrl": "https://panel.menutek.net/api/public/images/e5e0865b-49e8-43ee-aabd-c785a119186a.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": 0,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.845858Z",
+      "sections": [
+        {
+          "id": "0RX2132VY1MV7",
+          "name": "الشاورما",
+          "description": "Enjoy dajajati's shawarma done right with an enchanting smoky flavor, skillfully wrapped to take your senses on an authentic Eastern journey.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/8e1ae40e-cd1f-4014-9e8b-77b962bfd978.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132VY1MV7",
+      "category_name": "الشاورما",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBKP1NVK.webp"
+    },
+    {
+      "id": "0RXGNEBKY1NVE",
+      "price": 760,
+      "tablePrice": null,
+      "summary": "شرائح الشاورما الذهبية داخل خبزة الهامر مع ذرة و فطر فريش وموزاريلا ذائبة تقدم مع بطاطا مقرمشة و كريم ثوم سبايسي و مخلل",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "وجبة سبيسيال",
+      "imageUrl": "https://panel.menutek.net/api/public/images/3fe4e3a0-d2b4-4d8b-8e74-501a33f1ca66.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.847808Z",
+      "sections": [
+        {
+          "id": "0RX2132VY1MV7",
+          "name": "الشاورما",
+          "description": "Enjoy dajajati's shawarma done right with an enchanting smoky flavor, skillfully wrapped to take your senses on an authentic Eastern journey.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/8e1ae40e-cd1f-4014-9e8b-77b962bfd978.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132VY1MV7",
+      "category_name": "الشاورما",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBKY1NVE.webp"
+    },
+    {
+      "id": "0RXGNEBM61NZJ",
+      "price": 680,
+      "tablePrice": 0,
+      "summary": "شرائح الشاورما الذهبية تقدم مع محمرة و بطاطا ذهبية و كريم ثوم ومخلل و دبس الرمان",
+      "hasVariants": true,
+      "hasExtras": false,
+      "variants": [
+        {
+          "id": "0RXGNEC0E1NVT",
+          "price": 680,
+          "tablePrice": null,
+          "label": "250 غ",
+          "priceDiscount": null,
+          "calories": ""
+        },
+        {
+          "id": "0RXGNEC0E1NVV",
+          "price": 1020,
+          "tablePrice": null,
+          "label": "500 غ",
+          "priceDiscount": null,
+          "calories": ""
+        }
+      ],
+      "name": "وجبة شاورما فرط",
+      "imageUrl": "https://panel.menutek.net/api/public/images/adc574d3-b0ed-4ade-a13f-9745eba4abbb.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": 0,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.849669Z",
+      "sections": [
+        {
+          "id": "0RX2132VY1MV7",
+          "name": "الشاورما",
+          "description": "Enjoy dajajati's shawarma done right with an enchanting smoky flavor, skillfully wrapped to take your senses on an authentic Eastern journey.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/8e1ae40e-cd1f-4014-9e8b-77b962bfd978.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132VY1MV7",
+      "category_name": "الشاورما",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBM61NZJ.webp"
+    },
+    {
+      "id": "0RXGNEBME1NZ8",
+      "price": 520,
+      "tablePrice": 0,
+      "summary": "شرائح الشاورما الذهبية داخل خبز الصاج تقدم مع كريم ثوم و مخلل وبطاطا مقرمشة ومحمرة ودبس الرمان",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "وجبة ميني",
+      "imageUrl": "https://panel.menutek.net/api/public/images/be6e9318-5fcf-4482-84e8-635a7aacaf46.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": 0,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.851549Z",
+      "sections": [
+        {
+          "id": "0RX2132VY1MV7",
+          "name": "الشاورما",
+          "description": "Enjoy dajajati's shawarma done right with an enchanting smoky flavor, skillfully wrapped to take your senses on an authentic Eastern journey.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/8e1ae40e-cd1f-4014-9e8b-77b962bfd978.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132VY1MV7",
+      "category_name": "الشاورما",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBME1NZ8.webp"
+    },
+    {
+      "id": "0RXGNEBMP1NV8",
+      "price": 840,
+      "tablePrice": null,
+      "summary": "قطع عدد 5 من الدجاج المقرمش بخلطته اللذيذة يقدم مع بطاطا و كريم ثوم و مخلل و سلطة كول سلو و كتشب , بالإضافة إلى صوص شيدر",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "وجبة بروستد سبايسي",
+      "imageUrl": "https://panel.menutek.net/api/public/images/34961331-c0e6-42a4-b316-9b1d20c62057.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.853404Z",
+      "sections": [
+        {
+          "id": "0RX2132VJ1MZC",
+          "name": "البروستد",
+          "description": "At dajajati, we offer you irresistible golden crunch on the outside and unmatched tenderness on the inside, spiced with our special secrets to give you the ultimate deliciousness.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/fa6c411f-10bf-4a1a-857e-b2dd515e86bb.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132VJ1MZC",
+      "category_name": "البروستد",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBMP1NV8.webp"
+    },
+    {
+      "id": "0RXGNEBMY1NVZ",
+      "price": 820,
+      "tablePrice": null,
+      "summary": "قطع عدد 5 من الدجاج المقرمش بخلطته اللذيذة يقدم مع بطاطا و كريم ثوم و مخلل و سلطة كول سلو و كتشب",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "وجبة بروستد",
+      "imageUrl": "https://panel.menutek.net/api/public/images/34961331-c0e6-42a4-b316-9b1d20c62057.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.855194Z",
+      "sections": [
+        {
+          "id": "0RX2132VJ1MZC",
+          "name": "البروستد",
+          "description": "At dajajati, we offer you irresistible golden crunch on the outside and unmatched tenderness on the inside, spiced with our special secrets to give you the ultimate deliciousness.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/fa6c411f-10bf-4a1a-857e-b2dd515e86bb.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132VJ1MZC",
+      "category_name": "البروستد",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBMY1NVZ.webp"
+    },
+    {
+      "id": "0RXGNEBN21NVX",
+      "price": 750,
+      "tablePrice": null,
+      "summary": "قطع عدد 4 دبوس بخلطة البروستد المقرمشة تقدم مع بطاطا و كريم ثوم و مخلل و سلطة كول سلو وكتشب",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "وجبة دبوس بروستد",
+      "imageUrl": "https://panel.menutek.net/api/public/images/ff301ce6-faf8-4022-a2b0-2d742be4723f.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.856993Z",
+      "sections": [
+        {
+          "id": "0RX2132VJ1MZC",
+          "name": "البروستد",
+          "description": "At dajajati, we offer you irresistible golden crunch on the outside and unmatched tenderness on the inside, spiced with our special secrets to give you the ultimate deliciousness.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/fa6c411f-10bf-4a1a-857e-b2dd515e86bb.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132VJ1MZC",
+      "category_name": "البروستد",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBN21NVX.webp"
+    },
+    {
+      "id": "0RXGNEBNA1NZ0",
+      "price": 720,
+      "tablePrice": null,
+      "summary": "قطع عدد 10 من الجوانح المقرمشة تقدم مع بطاطا و كريم ثوم و مخلل و كول سلو و كتشب",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "وجبة جوانح بروستد",
+      "imageUrl": "https://panel.menutek.net/api/public/images/d8d76fcd-e215-4b98-984d-81d6b08295e5.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.858927Z",
+      "sections": [
+        {
+          "id": "0RX2132VJ1MZC",
+          "name": "البروستد",
+          "description": "At dajajati, we offer you irresistible golden crunch on the outside and unmatched tenderness on the inside, spiced with our special secrets to give you the ultimate deliciousness.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/fa6c411f-10bf-4a1a-857e-b2dd515e86bb.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132VJ1MZC",
+      "category_name": "البروستد",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBNA1NZ0.webp"
+    },
+    {
+      "id": "0RXGNEBNJ1NV6",
+      "price": 720,
+      "tablePrice": null,
+      "summary": "قطعتين من السمك بالخلطة الرائعة المقرمشة تقدم مع صوص تارتار و سلطة كول سلو واصابع البطاطا الذهبية والليمون",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "وجبة فيليه سمك بروستد",
+      "imageUrl": "https://panel.menutek.net/api/public/images/02d1f46b-38af-4dec-bbb4-ac9cc136b5f0.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.860786Z",
+      "sections": [
+        {
+          "id": "0RX2132VJ1MZC",
+          "name": "البروستد",
+          "description": "At dajajati, we offer you irresistible golden crunch on the outside and unmatched tenderness on the inside, spiced with our special secrets to give you the ultimate deliciousness.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/fa6c411f-10bf-4a1a-857e-b2dd515e86bb.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132VJ1MZC",
+      "category_name": "البروستد",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBNJ1NV6.webp"
+    },
+    {
+      "id": "0RXGNEBQJ1NV4",
+      "price": 810,
+      "tablePrice": null,
+      "summary": "قطع عدد 4 من الدجاج المقلي المقرمش مع صوص نابوليتان وجبنة موزاريلا الذائبة و الذرة تقدم مع سلطة كول سلو و مايونيز",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "وجبة اسكالوب ميلانيز",
+      "imageUrl": "https://panel.menutek.net/api/public/images/6214ad42-3174-45ad-81d0-8a20a2a5934a.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.876943Z",
+      "sections": [
+        {
+          "id": "0RX2132W21MZK",
+          "name": "الوجبات الغربي",
+          "description": "A luxurious global selection prepared with the finest fresh ingredients at dajajati, to satisfy fans of modern and distinctive Western flavors.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/0afda17e-c57b-470c-a47c-e2eb1c47e7c6.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132W21MZK",
+      "category_name": "الوجبات الغربي",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBQJ1NV4.webp"
+    },
+    {
+      "id": "0RXGNEBQE1NV8",
+      "price": 820,
+      "tablePrice": null,
+      "summary": "صدر دجاج مشوي مع صوص الأعشاب و لحوم باردة مع فطر فريش وخضار",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "تشكن الفريدو",
+      "imageUrl": "https://panel.menutek.net/api/public/images/697d5966-b91a-470b-96f8-44f91d076bff.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.875016Z",
+      "sections": [
+        {
+          "id": "0RX2132W21MZK",
+          "name": "الوجبات الغربي",
+          "description": "A luxurious global selection prepared with the finest fresh ingredients at dajajati, to satisfy fans of modern and distinctive Western flavors.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/0afda17e-c57b-470c-a47c-e2eb1c47e7c6.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132W21MZK",
+      "category_name": "الوجبات الغربي",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBQE1NV8.webp"
+    },
+    {
+      "id": "0RXGNEBQ61NZJ",
+      "price": 720,
+      "tablePrice": null,
+      "summary": "اصابع البطاطا مع قطع الدجاج المقرمشة مع مزيج من الصلصات الشهية وقطع الهالبينو وناتشوز",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "فرايز دجاجتي",
+      "imageUrl": "https://panel.menutek.net/api/public/images/78bc88a2-1f6d-467b-8179-1f8ba7560a51.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.873053Z",
+      "sections": [
+        {
+          "id": "0RX2132W21MZK",
+          "name": "الوجبات الغربي",
+          "description": "A luxurious global selection prepared with the finest fresh ingredients at dajajati, to satisfy fans of modern and distinctive Western flavors.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/0afda17e-c57b-470c-a47c-e2eb1c47e7c6.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132W21MZK",
+      "category_name": "الوجبات الغربي",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBQ61NZJ.webp"
+    },
+    {
+      "id": "0RXGNEBQT1NVV",
+      "price": 810,
+      "tablePrice": null,
+      "summary": "قطع عدد 2 من الدجاج المقلي المقرمش يقدم مع سلطة كول سلو و صوص الكريم وجبنة الموزاريلا الذائبة المحمرة مع فطر فريش و أصابع بطاطا و مايونيز",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "وجبة اسكالوب ماليبو",
+      "imageUrl": "https://panel.menutek.net/api/public/images/ce0c113c-eb74-4883-8aff-68d6e500767f.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.878837Z",
+      "sections": [
+        {
+          "id": "0RX2132W21MZK",
+          "name": "الوجبات الغربي",
+          "description": "A luxurious global selection prepared with the finest fresh ingredients at dajajati, to satisfy fans of modern and distinctive Western flavors.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/0afda17e-c57b-470c-a47c-e2eb1c47e7c6.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132W21MZK",
+      "category_name": "الوجبات الغربي",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBQT1NVV.webp"
+    },
+    {
+      "id": "0RXGNEBRJ1NVD",
+      "price": 760,
+      "tablePrice": null,
+      "summary": "قطع عدد 2 من شرائح الدجاج المشوية على الفحم الحجري تقدم مع سلطة الجرجير المميزة و الأرز الابيض",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "وجبة شرحات دايت",
+      "imageUrl": "https://panel.menutek.net/api/public/images/b603874c-7afe-43ea-819d-6793d557cfea.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.884705Z",
+      "sections": [
+        {
+          "id": "0RX2132W21MZK",
+          "name": "الوجبات الغربي",
+          "description": "A luxurious global selection prepared with the finest fresh ingredients at dajajati, to satisfy fans of modern and distinctive Western flavors.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/0afda17e-c57b-470c-a47c-e2eb1c47e7c6.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132W21MZK",
+      "category_name": "الوجبات الغربي",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBRJ1NVD.webp"
+    },
+    {
+      "id": "0RXGNEBNT1NVH",
+      "price": 830,
+      "tablePrice": null,
+      "summary": "قطع جاج مشوية مع فطر وذرة وقشقوان\nالمرافقات بطاطا ومايونيز غربي",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "وجبة فرانشيسكو",
+      "imageUrl": null,
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.862626Z",
+      "sections": [
+        {
+          "id": "0RX2132W21MZK",
+          "name": "الوجبات الغربي",
+          "description": "A luxurious global selection prepared with the finest fresh ingredients at dajajati, to satisfy fans of modern and distinctive Western flavors.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/0afda17e-c57b-470c-a47c-e2eb1c47e7c6.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132W21MZK",
+      "category_name": "الوجبات الغربي",
+      "local_image": null
+    },
+    {
+      "id": "0RXGNEBP21NVE",
+      "price": 790,
+      "tablePrice": null,
+      "summary": "قطعتين صدر جاج مقلي متبل بالحار مع روستو وصوص بوفالو وهالبينو وصوص شيدر\nالمرافقات بطاطا ومايونيز غربي",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "وجبة زنجر",
+      "imageUrl": null,
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.864546Z",
+      "sections": [
+        {
+          "id": "0RX2132W21MZK",
+          "name": "الوجبات الغربي",
+          "description": "A luxurious global selection prepared with the finest fresh ingredients at dajajati, to satisfy fans of modern and distinctive Western flavors.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/0afda17e-c57b-470c-a47c-e2eb1c47e7c6.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132W21MZK",
+      "category_name": "الوجبات الغربي",
+      "local_image": null
+    },
+    {
+      "id": "0RXGNEBPA1NV8",
+      "price": 490,
+      "tablePrice": null,
+      "summary": "10 قطع ناغيت جاج محشي قشقوان مع بطاطا وعلبة مايونيز غربي",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "وجبة ناغيت",
+      "imageUrl": null,
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.866763Z",
+      "sections": [
+        {
+          "id": "0RX2132W21MZK",
+          "name": "الوجبات الغربي",
+          "description": "A luxurious global selection prepared with the finest fresh ingredients at dajajati, to satisfy fans of modern and distinctive Western flavors.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/0afda17e-c57b-470c-a47c-e2eb1c47e7c6.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132W21MZK",
+      "category_name": "الوجبات الغربي",
+      "local_image": null
+    },
+    {
+      "id": "0RXGNEBPJ1NV0",
+      "price": 800,
+      "tablePrice": null,
+      "summary": "قطع جاج مشوية مع فليفلة حمرا وفليفلة خضرا وفطر ودرة وصوص بوفالو\nالمرافقات بطاطا ومايونيز غربي",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "وجبة مكسيكي",
+      "imageUrl": null,
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.868872Z",
+      "sections": [
+        {
+          "id": "0RX2132W21MZK",
+          "name": "الوجبات الغربي",
+          "description": "A luxurious global selection prepared with the finest fresh ingredients at dajajati, to satisfy fans of modern and distinctive Western flavors.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/0afda17e-c57b-470c-a47c-e2eb1c47e7c6.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132W21MZK",
+      "category_name": "الوجبات الغربي",
+      "local_image": null
+    },
+    {
+      "id": "0RXGNEBPT1NZH",
+      "price": 840,
+      "tablePrice": null,
+      "summary": "قطع جاج مشوية مع فليفلة حمرا وفليفلة خضرا وبصل وفطر وقشقوان\nالمرافقات بطاطا وعلبة مايونيز غربي",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "وجبة فاهيتا",
+      "imageUrl": null,
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.870897Z",
+      "sections": [
+        {
+          "id": "0RX2132W21MZK",
+          "name": "الوجبات الغربي",
+          "description": "A luxurious global selection prepared with the finest fresh ingredients at dajajati, to satisfy fans of modern and distinctive Western flavors.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/0afda17e-c57b-470c-a47c-e2eb1c47e7c6.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132W21MZK",
+      "category_name": "الوجبات الغربي",
+      "local_image": null
+    },
+    {
+      "id": "0RXGNEBR21NZW",
+      "price": 760,
+      "tablePrice": 0,
+      "summary": "قطع عدد 2 من الدجاج المقلي المقرمش يقدم مع أصابع البطاطا ومايونيز وسلطة كول سلو و كتشب",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "وجبة اسكالوب كلاسيك",
+      "imageUrl": "https://panel.menutek.net/api/public/images/def19e6d-c211-45af-ba95-4258fe2a593d.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": 0,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.880739Z",
+      "sections": [
+        {
+          "id": "0RX2132W21MZK",
+          "name": "الوجبات الغربي",
+          "description": "A luxurious global selection prepared with the finest fresh ingredients at dajajati, to satisfy fans of modern and distinctive Western flavors.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/0afda17e-c57b-470c-a47c-e2eb1c47e7c6.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132W21MZK",
+      "category_name": "الوجبات الغربي",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBR21NZW.webp"
+    },
+    {
+      "id": "0RXGNEBRT1NZG",
+      "price": 900,
+      "tablePrice": null,
+      "summary": "قطع من الدجاج بالخلطة اللذيذة مع صوص الكريم و الذرة وفطر فريش مع جبنة موزاريلا الذائبة تقدم مع أصابع البطاطا و الأرز الابيض",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "وجبة شيش بالفخارة",
+      "imageUrl": "https://panel.menutek.net/api/public/images/e303ead7-4513-4726-80e9-39a445b2a785.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.886617Z",
+      "sections": [
+        {
+          "id": "0RX2132W21MZK",
+          "name": "الوجبات الغربي",
+          "description": "A luxurious global selection prepared with the finest fresh ingredients at dajajati, to satisfy fans of modern and distinctive Western flavors.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/0afda17e-c57b-470c-a47c-e2eb1c47e7c6.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132W21MZK",
+      "category_name": "الوجبات الغربي",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBRT1NZG.webp"
+    },
+    {
+      "id": "0RXGNEBRA1NZZ",
+      "price": 810,
+      "tablePrice": null,
+      "summary": "صدر الدجاج محشو بجبنة موزاريلا مع فطر و حبش مدخن مغطاة بكعك البانكو المقرمش تقدم مع صوص البشاميل و أرز ابيض و أصابع البطاطا",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "وجبة كوردون بلو",
+      "imageUrl": "https://panel.menutek.net/api/public/images/3842527b-a001-4e02-b3e4-ea12c172d531.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.882706Z",
+      "sections": [
+        {
+          "id": "0RX2132W21MZK",
+          "name": "الوجبات الغربي",
+          "description": "A luxurious global selection prepared with the finest fresh ingredients at dajajati, to satisfy fans of modern and distinctive Western flavors.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/0afda17e-c57b-470c-a47c-e2eb1c47e7c6.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132W21MZK",
+      "category_name": "الوجبات الغربي",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBRA1NZZ.webp"
+    },
+    {
+      "id": "0RXGNEBS21NZD",
+      "price": 750,
+      "tablePrice": null,
+      "summary": "قطع الدجاج الشهية مشوية على الفحم الحجري تقدم مع خضار و أصابع البطاطا المقرمشة و مايونيز و سلطة كول سلو",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "وجبة شيش طاووق",
+      "imageUrl": "https://panel.menutek.net/api/public/images/d3023606-378a-436d-a960-fa2eacfc15bb.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.888599Z",
+      "sections": [
+        {
+          "id": "0RX2132W21MZK",
+          "name": "الوجبات الغربي",
+          "description": "A luxurious global selection prepared with the finest fresh ingredients at dajajati, to satisfy fans of modern and distinctive Western flavors.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/0afda17e-c57b-470c-a47c-e2eb1c47e7c6.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132W21MZK",
+      "category_name": "الوجبات الغربي",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBS21NZD.webp"
+    },
+    {
+      "id": "0RXGNEBSA1NZK",
+      "price": 800,
+      "tablePrice": null,
+      "summary": "قطع عدد 5 من الدجاج بخلطة دجاجتي اللذيذة مغطسة بصوص الباركيو و سمسم محمص تقدم مع أصابع البطاطا و صوص رانش و سلطة كول سلو",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "وجبة كرسبي باربكيو",
+      "imageUrl": "https://panel.menutek.net/api/public/images/bd5b8fec-6547-4cc6-96b3-142c8b903c67.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.890726Z",
+      "sections": [
+        {
+          "id": "0RX2132W21MZK",
+          "name": "الوجبات الغربي",
+          "description": "A luxurious global selection prepared with the finest fresh ingredients at dajajati, to satisfy fans of modern and distinctive Western flavors.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/0afda17e-c57b-470c-a47c-e2eb1c47e7c6.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132W21MZK",
+      "category_name": "الوجبات الغربي",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBSA1NZK.webp"
+    },
+    {
+      "id": "0RXGNEBSP1NZC",
+      "price": 800,
+      "tablePrice": null,
+      "summary": "قطع عدد 5 من الدجاج بخلطة دجاجتي اللذيذة المقرمشة مغطاة بصوص البوفالو الحار و صوص الشيدر و اصابع البطاطا تقدم مع صوص رانش وسلطة كول سلو",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "وجبة كرسبي بوفالو",
+      "imageUrl": "https://panel.menutek.net/api/public/images/01b14eeb-99ac-493e-a16f-5e515fc2d942.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.893311Z",
+      "sections": [
+        {
+          "id": "0RX2132W21MZK",
+          "name": "الوجبات الغربي",
+          "description": "A luxurious global selection prepared with the finest fresh ingredients at dajajati, to satisfy fans of modern and distinctive Western flavors.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/0afda17e-c57b-470c-a47c-e2eb1c47e7c6.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132W21MZK",
+      "category_name": "الوجبات الغربي",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBSP1NZC.webp"
+    },
+    {
+      "id": "0RXGNEBSY1NVQ",
+      "price": 770,
+      "tablePrice": null,
+      "summary": "قطع عدد 5 من الدجاج بخلطة دجاجتي اللذيذة المقرمشة الذهبية تقدم مع أصابع البطاطا و كريم ثوم و سلطة كول سلو و صوص كرسبي خاص و كتشب",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "وجبة كرسبي",
+      "imageUrl": "https://panel.menutek.net/api/public/images/97369036-8900-4307-bd45-4c972a3e1859.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.895586Z",
+      "sections": [
+        {
+          "id": "0RX2132W21MZK",
+          "name": "الوجبات الغربي",
+          "description": "A luxurious global selection prepared with the finest fresh ingredients at dajajati, to satisfy fans of modern and distinctive Western flavors.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/0afda17e-c57b-470c-a47c-e2eb1c47e7c6.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132W21MZK",
+      "category_name": "الوجبات الغربي",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBSY1NVQ.webp"
+    },
+    {
+      "id": "0RXGNEBT61NVK",
+      "price": 750,
+      "tablePrice": null,
+      "summary": "قطع عدد 10 من الجوانح المقرمشة مغطسة بصوص الباربكيو اللذيذ وسمسم محمص تقدم مع صوص رانش و سلطة كول سلو",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "وجبة جوانح باربكيو",
+      "imageUrl": "https://panel.menutek.net/api/public/images/f71232cf-8341-4bfa-857f-b5ecb1e76ade.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.897661Z",
+      "sections": [
+        {
+          "id": "0RX2132W21MZK",
+          "name": "الوجبات الغربي",
+          "description": "A luxurious global selection prepared with the finest fresh ingredients at dajajati, to satisfy fans of modern and distinctive Western flavors.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/0afda17e-c57b-470c-a47c-e2eb1c47e7c6.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132W21MZK",
+      "category_name": "الوجبات الغربي",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBT61NVK.webp"
+    },
+    {
+      "id": "0RXGNEBTE1NZ5",
+      "price": 750,
+      "tablePrice": null,
+      "summary": "قطع عدد 10 من الجوانح المقرمشة مغطسة بصوص البوفالو الحار و صوص الشيدر تقدم مع أصابع البطاطا الذهبية و صوص رانش وسلطة كول سلو",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "وجبة جوانح بوفالو",
+      "imageUrl": "https://panel.menutek.net/api/public/images/b33c80fd-cadf-4d16-91db-d09ebfa2e041.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.899663Z",
+      "sections": [
+        {
+          "id": "0RX2132W21MZK",
+          "name": "الوجبات الغربي",
+          "description": "A luxurious global selection prepared with the finest fresh ingredients at dajajati, to satisfy fans of modern and distinctive Western flavors.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/0afda17e-c57b-470c-a47c-e2eb1c47e7c6.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132W21MZK",
+      "category_name": "الوجبات الغربي",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBTE1NZ5.webp"
+    },
+    {
+      "id": "0RXGNEBTP1NVN",
+      "price": 480,
+      "tablePrice": null,
+      "summary": null,
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "سندويش شيش طاووق",
+      "imageUrl": "https://dajajati-sy.com/wp-content/uploads/2026/03/IMG_4724-1.jpg",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.901790Z",
+      "sections": [
+        {
+          "id": "0RX2132WA1MV9",
+          "name": "السندويش الغربي",
+          "description": "Quick bites rich in savory sauces and delicious ingredients from dajajati, specially prepared to give you energy and satisfaction with a unique taste.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/b3c04dd3-a3bd-4cd2-8b2c-f3dfce47a777.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WA1MV9",
+      "category_name": "السندويش الغربي",
+      "local_image": null
+    },
+    {
+      "id": "0RXGNEBTY1NV0",
+      "price": 750,
+      "tablePrice": null,
+      "summary": "لحم برغر مشوي ع الفحم الحجري مع صوص باربكيو وحلقات البصل المقرمشة و لحوم باردة",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "برغر باربكيو",
+      "imageUrl": "https://panel.menutek.net/api/public/images/0555f341-7ae1-493d-8983-05bed393b0e5.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.903910Z",
+      "sections": [
+        {
+          "id": "0RX2132WA1MV9",
+          "name": "السندويش الغربي",
+          "description": "Quick bites rich in savory sauces and delicious ingredients from dajajati, specially prepared to give you energy and satisfaction with a unique taste.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/b3c04dd3-a3bd-4cd2-8b2c-f3dfce47a777.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WA1MV9",
+      "category_name": "السندويش الغربي",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBTY1NV0.webp"
+    },
+    {
+      "id": "0RXGNEBVA1NZY",
+      "price": 560,
+      "tablePrice": null,
+      "summary": "خبز برغر عدد ١\n\nزنجر ١ برسيون\n\nسلامي ١ قطعة\n\nمايونيز غربي ٥٠ غ\n\nخس افرنجي\n\nحلقات بصل ٢ قطعة\n\nموزاريلا ٥٠ غ\n\nصوص شيدر ٥٠ غ\n\nبطاطا ١٥٠ غ\n\nصوص بوفالو ٥٠ غ\n\nمايونيز غربي ١ علبة\n\nكول سلو ٢ علبة\n\nالتغليف علبة كرسبي\n\nوصف النكهة قطع دجاج مقرمش مع مزيج من الحار وموزاريلا ذائبة",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "تشكن ميلانو",
+      "imageUrl": "https://panel.menutek.net/api/public/images/22c57f88-135f-4dcf-95e1-54e178ec676f.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.906361Z",
+      "sections": [
+        {
+          "id": "0RX2132WA1MV9",
+          "name": "السندويش الغربي",
+          "description": "Quick bites rich in savory sauces and delicious ingredients from dajajati, specially prepared to give you energy and satisfaction with a unique taste.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/b3c04dd3-a3bd-4cd2-8b2c-f3dfce47a777.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WA1MV9",
+      "category_name": "السندويش الغربي",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBVA1NZY.webp"
+    },
+    {
+      "id": "0RXGNEBVP1NVV",
+      "price": 520,
+      "tablePrice": null,
+      "summary": "خبز برغر عدد ١\n\nزنجر ١ برسيون\n\nمايونيز غربي ٥٠ غ\n\nحلقات بصل ٢ قطعة\n\nاستيك موزاريلا ٢ قطعة\n\nخس افرنجي\n\nبطااطا ١٥٠ غ\n\nصوص باربكيو ٥٠ غ\n\nمايونيز غربي ١ علبة\n\nكول سلو ١ علبة\n\nالتغليف علبة كرسبي",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "تشكن بيسيليا",
+      "imageUrl": "https://panel.menutek.net/api/public/images/22b1d013-cc2e-4650-a74c-40e757fdc91d.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.909187Z",
+      "sections": [
+        {
+          "id": "0RX2132WA1MV9",
+          "name": "السندويش الغربي",
+          "description": "Quick bites rich in savory sauces and delicious ingredients from dajajati, specially prepared to give you energy and satisfaction with a unique taste.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/b3c04dd3-a3bd-4cd2-8b2c-f3dfce47a777.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WA1MV9",
+      "category_name": "السندويش الغربي",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBVP1NVV.webp"
+    },
+    {
+      "id": "0RXGNEBVY1NV0",
+      "price": 510,
+      "tablePrice": null,
+      "summary": "قطع دجاج المقرمش مع صوص الشيدر الساخن واصابع شيبس اللذيذة",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "تشكن كرانشي",
+      "imageUrl": "https://panel.menutek.net/api/public/images/f059f24e-4952-4fa8-b478-4f7f1eb1c4fd.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.911776Z",
+      "sections": [
+        {
+          "id": "0RX2132WA1MV9",
+          "name": "السندويش الغربي",
+          "description": "Quick bites rich in savory sauces and delicious ingredients from dajajati, specially prepared to give you energy and satisfaction with a unique taste.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/b3c04dd3-a3bd-4cd2-8b2c-f3dfce47a777.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WA1MV9",
+      "category_name": "السندويش الغربي",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBVY1NV0.webp"
+    },
+    {
+      "id": "0RXGNEBWA1NVR",
+      "price": 500,
+      "tablePrice": 0,
+      "summary": "شرحات دجاج مشوية بخلطة الأعشاب اللذيذة مع قطع البندورة و مخلل واصابع سبونتيني",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "شرحات مشوية",
+      "imageUrl": "https://panel.menutek.net/api/public/images/0f86e195-c52f-435d-827d-44a5627d12e9.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": 0,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.914276Z",
+      "sections": [
+        {
+          "id": "0RX2132WA1MV9",
+          "name": "السندويش الغربي",
+          "description": "Quick bites rich in savory sauces and delicious ingredients from dajajati, specially prepared to give you energy and satisfaction with a unique taste.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/b3c04dd3-a3bd-4cd2-8b2c-f3dfce47a777.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WA1MV9",
+      "category_name": "السندويش الغربي",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBWA1NVR.webp"
+    },
+    {
+      "id": "0RXGNEBWJ1NVV",
+      "price": 550,
+      "tablePrice": null,
+      "summary": "قطع دجاج مقرمش مع اصابع موزاريلا مقلية مع صوص تكساس الحار وقطع ناتشوز اللذيذة",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "مايتي تشكن",
+      "imageUrl": "https://panel.menutek.net/api/public/images/19f391d1-76c2-48e7-8b1f-f1e3ec028d7f.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.916737Z",
+      "sections": [
+        {
+          "id": "0RX2132WA1MV9",
+          "name": "السندويش الغربي",
+          "description": "Quick bites rich in savory sauces and delicious ingredients from dajajati, specially prepared to give you energy and satisfaction with a unique taste.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/b3c04dd3-a3bd-4cd2-8b2c-f3dfce47a777.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WA1MV9",
+      "category_name": "السندويش الغربي",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBWJ1NVV.webp"
+    },
+    {
+      "id": "0RXGNEBWY1NV8",
+      "price": 700,
+      "tablePrice": null,
+      "summary": "لحم برغر مشوي ع الفحم الحجري مع البصل والبندورة المشوية مع صوص تكساس ومخلل",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "مايتي برغر لحم",
+      "imageUrl": "https://panel.menutek.net/api/public/images/d84af5c8-fc95-43a1-8e58-5f556aa2818e.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.919415Z",
+      "sections": [
+        {
+          "id": "0RX2132WA1MV9",
+          "name": "السندويش الغربي",
+          "description": "Quick bites rich in savory sauces and delicious ingredients from dajajati, specially prepared to give you energy and satisfaction with a unique taste.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/b3c04dd3-a3bd-4cd2-8b2c-f3dfce47a777.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WA1MV9",
+      "category_name": "السندويش الغربي",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBWY1NV8.webp"
+    },
+    {
+      "id": "0RXGNEBX61NVF",
+      "price": 480,
+      "tablePrice": null,
+      "summary": "دجاج مقلي مقرمش يقدم مع أصابع البطاطا ومايونيز وسلطة كول سلو و كتشب",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "اسكالوب",
+      "imageUrl": "https://panel.menutek.net/api/public/images/7fddd556-9a7e-4569-a42f-52b9c6205c87.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.921950Z",
+      "sections": [
+        {
+          "id": "0RX2132WA1MV9",
+          "name": "السندويش الغربي",
+          "description": "Quick bites rich in savory sauces and delicious ingredients from dajajati, specially prepared to give you energy and satisfaction with a unique taste.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/b3c04dd3-a3bd-4cd2-8b2c-f3dfce47a777.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WA1MV9",
+      "category_name": "السندويش الغربي",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBX61NVF.webp"
+    },
+    {
+      "id": "0RXGNEBXJ1NZ0",
+      "price": 510,
+      "tablePrice": null,
+      "summary": "قطع دجاج مشوية مع مزيج من الخضار و الفطر تقدم مع المايونيز و أصابع البطاطا و سلطة كول سلو و كتشب",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "مكسيكي",
+      "imageUrl": "https://panel.menutek.net/api/public/images/5975c90b-f158-41ca-a397-8fb58b002cb1.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.924421Z",
+      "sections": [
+        {
+          "id": "0RX2132WA1MV9",
+          "name": "السندويش الغربي",
+          "description": "Quick bites rich in savory sauces and delicious ingredients from dajajati, specially prepared to give you energy and satisfaction with a unique taste.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/b3c04dd3-a3bd-4cd2-8b2c-f3dfce47a777.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WA1MV9",
+      "category_name": "السندويش الغربي",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBXJ1NZ0.webp"
+    },
+    {
+      "id": "0RXGNEBXT1NZK",
+      "price": 480,
+      "tablePrice": 0,
+      "summary": "دجاج محشي بجبنة موزاريلا والذرة و روستو المدخن مغطاة بكعك البانكو المقرمش تقدم مع مايونيز و جبنة الشيدر و أصابع البطاطا الذهبية و سلطة كول سلو و كتشب",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "سوبريم",
+      "imageUrl": "https://panel.menutek.net/api/public/images/5013d525-3ce9-4eef-9dc0-2574bb50ad08.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": 0,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.926415Z",
+      "sections": [
+        {
+          "id": "0RX2132WA1MV9",
+          "name": "السندويش الغربي",
+          "description": "Quick bites rich in savory sauces and delicious ingredients from dajajati, specially prepared to give you energy and satisfaction with a unique taste.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/b3c04dd3-a3bd-4cd2-8b2c-f3dfce47a777.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WA1MV9",
+      "category_name": "السندويش الغربي",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBXT1NZK.webp"
+    },
+    {
+      "id": "0RXGNEBY21NVR",
+      "price": 560,
+      "tablePrice": 0,
+      "summary": "قطع دجاج مشوية مع هوت دوغ وموزاريلا و مزيج الخضار من الفليفلة والذرة و صوص باربكيو و مايونيز تقدم مع أصابع البطاطا و سلطة كول سلو و كتشب",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "ماغنوم",
+      "imageUrl": "https://panel.menutek.net/api/public/images/dace83cb-2763-4761-ab79-4fa8579edeb4.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": 0,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.928099Z",
+      "sections": [
+        {
+          "id": "0RX2132WA1MV9",
+          "name": "السندويش الغربي",
+          "description": "Quick bites rich in savory sauces and delicious ingredients from dajajati, specially prepared to give you energy and satisfaction with a unique taste.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/b3c04dd3-a3bd-4cd2-8b2c-f3dfce47a777.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WA1MV9",
+      "category_name": "السندويش الغربي",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBY21NVR.webp"
+    },
+    {
+      "id": "0RXGNEBY61NVT",
+      "price": 550,
+      "tablePrice": null,
+      "summary": "قطع دجاج مشوية مع الذرة الذهبية و مشروم فريش والصوص المميز و مايونيز تقدم مع أصابع البطاطا المقرمشة الذهبية و سلطة كول سلو و كتشب",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "فرانشيسكو",
+      "imageUrl": "https://panel.menutek.net/api/public/images/b957c3dd-818c-458b-8296-991968ed8951.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.929771Z",
+      "sections": [
+        {
+          "id": "0RX2132WA1MV9",
+          "name": "السندويش الغربي",
+          "description": "Quick bites rich in savory sauces and delicious ingredients from dajajati, specially prepared to give you energy and satisfaction with a unique taste.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/b3c04dd3-a3bd-4cd2-8b2c-f3dfce47a777.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WA1MV9",
+      "category_name": "السندويش الغربي",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBY61NVT.webp"
+    },
+    {
+      "id": "0RXGNEBYE1NZK",
+      "price": 550,
+      "tablePrice": null,
+      "summary": "قطع دجاج مشوية مع مزيج من الخضار و الفطر مع جبنة الموزاريلا الذائبة و مايونيز تقدم مع أصابع البطاطا و سلطة كول سلو و كتشب",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "فاهيتا",
+      "imageUrl": "https://panel.menutek.net/api/public/images/c9af3a24-c993-43e8-887e-1e3b79e1d0fb.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.931510Z",
+      "sections": [
+        {
+          "id": "0RX2132WA1MV9",
+          "name": "السندويش الغربي",
+          "description": "Quick bites rich in savory sauces and delicious ingredients from dajajati, specially prepared to give you energy and satisfaction with a unique taste.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/b3c04dd3-a3bd-4cd2-8b2c-f3dfce47a777.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WA1MV9",
+      "category_name": "السندويش الغربي",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBYE1NZK.webp"
+    },
+    {
+      "id": "0RXGNEBYP1NZG",
+      "price": 510,
+      "tablePrice": null,
+      "summary": "قطع الكرسبي المقرمشة مغطاة بصوص البوفالو الحار مع جبنة الشيدر و مايونيز تقدم مع أصابع البطاطا المقرمشة و سلطة كول سلو",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "كرسبي بوفالو",
+      "imageUrl": "https://panel.menutek.net/api/public/images/839a778d-84f7-4c22-9738-03c1c3cbe695.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.933253Z",
+      "sections": [
+        {
+          "id": "0RX2132WA1MV9",
+          "name": "السندويش الغربي",
+          "description": "Quick bites rich in savory sauces and delicious ingredients from dajajati, specially prepared to give you energy and satisfaction with a unique taste.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/b3c04dd3-a3bd-4cd2-8b2c-f3dfce47a777.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WA1MV9",
+      "category_name": "السندويش الغربي",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBYP1NZG.webp"
+    },
+    {
+      "id": "0RXGNEBYT1NZ7",
+      "price": 510,
+      "tablePrice": null,
+      "summary": "قطع الكرسبي المقرمشة مغطاة بصوص باربكيو و سمسم محمص مع مايونيز تقدم مع أصابع البطاطا و سلطة كول سلو",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "كرسبي باربكيو",
+      "imageUrl": "https://panel.menutek.net/api/public/images/046fd1b9-4e2b-4704-9a83-b33566087053.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.934922Z",
+      "sections": [
+        {
+          "id": "0RX2132WA1MV9",
+          "name": "السندويش الغربي",
+          "description": "Quick bites rich in savory sauces and delicious ingredients from dajajati, specially prepared to give you energy and satisfaction with a unique taste.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/b3c04dd3-a3bd-4cd2-8b2c-f3dfce47a777.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WA1MV9",
+      "category_name": "السندويش الغربي",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBYT1NZ7.webp"
+    },
+    {
+      "id": "0RXGNEBZ21NZ2",
+      "price": 480,
+      "tablePrice": null,
+      "summary": "قطع الكرسبي المقرمشة الذهبية مع مايونيز و أوراق الخس تقدم مع أصابع بطاطا و كول سلو و كتشب",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "كرسبي",
+      "imageUrl": "https://panel.menutek.net/api/public/images/0a7896c0-f851-4e9a-9e0d-6938130568d2.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.936962Z",
+      "sections": [
+        {
+          "id": "0RX2132WA1MV9",
+          "name": "السندويش الغربي",
+          "description": "Quick bites rich in savory sauces and delicious ingredients from dajajati, specially prepared to give you energy and satisfaction with a unique taste.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/b3c04dd3-a3bd-4cd2-8b2c-f3dfce47a777.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WA1MV9",
+      "category_name": "السندويش الغربي",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBZ21NZ2.webp"
+    },
+    {
+      "id": "0RXGNEBZA1NZW",
+      "price": 550,
+      "tablePrice": null,
+      "summary": "قطع من الدجاج المقلي المقرمش مع الموزاريلا المقلية تقدم مع صوص سريراتشا و جبنة الشيدر و أصابع البطاطا و مايونيز و سلطة كول سلو",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "فولكانو",
+      "imageUrl": "https://panel.menutek.net/api/public/images/b0dfb8fc-9892-4d00-83a2-897b6cd1c52f.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.938951Z",
+      "sections": [
+        {
+          "id": "0RX2132WA1MV9",
+          "name": "السندويش الغربي",
+          "description": "Quick bites rich in savory sauces and delicious ingredients from dajajati, specially prepared to give you energy and satisfaction with a unique taste.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/b3c04dd3-a3bd-4cd2-8b2c-f3dfce47a777.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WA1MV9",
+      "category_name": "السندويش الغربي",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBZA1NZW.webp"
+    },
+    {
+      "id": "0RXGNEBZJ1NVA",
+      "price": 510,
+      "tablePrice": null,
+      "summary": "قطعة دجاج بخلطة سبايسي الرائعة مقلية تقدم مع مايونيز و هالبينو وأوراق الخس و روستو مدخن و أصابع البطاطا الذهبية و سلطة كول سلو و كتشب",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "زنجر",
+      "imageUrl": "https://panel.menutek.net/api/public/images/92bd8624-741c-4053-b606-96aff91a96b0.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.940864Z",
+      "sections": [
+        {
+          "id": "0RX2132WA1MV9",
+          "name": "السندويش الغربي",
+          "description": "Quick bites rich in savory sauces and delicious ingredients from dajajati, specially prepared to give you energy and satisfaction with a unique taste.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/b3c04dd3-a3bd-4cd2-8b2c-f3dfce47a777.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WA1MV9",
+      "category_name": "السندويش الغربي",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBZJ1NVA.webp"
+    },
+    {
+      "id": "0RXGNEBZT1NV5",
+      "price": 410,
+      "tablePrice": null,
+      "summary": "برغر الدجاج اللذيذ مشوي على الفحم الحجري مع مايونيز و أوراق الخس و البصل تقدم مع أصابع البطاطا و سلطة كول سلو و مايونيز و كتشب",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "كلاسيك برغر",
+      "imageUrl": "https://panel.menutek.net/api/public/images/3bc7103b-f2a6-4cc2-ba30-45cc8d85370c.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.942716Z",
+      "sections": [
+        {
+          "id": "0RX2132WA1MV9",
+          "name": "السندويش الغربي",
+          "description": "Quick bites rich in savory sauces and delicious ingredients from dajajati, specially prepared to give you energy and satisfaction with a unique taste.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/b3c04dd3-a3bd-4cd2-8b2c-f3dfce47a777.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WA1MV9",
+      "category_name": "السندويش الغربي",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBZT1NV5.webp"
+    },
+    {
+      "id": "0RXGNEC0A1NZR",
+      "price": 800,
+      "tablePrice": 0,
+      "summary": "نصف فروج مشوي مع ( بطاطا أو رز ) حسب الإختيار , يقدم مع كريم ثوم و مخلل",
+      "hasVariants": true,
+      "hasExtras": false,
+      "variants": [
+        {
+          "id": "0S2Y0RY8FJWZW",
+          "price": 800,
+          "tablePrice": null,
+          "label": "وجبة فروج مشوي مع بطاطا",
+          "priceDiscount": null,
+          "calories": ""
+        },
+        {
+          "id": "0S2Y0RY8FJWZX",
+          "price": 800,
+          "tablePrice": null,
+          "label": "وجبة فروج مشوي مع رز",
+          "priceDiscount": null,
+          "calories": ""
+        }
+      ],
+      "name": "فروج مشوي",
+      "imageUrl": "https://panel.menutek.net/api/public/images/e4f18203-eb96-4fbd-bb54-c98b784ad288.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": 0,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.946462Z",
+      "sections": [
+        {
+          "id": "0RX2132W61MV9",
+          "name": "المشويات",
+          "description": "Fresh meats grilled over royal charcoal with utmost care at dajajati restaurant, overflowing with authentic BBQ flavor and melting in your mouth.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/0dc76b33-3bbf-487c-b57a-e520b2f91ec0.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132W61MV9",
+      "category_name": "المشويات",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEC0A1NZR.webp"
+    },
+    {
+      "id": "0RXGNEBGP1NZD",
+      "price": 370,
+      "tablePrice": null,
+      "summary": null,
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "سلطة جرجير",
+      "imageUrl": "https://panel.menutek.net/api/public/images/da4fc991-5b0c-4e8c-b616-22cb1a110d7d.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.821135Z",
+      "sections": [
+        {
+          "id": "0RX2132WJ1MVT",
+          "name": "السلطات",
+          "description": "Fresh and crunchy vegetables prepared with utmost care at dajajati to combine supreme refreshment and health benefits with a delicious taste.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/11d74ea4-f3c7-47b6-a7b8-8e44811aff6b.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WJ1MVT",
+      "category_name": "السلطات",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBGP1NZD.webp"
+    },
+    {
+      "id": "0RXGNEBH21NZF",
+      "price": 560,
+      "tablePrice": null,
+      "summary": "مزيج من الخس مع قطع الدجاج و الذرة و مشروم فريش مع الصلصة المميزة وجبنة البرمزان",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "سلطة دجاجتي",
+      "imageUrl": "https://panel.menutek.net/api/public/images/4afbfa1d-07e9-499c-bb4e-14285f0f2506.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.824610Z",
+      "sections": [
+        {
+          "id": "0RX2132WJ1MVT",
+          "name": "السلطات",
+          "description": "Fresh and crunchy vegetables prepared with utmost care at dajajati to combine supreme refreshment and health benefits with a delicious taste.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/11d74ea4-f3c7-47b6-a7b8-8e44811aff6b.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WJ1MVT",
+      "category_name": "السلطات",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBH21NZF.webp"
+    },
+    {
+      "id": "0RXGNEBHJ1NVS",
+      "price": 550,
+      "tablePrice": null,
+      "summary": "خس مع صوص سيزر اللذيذ و شرحات الدجاج المشوية مع توست محمص وجبنة برمزان",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "سلطة سيزر",
+      "imageUrl": "https://panel.menutek.net/api/public/images/b1f38a9e-1fa7-404b-89e6-036327896236.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.828530Z",
+      "sections": [
+        {
+          "id": "0RX2132WJ1MVT",
+          "name": "السلطات",
+          "description": "Fresh and crunchy vegetables prepared with utmost care at dajajati to combine supreme refreshment and health benefits with a delicious taste.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/11d74ea4-f3c7-47b6-a7b8-8e44811aff6b.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WJ1MVT",
+      "category_name": "السلطات",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBHJ1NVS.webp"
+    },
+    {
+      "id": "0RXGNEBHY1NVD",
+      "price": 330,
+      "tablePrice": null,
+      "summary": "مزيج من الباستا مع قطع الهوت دوغ و الذرة و الخضار بصوص الكوكتيل المميز",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "سلطة باستا كوكتيل",
+      "imageUrl": "https://panel.menutek.net/api/public/images/163f6d1c-42d5-4e72-b4f1-d1c39dd8c677.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.831872Z",
+      "sections": [
+        {
+          "id": "0RX2132WJ1MVT",
+          "name": "السلطات",
+          "description": "Fresh and crunchy vegetables prepared with utmost care at dajajati to combine supreme refreshment and health benefits with a delicious taste.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/11d74ea4-f3c7-47b6-a7b8-8e44811aff6b.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WJ1MVT",
+      "category_name": "السلطات",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBHY1NVD.webp"
+    },
+    {
+      "id": "0RXGNEBJA1NV9",
+      "price": 320,
+      "tablePrice": null,
+      "summary": "أوراق الملفوف مع الجزر",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "سلطة كول سلو",
+      "imageUrl": "https://panel.menutek.net/api/public/images/4a95268e-bfd3-40a5-80c6-cdc8cb9ff535.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.834569Z",
+      "sections": [
+        {
+          "id": "0RX2132WJ1MVT",
+          "name": "السلطات",
+          "description": "Fresh and crunchy vegetables prepared with utmost care at dajajati to combine supreme refreshment and health benefits with a delicious taste.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/11d74ea4-f3c7-47b6-a7b8-8e44811aff6b.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WJ1MVT",
+      "category_name": "السلطات",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBJA1NV9.webp"
+    },
+    {
+      "id": "0RXGNEBJJ1NZT",
+      "price": 410,
+      "tablePrice": null,
+      "summary": "أوراق الجرجير مع مشروم فريش و بندورة كرزية وصوص البلسميك و جبنة البرمزان",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "سلطة روكا",
+      "imageUrl": "https://panel.menutek.net/api/public/images/b35a94ae-488b-473a-a1e1-43ff30ebaf4d.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.836900Z",
+      "sections": [
+        {
+          "id": "0RX2132WJ1MVT",
+          "name": "السلطات",
+          "description": "Fresh and crunchy vegetables prepared with utmost care at dajajati to combine supreme refreshment and health benefits with a delicious taste.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/11d74ea4-f3c7-47b6-a7b8-8e44811aff6b.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WJ1MVT",
+      "category_name": "السلطات",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBJJ1NZT.webp"
+    },
+    {
+      "id": "0S5HJSSSEA4YP",
+      "price": 630,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "بيتزا لحومات باردة",
+      "imageUrl": "https://panel.menutek.net/api/public/images/fff41881-6152-4d86-8376-9bce95bbf670.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-11-07T18:07:58.411094Z",
+      "sections": [
+        {
+          "id": "0RX2132WA1MVA",
+          "name": "البيتزا",
+          "description": "Fluffy Italian dough baked with love, topped with abundant layers of luxury cheeses and enchanting flavors specially presented by dajajati.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/35395f4f-f72e-41b7-acf1-79b27b7e50c5.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WA1MVA",
+      "category_name": "البيتزا",
+      "local_image": "/storage/menu/dajajati/dish_0S5HJSSSEA4YP.webp"
+    },
+    {
+      "id": "0S5HJJMR6A5BM",
+      "price": 530,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "بيتزا مرغريتا",
+      "imageUrl": "https://panel.menutek.net/api/public/images/cb43b7b0-17a3-48c6-9fbf-a6a55b664c47.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-11-07T18:06:59.777681Z",
+      "sections": [
+        {
+          "id": "0RX2132WA1MVA",
+          "name": "البيتزا",
+          "description": "Fluffy Italian dough baked with love, topped with abundant layers of luxury cheeses and enchanting flavors specially presented by dajajati.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/35395f4f-f72e-41b7-acf1-79b27b7e50c5.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WA1MVA",
+      "category_name": "البيتزا",
+      "local_image": "/storage/menu/dajajati/dish_0S5HJJMR6A5BM.webp"
+    },
+    {
+      "id": "0S5HHAJRAA5AQ",
+      "price": 580,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "بيتزا فصول أربعة",
+      "imageUrl": "https://panel.menutek.net/api/public/images/a2e8d957-d460-4eb1-a47b-411595312eae.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-11-07T18:01:31.586570Z",
+      "sections": [
+        {
+          "id": "0RX2132WA1MVA",
+          "name": "البيتزا",
+          "description": "Fluffy Italian dough baked with love, topped with abundant layers of luxury cheeses and enchanting flavors specially presented by dajajati.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/35395f4f-f72e-41b7-acf1-79b27b7e50c5.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WA1MVA",
+      "category_name": "البيتزا",
+      "local_image": "/storage/menu/dajajati/dish_0S5HHAJRAA5AQ.webp"
+    },
+    {
+      "id": "0S5HH4P5YA5EJ",
+      "price": 680,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "بيتزا بوب كورن",
+      "imageUrl": "https://panel.menutek.net/api/public/images/2bcaab87-26e3-4971-87a1-76f9d4acc58b.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-11-07T18:00:43.311372Z",
+      "sections": [
+        {
+          "id": "0RX2132WA1MVA",
+          "name": "البيتزا",
+          "description": "Fluffy Italian dough baked with love, topped with abundant layers of luxury cheeses and enchanting flavors specially presented by dajajati.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/35395f4f-f72e-41b7-acf1-79b27b7e50c5.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WA1MVA",
+      "category_name": "البيتزا",
+      "local_image": "/storage/menu/dajajati/dish_0S5HH4P5YA5EJ.webp"
+    },
+    {
+      "id": "0S5HGTSDEA5B7",
+      "price": 680,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "بيتزا باربكيو",
+      "imageUrl": "https://panel.menutek.net/api/public/images/09a7baae-d298-4607-a5b4-a3a53f72b68c.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-11-07T17:59:22.219288Z",
+      "sections": [
+        {
+          "id": "0RX2132WA1MVA",
+          "name": "البيتزا",
+          "description": "Fluffy Italian dough baked with love, topped with abundant layers of luxury cheeses and enchanting flavors specially presented by dajajati.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/35395f4f-f72e-41b7-acf1-79b27b7e50c5.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WA1MVA",
+      "category_name": "البيتزا",
+      "local_image": "/storage/menu/dajajati/dish_0S5HGTSDEA5B7.webp"
+    },
+    {
+      "id": "0S5HCHRWAA5EX",
+      "price": 630,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "بيتزا لحومات باردة",
+      "imageUrl": "https://panel.menutek.net/api/public/images/630a77f6-ef6e-465d-84ac-5fdcc26918f5.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-11-07T17:40:39.778963Z",
+      "sections": [
+        {
+          "id": "0RX2132WA1MVA",
+          "name": "البيتزا",
+          "description": "Fluffy Italian dough baked with love, topped with abundant layers of luxury cheeses and enchanting flavors specially presented by dajajati.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/35395f4f-f72e-41b7-acf1-79b27b7e50c5.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WA1MVA",
+      "category_name": "البيتزا",
+      "local_image": "/storage/menu/dajajati/dish_0S5HCHRWAA5EX.webp"
+    },
+    {
+      "id": "0S5HC84JPA4YT",
+      "price": 530,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "بيتزا مرغريتا",
+      "imageUrl": "https://panel.menutek.net/api/public/images/cdd947a1-c795-4e5a-abf2-0525bec64743.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-11-07T17:39:20.853441Z",
+      "sections": [
+        {
+          "id": "0RX2132WA1MVA",
+          "name": "البيتزا",
+          "description": "Fluffy Italian dough baked with love, topped with abundant layers of luxury cheeses and enchanting flavors specially presented by dajajati.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/35395f4f-f72e-41b7-acf1-79b27b7e50c5.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WA1MVA",
+      "category_name": "البيتزا",
+      "local_image": "/storage/menu/dajajati/dish_0S5HC84JPA4YT.webp"
+    },
+    {
+      "id": "0S5H1PM5YA5E5",
+      "price": 580,
+      "tablePrice": 0,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "بيتزا فصول أربعة",
+      "imageUrl": "https://panel.menutek.net/api/public/images/227afd76-9509-43ef-bc97-124400ed9da8.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": 0,
+      "ignoreQuantity": true,
+      "createdDate": "2026-11-07T16:53:15.951769Z",
+      "sections": [
+        {
+          "id": "0RX2132WA1MVA",
+          "name": "البيتزا",
+          "description": "Fluffy Italian dough baked with love, topped with abundant layers of luxury cheeses and enchanting flavors specially presented by dajajati.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/35395f4f-f72e-41b7-acf1-79b27b7e50c5.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WA1MVA",
+      "category_name": "البيتزا",
+      "local_image": "/storage/menu/dajajati/dish_0S5H1PM5YA5E5.webp"
+    },
+    {
+      "id": "0S5H10H2TA5B5",
+      "price": 680,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "بيتزا بوب كورن",
+      "imageUrl": "https://panel.menutek.net/api/public/images/d76bf324-107f-4f73-b43d-78a4c567ece6.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-11-07T16:50:14.934237Z",
+      "sections": [
+        {
+          "id": "0RX2132WA1MVA",
+          "name": "البيتزا",
+          "description": "Fluffy Italian dough baked with love, topped with abundant layers of luxury cheeses and enchanting flavors specially presented by dajajati.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/35395f4f-f72e-41b7-acf1-79b27b7e50c5.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WA1MVA",
+      "category_name": "البيتزا",
+      "local_image": "/storage/menu/dajajati/dish_0S5H10H2TA5B5.webp"
+    },
+    {
+      "id": "0S5H0VTEEA5FD",
+      "price": 680,
+      "tablePrice": 0,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "بيتزا باربكيو",
+      "imageUrl": "https://panel.menutek.net/api/public/images/0e387204-9690-456e-9a85-82f706f77ebe.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": 0,
+      "ignoreQuantity": true,
+      "createdDate": "2026-11-07T16:49:36.371484Z",
+      "sections": [
+        {
+          "id": "0RX2132WA1MVA",
+          "name": "البيتزا",
+          "description": "Fluffy Italian dough baked with love, topped with abundant layers of luxury cheeses and enchanting flavors specially presented by dajajati.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/35395f4f-f72e-41b7-acf1-79b27b7e50c5.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WA1MVA",
+      "category_name": "البيتزا",
+      "local_image": "/storage/menu/dajajati/dish_0S5H0VTEEA5FD.webp"
+    },
+    {
+      "id": "0RXGNEBDJ1NVR",
+      "price": 180,
+      "tablePrice": null,
+      "summary": null,
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "سندويش بطاطا",
+      "imageUrl": "https://panel.menutek.net/api/public/images/53b38cba-1143-4174-aafd-a1bebedee3f1.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.796434Z",
+      "sections": [
+        {
+          "id": "0RX2132WE1MZC",
+          "name": "المقبلات",
+          "description": "The perfect beginning to every meal at dajajati, a diverse selection that opens your appetite and adds a rich, integrated flavor to your table.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/a681f4f3-eebe-439f-be59-ad90326544e4.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WE1MZC",
+      "category_name": "المقبلات",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBDJ1NVR.webp"
+    },
+    {
+      "id": "0RXGNEBE61NVH",
+      "price": 300,
+      "tablePrice": null,
+      "summary": "قطع من موزاريلا مغطاة بكعك البانكو المقرمش تقدم مع صوص باربكيو",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "موزريلا بانيه",
+      "imageUrl": "https://panel.menutek.net/api/public/images/722aaaaf-d277-4b83-aec8-917b3347fac7.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.801398Z",
+      "sections": [
+        {
+          "id": "0RX2132WE1MZC",
+          "name": "المقبلات",
+          "description": "The perfect beginning to every meal at dajajati, a diverse selection that opens your appetite and adds a rich, integrated flavor to your table.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/a681f4f3-eebe-439f-be59-ad90326544e4.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WE1MZC",
+      "category_name": "المقبلات",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBE61NVH.webp"
+    },
+    {
+      "id": "0RXGNEBEP1NV4",
+      "price": 200,
+      "tablePrice": null,
+      "summary": null,
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "صحن رز",
+      "imageUrl": "https://panel.menutek.net/api/public/images/79ad8596-a18f-42d5-a539-182c8db88a5c.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.805414Z",
+      "sections": [
+        {
+          "id": "0RX2132WE1MZC",
+          "name": "المقبلات",
+          "description": "The perfect beginning to every meal at dajajati, a diverse selection that opens your appetite and adds a rich, integrated flavor to your table.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/a681f4f3-eebe-439f-be59-ad90326544e4.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WE1MZC",
+      "category_name": "المقبلات",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBEP1NV4.webp"
+    },
+    {
+      "id": "0RXGNEBF21NV4",
+      "price": 380,
+      "tablePrice": 0,
+      "summary": "أصابع البطاطا المقرمشة الذهبية تقدم مع الموزاريلا الذائبة وصوص دريسنغ اللذيذ",
+      "hasVariants": true,
+      "hasExtras": false,
+      "variants": [
+        {
+          "id": "0S5E1BXA2A5Z0",
+          "price": 380,
+          "tablePrice": null,
+          "label": "صحن تشيز بطاطا ( صوص كريم )",
+          "priceDiscount": null,
+          "calories": ""
+        }
+      ],
+      "name": "صحن تشيز بطاطا",
+      "imageUrl": "https://panel.menutek.net/api/public/images/ee4b9339-78e4-4ac9-9c17-a485dc2d4135.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": 0,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.808537Z",
+      "sections": [
+        {
+          "id": "0RX2132WE1MZC",
+          "name": "المقبلات",
+          "description": "The perfect beginning to every meal at dajajati, a diverse selection that opens your appetite and adds a rich, integrated flavor to your table.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/a681f4f3-eebe-439f-be59-ad90326544e4.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WE1MZC",
+      "category_name": "المقبلات",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBF21NV4.webp"
+    },
+    {
+      "id": "0RXGNEBFE1NZ2",
+      "price": 300,
+      "tablePrice": null,
+      "summary": "أصابع البطاطا المقرمشة الذهبية تقدم مع مايونيز و كتشب",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "صحن بطاطا أصابع",
+      "imageUrl": "https://panel.menutek.net/api/public/images/47adb1ea-ce00-4d35-88b8-559c3fc849d2.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.811524Z",
+      "sections": [
+        {
+          "id": "0RX2132WE1MZC",
+          "name": "المقبلات",
+          "description": "The perfect beginning to every meal at dajajati, a diverse selection that opens your appetite and adds a rich, integrated flavor to your table.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/a681f4f3-eebe-439f-be59-ad90326544e4.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WE1MZC",
+      "category_name": "المقبلات",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBFE1NZ2.webp"
+    },
+    {
+      "id": "0RXGNEBFT1NVZ",
+      "price": 570,
+      "tablePrice": null,
+      "summary": "قطعة كرسبي\n\nميني برغر\n\nاصبع موزاريلا\n\nتقدم مع أصابع البطاطا الذهبية و مايونيز و صوص الشيدر و كتشب وعصير يومي",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "وجبة الطفل",
+      "imageUrl": "https://panel.menutek.net/api/public/images/f125b818-214d-4ab4-972e-caa0f74dd62e.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.814752Z",
+      "sections": [
+        {
+          "id": "0RX2132WE1MZC",
+          "name": "المقبلات",
+          "description": "The perfect beginning to every meal at dajajati, a diverse selection that opens your appetite and adds a rich, integrated flavor to your table.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/a681f4f3-eebe-439f-be59-ad90326544e4.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WE1MZC",
+      "category_name": "المقبلات",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBFT1NVZ.webp"
+    },
+    {
+      "id": "0RXGNEBGA1NVH",
+      "price": 570,
+      "tablePrice": null,
+      "summary": "مختارات من أصناف دجاجتي المميزة\n\n2 اصبع موزاريلا\n\n2 قطع ناغيت\n\n2 قطع كرسبي\n\nتقدم مع أصابع البطاطا الذهبية و مايونيز و كتشب",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "دجاجتي باسكت",
+      "imageUrl": "https://panel.menutek.net/api/public/images/eaf4a43f-1e41-4442-b665-940aa0fb517b.webp",
+      "video": null,
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-13T19:28:18.818104Z",
+      "sections": [
+        {
+          "id": "0RX2132WE1MZC",
+          "name": "المقبلات",
+          "description": "The perfect beginning to every meal at dajajati, a diverse selection that opens your appetite and adds a rich, integrated flavor to your table.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/a681f4f3-eebe-439f-be59-ad90326544e4.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0RX2132WE1MZC",
+      "category_name": "المقبلات",
+      "local_image": "/storage/menu/dajajati/dish_0RXGNEBGA1NVH.webp"
+    },
+    {
+      "id": "0S29J2MQZJXZP",
+      "price": 380,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "فروتي شيك ",
+      "imageUrl": "https://panel.menutek.net/api/public/images/2a36c14e-f7b8-43f4-aba4-cd300692d8de.jfif",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T15:44:33.471814Z",
+      "sections": [
+        {
+          "id": "0S298K323JXZG",
+          "name": "ميلك شيك",
+          "description": "\"دلل حواسك مع أشهى أصناف الميلك شيك الغنية والكريمية، المُحضرة بأجود المكونات والنكهات المميزة لتمنحك طعماً لا يُقاوم في كل رشفة.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/728bead7-1460-4fe7-a074-17555d78aa40.jfif",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S298K323JXZG",
+      "category_name": "ميلك شيك",
+      "local_image": "/storage/menu/dajajati/dish_0S29J2MQZJXZP.jfif"
+    },
+    {
+      "id": "0S29HRJFZJXY0",
+      "price": 380,
+      "tablePrice": 0,
+      "summary": "",
+      "hasVariants": true,
+      "hasExtras": false,
+      "variants": [
+        {
+          "id": "0S29TW12KJXQX",
+          "price": 380,
+          "tablePrice": null,
+          "label": "كيت كات",
+          "priceDiscount": null,
+          "calories": ""
+        },
+        {
+          "id": "0S29TW12KJXQY",
+          "price": 380,
+          "tablePrice": null,
+          "label": "اوريو",
+          "priceDiscount": null,
+          "calories": ""
+        }
+      ],
+      "name": "اوبشن شيك ",
+      "imageUrl": "https://panel.menutek.net/api/public/images/8d30a88b-7b05-474f-af6c-efb9e91106b0.jpeg",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": 0,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T15:43:10.976056Z",
+      "sections": [
+        {
+          "id": "0S298K323JXZG",
+          "name": "ميلك شيك",
+          "description": "\"دلل حواسك مع أشهى أصناف الميلك شيك الغنية والكريمية، المُحضرة بأجود المكونات والنكهات المميزة لتمنحك طعماً لا يُقاوم في كل رشفة.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/728bead7-1460-4fe7-a074-17555d78aa40.jfif",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S298K323JXZG",
+      "category_name": "ميلك شيك",
+      "local_image": "/storage/menu/dajajati/dish_0S29HRJFZJXY0.jpg"
+    },
+    {
+      "id": "0S29H463KJXXW",
+      "price": 380,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "براونيز شيك",
+      "imageUrl": "https://panel.menutek.net/api/public/images/4e3029f7-001b-48b5-99ed-42816a0f4dc7.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T15:40:23.964307Z",
+      "sections": [
+        {
+          "id": "0S298K323JXZG",
+          "name": "ميلك شيك",
+          "description": "\"دلل حواسك مع أشهى أصناف الميلك شيك الغنية والكريمية، المُحضرة بأجود المكونات والنكهات المميزة لتمنحك طعماً لا يُقاوم في كل رشفة.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/728bead7-1460-4fe7-a074-17555d78aa40.jfif",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S298K323JXZG",
+      "category_name": "ميلك شيك",
+      "local_image": "/storage/menu/dajajati/dish_0S29H463KJXXW.webp"
+    },
+    {
+      "id": "0S29GWNZBJXZB",
+      "price": 380,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "لوتس شيك",
+      "imageUrl": "https://panel.menutek.net/api/public/images/56070d0f-dfb6-4c13-84a4-1a6a5dde0cc4.jfif",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T15:39:22.490187Z",
+      "sections": [
+        {
+          "id": "0S298K323JXZG",
+          "name": "ميلك شيك",
+          "description": "\"دلل حواسك مع أشهى أصناف الميلك شيك الغنية والكريمية، المُحضرة بأجود المكونات والنكهات المميزة لتمنحك طعماً لا يُقاوم في كل رشفة.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/728bead7-1460-4fe7-a074-17555d78aa40.jfif",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S298K323JXZG",
+      "category_name": "ميلك شيك",
+      "local_image": "/storage/menu/dajajati/dish_0S29GWNZBJXZB.jfif"
+    },
+    {
+      "id": "0S29GMJVBJXXR",
+      "price": 340,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": true,
+      "hasExtras": false,
+      "variants": [
+        {
+          "id": "0S29GMJVBJXXS",
+          "price": 340,
+          "tablePrice": null,
+          "label": "فانيل",
+          "priceDiscount": null,
+          "calories": ""
+        },
+        {
+          "id": "0S29GMJVBJXXT",
+          "price": 340,
+          "tablePrice": null,
+          "label": "فريز",
+          "priceDiscount": null,
+          "calories": ""
+        },
+        {
+          "id": "0S29GMJVBJXXV",
+          "price": 340,
+          "tablePrice": null,
+          "label": "شوكولا ",
+          "priceDiscount": null,
+          "calories": ""
+        }
+      ],
+      "name": "كلاسيك شيك",
+      "imageUrl": "https://panel.menutek.net/api/public/images/5a4f69b5-b433-4cd5-a059-5453cf00a454.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T15:38:16.154607Z",
+      "sections": [
+        {
+          "id": "0S298K323JXZG",
+          "name": "ميلك شيك",
+          "description": "\"دلل حواسك مع أشهى أصناف الميلك شيك الغنية والكريمية، المُحضرة بأجود المكونات والنكهات المميزة لتمنحك طعماً لا يُقاوم في كل رشفة.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/728bead7-1460-4fe7-a074-17555d78aa40.jfif",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S298K323JXZG",
+      "category_name": "ميلك شيك",
+      "local_image": "/storage/menu/dajajati/dish_0S29GMJVBJXXR.webp"
+    },
+    {
+      "id": "0S29SB34VJXKM",
+      "price": 210,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "فلو تريمنت",
+      "imageUrl": "https://panel.menutek.net/api/public/images/6bf60de1-68d4-4963-9016-c289de472977.png",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T16:16:17.702753Z",
+      "sections": [
+        {
+          "id": "0S299DRDZJWVH",
+          "name": "مشروبات ساخنة",
+          "description": "\"ابدأ يومك و أكمل جلستك بأرقى نكهات القهوة والمشروبات الساخنة المُحضرة بعناية لتمنحك الدفء والمذاق الأصيل.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/4e0ba1d1-1ec1-4512-a69a-dcf96bcb1608.jfif",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S299DRDZJWVH",
+      "category_name": "مشروبات ساخنة",
+      "local_image": "/storage/menu/dajajati/dish_0S29SB34VJXKM.png"
+    },
+    {
+      "id": "0S29R54EKJXZX",
+      "price": 250,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "امريكانو",
+      "imageUrl": "https://panel.menutek.net/api/public/images/47642dd4-7a1e-4e60-ae53-2c70c4c08c29.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T16:11:06.740421Z",
+      "sections": [
+        {
+          "id": "0S299DRDZJWVH",
+          "name": "مشروبات ساخنة",
+          "description": "\"ابدأ يومك و أكمل جلستك بأرقى نكهات القهوة والمشروبات الساخنة المُحضرة بعناية لتمنحك الدفء والمذاق الأصيل.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/4e0ba1d1-1ec1-4512-a69a-dcf96bcb1608.jfif",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S299DRDZJWVH",
+      "category_name": "مشروبات ساخنة",
+      "local_image": "/storage/menu/dajajati/dish_0S29R54EKJXZX.webp"
+    },
+    {
+      "id": "0S29QVF1FJY6Q",
+      "price": 330,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "برتقال ساخن مع زنجبيل",
+      "imageUrl": "https://panel.menutek.net/api/public/images/7d8b6abb-9011-4b9d-bbc5-e39bf6d1bbfa.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T16:09:47.531615Z",
+      "sections": [
+        {
+          "id": "0S299DRDZJWVH",
+          "name": "مشروبات ساخنة",
+          "description": "\"ابدأ يومك و أكمل جلستك بأرقى نكهات القهوة والمشروبات الساخنة المُحضرة بعناية لتمنحك الدفء والمذاق الأصيل.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/4e0ba1d1-1ec1-4512-a69a-dcf96bcb1608.jfif",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S299DRDZJWVH",
+      "category_name": "مشروبات ساخنة",
+      "local_image": "/storage/menu/dajajati/dish_0S29QVF1FJY6Q.webp"
+    },
+    {
+      "id": "0S29QKP1ZJX5W",
+      "price": 330,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "برتقال ساخن مع عسل وقرفة ",
+      "imageUrl": "https://panel.menutek.net/api/public/images/72165580-2a8c-4435-911e-f8473b30708d.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T16:08:43.791465Z",
+      "sections": [
+        {
+          "id": "0S299DRDZJWVH",
+          "name": "مشروبات ساخنة",
+          "description": "\"ابدأ يومك و أكمل جلستك بأرقى نكهات القهوة والمشروبات الساخنة المُحضرة بعناية لتمنحك الدفء والمذاق الأصيل.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/4e0ba1d1-1ec1-4512-a69a-dcf96bcb1608.jfif",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S299DRDZJWVH",
+      "category_name": "مشروبات ساخنة",
+      "local_image": "/storage/menu/dajajati/dish_0S29QKP1ZJX5W.webp"
+    },
+    {
+      "id": "0S29QATPZJX6E",
+      "price": 330,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "ليمون ساخن مع عسل وقرفة",
+      "imageUrl": "https://panel.menutek.net/api/public/images/52b6fae5-5370-41fa-86a7-2719892ec880.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T16:07:31.255700Z",
+      "sections": [
+        {
+          "id": "0S299DRDZJWVH",
+          "name": "مشروبات ساخنة",
+          "description": "\"ابدأ يومك و أكمل جلستك بأرقى نكهات القهوة والمشروبات الساخنة المُحضرة بعناية لتمنحك الدفء والمذاق الأصيل.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/4e0ba1d1-1ec1-4512-a69a-dcf96bcb1608.jfif",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S299DRDZJWVH",
+      "category_name": "مشروبات ساخنة",
+      "local_image": "/storage/menu/dajajati/dish_0S29QATPZJX6E.webp"
+    },
+    {
+      "id": "0S29Q41XQJXZM",
+      "price": 330,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "تفاح ساخن مع قرفة",
+      "imageUrl": "https://panel.menutek.net/api/public/images/c69f5550-2139-4016-ba09-9b0784600d61.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T16:06:35.757687Z",
+      "sections": [
+        {
+          "id": "0S299DRDZJWVH",
+          "name": "مشروبات ساخنة",
+          "description": "\"ابدأ يومك و أكمل جلستك بأرقى نكهات القهوة والمشروبات الساخنة المُحضرة بعناية لتمنحك الدفء والمذاق الأصيل.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/4e0ba1d1-1ec1-4512-a69a-dcf96bcb1608.jfif",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S299DRDZJWVH",
+      "category_name": "مشروبات ساخنة",
+      "local_image": "/storage/menu/dajajati/dish_0S29Q41XQJXZM.webp"
+    },
+    {
+      "id": "0S29PNNPQJY3P",
+      "price": 290,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "سحلب ",
+      "imageUrl": "https://panel.menutek.net/api/public/images/84ae06ba-4aa1-4c69-b8ba-45972550955b.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T16:04:37.941590Z",
+      "sections": [
+        {
+          "id": "0S299DRDZJWVH",
+          "name": "مشروبات ساخنة",
+          "description": "\"ابدأ يومك و أكمل جلستك بأرقى نكهات القهوة والمشروبات الساخنة المُحضرة بعناية لتمنحك الدفء والمذاق الأصيل.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/4e0ba1d1-1ec1-4512-a69a-dcf96bcb1608.jfif",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S299DRDZJWVH",
+      "category_name": "مشروبات ساخنة",
+      "local_image": "/storage/menu/dajajati/dish_0S29PNNPQJY3P.webp"
+    },
+    {
+      "id": "0S29PFD7VJWVY",
+      "price": 270,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "كافي لاتيه",
+      "imageUrl": "https://panel.menutek.net/api/public/images/4c658cba-07de-4b06-8186-88ecbcb0bf3b.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T16:03:46.622072Z",
+      "sections": [
+        {
+          "id": "0S299DRDZJWVH",
+          "name": "مشروبات ساخنة",
+          "description": "\"ابدأ يومك و أكمل جلستك بأرقى نكهات القهوة والمشروبات الساخنة المُحضرة بعناية لتمنحك الدفء والمذاق الأصيل.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/4e0ba1d1-1ec1-4512-a69a-dcf96bcb1608.jfif",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S299DRDZJWVH",
+      "category_name": "مشروبات ساخنة",
+      "local_image": "/storage/menu/dajajati/dish_0S29PFD7VJWVY.webp"
+    },
+    {
+      "id": "0S29NWW9QJWVZ",
+      "price": 16,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": true,
+      "hasExtras": false,
+      "variants": [
+        {
+          "id": "0S29NWW9QJWW0",
+          "price": 16,
+          "tablePrice": null,
+          "label": "كوب",
+          "priceDiscount": null,
+          "calories": ""
+        },
+        {
+          "id": "0S29NWW9VJWVZ",
+          "price": 10,
+          "tablePrice": null,
+          "label": "كاسة",
+          "priceDiscount": null,
+          "calories": ""
+        }
+      ],
+      "name": "شاي بأنواعه",
+      "imageUrl": "https://panel.menutek.net/api/public/images/4ff73daf-0b81-4290-9827-fbbf1d75100b.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T16:01:14.829920Z",
+      "sections": [
+        {
+          "id": "0S299DRDZJWVH",
+          "name": "مشروبات ساخنة",
+          "description": "\"ابدأ يومك و أكمل جلستك بأرقى نكهات القهوة والمشروبات الساخنة المُحضرة بعناية لتمنحك الدفء والمذاق الأصيل.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/4e0ba1d1-1ec1-4512-a69a-dcf96bcb1608.jfif",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S299DRDZJWVH",
+      "category_name": "مشروبات ساخنة",
+      "local_image": "/storage/menu/dajajati/dish_0S29NWW9QJWVZ.webp"
+    },
+    {
+      "id": "0S29KPYM3JX7W",
+      "price": 240,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "هوت شوكليت",
+      "imageUrl": "https://panel.menutek.net/api/public/images/450ca11f-7af0-4ee5-b508-403957e9e5e9.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T15:51:41.984750Z",
+      "sections": [
+        {
+          "id": "0S299DRDZJWVH",
+          "name": "مشروبات ساخنة",
+          "description": "\"ابدأ يومك و أكمل جلستك بأرقى نكهات القهوة والمشروبات الساخنة المُحضرة بعناية لتمنحك الدفء والمذاق الأصيل.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/4e0ba1d1-1ec1-4512-a69a-dcf96bcb1608.jfif",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S299DRDZJWVH",
+      "category_name": "مشروبات ساخنة",
+      "local_image": "/storage/menu/dajajati/dish_0S29KPYM3JX7W.webp"
+    },
+    {
+      "id": "0S29KDDDQJWXM",
+      "price": 270,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "كابتشينو",
+      "imageUrl": "https://panel.menutek.net/api/public/images/d028164f-8e08-4ddd-9c71-9118fe910b3e.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T15:50:23.853116Z",
+      "sections": [
+        {
+          "id": "0S299DRDZJWVH",
+          "name": "مشروبات ساخنة",
+          "description": "\"ابدأ يومك و أكمل جلستك بأرقى نكهات القهوة والمشروبات الساخنة المُحضرة بعناية لتمنحك الدفء والمذاق الأصيل.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/4e0ba1d1-1ec1-4512-a69a-dcf96bcb1608.jfif",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S299DRDZJWVH",
+      "category_name": "مشروبات ساخنة",
+      "local_image": "/storage/menu/dajajati/dish_0S29KDDDQJWXM.webp"
+    },
+    {
+      "id": "0S29K1BNVJXXW",
+      "price": 210,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "اسبريسو",
+      "imageUrl": "https://panel.menutek.net/api/public/images/beea4113-0625-493f-bddc-a64ab657299e.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T15:48:45.102891Z",
+      "sections": [
+        {
+          "id": "0S299DRDZJWVH",
+          "name": "مشروبات ساخنة",
+          "description": "\"ابدأ يومك و أكمل جلستك بأرقى نكهات القهوة والمشروبات الساخنة المُحضرة بعناية لتمنحك الدفء والمذاق الأصيل.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/4e0ba1d1-1ec1-4512-a69a-dcf96bcb1608.jfif",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S299DRDZJWVH",
+      "category_name": "مشروبات ساخنة",
+      "local_image": "/storage/menu/dajajati/dish_0S29K1BNVJXXW.webp"
+    },
+    {
+      "id": "0S29JVQ07JXYK",
+      "price": 150,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "قهوة تركي",
+      "imageUrl": "https://panel.menutek.net/api/public/images/372a67d3-d77d-42d9-91e7-f7fa6177bf02.jfif",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T15:47:58.849503Z",
+      "sections": [
+        {
+          "id": "0S299DRDZJWVH",
+          "name": "مشروبات ساخنة",
+          "description": "\"ابدأ يومك و أكمل جلستك بأرقى نكهات القهوة والمشروبات الساخنة المُحضرة بعناية لتمنحك الدفء والمذاق الأصيل.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/4e0ba1d1-1ec1-4512-a69a-dcf96bcb1608.jfif",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S299DRDZJWVH",
+      "category_name": "مشروبات ساخنة",
+      "local_image": "/storage/menu/dajajati/dish_0S29JVQ07JXYK.jfif"
+    },
+    {
+      "id": "0S29JFQ17JXPV",
+      "price": 210,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "نسكافيه",
+      "imageUrl": "https://panel.menutek.net/api/public/images/1838761e-a13f-422c-b9f2-30ffe64b3ae6.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T15:46:20.553682Z",
+      "sections": [
+        {
+          "id": "0S299DRDZJWVH",
+          "name": "مشروبات ساخنة",
+          "description": "\"ابدأ يومك و أكمل جلستك بأرقى نكهات القهوة والمشروبات الساخنة المُحضرة بعناية لتمنحك الدفء والمذاق الأصيل.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/4e0ba1d1-1ec1-4512-a69a-dcf96bcb1608.jfif",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S299DRDZJWVH",
+      "category_name": "مشروبات ساخنة",
+      "local_image": "/storage/menu/dajajati/dish_0S29JFQ17JXPV.webp"
+    },
+    {
+      "id": "0S2A5ZTMKJX4Q",
+      "price": 340,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "جزر",
+      "imageUrl": "https://panel.menutek.net/api/public/images/dd6e88eb-f938-4e9a-bdcd-6bb4e2345a68.jfif",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T17:11:33.284720Z",
+      "sections": [
+        {
+          "id": "0S29DXTJZJWVJ",
+          "name": "عصائر ",
+          "description": "\"اروي عطشك بأطيب العصائر الطبيعية الطازجة 100%، المُعصورة بعناية يومياً لتمنحك الانتعاش والصحة في كل كوب.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/fab00303-131b-43e8-9e1b-ebac9db39829.webp",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S29DXTJZJWVJ",
+      "category_name": "عصائر",
+      "local_image": "/storage/menu/dajajati/dish_0S2A5ZTMKJX4Q.jfif"
+    },
+    {
+      "id": "0S2A5KXTBJWZR",
+      "price": 340,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "تفاح",
+      "imageUrl": "https://panel.menutek.net/api/public/images/3568ad0e-72e9-4259-8759-38294898dc9e.jfif",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T17:09:55.794031Z",
+      "sections": [
+        {
+          "id": "0S29DXTJZJWVJ",
+          "name": "عصائر ",
+          "description": "\"اروي عطشك بأطيب العصائر الطبيعية الطازجة 100%، المُعصورة بعناية يومياً لتمنحك الانتعاش والصحة في كل كوب.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/fab00303-131b-43e8-9e1b-ebac9db39829.webp",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S29DXTJZJWVJ",
+      "category_name": "عصائر",
+      "local_image": "/storage/menu/dajajati/dish_0S2A5KXTBJWZR.jfif"
+    },
+    {
+      "id": "0S2A5GW8ZJWZZ",
+      "price": 340,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "منغا",
+      "imageUrl": "https://panel.menutek.net/api/public/images/4b7d301f-c77d-4606-8a84-2d0a4d37d4c7.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T17:09:30.823847Z",
+      "sections": [
+        {
+          "id": "0S29DXTJZJWVJ",
+          "name": "عصائر ",
+          "description": "\"اروي عطشك بأطيب العصائر الطبيعية الطازجة 100%، المُعصورة بعناية يومياً لتمنحك الانتعاش والصحة في كل كوب.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/fab00303-131b-43e8-9e1b-ebac9db39829.webp",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S29DXTJZJWVJ",
+      "category_name": "عصائر",
+      "local_image": "/storage/menu/dajajati/dish_0S2A5GW8ZJWZZ.webp"
+    },
+    {
+      "id": "0S2A4VXQ7JXQ0",
+      "price": 360,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "توت ",
+      "imageUrl": "https://panel.menutek.net/api/public/images/181ae655-ce49-4c04-9aff-7ade916bee36.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T17:06:39.161262Z",
+      "sections": [
+        {
+          "id": "0S29DXTJZJWVJ",
+          "name": "عصائر ",
+          "description": "\"اروي عطشك بأطيب العصائر الطبيعية الطازجة 100%، المُعصورة بعناية يومياً لتمنحك الانتعاش والصحة في كل كوب.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/fab00303-131b-43e8-9e1b-ebac9db39829.webp",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S29DXTJZJWVJ",
+      "category_name": "عصائر",
+      "local_image": "/storage/menu/dajajati/dish_0S2A4VXQ7JXQ0.webp"
+    },
+    {
+      "id": "0S2A4KARBJWX2",
+      "price": 360,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "فريز",
+      "imageUrl": "https://panel.menutek.net/api/public/images/4b8b1096-131b-4bcd-a1f4-d7cc9edc6abc.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T17:05:28.770236Z",
+      "sections": [
+        {
+          "id": "0S29DXTJZJWVJ",
+          "name": "عصائر ",
+          "description": "\"اروي عطشك بأطيب العصائر الطبيعية الطازجة 100%، المُعصورة بعناية يومياً لتمنحك الانتعاش والصحة في كل كوب.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/fab00303-131b-43e8-9e1b-ebac9db39829.webp",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S29DXTJZJWVJ",
+      "category_name": "عصائر",
+      "local_image": "/storage/menu/dajajati/dish_0S2A4KARBJWX2.webp"
+    },
+    {
+      "id": "0S2A49E83JY1G",
+      "price": 360,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "موسمي",
+      "imageUrl": "https://panel.menutek.net/api/public/images/c11acebf-0e0b-4f88-bebe-959065a1441d.jfif",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T17:04:07.744341Z",
+      "sections": [
+        {
+          "id": "0S29DXTJZJWVJ",
+          "name": "عصائر ",
+          "description": "\"اروي عطشك بأطيب العصائر الطبيعية الطازجة 100%، المُعصورة بعناية يومياً لتمنحك الانتعاش والصحة في كل كوب.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/fab00303-131b-43e8-9e1b-ebac9db39829.webp",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S29DXTJZJWVJ",
+      "category_name": "عصائر",
+      "local_image": "/storage/menu/dajajati/dish_0S2A49E83JY1G.jfif"
+    },
+    {
+      "id": "0S2A35AEFJY3H",
+      "price": 360,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "اناناس",
+      "imageUrl": "https://panel.menutek.net/api/public/images/fb444a7d-9ead-447f-9d74-6e6d513b1965.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T16:59:11.859800Z",
+      "sections": [
+        {
+          "id": "0S29DXTJZJWVJ",
+          "name": "عصائر ",
+          "description": "\"اروي عطشك بأطيب العصائر الطبيعية الطازجة 100%، المُعصورة بعناية يومياً لتمنحك الانتعاش والصحة في كل كوب.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/fab00303-131b-43e8-9e1b-ebac9db39829.webp",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S29DXTJZJWVJ",
+      "category_name": "عصائر",
+      "local_image": "/storage/menu/dajajati/dish_0S2A35AEFJY3H.webp"
+    },
+    {
+      "id": "0S2A2851VJX7A",
+      "price": 340,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "بولو ",
+      "imageUrl": "https://panel.menutek.net/api/public/images/2e8f2fc8-afb7-4809-a2a6-ab553528dadf.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T16:55:12.910189Z",
+      "sections": [
+        {
+          "id": "0S29DXTJZJWVJ",
+          "name": "عصائر ",
+          "description": "\"اروي عطشك بأطيب العصائر الطبيعية الطازجة 100%، المُعصورة بعناية يومياً لتمنحك الانتعاش والصحة في كل كوب.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/fab00303-131b-43e8-9e1b-ebac9db39829.webp",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S29DXTJZJWVJ",
+      "category_name": "عصائر",
+      "local_image": "/storage/menu/dajajati/dish_0S2A2851VJX7A.webp"
+    },
+    {
+      "id": "0S2A1YZE3JXZY",
+      "price": 310,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "برتقال",
+      "imageUrl": "https://panel.menutek.net/api/public/images/c4dfd27f-0466-41ea-a7a4-1345573f7583.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T16:53:57.745009Z",
+      "sections": [
+        {
+          "id": "0S29DXTJZJWVJ",
+          "name": "عصائر ",
+          "description": "\"اروي عطشك بأطيب العصائر الطبيعية الطازجة 100%، المُعصورة بعناية يومياً لتمنحك الانتعاش والصحة في كل كوب.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/fab00303-131b-43e8-9e1b-ebac9db39829.webp",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S29DXTJZJWVJ",
+      "category_name": "عصائر",
+      "local_image": "/storage/menu/dajajati/dish_0S2A1YZE3JXZY.webp"
+    },
+    {
+      "id": "0S2A1PJ6FJXZN",
+      "price": 310,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": " ليمون ",
+      "imageUrl": "https://panel.menutek.net/api/public/images/70dfa035-852b-432c-956d-d22f1636db4b.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T16:52:48.819422Z",
+      "sections": [
+        {
+          "id": "0S29DXTJZJWVJ",
+          "name": "عصائر ",
+          "description": "\"اروي عطشك بأطيب العصائر الطبيعية الطازجة 100%، المُعصورة بعناية يومياً لتمنحك الانتعاش والصحة في كل كوب.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/fab00303-131b-43e8-9e1b-ebac9db39829.webp",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S29DXTJZJWVJ",
+      "category_name": "عصائر",
+      "local_image": "/storage/menu/dajajati/dish_0S2A1PJ6FJXZN.webp"
+    },
+    {
+      "id": "0S29W4363JXKA",
+      "price": 490,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": true,
+      "hasExtras": false,
+      "variants": [
+        {
+          "id": "0S29W4363JXKB",
+          "price": 510,
+          "tablePrice": null,
+          "label": "شوكولا",
+          "priceDiscount": null,
+          "calories": ""
+        },
+        {
+          "id": "0S29W4363JXKC",
+          "price": 510,
+          "tablePrice": null,
+          "label": "لوتس",
+          "priceDiscount": null,
+          "calories": ""
+        },
+        {
+          "id": "0S29W4363JXKD",
+          "price": 510,
+          "tablePrice": null,
+          "label": "اوريو",
+          "priceDiscount": null,
+          "calories": ""
+        },
+        {
+          "id": "0S29W4363JXKE",
+          "price": 510,
+          "tablePrice": null,
+          "label": "براونيز",
+          "priceDiscount": null,
+          "calories": ""
+        },
+        {
+          "id": "0S29W4363JXKF",
+          "price": 490,
+          "tablePrice": null,
+          "label": "فواكة",
+          "priceDiscount": null,
+          "calories": ""
+        }
+      ],
+      "name": "كريب",
+      "imageUrl": "https://panel.menutek.net/api/public/images/8059025a-ae0d-47e2-b107-a4db38265b5b.jfif",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T16:28:26.800794Z",
+      "sections": [
+        {
+          "id": "0S29BQKPKJXZX",
+          "name": " حلويات",
+          "description": "\"اكتشف تشكيلتنا الشهية من الحلويات الطازجة واللذيذة، المُحضرة بأجود المكونات لتكون التكملة المثالية لكل لحظة.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/2c0b9cf4-8489-455a-9528-4894bb972f79.jfif",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S29BQKPKJXZX",
+      "category_name": "حلويات",
+      "local_image": "/storage/menu/dajajati/dish_0S29W4363JXKA.jfif"
+    },
+    {
+      "id": "0S29TJ63FJXQV",
+      "price": 490,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": true,
+      "hasExtras": false,
+      "variants": [
+        {
+          "id": "0S29TJ63KJXQ2",
+          "price": 490,
+          "tablePrice": null,
+          "label": "شوكولا",
+          "priceDiscount": null,
+          "calories": ""
+        },
+        {
+          "id": "0S29TJ63KJXQ3",
+          "price": 490,
+          "tablePrice": null,
+          "label": "لوتس",
+          "priceDiscount": null,
+          "calories": ""
+        },
+        {
+          "id": "0S29TJ63KJXQ4",
+          "price": 490,
+          "tablePrice": null,
+          "label": "اوريو",
+          "priceDiscount": null,
+          "calories": ""
+        },
+        {
+          "id": "0S29TJ63KJXQ5",
+          "price": 490,
+          "tablePrice": null,
+          "label": "فواكة",
+          "priceDiscount": null,
+          "calories": ""
+        }
+      ],
+      "name": "وافل",
+      "imageUrl": "https://panel.menutek.net/api/public/images/464791a0-0fad-4c9f-8246-530e91b1f040.jfif",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T16:21:37.947938Z",
+      "sections": [
+        {
+          "id": "0S29BQKPKJXZX",
+          "name": " حلويات",
+          "description": "\"اكتشف تشكيلتنا الشهية من الحلويات الطازجة واللذيذة، المُحضرة بأجود المكونات لتكون التكملة المثالية لكل لحظة.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/2c0b9cf4-8489-455a-9528-4894bb972f79.jfif",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S29BQKPKJXZX",
+      "category_name": "حلويات",
+      "local_image": "/storage/menu/dajajati/dish_0S29TJ63FJXQV.jfif"
+    },
+    {
+      "id": "0S2A1ETVFJX34",
+      "price": 210,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "طاقة جاك مكس",
+      "imageUrl": "https://panel.menutek.net/api/public/images/40f9d9bb-b15e-4b22-bac8-494d58f500a2.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T16:51:45.499285Z",
+      "sections": [
+        {
+          "id": "0S29CTAQZJWZH",
+          "name": "موكتيل",
+          "description": "استمتع بانتعاش لا يُضاهى مع تشكيلة مبدعة من الموكتيلات الفاخرة، المُحضرة طازجة من أجود الفواكه والنكهات لتمنحك طاقة وحيوية في كل رشفة.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/d6f4c400-fbf2-4575-b775-18ca4e7eb971.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S29CTAQZJWZH",
+      "category_name": "موكتيل",
+      "local_image": "/storage/menu/dajajati/dish_0S2A1ETVFJX34.webp"
+    },
+    {
+      "id": "0S2A0YB13JWYY",
+      "price": 370,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": true,
+      "hasExtras": false,
+      "variants": [
+        {
+          "id": "0S2A0YB13JWYZ",
+          "price": 370,
+          "tablePrice": null,
+          "label": "فريز",
+          "priceDiscount": null,
+          "calories": ""
+        },
+        {
+          "id": "0S2A0YB13JWZ0",
+          "price": 370,
+          "tablePrice": null,
+          "label": "غراندين",
+          "priceDiscount": null,
+          "calories": ""
+        },
+        {
+          "id": "0S2A0YB13JWZ1",
+          "price": 370,
+          "tablePrice": null,
+          "label": "نعنع ",
+          "priceDiscount": null,
+          "calories": ""
+        },
+        {
+          "id": "0S2A0YB13JWZ2",
+          "price": 370,
+          "tablePrice": null,
+          "label": "بلو",
+          "priceDiscount": null,
+          "calories": ""
+        }
+      ],
+      "name": "موهيتو",
+      "imageUrl": "https://panel.menutek.net/api/public/images/e4a2c05b-104d-44a6-a532-84acc3aa612c.jfif",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T16:49:30.376352Z",
+      "sections": [
+        {
+          "id": "0S29CTAQZJWZH",
+          "name": "موكتيل",
+          "description": "استمتع بانتعاش لا يُضاهى مع تشكيلة مبدعة من الموكتيلات الفاخرة، المُحضرة طازجة من أجود الفواكه والنكهات لتمنحك طاقة وحيوية في كل رشفة.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/d6f4c400-fbf2-4575-b775-18ca4e7eb971.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S29CTAQZJWZH",
+      "category_name": "موكتيل",
+      "local_image": "/storage/menu/dajajati/dish_0S2A0YB13JWYY.jfif"
+    },
+    {
+      "id": "0S29ZR42FJXK8",
+      "price": 390,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "باشن لايم",
+      "imageUrl": "https://panel.menutek.net/api/public/images/7a67b4d0-cb7c-4b97-8818-c12361f33f02.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T16:44:17.299236Z",
+      "sections": [
+        {
+          "id": "0S29CTAQZJWZH",
+          "name": "موكتيل",
+          "description": "استمتع بانتعاش لا يُضاهى مع تشكيلة مبدعة من الموكتيلات الفاخرة، المُحضرة طازجة من أجود الفواكه والنكهات لتمنحك طاقة وحيوية في كل رشفة.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/d6f4c400-fbf2-4575-b775-18ca4e7eb971.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S29CTAQZJWZH",
+      "category_name": "موكتيل",
+      "local_image": "/storage/menu/dajajati/dish_0S29ZR42FJXK8.webp"
+    },
+    {
+      "id": "0S2A85Z27JX3W",
+      "price": 360,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "ايس فراب",
+      "imageUrl": "https://panel.menutek.net/api/public/images/4b6034be-4802-49f0-8076-234a521dbbbc.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T17:21:07.857290Z",
+      "sections": [
+        {
+          "id": "0S29EY2PKJXJA",
+          "name": "مشروبات باردة",
+          "description": "\"انتعش بألذ المشروبات الباردة والمنعشة، المُحضرة بعناية لتُطفئ عطشك وتمنحك طاقة ومنظرًا يفتح النفس في كل لحظة.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/8bfb406b-2f9f-41e3-a1e7-1717999ad57d.jfif",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S29EY2PKJXJA",
+      "category_name": "مشروبات باردة",
+      "local_image": "/storage/menu/dajajati/dish_0S2A85Z27JX3W.webp"
+    },
+    {
+      "id": "0S2A7X8MFJWXJ",
+      "price": 310,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": true,
+      "hasExtras": false,
+      "variants": [
+        {
+          "id": "0S2A7X8MFJWXK",
+          "price": 360,
+          "tablePrice": null,
+          "label": " ميكس بيري",
+          "priceDiscount": null,
+          "calories": ""
+        }
+      ],
+      "name": "ايس تي دراق",
+      "imageUrl": "https://panel.menutek.net/api/public/images/eb452482-0bbc-449e-b807-7a4f7413f64d.jpg",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T17:19:56.579771Z",
+      "sections": [
+        {
+          "id": "0S29EY2PKJXJA",
+          "name": "مشروبات باردة",
+          "description": "\"انتعش بألذ المشروبات الباردة والمنعشة، المُحضرة بعناية لتُطفئ عطشك وتمنحك طاقة ومنظرًا يفتح النفس في كل لحظة.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/8bfb406b-2f9f-41e3-a1e7-1717999ad57d.jfif",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S29EY2PKJXJA",
+      "category_name": "مشروبات باردة",
+      "local_image": "/storage/menu/dajajati/dish_0S2A7X8MFJWXJ.jpg"
+    },
+    {
+      "id": "0S2A7JSV7JX7H",
+      "price": 330,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": true,
+      "hasExtras": false,
+      "variants": [
+        {
+          "id": "0S2A7JSV7JX7J",
+          "price": 280,
+          "tablePrice": null,
+          "label": "وسط",
+          "priceDiscount": null,
+          "calories": ""
+        }
+      ],
+      "name": "ايس كوفي ",
+      "imageUrl": "https://panel.menutek.net/api/public/images/6cb1e858-8ea7-416b-af1c-8d08a12570bc.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T17:18:30.873126Z",
+      "sections": [
+        {
+          "id": "0S29EY2PKJXJA",
+          "name": "مشروبات باردة",
+          "description": "\"انتعش بألذ المشروبات الباردة والمنعشة، المُحضرة بعناية لتُطفئ عطشك وتمنحك طاقة ومنظرًا يفتح النفس في كل لحظة.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/8bfb406b-2f9f-41e3-a1e7-1717999ad57d.jfif",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S29EY2PKJXJA",
+      "category_name": "مشروبات باردة",
+      "local_image": "/storage/menu/dajajati/dish_0S2A7JSV7JX7H.webp"
+    },
+    {
+      "id": "0S2A75SYZJY1K",
+      "price": 110,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "مياه كبير",
+      "imageUrl": "https://panel.menutek.net/api/public/images/bde0ec14-4a80-4cbe-946f-36a07bfa470f.jfif",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T17:16:44.407316Z",
+      "sections": [
+        {
+          "id": "0S29EY2PKJXJA",
+          "name": "مشروبات باردة",
+          "description": "\"انتعش بألذ المشروبات الباردة والمنعشة، المُحضرة بعناية لتُطفئ عطشك وتمنحك طاقة ومنظرًا يفتح النفس في كل لحظة.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/8bfb406b-2f9f-41e3-a1e7-1717999ad57d.jfif",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S29EY2PKJXJA",
+      "category_name": "مشروبات باردة",
+      "local_image": "/storage/menu/dajajati/dish_0S2A75SYZJY1K.jfif"
+    },
+    {
+      "id": "0S2A731NZJY5H",
+      "price": 210,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "طاقة جاك ",
+      "imageUrl": "https://panel.menutek.net/api/public/images/5b66a0e3-1139-4fcf-8c7f-1b87f546685c.jfif",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T17:16:21.807842Z",
+      "sections": [
+        {
+          "id": "0S29EY2PKJXJA",
+          "name": "مشروبات باردة",
+          "description": "\"انتعش بألذ المشروبات الباردة والمنعشة، المُحضرة بعناية لتُطفئ عطشك وتمنحك طاقة ومنظرًا يفتح النفس في كل لحظة.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/8bfb406b-2f9f-41e3-a1e7-1717999ad57d.jfif",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S29EY2PKJXJA",
+      "category_name": "مشروبات باردة",
+      "local_image": "/storage/menu/dajajati/dish_0S2A731NZJY5H.jfif"
+    },
+    {
+      "id": "0S2ADVPCFJX7G",
+      "price": 430,
+      "tablePrice": 0,
+      "summary": "",
+      "hasVariants": true,
+      "hasExtras": false,
+      "variants": [
+        {
+          "id": "0S2ADVPCKJX7G",
+          "price": 430,
+          "tablePrice": null,
+          "label": "منغا",
+          "priceDiscount": null,
+          "calories": ""
+        },
+        {
+          "id": "0S2ADVPCKJX7H",
+          "price": 460,
+          "tablePrice": null,
+          "label": "فريز",
+          "priceDiscount": null,
+          "calories": ""
+        },
+        {
+          "id": "0S2ADVPCKJX7J",
+          "price": 490,
+          "tablePrice": null,
+          "label": "شوكولا",
+          "priceDiscount": null,
+          "calories": ""
+        }
+      ],
+      "name": "امبراطور",
+      "imageUrl": "https://panel.menutek.net/api/public/images/26e6e024-db3f-4eb8-9c9b-7db3aae04fc2.jfif",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": 0,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T17:45:56.579982Z",
+      "sections": [
+        {
+          "id": "0S29FHGRZJY6W",
+          "name": "كوكتيلات",
+          "description": "\"تذوق روعة المزج الفريد مع تشكيلة كوكتيلاتنا الغنية والمميزة، المُحضرة من أجود الفواكه الطازجة وطبقات النكهات التي تروق لكل الأذواق.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/ad95a3cb-69c6-4e89-9bd3-2bea696e3040.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S29FHGRZJY6W",
+      "category_name": "كوكتيلات",
+      "local_image": "/storage/menu/dajajati/dish_0S2ADVPCFJX7G.jfif"
+    },
+    {
+      "id": "0S2ADBD67JXPN",
+      "price": 370,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "فريز وليمون ",
+      "imageUrl": "https://panel.menutek.net/api/public/images/4e32f34d-c7b3-4e6a-be24-4bc0ed54ec5f.jfif",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T17:43:43.153266Z",
+      "sections": [
+        {
+          "id": "0S29FHGRZJY6W",
+          "name": "كوكتيلات",
+          "description": "\"تذوق روعة المزج الفريد مع تشكيلة كوكتيلاتنا الغنية والمميزة، المُحضرة من أجود الفواكه الطازجة وطبقات النكهات التي تروق لكل الأذواق.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/ad95a3cb-69c6-4e89-9bd3-2bea696e3040.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S29FHGRZJY6W",
+      "category_name": "كوكتيلات",
+      "local_image": "/storage/menu/dajajati/dish_0S2ADBD67JXPN.jfif"
+    },
+    {
+      "id": "0S2AD74YFJWZ6",
+      "price": 370,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "كريزي بيري ",
+      "imageUrl": "https://panel.menutek.net/api/public/images/54c34371-e461-4602-ba6a-d015bb875fa0.jfif",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T17:43:08.275719Z",
+      "sections": [
+        {
+          "id": "0S29FHGRZJY6W",
+          "name": "كوكتيلات",
+          "description": "\"تذوق روعة المزج الفريد مع تشكيلة كوكتيلاتنا الغنية والمميزة، المُحضرة من أجود الفواكه الطازجة وطبقات النكهات التي تروق لكل الأذواق.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/ad95a3cb-69c6-4e89-9bd3-2bea696e3040.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S29FHGRZJY6W",
+      "category_name": "كوكتيلات",
+      "local_image": "/storage/menu/dajajati/dish_0S2AD74YFJWZ6.jfif"
+    },
+    {
+      "id": "0S2AD1GJFJWXE",
+      "price": 370,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "موز وبرتقال",
+      "imageUrl": "https://panel.menutek.net/api/public/images/de96d33a-a534-4cd3-a671-2cb5c9baa946.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T17:42:22.100028Z",
+      "sections": [
+        {
+          "id": "0S29FHGRZJY6W",
+          "name": "كوكتيلات",
+          "description": "\"تذوق روعة المزج الفريد مع تشكيلة كوكتيلاتنا الغنية والمميزة، المُحضرة من أجود الفواكه الطازجة وطبقات النكهات التي تروق لكل الأذواق.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/ad95a3cb-69c6-4e89-9bd3-2bea696e3040.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S29FHGRZJY6W",
+      "category_name": "كوكتيلات",
+      "local_image": "/storage/menu/dajajati/dish_0S2AD1GJFJWXE.webp"
+    },
+    {
+      "id": "0S2ABXKGQJXK0",
+      "price": 370,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "فريز ومنغا ",
+      "imageUrl": "https://panel.menutek.net/api/public/images/cd506be1-49e4-4379-9a8d-7c1b0dd1f562.jfif",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T17:37:27.941777Z",
+      "sections": [
+        {
+          "id": "0S29FHGRZJY6W",
+          "name": "كوكتيلات",
+          "description": "\"تذوق روعة المزج الفريد مع تشكيلة كوكتيلاتنا الغنية والمميزة، المُحضرة من أجود الفواكه الطازجة وطبقات النكهات التي تروق لكل الأذواق.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/ad95a3cb-69c6-4e89-9bd3-2bea696e3040.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S29FHGRZJY6W",
+      "category_name": "كوكتيلات",
+      "local_image": "/storage/menu/dajajati/dish_0S2ABXKGQJXK0.jfif"
+    },
+    {
+      "id": "0S2AB7BD3JX3D",
+      "price": 370,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "فروتي كوكتيل ",
+      "imageUrl": "https://panel.menutek.net/api/public/images/3d29d58d-ffa6-4fd0-b813-837dfa4b0196.jfif",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T17:34:25.640391Z",
+      "sections": [
+        {
+          "id": "0S29FHGRZJY6W",
+          "name": "كوكتيلات",
+          "description": "\"تذوق روعة المزج الفريد مع تشكيلة كوكتيلاتنا الغنية والمميزة، المُحضرة من أجود الفواكه الطازجة وطبقات النكهات التي تروق لكل الأذواق.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/ad95a3cb-69c6-4e89-9bd3-2bea696e3040.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S29FHGRZJY6W",
+      "category_name": "كوكتيلات",
+      "local_image": "/storage/menu/dajajati/dish_0S2AB7BD3JX3D.jfif"
+    },
+    {
+      "id": "0S2A9PGWKJXMJ",
+      "price": 340,
+      "tablePrice": 0,
+      "summary": "",
+      "hasVariants": true,
+      "hasExtras": false,
+      "variants": [
+        {
+          "id": "0S2AA3KHZJWXE",
+          "price": 360,
+          "tablePrice": null,
+          "label": "شوكولا",
+          "priceDiscount": null,
+          "calories": ""
+        },
+        {
+          "id": "0S2AA3KHZJWXF",
+          "price": 360,
+          "tablePrice": null,
+          "label": "عسل وقرفة",
+          "priceDiscount": null,
+          "calories": ""
+        },
+        {
+          "id": "0S2A9PGWKJXMK",
+          "price": 360,
+          "tablePrice": null,
+          "label": "فريز",
+          "priceDiscount": null,
+          "calories": ""
+        }
+      ],
+      "name": "موز وحليب ",
+      "imageUrl": "https://panel.menutek.net/api/public/images/809fd267-899a-481b-98d2-7d2b8608797e.jpg",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": 0,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T17:27:45.636278Z",
+      "sections": [
+        {
+          "id": "0S29FHGRZJY6W",
+          "name": "كوكتيلات",
+          "description": "\"تذوق روعة المزج الفريد مع تشكيلة كوكتيلاتنا الغنية والمميزة، المُحضرة من أجود الفواكه الطازجة وطبقات النكهات التي تروق لكل الأذواق.\"",
+          "imageUrl": "https://panel.menutek.net/api/public/images/ad95a3cb-69c6-4e89-9bd3-2bea696e3040.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S29FHGRZJY6W",
+      "category_name": "كوكتيلات",
+      "local_image": "/storage/menu/dajajati/dish_0S2A9PGWKJXMJ.jpg"
+    },
+    {
+      "id": "0S29ZB90FJXZM",
+      "price": 290,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": true,
+      "hasExtras": false,
+      "variants": [
+        {
+          "id": "0S29ZB90FJXZN",
+          "price": 290,
+          "tablePrice": null,
+          "label": "شوكولامو",
+          "priceDiscount": null,
+          "calories": ""
+        },
+        {
+          "id": "0S29ZB90FJXZP",
+          "price": 290,
+          "tablePrice": null,
+          "label": "كراشد ايس كريم",
+          "priceDiscount": null,
+          "calories": ""
+        },
+        {
+          "id": "0S29ZB90FJXZQ",
+          "price": 350,
+          "tablePrice": null,
+          "label": "مشكل",
+          "priceDiscount": null,
+          "calories": ""
+        }
+      ],
+      "name": "ايس كريم",
+      "imageUrl": "https://panel.menutek.net/api/public/images/931bd15a-af6a-48ae-a654-56a2d4b891ef.jfif",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T16:42:32.067227Z",
+      "sections": [
+        {
+          "id": "0S29X2X0FJWYT",
+          "name": "سلطة فواكة",
+          "description": "استمتع بمذاق الانتعاش مع تشكيلة من أطياف الفواكه الطازجة",
+          "imageUrl": "https://panel.menutek.net/api/public/images/3ff2b142-6c2d-4645-9a98-d16ee52f23e4.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S29X2X0FJWYT",
+      "category_name": "سلطة فواكة",
+      "local_image": "/storage/menu/dajajati/dish_0S29ZB90FJXZM.jfif"
+    },
+    {
+      "id": "0S29YFGR3JXXH",
+      "price": 430,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "فوندون",
+      "imageUrl": "https://panel.menutek.net/api/public/images/5904e2b0-9bac-4831-8e9e-7c682e42d24d.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T16:38:44.672426Z",
+      "sections": [
+        {
+          "id": "0S29X2X0FJWYT",
+          "name": "سلطة فواكة",
+          "description": "استمتع بمذاق الانتعاش مع تشكيلة من أطياف الفواكه الطازجة",
+          "imageUrl": "https://panel.menutek.net/api/public/images/3ff2b142-6c2d-4645-9a98-d16ee52f23e4.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S29X2X0FJWYT",
+      "category_name": "سلطة فواكة",
+      "local_image": "/storage/menu/dajajati/dish_0S29YFGR3JXXH.webp"
+    },
+    {
+      "id": "0S29YBC3BJXNW",
+      "price": 430,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "براونيز",
+      "imageUrl": "https://panel.menutek.net/api/public/images/439bf646-1f88-42ca-b4e0-4634c17d348d.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T16:38:10.714938Z",
+      "sections": [
+        {
+          "id": "0S29X2X0FJWYT",
+          "name": "سلطة فواكة",
+          "description": "استمتع بمذاق الانتعاش مع تشكيلة من أطياف الفواكه الطازجة",
+          "imageUrl": "https://panel.menutek.net/api/public/images/3ff2b142-6c2d-4645-9a98-d16ee52f23e4.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S29X2X0FJWYT",
+      "category_name": "سلطة فواكة",
+      "local_image": "/storage/menu/dajajati/dish_0S29YBC3BJXNW.webp"
+    },
+    {
+      "id": "0S29XXQ77JXQ1",
+      "price": 490,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "كيت كات",
+      "imageUrl": "https://panel.menutek.net/api/public/images/96fa7a8f-b005-48e1-bf19-e49944c804f4.jfif",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T16:36:18.873721Z",
+      "sections": [
+        {
+          "id": "0S29X2X0FJWYT",
+          "name": "سلطة فواكة",
+          "description": "استمتع بمذاق الانتعاش مع تشكيلة من أطياف الفواكه الطازجة",
+          "imageUrl": "https://panel.menutek.net/api/public/images/3ff2b142-6c2d-4645-9a98-d16ee52f23e4.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S29X2X0FJWYT",
+      "category_name": "سلطة فواكة",
+      "local_image": "/storage/menu/dajajati/dish_0S29XXQ77JXQ1.jfif"
+    },
+    {
+      "id": "0S29XNWEVJX3K",
+      "price": 460,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": false,
+      "hasExtras": false,
+      "variants": [],
+      "name": "كلاسيك",
+      "imageUrl": "https://panel.menutek.net/api/public/images/6f9343f5-2088-4378-af87-88ad24767e27.jfif",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-28T16:35:14.678638Z",
+      "sections": [
+        {
+          "id": "0S29X2X0FJWYT",
+          "name": "سلطة فواكة",
+          "description": "استمتع بمذاق الانتعاش مع تشكيلة من أطياف الفواكه الطازجة",
+          "imageUrl": "https://panel.menutek.net/api/public/images/3ff2b142-6c2d-4645-9a98-d16ee52f23e4.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S29X2X0FJWYT",
+      "category_name": "سلطة فواكة",
+      "local_image": "/storage/menu/dajajati/dish_0S29XNWEVJX3K.jfif"
+    },
+    {
+      "id": "0S30MAEXZJY7T",
+      "price": 1550,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": true,
+      "hasExtras": false,
+      "variants": [
+        {
+          "id": "0S30MAEXZJY7V",
+          "price": 840,
+          "tablePrice": null,
+          "label": "نصف كيلو",
+          "priceDiscount": null,
+          "calories": ""
+        }
+      ],
+      "name": "كستا مشوية",
+      "imageUrl": "https://panel.menutek.net/api/public/images/f74a6f04-4734-420b-a708-ca006c8e8384.jpeg",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-30T21:29:59.791824Z",
+      "sections": [
+        {
+          "id": "0S30FZTZFJWZE",
+          "name": "مشويات على الفحم",
+          "description": "تشكيلة فاخرة من أطيب لحوم الخروف الطازجة وصدور الدجاج، متبلة بأعشابنا الخاصة ومشوية ببطء على الجمر لتذوب في الفم.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/4573fe6c-df6d-4a62-bba2-614c7944413e.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S30FZTZFJWZE",
+      "category_name": "مشويات على الفحم",
+      "local_image": "/storage/menu/dajajati/dish_0S30MAEXZJY7T.jpg"
+    },
+    {
+      "id": "0S30M1MEZJWZQ",
+      "price": 1300,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": true,
+      "hasExtras": false,
+      "variants": [
+        {
+          "id": "0S30M1MEZJWZR",
+          "price": 760,
+          "tablePrice": null,
+          "label": "نصف كيلو",
+          "priceDiscount": null,
+          "calories": ""
+        }
+      ],
+      "name": "جوانح مشوية",
+      "imageUrl": "https://panel.menutek.net/api/public/images/f7f086bf-dae9-4679-92e0-899ee846d1e6.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-30T21:28:47.479662Z",
+      "sections": [
+        {
+          "id": "0S30FZTZFJWZE",
+          "name": "مشويات على الفحم",
+          "description": "تشكيلة فاخرة من أطيب لحوم الخروف الطازجة وصدور الدجاج، متبلة بأعشابنا الخاصة ومشوية ببطء على الجمر لتذوب في الفم.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/4573fe6c-df6d-4a62-bba2-614c7944413e.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S30FZTZFJWZE",
+      "category_name": "مشويات على الفحم",
+      "local_image": "/storage/menu/dajajati/dish_0S30M1MEZJWZQ.webp"
+    },
+    {
+      "id": "0S30KKRDVJWVJ",
+      "price": 1300,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": true,
+      "hasExtras": false,
+      "variants": [
+        {
+          "id": "0S30KKRDVJWVK",
+          "price": 750,
+          "tablePrice": null,
+          "label": "نصف كيلو",
+          "priceDiscount": null,
+          "calories": ""
+        },
+        {
+          "id": "0S30KKRDZJWZV",
+          "price": 540,
+          "tablePrice": null,
+          "label": "وجبة 250غ",
+          "priceDiscount": null,
+          "calories": ""
+        }
+      ],
+      "name": "كيلو كباب",
+      "imageUrl": "https://panel.menutek.net/api/public/images/67bc5a57-9eff-41af-88bb-bc2f939537ed.jfif",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-30T21:26:53.806926Z",
+      "sections": [
+        {
+          "id": "0S30FZTZFJWZE",
+          "name": "مشويات على الفحم",
+          "description": "تشكيلة فاخرة من أطيب لحوم الخروف الطازجة وصدور الدجاج، متبلة بأعشابنا الخاصة ومشوية ببطء على الجمر لتذوب في الفم.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/4573fe6c-df6d-4a62-bba2-614c7944413e.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S30FZTZFJWZE",
+      "category_name": "مشويات على الفحم",
+      "local_image": "/storage/menu/dajajati/dish_0S30KKRDVJWVJ.jfif"
+    },
+    {
+      "id": "0S30J6Z5KJWZP",
+      "price": 1750,
+      "tablePrice": 0,
+      "summary": "",
+      "hasVariants": true,
+      "hasExtras": false,
+      "variants": [
+        {
+          "id": "0S30J6Z5KJWZQ",
+          "price": 950,
+          "tablePrice": null,
+          "label": "نصف كيلو 500غ",
+          "priceDiscount": null,
+          "calories": ""
+        },
+        {
+          "id": "0S30J6Z5KJWZR",
+          "price": 690,
+          "tablePrice": null,
+          "label": "وجبة شيش 250غ",
+          "priceDiscount": null,
+          "calories": ""
+        }
+      ],
+      "name": "كيلو شيش",
+      "imageUrl": "https://panel.menutek.net/api/public/images/d86b8a0b-00a0-43f0-87bf-8a7bdc24eec0.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": 0,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-30T21:20:46.892628Z",
+      "sections": [
+        {
+          "id": "0S30FZTZFJWZE",
+          "name": "مشويات على الفحم",
+          "description": "تشكيلة فاخرة من أطيب لحوم الخروف الطازجة وصدور الدجاج، متبلة بأعشابنا الخاصة ومشوية ببطء على الجمر لتذوب في الفم.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/4573fe6c-df6d-4a62-bba2-614c7944413e.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S30FZTZFJWZE",
+      "category_name": "مشويات على الفحم",
+      "local_image": "/storage/menu/dajajati/dish_0S30J6Z5KJWZP.webp"
+    },
+    {
+      "id": "0S30HP1EBJY2R",
+      "price": 1700,
+      "tablePrice": null,
+      "summary": "",
+      "hasVariants": true,
+      "hasExtras": false,
+      "variants": [
+        {
+          "id": "0S30HP1EBJY2S",
+          "price": 890,
+          "tablePrice": null,
+          "label": "نصف فروج عالفحم ",
+          "priceDiscount": null,
+          "calories": ""
+        }
+      ],
+      "name": "فروج عالفحم ",
+      "imageUrl": "https://panel.menutek.net/api/public/images/476f07f4-7c04-41e6-9a49-59c5ad71d36f.webp",
+      "video": "",
+      "hasOffer": false,
+      "newPrice": 0,
+      "quantity": null,
+      "ignoreQuantity": true,
+      "createdDate": "2026-10-30T21:18:28.210353Z",
+      "sections": [
+        {
+          "id": "0S30FZTZFJWZE",
+          "name": "مشويات على الفحم",
+          "description": "تشكيلة فاخرة من أطيب لحوم الخروف الطازجة وصدور الدجاج، متبلة بأعشابنا الخاصة ومشوية ببطء على الجمر لتذوب في الفم.",
+          "imageUrl": "https://panel.menutek.net/api/public/images/4573fe6c-df6d-4a62-bba2-614c7944413e.jpg",
+          "itemCount": null,
+          "children": []
+        }
+      ],
+      "extras": [],
+      "category_id": "0S30FZTZFJWZE",
+      "category_name": "مشويات على الفحم",
+      "local_image": "/storage/menu/dajajati/dish_0S30HP1EBJY2R.webp"
+    }
+  ],
+  "category_breakdown": {
+    "الشاورما": 6,
+    "البروستد": 5,
+    "الوجبات الغربي": 19,
+    "السندويش الغربي": 20,
+    "المشويات": 1,
+    "السلطات": 6,
+    "البيتزا": 10,
+    "المقبلات": 7,
+    "البار": 0,
+    "ميلك شيك": 5,
+    "مشروبات ساخنة": 14,
+    "عصائر": 10,
+    "حلويات": 2,
+    "موكتيل": 3,
+    "مشروبات باردة": 5,
+    "كوكتيلات": 7,
+    "سلطة فواكة": 5,
+    "مشويات على الفحم": 5
+  }
+}

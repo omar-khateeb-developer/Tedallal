@@ -276,7 +276,7 @@
         <div class="divider"></div>
         <div style="text-align: center; margin: 1.5mm 0; padding: 1.5mm 1mm; border: 1px dashed #000; border-radius: 3px; background: #fafafa;">
             <div style="font-weight: 800; font-size: 11.5px; margin-bottom: 0.5mm;">🎁 امسح لتدوير عجلة الحظ واربح خصم!</div>
-            <img src="data:image/png;base64,{{ $wheelQrBase64 }}" style="width: 22mm; height: 22mm; margin: 1mm auto; display: block;" alt="رمز عجلة الحظ" />
+            <img src="data:image/png;base64,{{ $wheelQrBase64 }}" style="width: 24mm; height: 24mm; margin: 1mm auto; display: block; image-rendering: pixelated; image-rendering: -moz-crisp-edges; image-rendering: crisp-edges;" alt="رمز عجلة الحظ" />
             <div style="font-size: 9px; font-weight: 700; color: #444;">كود فريد لمرة واحدة • صالح لـ 14 يوم</div>
         </div>
         @endif

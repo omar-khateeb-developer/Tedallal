@@ -21,7 +21,7 @@ class SessionController extends ApiController
         ]);
 
         $table = RestaurantTable::withoutGlobalScopes()
-            ->where('public_token', $request->string('public_token'))
+            ->whereToken($request->string('public_token'))
             ->where('status', 'active')
             ->first();
 

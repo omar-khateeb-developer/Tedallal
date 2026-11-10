@@ -57,8 +57,35 @@ class RestaurantTable extends Model
         return $this->status === TableStatus::Active;
     }
 
-    public function publicUrl(): string
+    public function publicUrl(?string $baseUrl = null): string
     {
-        return url('/t/'.$this->public_token);
+        if ($baseUrl) {
+            return rtrim($baseUrl, '/') . '/t/' . $this->public_token;
+        }
+
+        // Priority 1: Configured QR base URL from config or env
+        if ($configured = config('tedallal.qr_base_url') ?? env('QR_BASE_URL')) {
+            return rtrim($configured, '/') . '/t/' . $this->public_token;
+        }
+
+        // Priority 2: In active HTTP web request, dynamically match user's host (e.g. 127.0.0.1:8000 or production domain)
+        if (app()->runningInConsole() === false && request()->hasHeader('host')) {
+            return request()->getSchemeAndHttpHost() . '/t/' . $this->public_token;
+        }
+
+        // Priority 3: Fallback to standard Laravel url helper
+        return url('/t/' . $this->public_token);
+    }
+
+    /**
+     * Scope a query to find a table by public token with case-insensitive and normalized fallback.
+     */
+    public function scopeWhereToken($query, string $token)
+    {
+        $clean = trim($token);
+        return $query->where(function ($q) use ($clean) {
+            $q->where('public_token', $clean)
+              ->orWhereRaw('LOWER(public_token) = ?', [strtolower($clean)]);
+        });
     }
 }

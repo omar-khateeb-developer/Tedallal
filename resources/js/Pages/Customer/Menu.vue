@@ -14,6 +14,7 @@ interface MenuItem {
     description: string | null;
     price: string;
     image: string | null;
+    category_name?: string;
 }
 
 interface Category {
@@ -44,7 +45,34 @@ const props = defineProps<{
     }[];
 }>();
 
-const activeCategory = ref(props.categories[0]?.id ?? 0);
+const activeCategory = ref<number | 'all'>('all');
+const viewMode = ref<'grid' | 'list'>(
+    typeof window !== 'undefined' && localStorage.getItem('tedallal_menu_view') === 'list' ? 'list' : 'grid'
+);
+
+function setViewMode(mode: 'grid' | 'list') {
+    viewMode.value = mode;
+    try {
+        localStorage.setItem('tedallal_menu_view', mode);
+    } catch {}
+}
+
+function getDishBadge(item: MenuItem, index: number): { label: string; icon: string; style: string } | null {
+    const text = (item.name + ' ' + (item.description || '')).toLowerCase();
+    if (text.includes('شيف') || text.includes('chef') || text.includes('توصية') || text.includes('مميز')) {
+        return { label: 'توصية الشيف', icon: '⭐', style: 'bg-amber-500 text-stone-950 font-black' };
+    }
+    if (text.includes('حار') || text.includes('سبايسي') || text.includes('spicy')) {
+        return { label: 'حار', icon: '🌶️', style: 'bg-red-500 text-white font-black' };
+    }
+    if (text.includes('نباتي') || text.includes('صحي') || text.includes('سلطة') || text.includes('vegan') || text.includes('salad')) {
+        return { label: 'نباتي / صحي', icon: '🥗', style: 'bg-emerald-600 text-white font-bold' };
+    }
+    if (index === 0) {
+        return { label: 'الأكثر طلباً', icon: '👑', style: 'bg-amber-600 text-white font-bold' };
+    }
+    return null;
+}
 const cartCount = ref(0);
 const cartOpen = ref(false);
 const checkoutOpen = ref(false);
@@ -71,9 +99,40 @@ function reloadSession() {
     window.location.reload();
 }
 
-const visibleItems = computed(() => {
+const defaultDishLogo = '/images/tedallal-golden-logo-pure.png';
+
+function onDishImageError(event: Event) {
+    const img = event.target as HTMLImageElement;
+    if (img && !img.dataset.fallbackApplied) {
+        img.dataset.fallbackApplied = 'true';
+        img.src = defaultDishLogo;
+        img.classList.remove('object-cover');
+        img.classList.add('object-contain', 'p-3', 'bg-gradient-to-br', 'from-amber-950/30', 'via-stone-900', 'to-black');
+    }
+}
+
+const visibleItems = computed<MenuItem[]>(() => {
+    if (activeCategory.value === 'all') {
+        const items: MenuItem[] = [];
+        const seenIds = new Set<number>();
+        for (const cat of props.categories) {
+            for (const item of (cat.active_items ?? [])) {
+                if (!seenIds.has(item.id)) {
+                    seenIds.add(item.id);
+                    items.push({
+                        ...item,
+                        category_name: cat.name,
+                    });
+                }
+            }
+        }
+        return items;
+    }
     const cat = props.categories.find((c) => c.id === activeCategory.value);
-    return cat?.active_items ?? [];
+    return (cat?.active_items ?? []).map((item) => ({
+        ...item,
+        category_name: cat?.name,
+    }));
 });
 
 async function refreshCartSummary() {
@@ -331,8 +390,20 @@ onMounted(() => {
         </div>
 
         <!-- تبويبات الأصناف - تثبت عند التمرير -->
-        <div class="sticky top-0 z-10 -mx-4 bg-stone-50/95 dark:bg-[#060913]/95 backdrop-blur-md px-4 pt-2 pb-3 mb-4 border-b border-stone-200/60 dark:border-slate-800/80 transition-colors">
+        <div class="sticky top-0 z-10 -mx-4 bg-stone-50/95 dark:bg-[#060913]/95 backdrop-blur-md px-4 pt-2 pb-3 mb-3 border-b border-stone-200/60 dark:border-slate-800/80 transition-colors">
             <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                <!-- تبويب الكل -->
+                <button
+                    type="button"
+                    class="whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 shrink-0 flex items-center gap-1.5"
+                    :class="activeCategory === 'all'
+                        ? 'bg-amber-600 text-white shadow-md shadow-amber-200 dark:shadow-amber-900/50'
+                        : 'bg-white text-stone-600 ring-1 ring-stone-200 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-800 hover:dark:bg-slate-800'"
+                    @click="activeCategory = 'all'"
+                >
+                    <span>الكل</span>
+                </button>
+
                 <button
                     v-for="category in categories"
                     :key="category.id"
@@ -346,106 +417,272 @@ onMounted(() => {
                     {{ category.name }}
                 </button>
             </div>
+
+            <!-- شريط أدوات العرض: عدد الأصناف + مبدل نمط الشبكة/القائمة (مستوحى من Restoria) -->
+            <div class="flex items-center justify-between mt-2 pt-2 border-t border-stone-200/40 dark:border-slate-800/40 text-xs text-stone-500 dark:text-slate-400">
+                <span class="font-medium">
+                    {{ visibleItems.length }} {{ visibleItems.length === 1 ? 'صنف' : visibleItems.length === 2 ? 'صنفان' : 'أصناف' }}
+                </span>
+                <div class="flex items-center bg-stone-200/70 dark:bg-slate-800/80 p-0.5 rounded-lg gap-0.5">
+                    <button
+                        type="button"
+                        class="flex items-center gap-1 px-2 py-1 rounded-md transition-all font-medium"
+                        :class="viewMode === 'grid' ? 'bg-white dark:bg-stone-900 text-amber-600 dark:text-amber-400 shadow-2xs font-bold' : 'text-stone-500 dark:text-slate-400 hover:text-stone-800'"
+                        title="عرض شبكي (Restoria Grid)"
+                        @click="setViewMode('grid')"
+                    >
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z"/>
+                        </svg>
+                        <span class="text-[11px]">شبكي</span>
+                    </button>
+                    <button
+                        type="button"
+                        class="flex items-center gap-1 px-2 py-1 rounded-md transition-all font-medium"
+                        :class="viewMode === 'list' ? 'bg-white dark:bg-stone-900 text-amber-600 dark:text-amber-400 shadow-2xs font-bold' : 'text-stone-500 dark:text-slate-400 hover:text-stone-800'"
+                        title="عرض قائمة (Compact List)"
+                        @click="setViewMode('list')"
+                    >
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h16v2H4v-2z"/>
+                        </svg>
+                        <span class="text-[11px]">قائمة</span>
+                    </button>
+                </div>
+            </div>
         </div>
 
-        <!-- قائمة الأصناف -->
-        <div class="grid grid-cols-1 gap-3 pb-32">
-            <article
-                v-for="item in visibleItems"
-                :key="item.id"
-                class="group flex gap-4 rounded-2xl bg-white dark:bg-[#0a0f1d] p-3.5 shadow-2xs ring-1 ring-stone-100/90 dark:ring-slate-800/80 hover:shadow-md hover:dark:ring-amber-500/40 transition-all duration-200 cursor-pointer"
-                @click="openAddModal(item)"
-            >
-                <!-- صورة الصنف -->
-                <div class="shrink-0 relative">
-                    <div v-if="item.image" class="h-24 w-24 rounded-xl overflow-hidden shadow-2xs border border-stone-100 dark:border-slate-800">
+        <!-- قائمة الأصناف: النمط الشبكي (Restoria Grid 2-cols) أو القائمة الأفقية -->
+        <div
+            :class="viewMode === 'grid'
+                ? 'grid grid-cols-2 sm:grid-cols-3 gap-3 pb-32'
+                : 'grid grid-cols-1 gap-3 pb-32'"
+        >
+            <!-- بطاقة النمط الشبكي (Restoria Luxury Grid) -->
+            <template v-if="viewMode === 'grid'">
+                <article
+                    v-for="(item, idx) in visibleItems"
+                    :key="'grid-' + item.id"
+                    class="group flex flex-col rounded-2xl bg-white dark:bg-[#0a0f1d] overflow-hidden shadow-2xs ring-1 ring-stone-100/90 dark:ring-slate-800/80 hover:shadow-lg hover:dark:ring-amber-500/40 transition-all duration-200 cursor-pointer"
+                    @click="openAddModal(item)"
+                >
+                    <!-- صورة الصنف مع شارة تذوق Restoria الفاخرة -->
+                    <div class="relative w-full aspect-[4/3] bg-gradient-to-br from-amber-50 to-stone-100 dark:from-slate-900 dark:to-slate-800 overflow-hidden flex items-center justify-center">
                         <img
-                            :src="item.image"
+                            :src="item.image || defaultDishLogo"
                             :alt="item.name"
-                            class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            loading="lazy"
+                            :class="[
+                                (item.image && !item.image.includes('tedallal-golden-logo'))
+                                    ? 'h-full w-full object-cover group-hover:scale-105 transition-transform duration-300'
+                                    : 'h-full w-full object-contain p-4 bg-gradient-to-br from-amber-500/10 via-stone-900 to-[#070709] drop-shadow-[0_4px_12px_rgba(218,165,32,0.35)]'
+                            ]"
+                            @error="onDishImageError"
                         />
-                    </div>
-                    <div v-else class="h-24 w-24 rounded-xl bg-gradient-to-br from-amber-50 to-stone-100 dark:from-slate-900 dark:to-slate-800 border border-stone-100 dark:border-slate-800 flex items-center justify-center">
-                        <svg class="w-10 h-10 text-amber-300 dark:text-amber-500/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                        </svg>
-                    </div>
 
-                    <!-- شارة الكمية في زاوية الصورة إن كانت مضافة -->
-                    <span
-                        v-if="cartItemsByMenuItemId[item.id]"
-                        class="absolute -top-1.5 -right-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-amber-500 px-1 text-[11px] font-black text-stone-950 shadow-md ring-2 ring-white dark:ring-slate-900"
-                    >
-                        {{ cartItemsByMenuItemId[item.id].quantity }}
-                    </span>
-                </div>
+                        <!-- شارة الطهي الفاخرة (Restoria Badge) -->
+                        <span
+                            v-if="getDishBadge(item, idx)"
+                            class="absolute top-2 start-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] shadow-sm backdrop-blur-md"
+                            :class="getDishBadge(item, idx)?.style"
+                        >
+                            <span>{{ getDishBadge(item, idx)?.icon }}</span>
+                            <span>{{ getDishBadge(item, idx)?.label }}</span>
+                        </span>
 
-                <!-- تفاصيل الصنف -->
-                <div class="flex-1 flex flex-col justify-between min-w-0">
-                    <div>
-                        <h3 class="font-bold text-gray-900 dark:text-white text-base leading-tight group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">{{ item.name }}</h3>
-                        <p v-if="item.description" class="mt-1 text-xs text-stone-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
-                            {{ item.description }}
-                        </p>
+                        <!-- شارة الكمية في السلة -->
+                        <span
+                            v-if="cartItemsByMenuItemId[item.id]"
+                            class="absolute top-2 end-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-amber-500 px-1 text-[11px] font-black text-stone-950 shadow-md ring-2 ring-white dark:ring-slate-900"
+                        >
+                            {{ cartItemsByMenuItemId[item.id].quantity }}
+                        </span>
                     </div>
 
-                    <div class="flex items-center justify-between mt-2 pt-1 border-t border-stone-50 dark:border-slate-800/60">
-                        <p class="font-black text-amber-600 dark:text-amber-400 text-sm sm:text-base">{{ formatPrice(item.price) }}</p>
-
-                        <!-- أزرار الإضافة السريعة أو العداد المباشر في البطاقة -->
-                        <div @click.stop>
-                            <!-- إذا كان الصنف مضافاً في السلة: يظهر عداد فوري [ - ] [ quantity ] [ + ] -->
-                            <div
-                                v-if="cartItemsByMenuItemId[item.id]"
-                                class="flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200/90 dark:border-amber-700/60 rounded-full p-0.5 shadow-2xs"
+                    <!-- تفاصيل البطاقة الشبكية -->
+                    <div class="flex-1 p-3 flex flex-col justify-between">
+                        <div>
+                            <span
+                                v-if="activeCategory === 'all' && item.category_name"
+                                class="inline-block text-[10px] font-bold text-amber-600 dark:text-amber-400/90 mb-0.5"
                             >
-                                <button
-                                    type="button"
-                                    class="h-7 w-7 rounded-full bg-white dark:bg-slate-800 text-amber-800 dark:text-amber-300 font-bold flex items-center justify-center hover:bg-amber-100 dark:hover:bg-slate-700 active:scale-90 transition-all shadow-2xs disabled:opacity-50"
-                                    :disabled="updatingItemIds.has(item.id)"
-                                    title="تقليل"
-                                    @click="quickDecrement(item)"
+                                {{ item.category_name }}
+                            </span>
+                            <h3 class="font-bold text-gray-900 dark:text-white text-sm line-clamp-1 group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">
+                                {{ item.name }}
+                            </h3>
+                            <p v-if="item.description" class="mt-1 text-[11px] text-stone-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                                {{ item.description }}
+                            </p>
+                        </div>
+
+                        <div class="flex items-center justify-between mt-3 pt-2 border-t border-stone-100 dark:border-slate-800/60">
+                            <p class="font-black text-amber-600 dark:text-amber-400 text-xs sm:text-sm">
+                                {{ formatPrice(item.price) }}
+                            </p>
+
+                            <!-- أزرار الإضافة السريعة -->
+                            <div @click.stop>
+                                <div
+                                    v-if="cartItemsByMenuItemId[item.id]"
+                                    class="flex items-center gap-1 bg-amber-50 dark:bg-amber-950/50 border border-amber-200/90 dark:border-amber-700/60 rounded-full p-0.5 shadow-2xs"
                                 >
-                                    −
-                                </button>
-                                <span class="text-xs font-black text-amber-900 dark:text-amber-200 min-w-[16px] text-center">
-                                    {{ cartItemsByMenuItemId[item.id].quantity }}
-                                </span>
+                                    <button
+                                        type="button"
+                                        class="h-6 w-6 rounded-full bg-white dark:bg-slate-800 text-amber-800 dark:text-amber-300 font-bold flex items-center justify-center hover:bg-amber-100 dark:hover:bg-slate-700 active:scale-90 transition-all text-xs"
+                                        :disabled="updatingItemIds.has(item.id)"
+                                        @click="quickDecrement(item)"
+                                    >
+                                        −
+                                    </button>
+                                    <span class="text-xs font-black text-amber-900 dark:text-amber-200 min-w-[14px] text-center">
+                                        {{ cartItemsByMenuItemId[item.id].quantity }}
+                                    </span>
+                                    <button
+                                        type="button"
+                                        class="h-6 w-6 rounded-full bg-amber-600 dark:bg-amber-500 text-white font-bold flex items-center justify-center hover:bg-amber-700 dark:hover:bg-amber-400 active:scale-90 transition-all text-xs"
+                                        :disabled="updatingItemIds.has(item.id)"
+                                        @click="quickIncrement(item)"
+                                    >
+                                        +
+                                    </button>
+                                </div>
                                 <button
+                                    v-else
                                     type="button"
-                                    class="h-7 w-7 rounded-full bg-amber-600 dark:bg-amber-500 text-white font-bold flex items-center justify-center hover:bg-amber-700 dark:hover:bg-amber-400 active:scale-90 transition-all shadow-2xs disabled:opacity-50"
+                                    class="h-7 w-7 rounded-full bg-amber-600 dark:bg-amber-500 text-white flex items-center justify-center shadow-md shadow-amber-200 dark:shadow-amber-950/50 hover:bg-amber-700 dark:hover:bg-amber-400 active:scale-90 transition-transform disabled:opacity-50"
                                     :disabled="updatingItemIds.has(item.id)"
-                                    title="زيادة"
-                                    @click="quickIncrement(item)"
+                                    title="إضافة سريعة"
+                                    @click="quickAdd(item)"
                                 >
-                                    +
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+                                    </svg>
                                 </button>
                             </div>
-
-                            <!-- إذا لم يكن في السلة: زر إضافة سريع (+) مع الاحتفاظ بإمكانية الضغط على البطاقة للملاحظات -->
-                            <button
-                                v-else
-                                type="button"
-                                class="h-8 w-8 rounded-full bg-amber-600 dark:bg-amber-500 text-white flex items-center justify-center shadow-md shadow-amber-200 dark:shadow-amber-950/50 hover:bg-amber-700 dark:hover:bg-amber-400 active:scale-90 transition-transform disabled:opacity-50"
-                                :disabled="updatingItemIds.has(item.id)"
-                                title="إضافة سريعة للطلب"
-                                @click="quickAdd(item)"
-                            >
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
-                                </svg>
-                            </button>
                         </div>
                     </div>
-                </div>
-            </article>
+                </article>
+            </template>
+
+            <!-- بطاقة النمط الأفقي (List Mode) -->
+            <template v-else>
+                <article
+                    v-for="(item, idx) in visibleItems"
+                    :key="'list-' + item.id"
+                    class="group flex gap-4 rounded-2xl bg-white dark:bg-[#0a0f1d] p-3.5 shadow-2xs ring-1 ring-stone-100/90 dark:ring-slate-800/80 hover:shadow-md hover:dark:ring-amber-500/40 transition-all duration-200 cursor-pointer"
+                    @click="openAddModal(item)"
+                >
+                    <!-- صورة الصنف -->
+                    <div class="shrink-0 relative">
+                        <div class="h-24 w-24 rounded-xl overflow-hidden shadow-2xs border border-stone-100 dark:border-slate-800 flex items-center justify-center bg-gradient-to-br from-amber-50 to-stone-100 dark:from-slate-900 dark:to-[#070709]">
+                            <img
+                                :src="item.image || defaultDishLogo"
+                                :alt="item.name"
+                                loading="lazy"
+                                :class="[
+                                    (item.image && !item.image.includes('tedallal-golden-logo'))
+                                        ? 'h-full w-full object-cover group-hover:scale-105 transition-transform duration-300'
+                                        : 'h-full w-full object-contain p-2 bg-gradient-to-br from-amber-500/10 via-stone-900 to-[#070709] drop-shadow-[0_2px_8px_rgba(218,165,32,0.3)]'
+                                ]"
+                                @error="onDishImageError"
+                            />
+                        </div>
+
+                        <!-- شارة الكمية في زاوية الصورة -->
+                        <span
+                            v-if="cartItemsByMenuItemId[item.id]"
+                            class="absolute -top-1.5 -right-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-amber-500 px-1 text-[11px] font-black text-stone-950 shadow-md ring-2 ring-white dark:ring-slate-900"
+                        >
+                            {{ cartItemsByMenuItemId[item.id].quantity }}
+                        </span>
+                    </div>
+
+                    <!-- تفاصيل الصنف -->
+                    <div class="flex-1 flex flex-col justify-between min-w-0">
+                        <div>
+                            <span
+                                v-if="activeCategory === 'all' && item.category_name"
+                                class="inline-block text-[10px] font-bold text-amber-600 dark:text-amber-400/90 mb-0.5"
+                            >
+                                {{ item.category_name }}
+                            </span>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h3 class="font-bold text-gray-900 dark:text-white text-base leading-tight group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">
+                                    {{ item.name }}
+                                </h3>
+                                <span
+                                    v-if="getDishBadge(item, idx)"
+                                    class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] shadow-2xs"
+                                    :class="getDishBadge(item, idx)?.style"
+                                >
+                                    <span>{{ getDishBadge(item, idx)?.icon }}</span>
+                                    <span>{{ getDishBadge(item, idx)?.label }}</span>
+                                </span>
+                            </div>
+                            <p v-if="item.description" class="mt-1 text-xs text-stone-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                                {{ item.description }}
+                            </p>
+                        </div>
+
+                        <div class="flex items-center justify-between mt-2 pt-1 border-t border-stone-50 dark:border-slate-800/60">
+                            <p class="font-black text-amber-600 dark:text-amber-400 text-sm sm:text-base">
+                                {{ formatPrice(item.price) }}
+                            </p>
+
+                            <!-- أزرار الإضافة السريعة أو العداد المباشر في البطاقة -->
+                            <div @click.stop>
+                                <div
+                                    v-if="cartItemsByMenuItemId[item.id]"
+                                    class="flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200/90 dark:border-amber-700/60 rounded-full p-0.5 shadow-2xs"
+                                >
+                                    <button
+                                        type="button"
+                                        class="h-7 w-7 rounded-full bg-white dark:bg-slate-800 text-amber-800 dark:text-amber-300 font-bold flex items-center justify-center hover:bg-amber-100 dark:hover:bg-slate-700 active:scale-90 transition-all shadow-2xs disabled:opacity-50"
+                                        :disabled="updatingItemIds.has(item.id)"
+                                        title="تقليل"
+                                        @click="quickDecrement(item)"
+                                    >
+                                        −
+                                    </button>
+                                    <span class="text-xs font-black text-amber-900 dark:text-amber-200 min-w-[16px] text-center">
+                                        {{ cartItemsByMenuItemId[item.id].quantity }}
+                                    </span>
+                                    <button
+                                        type="button"
+                                        class="h-7 w-7 rounded-full bg-amber-600 dark:bg-amber-500 text-white font-bold flex items-center justify-center hover:bg-amber-700 dark:hover:bg-amber-400 active:scale-90 transition-all shadow-2xs disabled:opacity-50"
+                                        :disabled="updatingItemIds.has(item.id)"
+                                        title="زيادة"
+                                        @click="quickIncrement(item)"
+                                    >
+                                        +
+                                    </button>
+                                </div>
+
+                                <button
+                                    v-else
+                                    type="button"
+                                    class="h-8 w-8 rounded-full bg-amber-600 dark:bg-amber-500 text-white flex items-center justify-center shadow-md shadow-amber-200 dark:shadow-amber-950/50 hover:bg-amber-700 dark:hover:bg-amber-400 active:scale-90 transition-transform disabled:opacity-50"
+                                    :disabled="updatingItemIds.has(item.id)"
+                                    title="إضافة سريعة للطلب"
+                                    @click="quickAdd(item)"
+                                >
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </template>
 
             <!-- حالة فارغة -->
             <div v-if="visibleItems.length === 0" class="col-span-full py-16 text-center text-stone-400 dark:text-slate-500">
                 <svg class="w-16 h-16 mx-auto mb-3 text-stone-200 dark:text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                <p class="font-medium">لا توجد أصناف في هذا القسم حالياً</p>
+                <p class="font-medium">{{ activeCategory === 'all' ? 'لا توجد أصناف متاحة في المنيو حالياً' : 'لا توجد أصناف في هذا القسم حالياً' }}</p>
             </div>
         </div>
 

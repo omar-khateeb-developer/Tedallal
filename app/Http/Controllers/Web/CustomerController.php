@@ -18,13 +18,39 @@ class CustomerController extends Controller
         private readonly TableSessionService $tableSessionService,
     ) {}
 
-    public function table(Request $request, string $token): Response
+    public function table(Request $request, string $token): Response|\Illuminate\Http\Response
     {
+        $cleanToken = trim($token);
+
         $table = RestaurantTable::withoutGlobalScopes()
             ->with('restaurant')
-            ->where('public_token', $token)
-            ->where('status', 'active')
-            ->firstOrFail();
+            ->whereToken($cleanToken)
+            ->first();
+
+        if (! $table) {
+            return response()->view('customer.table-not-found', [
+                'token' => $cleanToken,
+                'reason' => 'not_found',
+            ], 404);
+        }
+
+        if (! $table->isActive()) {
+            return response()->view('customer.table-not-found', [
+                'table' => $table,
+                'token' => $cleanToken,
+                'restaurant' => $table->restaurant,
+                'reason' => 'inactive',
+            ], 200);
+        }
+
+        if (! $table->restaurant || ! $table->restaurant->isActive()) {
+            return response()->view('customer.table-not-found', [
+                'table' => $table,
+                'token' => $cleanToken,
+                'restaurant' => $table->restaurant,
+                'reason' => 'restaurant_closed',
+            ], 200);
+        }
 
         $session = $this->tableSessionService->resolveOrCreate($table);
 
@@ -46,7 +72,7 @@ class CustomerController extends Controller
             ->where('restaurant_id', $table->restaurant_id)
             ->active()
             ->orderBy('sort_order')
-            ->with(['activeItems' => fn ($q) => $q->orderBy('sort_order')])
+            ->with(['activeItems' => fn ($q) => $q->withoutGlobalScopes()->where('restaurant_id', $table->restaurant_id)->orderBy('sort_order')])
             ->get();
 
         $activeOrders = $session->orders()
@@ -79,7 +105,7 @@ class CustomerController extends Controller
     {
         $table = RestaurantTable::withoutGlobalScopes()
             ->with('restaurant')
-            ->where('public_token', $token)
+            ->whereToken($token)
             ->firstOrFail();
 
         // Ensure the order exists and belongs to this table and restaurant

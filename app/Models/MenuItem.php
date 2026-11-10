@@ -35,15 +35,41 @@ class MenuItem extends Model
         ];
     }
 
+    public const DEFAULT_IMAGE = '/images/tedallal-golden-logo-pure.png';
+
     protected function image(): \Illuminate\Database\Eloquent\Casts\Attribute
     {
         return \Illuminate\Database\Eloquent\Casts\Attribute::make(
             get: function (?string $value) {
-                if (! $value) return null;
-                if (str_starts_with($value, 'http')) {
-                    $value = parse_url($value, PHP_URL_PATH);
+                if (empty($value)) {
+                    return self::DEFAULT_IMAGE;
                 }
-                return '/' . ltrim($value, '/');
+
+                if (str_starts_with($value, 'http://') || str_starts_with($value, 'https://')) {
+                    return $value;
+                }
+
+                $clean = ltrim(parse_url($value, PHP_URL_PATH) ?? '', '/');
+                if (! str_starts_with($clean, 'storage/') && ! str_starts_with($clean, 'images/')) {
+                    $clean = 'storage/' . $clean;
+                }
+
+                // Check physical file existence in public_path
+                $publicFile = public_path($clean);
+                if (file_exists($publicFile) && is_file($publicFile)) {
+                    return '/' . $clean;
+                }
+
+                // Check in storage/app/public fallback
+                if (str_starts_with($clean, 'storage/')) {
+                    $storageCandidate = storage_path('app/public/' . substr($clean, 8));
+                    if (file_exists($storageCandidate) && is_file($storageCandidate)) {
+                        return '/' . $clean;
+                    }
+                }
+
+                // If file is missing on disk, self-heal to pure golden Tedallal logo
+                return self::DEFAULT_IMAGE;
             },
         );
     }

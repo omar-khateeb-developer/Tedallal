@@ -45,6 +45,7 @@ const shortOrderNumber = computed(() => {
 });
 
 function shareOrderOnWhatsApp() {
+    if (!order.value) return;
     const url = window.location.href;
     const itemsText = order.value.items && order.value.items.length > 0
         ? '\n📋 أصناف الطلب:\n' + order.value.items.map(i => `• ${i.quantity}x ${i.item_name_snapshot}`).join('\n')

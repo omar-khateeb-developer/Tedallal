@@ -80,7 +80,7 @@ onMounted(() => {
                             <div class="flex shrink-0 items-center bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-3 py-1.5 sm:px-4 sm:py-2 rounded-2xl shadow-xs border border-white/50 dark:border-slate-700/80 transition-all hover:shadow-md min-w-0">
                                 <Link :href="route('dashboard')" class="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
                                     <img v-if="restaurant?.logo" :src="restaurant.logo" class="h-10 sm:h-14 w-auto max-w-[120px] sm:max-w-[180px] object-contain rounded-xl shadow-xs" alt="Restaurant Logo" />
-                                    <ApplicationLogo v-else class="block h-9 sm:h-11 w-auto fill-current text-amber-500" />
+                                    <ApplicationLogo v-else class="block h-10 w-10 sm:h-12 sm:w-12 shrink-0" />
                                     
                                     <!-- Restaurant Name & Operating Type Badge -->
                                     <div v-if="restaurant" class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2.5 min-w-0">

@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منظومة تدلّل | العرض التقديمي التنفيذي الشامل</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        gold: {
+                            50: '#FDFBF0',
+                            100: '#F9F4D8',
+                            200: '#F2E5A8',
+                            300: '#E8D275',
+                            400: '#DFBD45',
+                            500: '#C5A028',
+                            600: '#A3801C',
+                            700: '#7F6015',
+                            800: '#5C4410',
+                            900: '#3D2D0A',
+                        },
+                        obsidian: {
+                            900: '#070709',
+                            800: '#0E0E12',
+                            700: '#15151C',
+                            600: '#1F1F2A',
+                            500: '#2E2E3E',
+                        }
+                    },
+                    fontFamily: {
+                        cairo: ['Cairo', 'sans-serif'],
+                        montserrat: ['Montserrat', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body {
+            font-family: 'Cairo', sans-serif;
+            overflow: hidden;
+            background-color: #070709;
+            color: #FAF8F5;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        /* Light mode adjustments */
+        html.light body {
+            background-color: #FAF7F2;
+            color: #1A1A1E;
+        }
+
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #ECC86F 0%, #B8860B 50%, #FFDF73 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .gold-border {
+            border: 1px solid rgba(197, 160, 40, 0.28);
+        }
+
+        .glass-card {
+            background: rgba(21, 21, 28, 0.72);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(218, 165, 32, 0.16);
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+        }
+
+        html.light .glass-card {
+            background: rgba(255, 255, 255, 0.88);
+            border: 1px solid rgba(197, 160, 40, 0.25);
+            box-shadow: 0 20px 40px -15px rgba(184, 134, 11, 0.12);
+        }
+
+        /* Slide Transition System */
+        .slide {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.97) translateX(-25px);
+            transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), 
+                        transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+                        visibility 0.5s;
+            pointer-events: none;
+            overflow-y: auto;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1) translateX(0);
+            pointer-events: auto;
+            z-index: 10;
+        }
+
+        .slide.prev {
+            transform: scale(0.97) translateX(25px);
+        }
+
+        /* Logo Animation Styles */
+        .tld-base-lines {
+            stroke: url(#pres-gold-gradient);
+            stroke-width: 4;
+            fill: none;
+            stroke-dasharray: 1200;
+            stroke-dashoffset: 1200;
+            animation: tldDrawLines 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        .tld-arabic-calligraphy {
+            stroke: url(#pres-gold-gradient);
+            stroke-width: 5;
+            fill: none;
+            stroke-dasharray: 1500;
+            stroke-dashoffset: 1500;
+            animation: tldDrawCalligraphy 1.1s cubic-bezier(0.4, 0, 0.2, 1) 0.8s forwards;
+        }
+        .tld-dots-accents {
+            fill: url(#pres-gold-gradient);
+            opacity: 0;
+            animation: tldPopBounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) 1.6s forwards;
+        }
+        .tld-royal-crown {
+            fill: url(#pres-gold-gradient);
+            opacity: 0;
+            animation: tldDropCrown 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.8s forwards;
+        }
+        .tld-crown-flare {
+            fill: #FFF;
+            opacity: 0;
+            mix-blend-mode: overlay;
+            animation: tldFlashFlare 0.5s ease-out 2.4s forwards;
+        }
+        .tld-bottom-text {
+            fill: url(#pres-gold-gradient);
+            clip-path: url(#pres-text-clip);
+        }
+        #pres-clip-rect {
+            animation: tldRevealText 0.7s ease-out 2.5s forwards;
+        }
+        .tld-shine-overlay {
+            fill: url(#pres-shine-gradient);
+            mix-blend-mode: overlay;
+            transform: skewX(-30deg) translateX(-300px);
+            animation: tldGoldenSweep 0.6s ease-in-out 3.1s forwards;
+        }
+
+        @keyframes tldDrawLines { to { stroke-dashoffset: 0; fill: url(#pres-gold-gradient); fill-opacity: 0.08; } }
+        @keyframes tldDrawCalligraphy { to { stroke-dashoffset: 0; } }
+        @keyframes tldPopBounce {
+            0% { opacity: 0; transform: scale(0.3); }
+            70% { transform: scale(1.15); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        @keyframes tldDropCrown {
+            0% { opacity: 0; transform: translateY(-70px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes tldFlashFlare {
+            0% { opacity: 0; transform: scale(0.4); }
+            50% { opacity: 0.9; }
+            100% { opacity: 0; transform: scale(1.4); }
+        }
+        @keyframes tldRevealText { to { width: 800px; } }
+        @keyframes tldGoldenSweep {
+            0% { transform: skewX(-30deg) translateX(-300px); }
+            100% { transform: skewX(-30deg) translateX(1200px); }
+        }
+
+        /* Mascot Float & Pulse Animations */
+        @keyframes mascotBob {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(1deg); }
+        }
+        .animate-mascot {
+            animation: mascotBob 4s ease-in-out infinite;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(197, 160, 40, 0.4); border-radius: 999px; }
+
+        /* Print styles */
+        @media print {
+            body { overflow: visible !important; background: #FFF !important; color: #000 !important; }
+            .slide { position: relative !important; opacity: 1 !important; visibility: visible !important; transform: none !important; page-break-after: always; min-height: 100vh; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body class="dark h-screen w-screen flex flex-col justify-between selection:bg-gold-500 selection:text-obsidian-900">
+
+    <!-- Top Floating Presentation Bar -->
+    <header class="no-print h-16 px-6 sm:px-10 flex items-center justify-between border-b border-gold-500/15 bg-obsidian-900/80 backdrop-blur-md z-50">
+        <div class="flex items-center gap-4">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-gold-600 to-gold-300 p-0.5 flex items-center justify-center shadow-lg shadow-gold-500/20">
+                <span class="font-black text-xs text-obsidian-900">ت</span>
+            </div>
+            <div>
+                <h1 class="font-bold text-sm sm:text-base tracking-wide flex items-center gap-2">
+                    <span>مـنـظـومـة تـدلّـل</span>
+                    <span class="text-xs px-2 py-0.5 rounded-full bg-gold-500/15 text-gold-400 font-semibold border border-gold-500/30">Executive Presentation</span>
+                </h1>
+            </div>
+        </div>
+
+        <!-- Navigation Controls & Tools -->
+        <div class="flex items-center gap-3">
+            <!-- Slide Index Counter -->
+            <div class="px-3 py-1 rounded-lg bg-obsidian-800 border border-gold-500/20 text-xs sm:text-sm font-bold text-gold-400">
+                <span id="currentSlideNum">01</span> / <span id="totalSlideNum">12</span>
+            </div>
+
+            <!-- Slide Thumbnails / Menu Button -->
+            <button onclick="toggleSlideIndexModal()" class="p-2 rounded-lg bg-obsidian-800 hover:bg-gold-500/10 border border-gold-500/20 text-gold-400 transition" title="فهرس الشرائح">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/></svg>
+            </button>
+
+            <!-- Light/Dark Mode Toggle -->
+            <button onclick="toggleTheme()" class="p-2 rounded-lg bg-obsidian-800 hover:bg-gold-500/10 border border-gold-500/20 text-gold-400 transition" title="تبديل النمط">
+                <svg id="themeIconSun" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                <svg id="themeIconMoon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+            </button>
+
+            <!-- Fullscreen Button -->
+            <button onclick="toggleFullScreen()" class="p-2 rounded-lg bg-obsidian-800 hover:bg-gold-500/10 border border-gold-500/20 text-gold-400 transition" title="ملء الشاشة (F)">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+            </button>
+
+            <!-- Navigation Arrows -->
+            <div class="flex items-center gap-1 border-r border-gold-500/20 pr-3 mr-1">
+                <button onclick="prevSlide()" class="p-2 rounded-lg bg-obsidian-800 hover:bg-gold-500 hover:text-obsidian-900 border border-gold-500/20 text-gold-400 transition" title="الشريحة السابقة">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </button>
+                <button onclick="nextSlide()" class="p-2 rounded-lg bg-gold-500 text-obsidian-900 hover:bg-gold-400 font-bold shadow-lg shadow-gold-500/25 transition" title="الشريحة التالية">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Presentation Stage Container -->
+    <main class="relative flex-1 w-full overflow-hidden">
+
+        <!-- ========================================== -->
+        <!-- SLIDE 1: Title & Royal Brand Introduction  -->
+        <!-- ========================================== -->
+        <section class="slide active items-center justify-center p-6 sm:p-12" data-slide="1">
+            <div class="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center my-auto">
+                <div class="lg:col-span-7 space-y-6 text-right">
+                    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gold-500/10 border border-gold-500/30 text-gold-400 text-xs sm:text-sm font-semibold">
+                        <span class="w-2 h-2 rounded-full bg-gold-400 animate-ping"></span>
+                        العصر الجديد في تكنولوجيا المطاعم والضيافة الراقية
+                    </div>
+                    <h2 class="text-4xl sm:text-6xl font-black leading-tight tracking-tight">
+                        منظومة <span class="gold-gradient-text">تدلّل</span> الرقمية
+                    </h2>
+                    <p class="text-lg sm:text-2xl text-gold-200/90 font-light leading-relaxed">
+                        تجربة ضيافة ذكية تجمع بين عبق الفخامة الملكية وسرعة التقنية اللحظية. من مسح الطاولة إلى رضا الضيف الكامل.
+                    </p>
+                    
+                    <!-- Quick stats pills -->
+                    <div class="grid grid-cols-3 gap-4 pt-4">
+                        <div class="glass-card p-4 rounded-2xl text-center">
+                            <div class="text-2xl sm:text-3xl font-black text-gold-400">+35%</div>
+                            <div class="text-xs text-gray-400 mt-1">متوسط الفاتورة</div>
+                        </div>
+                        <div class="glass-card p-4 rounded-2xl text-center">
+                            <div class="text-2xl sm:text-3xl font-black text-gold-400">-60%</div>
+                            <div class="text-xs text-gray-400 mt-1">زمن الانتظار</div>
+                        </div>
+                        <div class="glass-card p-4 rounded-2xl text-center">
+                            <div class="text-2xl sm:text-3xl font-black text-gold-400">100%</div>
+                            <div class="text-xs text-gray-400 mt-1">مزامنة سحابية</div>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 flex items-center gap-4">
+                        <button onclick="nextSlide()" class="px-8 py-3.5 rounded-xl bg-gradient-to-r from-gold-500 to-gold-400 text-obsidian-900 font-extrabold text-base shadow-xl shadow-gold-500/25 hover:shadow-gold-500/40 hover:scale-105 transition transform">
+                            بدء جولة الميزات 🚀
+                        </button>
+                        <span class="text-xs text-gray-400">اضغط Space أو الأسهم للتنقل</span>
+                    </div>
+                </div>
+
+                <!-- Animated Interactive Logo Showcase -->
+                <div class="lg:col-span-5 flex flex-col items-center justify-center">
+                    <div class="glass-card p-8 rounded-3xl relative w-full max-w-md aspect-square flex flex-col items-center justify-center border-gold-500/40 shadow-2xl">
+                        <!-- User's Exact Animated SVG Logo -->
+                        <svg class="w-64 h-64 sm:w-72 sm:h-72 drop-shadow-[0_10px_25px_rgba(218,165,32,0.35)]" viewBox="0 0 1000 800" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="pres-gold-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#B38728" />
+                                    <stop offset="25%" stop-color="#FBF5B7" />
+                                    <stop offset="50%" stop-color="#DAA520" />
+                                    <stop offset="75%" stop-color="#FBF5B7" />
+                                    <stop offset="100%" stop-color="#AA771C" />
+                                </linearGradient>
+                                <linearGradient id="pres-shine-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stop-color="rgba(255,255,255,0)" />
+                                    <stop offset="50%" stop-color="rgba(255,255,255,0.7)" />
+                                    <stop offset="100%" stop-color="rgba(255,255,255,0)" />
+                                </linearGradient>
+                                <clipPath id="pres-text-clip">
+                                    <rect id="pres-clip-rect" x="100" y="550" width="0" height="200" />
+                                </clipPath>
+                            </defs>
+                            <g>
+                                <g class="tld-base-lines">
+                                    <path d="M 250,500 A 250,250 0 0,1 750,500 Z" />
+                                    <line x1="220" y1="510" x2="780" y2="510" />
+                                    <line x1="240" y1="525" x2="760" y2="525" />
+                                    <circle cx="470" cy="540" r="8" />
+                                    <circle cx="500" cy="540" r="8" />
+                                    <circle cx="530" cy="540" r="8" />
+                                </g>
+                                <g class="tld-arabic-calligraphy">
+                                    <path d="M 620,400 C 650,300 580,260 540,320 C 500,370 450,480 380,480 C 330,480 290,400 320,330 C 340,280 390,290 410,340 C 430,400 370,450 450,450 C 510,450 560,340 500,240" />
+                                </g>
+                                <g class="tld-dots-accents">
+                                    <circle cx="610" cy="230" r="10" />
+                                    <circle cx="640" cy="245" r="10" />
+                                    <path d="M 550,210 Q 560,195 570,210 T 590,210" stroke-width="4" stroke="url(#pres-gold-gradient)" fill="none" />
+                                </g>
+                                <g class="tld-royal-crown">
+                                    <path d="M 370,230 L 410,120 L 460,180 L 500,80 L 540,180 L 590,120 L 630,230 C 630,230 500,260 370,230 Z" />
+                                    <circle cx="410" cy="110" r="12" />
+                                    <circle cx="500" cy="68" r="15" />
+                                    <circle cx="590" cy="110" r="12" />
+                                </g>
+                                <circle class="tld-crown-flare" cx="500" cy="235" r="40" />
+                                <g class="tld-bottom-text">
+                                    <text x="500" y="610" font-family="'Montserrat', sans-serif" font-size="75" font-weight="900" letter-spacing="10" text-anchor="middle">TEDALLAL</text>
+                                    <text x="500" y="700" font-family="'Cairo', sans-serif" font-size="50" font-weight="bold" letter-spacing="4" text-anchor="middle">تـدلّـل</text>
+                                </g>
+                                <rect class="tld-shine-overlay" x="0" y="50" width="150" height="700" />
+                            </g>
+                        </svg>
+                        
+                        <!-- Mascot Badge: الشيف سلطان يرحب بكم -->
+                        <div class="absolute -bottom-6 bg-obsidian-800 border border-gold-500/40 px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
+                            <span class="text-xl">👑</span>
+                            <span class="text-xs font-bold text-gold-300">منظومة الضيافة الفندقية المتكاملة</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SLIDE 2: The Problems vs. Tedallal Vision  -->
+        <!-- ========================================== -->
+        <section class="slide items-center justify-center p-6 sm:p-12" data-slide="2">
+            <div class="max-w-6xl w-full my-auto space-y-8">
+                <div class="text-center space-y-2">
+                    <span class="text-xs uppercase font-bold text-gold-400 tracking-widest">تحليل فجوة السوق</span>
+                    <h2 class="text-3xl sm:text-5xl font-black">المعاناة التقليدية مقابل <span class="gold-gradient-text">حلول تدلّل</span></h2>
+                    <p class="text-gray-400 max-w-2xl mx-auto text-sm sm:text-base">لماذا تفقد المطاعم 30% من عملائها بسبب بطء الدورة التشغيلية؟</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+                    <!-- The Pain Points Card (Traditional) -->
+                    <div class="glass-card p-6 rounded-3xl border-red-500/20 bg-red-950/10 relative overflow-hidden flex flex-col justify-between">
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-3 text-red-400 font-bold text-lg">
+                                <div class="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center text-xl">⚠️</div>
+                                <span>الطريقة التقليدية المتعبة</span>
+                            </div>
+                            <ul class="space-y-3 text-sm sm:text-base text-gray-300">
+                                <li class="flex items-start gap-2">
+                                    <span class="text-red-400 font-bold">✕</span>
+                                    <span>انتظار النادل لتسليم المنيو الورقي المتهالك (متوسط 12 دقيقة ضائعة).</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-red-400 font-bold">✕</span>
+                                    <span>أخطاء بشرية متكررة في تسجيل ملاحظات الطهي والحساسية.</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-red-400 font-bold">✕</span>
+                                    <span>تراكم بونات الورق في المطبخ وضياع ترتيب الطلبات.</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-red-400 font-bold">✕</span>
+                                    <span>إحراج الزبون عند البحث عن النادل لطلب الحساب أو المساعدة.</span>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <!-- Cartoon Character: النادل المرهق والمحتار -->
+                        <div class="mt-6 pt-4 border-t border-red-500/20 flex items-center gap-3">
+                            <svg class="w-12 h-12 flex-shrink-0" viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="45" fill="#3D1212" stroke="#EF4444" stroke-width="2"/>
+                                <circle cx="35" cy="40" r="5" fill="#EF4444"/>
+                                <circle cx="65" cy="40" r="5" fill="#EF4444"/>
+                                <path d="M 35 70 Q 50 55 65 70" stroke="#EF4444" stroke-width="4" fill="none" stroke-linecap="round"/>
+                                <path d="M 20 25 L 35 32" stroke="#EF4444" stroke-width="3"/>
+                                <path d="M 80 25 L 65 32" stroke="#EF4444" stroke-width="3"/>
+                            </svg>
+                            <span class="text-xs text-red-300/80">تكدس الطاولات، تذمر الزبائن، وتراجع الإيرادات.</span>
+                        </div>
+                    </div>
+
+                    <!-- The Solution Card (Tedallal) -->
+                    <div class="glass-card p-6 rounded-3xl border-gold-500/40 bg-gold-950/20 relative overflow-hidden flex flex-col justify-between">
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-3 text-gold-400 font-bold text-lg">
+                                <div class="w-10 h-10 rounded-xl bg-gold-500/20 flex items-center justify-center text-xl">✨</div>
+                                <span>تجربة «تدلّل» السلسة</span>
+                            </div>
+                            <ul class="space-y-3 text-sm sm:text-base text-gray-200">
+                                <li class="flex items-start gap-2">
+                                    <span class="text-gold-400 font-bold">✓</span>
+                                    <span>مسح فوري للـ QR في 0.05 ثانية، بدون تنزيل تطبيقات أو تسجيل حساب.</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-gold-400 font-bold">✓</span>
+                                    <span>منيو تفاعلي صور عالية الجودة، تخصيص دقيق للمكونات والحساسية.</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-gold-400 font-bold">✓</span>
+                                    <span>ترحيل فوري للمطبخ (KDS) بمزامنة حية وتنبيهات صوتية فورية.</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <span class="text-gold-400 font-bold">✓</span>
+                                    <span>زر نداء النادل وطلب الفاتورة بنقرة زر واحدة مع عجلة الحظ المبهجة.</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Cartoon Character: الشيف السعيد والمبتسم -->
+                        <div class="mt-6 pt-4 border-t border-gold-500/30 flex items-center gap-3">
+                            <svg class="w-12 h-12 flex-shrink-0 animate-mascot" viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="45" fill="#2E230A" stroke="#DAA520" stroke-width="2"/>
+                                <!-- Chef Hat -->
+                                <path d="M 30 35 C 30 15 70 15 70 35 Z" fill="#DAA520" opacity="0.3"/>
+                                <path d="M 32 35 C 20 20 50 10 50 25 C 50 10 80 20 68 35 Z" fill="#FBF5B7"/>
+                                <rect x="35" y="32" width="30" height="6" rx="2" fill="#DAA520"/>
+                                <!-- Eyes Smiling -->
+                                <path d="M 35 48 Q 40 42 45 48" stroke="#FBF5B7" stroke-width="3" fill="none" stroke-linecap="round"/>
+                                <path d="M 55 48 Q 60 42 65 48" stroke="#FBF5B7" stroke-width="3" fill="none" stroke-linecap="round"/>
+                                <!-- Moustache -->
+                                <path d="M 35 60 C 45 55 50 63 50 63 C 50 63 55 55 65 60 C 58 66 50 64 50 64 C 50 64 42 66 35 60 Z" fill="#DAA520"/>
+                                <!-- Smile -->
+                                <path d="M 42 68 Q 50 76 58 68" stroke="#FBF5B7" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                            </svg>
+                            <span class="text-xs text-gold-300 font-medium">رضا تام للعملاء، تدفق تشغيلي سريع، وأرباح متضاعفة.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SLIDE 3: End-to-End Customer Flow Diagram  -->
+        <!-- ========================================== -->
+        <section class="slide items-center justify-center p-6 sm:p-12" data-slide="3">
+            <div class="max-w-6xl w-full my-auto space-y-8">
+                <div class="text-center space-y-2">
+                    <span class="text-xs uppercase font-bold text-gold-400 tracking-widest">المخطط الانسيابي المتكامل</span>
+                    <h2 class="text-3xl sm:text-5xl font-black">رحلة العميل في <span class="gold-gradient-text">تدلّل</span> (6 خطوات)</h2>
+                    <p class="text-gray-400 max-w-2xl mx-auto text-sm sm:text-base">دورة حياة ذكية تبدأ من وصول الضيف وتنتهي بعودته مجدداً</p>
+                </div>
+
+                <!-- Interactive Step Flow Cards -->
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                    <!-- Step 1 -->
+                    <div class="glass-card p-4 rounded-2xl flex flex-col items-center text-center space-y-2 border-gold-500/30 hover:border-gold-400 transition transform hover:-translate-y-1">
+                        <div class="w-12 h-12 rounded-xl bg-gold-500/20 border border-gold-500/40 flex items-center justify-center text-2xl">📱</div>
+                        <span class="text-xs font-bold text-gold-400">1. مسح الـ QR</span>
+                        <p class="text-[11px] text-gray-300 leading-tight">مسح سريع لرمز الطاولة المطبوع حرارياً بنصف ثانية</p>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="glass-card p-4 rounded-2xl flex flex-col items-center text-center space-y-2 border-gold-500/30 hover:border-gold-400 transition transform hover:-translate-y-1">
+                        <div class="w-12 h-12 rounded-xl bg-gold-500/20 border border-gold-500/40 flex items-center justify-center text-2xl">🍽️</div>
+                        <span class="text-xs font-bold text-gold-400">2. تصفح المنيو</span>
+                        <p class="text-[11px] text-gray-300 leading-tight">صور فاخرة، تصنيفات ديناميكية، وتحديد المكونات</p>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="glass-card p-4 rounded-2xl flex flex-col items-center text-center space-y-2 border-gold-500/30 hover:border-gold-400 transition transform hover:-translate-y-1">
+                        <div class="w-12 h-12 rounded-xl bg-gold-500/20 border border-gold-500/40 flex items-center justify-center text-2xl">⚡</div>
+                        <span class="text-xs font-bold text-gold-400">3. طلب فوري</span>
+                        <p class="text-[11px] text-gray-300 leading-tight">تأكيد السلة بضغطة واحدة وترحيل فوري سحابي</p>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="glass-card p-4 rounded-2xl flex flex-col items-center text-center space-y-2 border-gold-500/30 hover:border-gold-400 transition transform hover:-translate-y-1">
+                        <div class="w-12 h-12 rounded-xl bg-gold-500/20 border border-gold-500/40 flex items-center justify-center text-2xl">👨‍🍳</div>
+                        <span class="text-xs font-bold text-gold-400">4. شاشة KDS</span>
+                        <p class="text-[11px] text-gray-300 leading-tight">تنبيه صوتي للشيف، توقيت التحضير، وتسليم سلس</p>
+                    </div>
+
+                    <!-- Step 5 -->
+                    <div class="glass-card p-4 rounded-2xl flex flex-col items-center text-center space-y-2 border-gold-500/30 hover:border-gold-400 transition transform hover:-translate-y-1">
+                        <div class="w-12 h-12 rounded-xl bg-gold-500/20 border border-gold-500/40 flex items-center justify-center text-2xl">🛎️</div>
+                        <span class="text-xs font-bold text-gold-400">5. نداء النادل</span>
+                        <p class="text-[11px] text-gray-300 leading-tight">طلب المساعدة أو الفاتورة مباشرة دون تلويح باليد</p>
+                    </div>
+
+                    <!-- Step 6 -->
+                    <div class="glass-card p-4 rounded-2xl flex flex-col items-center text-center space-y-2 border-gold-500/30 hover:border-gold-400 transition transform hover:-translate-y-1">
+                        <div class="w-12 h-12 rounded-xl bg-gold-500/20 border border-gold-500/40 flex items-center justify-center text-2xl">🎡</div>
+                        <span class="text-xs font-bold text-gold-400">6. عجلة الحظ</span>
+                        <p class="text-[11px] text-gray-300 leading-tight">كوبونات وجوائز بعد الدفع تضمن تكرار الزيارة</p>
+                    </div>
+                </div>
+
+                <!-- Architecture & Real-Time Sync Banner -->
+                <div class="glass-card p-6 rounded-3xl border-gold-500/30 flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div class="space-y-1 text-right">
+                        <h4 class="font-bold text-lg text-gold-300 flex items-center gap-2">
+                            <span>📡 مزامنة حية ثنائية الاتجاه (Real-time SSE Engine)</span>
+                        </h4>
+                        <p class="text-xs sm:text-sm text-gray-300">
+                            أي تغيير في حالة الطلب يظهر في شاشة الزبون وجهاز النادل وشاشة المطبخ في أجزاء من الثانية دون الحاجة لتحديث الصفحة.
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs font-mono text-gold-400 bg-obsidian-800 px-4 py-2 rounded-xl border border-gold-500/20">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+                        <span>LATENCY &lt; 85ms</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SLIDE 4: Ultra-Smart QR & Digital Menu     -->
+        <!-- ========================================== -->
+        <section class="slide items-center justify-center p-6 sm:p-12" data-slide="4">
+            <div class="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center my-auto">
+                <div class="lg:col-span-7 space-y-5 text-right">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold-500/10 text-gold-400 text-xs font-semibold">
+                        الميزة الأولى: تجربة العميل
+                    </div>
+                    <h2 class="text-3xl sm:text-5xl font-black">
+                        رمز <span class="gold-gradient-text">QR ذكي ومبسّط</span> وقائمة طعام لا تُقاوم
+                    </h2>
+                    <p class="text-sm sm:text-base text-gray-300 leading-relaxed">
+                        تخلصنا من الرموز المعقدة والشعارات التي تشوه الباركود. اعتمدنا شبكة نقية (Low-density 25×25) بمربعات عريضة تقرأها الكاميرات فوراً حتى في إضاءة المطاعم الشاعرية.
+                    </p>
+
+                    <div class="space-y-3">
+                        <div class="flex items-start gap-3">
+                            <div class="w-6 h-6 rounded-full bg-gold-500/20 flex items-center justify-center text-gold-400 text-xs font-bold mt-1">1</div>
+                            <div>
+                                <h4 class="font-bold text-sm text-gold-300">بدون أي تطبيق (Zero App Friction)</h4>
+                                <p class="text-xs text-gray-400">يعمل مباشرة في متصفح Safari أو Chrome فور المسح دون تنزيل أي برامج.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-6 h-6 rounded-full bg-gold-500/20 flex items-center justify-center text-gold-400 text-xs font-bold mt-1">2</div>
+                            <div>
+                                <h4 class="font-bold text-sm text-gold-300">ملاحظات الحساسية والتخصيص الإضافي</h4>
+                                <p class="text-xs text-gray-400">إمكانية إضافة ملاحظات الشيف الخاصة (بدون بصل، استواء متوسط، صوص جانبي).</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <div class="w-6 h-6 rounded-full bg-gold-500/20 flex items-center justify-center text-gold-400 text-xs font-bold mt-1">3</div>
+                            <div>
+                                <h4 class="font-bold text-sm text-gold-300">متابعة مسار الطلب لحظة بلحظة</h4>
+                                <p class="text-xs text-gray-400">شريط تقدم مباشر يوضح: تم الاستلام ➔ قيد الطهي ➔ جاهز للتقديم.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visual Mockup & Cartoon Mascot: الضيف فارس والـ QR -->
+                <div class="lg:col-span-5 flex flex-col items-center justify-center">
+                    <div class="glass-card p-6 rounded-3xl w-full max-w-sm flex flex-col items-center text-center border-gold-500/30 relative">
+                        <!-- Cartoon Vector: الضيف فارس يمسح الـ QR بهاتفه -->
+                        <div class="w-48 h-48 relative mb-4">
+                            <svg class="w-full h-full animate-mascot" viewBox="0 0 200 200">
+                                <!-- Table -->
+                                <ellipse cx="100" cy="170" rx="80" ry="20" fill="#1C1810" stroke="#DAA520" stroke-width="2"/>
+                                <!-- Table QR Stand -->
+                                <rect x="90" y="130" width="20" height="25" rx="3" fill="#FFF" stroke="#DAA520" stroke-width="1.5"/>
+                                <rect x="93" y="133" width="14" height="14" fill="#000"/>
+                                <rect x="95" y="135" width="4" height="4" fill="#FFF"/>
+                                <!-- Customer Body -->
+                                <ellipse cx="100" cy="90" rx="30" ry="25" fill="#DAA520" opacity="0.2"/>
+                                <circle cx="100" cy="65" r="24" fill="#FCE7B8"/>
+                                <!-- Hair -->
+                                <path d="M 76 60 Q 100 35 124 60 Z" fill="#2C1D11"/>
+                                <!-- Smiling Face -->
+                                <circle cx="92" cy="63" r="3" fill="#2C1D11"/>
+                                <circle cx="108" cy="63" r="3" fill="#2C1D11"/>
+                                <path d="M 94 72 Q 100 78 106 72" stroke="#2C1D11" stroke-width="2" fill="none" stroke-linecap="round"/>
+                                <!-- Phone in hand -->
+                                <rect x="110" y="85" width="22" height="40" rx="4" fill="#0A0A0C" stroke="#DAA520" stroke-width="2" transform="rotate(-15 110 85)"/>
+                                <rect x="113" y="90" width="16" height="28" rx="2" fill="#DAA520" opacity="0.7" transform="rotate(-15 110 85)"/>
+                                <!-- Scan beam animation -->
+                                <line x1="105" y1="110" x2="95" y2="135" stroke="#4ADE80" stroke-width="2" stroke-dasharray="3,3"/>
+                            </svg>
+                        </div>
+                        <h4 class="font-bold text-sm text-gold-300">مسح فوري من كاميرا الجوال</h4>
+                        <p class="text-xs text-gray-400 mt-1">توليد نقي عالي الدقة بمربعات Chunky واضحة</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SLIDE 5: Kitchen Display System (KDS)      -->
+        <!-- ========================================== -->
+        <section class="slide items-center justify-center p-6 sm:p-12" data-slide="5">
+            <div class="max-w-6xl w-full my-auto space-y-6">
+                <div class="text-center space-y-1">
+                    <span class="text-xs uppercase font-bold text-gold-400 tracking-widest">الميزة الثانية: عصب العمليات</span>
+                    <h2 class="text-3xl sm:text-5xl font-black">شاشة المطبخ الذكية <span class="gold-gradient-text">(KDS)</span></h2>
+                    <p class="text-gray-400 max-w-2xl mx-auto text-xs sm:text-sm">صفر أوراق، صفر ضياع، وتنسيق دقيق بين محطات الشيف</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                    <!-- Left: Interactive KDS Ticket Demo -->
+                    <div class="lg:col-span-7 glass-card p-6 rounded-3xl border-gold-500/30 space-y-4">
+                        <div class="flex items-center justify-between border-b border-gold-500/20 pb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
+                                <span class="font-bold text-sm text-gold-300">شاشة شيف الطهي (KDS Live Ticket)</span>
+                            </div>
+                            <span class="text-xs font-mono px-2 py-0.5 rounded bg-gold-500/10 text-gold-400">طاولة #04</span>
+                        </div>
+
+                        <!-- The Ticket Content -->
+                        <div id="kdsDemoTicket" class="bg-obsidian-800 p-4 rounded-2xl border-2 border-amber-500/60 transition-all duration-300">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-bold text-base text-white">طلب #1042</span>
+                                <span id="kdsTimerBadge" class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300">⏱️ منذ 3 دقائق</span>
+                            </div>
+                            <ul class="space-y-1.5 text-xs sm:text-sm text-gray-200 divide-y divide-white/5">
+                                <li class="pt-1 flex justify-between">
+                                    <span>2× ستيك واغيو ملكي (Medium)</span>
+                                    <span class="text-gold-400 font-mono">x2</span>
+                                </li>
+                                <li class="pt-1 flex justify-between text-amber-200">
+                                    <span>ملاحظة: الصوص في طبق منفصل</span>
+                                    <span class="text-xs">⚠️</span>
+                                </li>
+                                <li class="pt-1 flex justify-between">
+                                    <span>1× باستا تروفل فريش</span>
+                                    <span class="text-gold-400 font-mono">x1</span>
+                                </li>
+                            </ul>
+
+                            <!-- Interactive Status Button -->
+                            <div class="mt-4 pt-3 border-t border-white/10 flex items-center justify-between">
+                                <span class="text-xs text-gray-400">الحالة الحالية:</span>
+                                <button id="kdsStatusBtn" onclick="cycleKdsStatus()" class="px-4 py-2 rounded-xl bg-amber-500 text-obsidian-900 font-extrabold text-xs shadow-lg hover:scale-105 transition">
+                                    🔥 قيد الطهي (اضغط للتحديث)
+                                </button>
+                            </div>
+                        </div>
+
+                        <p class="text-xs text-center text-gray-400">اضغط على الزر لتجربة تغير حالة الطلب كما يراها الشيف في المطبخ</p>
+                    </div>
+
+                    <!-- Right: Features & Cartoon Chef -->
+                    <div class="lg:col-span-5 space-y-4 text-right">
+                        <div class="glass-card p-4 rounded-2xl border-gold-500/20">
+                            <h4 class="font-bold text-sm text-gold-300 flex items-center gap-2">
+                                <span>🔔 تنبيهات صوتية وبصرية فورية</span>
+                            </h4>
+                            <p class="text-xs text-gray-400 mt-1">رنين مميز عند وصول أي طلب جديد لا يتوقف إلا بعد استلام الشيف.</p>
+                        </div>
+
+                        <div class="glass-card p-4 rounded-2xl border-gold-500/20">
+                            <h4 class="font-bold text-sm text-gold-300 flex items-center gap-2">
+                                <span>🎨 ألوان ذكية لقياس مدة التأخير</span>
+                            </h4>
+                            <p class="text-xs text-gray-400 mt-1">اللون الأخضر (طبيعي) ➔ البرتقالي (اقترب الوقت) ➔ الأحمر (تحذير تأخير).</p>
+                        </div>
+
+                        <div class="glass-card p-4 rounded-2xl border-gold-500/20">
+                            <h4 class="font-bold text-sm text-gold-300 flex items-center gap-2">
+                                <span>🚀 فصل محطات التجهيز</span>
+                            </h4>
+                            <p class="text-xs text-gray-400 mt-1">توزيع آلي للأصناف بين محطة المشروبات، المطبخ الساخن، والحلويات.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SLIDE 6: Floor Plan & Waiter Call System   -->
+        <!-- ========================================== -->
+        <section class="slide items-center justify-center p-6 sm:p-12" data-slide="6">
+            <div class="max-w-6xl w-full my-auto space-y-6">
+                <div class="text-center space-y-1">
+                    <span class="text-xs uppercase font-bold text-gold-400 tracking-widest">الميزة الثالثة: إدارة الصالة</span>
+                    <h2 class="text-3xl sm:text-5xl font-black">خريطة الصالة الحية و <span class="gold-gradient-text">نداء النادل الفوري</span></h2>
+                    <p class="text-gray-400 max-w-2xl mx-auto text-xs sm:text-sm">تحكم كامل في توزيع الطاولات واستجابة لحظية لأي نداء بدون إزعاج</p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                    <!-- Left: Interactive Floor Plan Matrix -->
+                    <div class="lg:col-span-7 glass-card p-6 rounded-3xl border-gold-500/30">
+                        <div class="flex items-center justify-between border-b border-gold-500/20 pb-3 mb-4">
+                            <span class="font-bold text-sm text-gold-300">مخطط الصالة التفاعلي (Live Floor Map)</span>
+                            <div class="flex items-center gap-3 text-xs">
+                                <span class="flex items-center gap-1 text-emerald-400"><span class="w-2 h-2 rounded-full bg-emerald-400"></span>شاغرة</span>
+                                <span class="flex items-center gap-1 text-red-400"><span class="w-2 h-2 rounded-full bg-red-400"></span>مشغولة</span>
+                                <span class="flex items-center gap-1 text-blue-400"><span class="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span>نداء!</span>
+                            </div>
+                        </div>
+
+                        <!-- 6 Tables Interactive Grid -->
+                        <div class="grid grid-cols-3 gap-3">
+                            <!-- Table 1 -->
+                            <div class="p-4 rounded-2xl bg-emerald-950/20 border border-emerald-500/40 text-center cursor-pointer hover:scale-105 transition" onclick="toggleTableMock(this, 'طاولة 1')">
+                                <div class="text-xl">🪑</div>
+                                <div class="font-bold text-xs text-white mt-1">طاولة 01</div>
+                                <div class="text-[10px] text-emerald-400">شاغرة</div>
+                            </div>
+                            <!-- Table 2 (Active with Waiter Call) -->
+                            <div class="p-4 rounded-2xl bg-blue-950/30 border-2 border-blue-500 text-center shadow-lg shadow-blue-500/20 animate-pulse cursor-pointer hover:scale-105 transition" onclick="toggleTableMock(this, 'طاولة 2')">
+                                <div class="text-xl">🛎️</div>
+                                <div class="font-bold text-xs text-white mt-1">طاولة 02</div>
+                                <div class="text-[10px] text-blue-300 font-bold">نداء نادل!</div>
+                            </div>
+                            <!-- Table 3 -->
+                            <div class="p-4 rounded-2xl bg-red-950/20 border border-red-500/40 text-center cursor-pointer hover:scale-105 transition" onclick="toggleTableMock(this, 'طاولة 3')">
+                                <div class="text-xl">🍽️</div>
+                                <div class="font-bold text-xs text-white mt-1">طاولة 03</div>
+                                <div class="text-[10px] text-red-400">قيد تناول الطعام</div>
+                            </div>
+                            <!-- Table 4 -->
+                            <div class="p-4 rounded-2xl bg-amber-950/20 border border-amber-500/40 text-center cursor-pointer hover:scale-105 transition" onclick="toggleTableMock(this, 'طاولة 4')">
+                                <div class="text-xl">💳</div>
+                                <div class="font-bold text-xs text-white mt-1">طاولة 04</div>
+                                <div class="text-[10px] text-amber-400">طلب الفاتورة</div>
+                            </div>
+                            <!-- Table 5 -->
+                            <div class="p-4 rounded-2xl bg-emerald-950/20 border border-emerald-500/40 text-center cursor-pointer hover:scale-105 transition" onclick="toggleTableMock(this, 'طاولة 5')">
+                                <div class="text-xl">🪑</div>
+                                <div class="font-bold text-xs text-white mt-1">طاولة 05</div>
+                                <div class="text-[10px] text-emerald-400">شاغرة</div>
+                            </div>
+                            <!-- Table 6 -->
+                            <div class="p-4 rounded-2xl bg-red-950/20 border border-red-500/40 text-center cursor-pointer hover:scale-105 transition" onclick="toggleTableMock(this, 'طاولة 6')">
+                                <div class="text-xl">🍽️</div>
+                                <div class="font-bold text-xs text-white mt-1">طاولة 06</div>
+                                <div class="text-[10px] text-red-400">طلب جديد</div>
+                            </div>
+                        </div>
+
+                        <p class="text-[11px] text-center text-gray-400 mt-4">إشعار فوري على تابلت النادل باسم ورقم الطاولة ونوع الطلب بدقة</p>
+                    </div>
+
+                    <!-- Right: Mascot Cartoon: النادل ريّان -->
+                    <div class="lg:col-span-5 space-y-4 text-right">
+                        <!-- Cartoon Vector: النادل ريّان بالتابلت -->
+                        <div class="glass-card p-6 rounded-3xl border-gold-500/30 flex flex-col items-center text-center">
+                            <div class="w-36 h-36 relative mb-2">
+                                <svg class="w-full h-full animate-mascot" viewBox="0 0 160 160">
+                                    <!-- Waiter Body with Bow Tie -->
+                                    <circle cx="80" cy="50" r="28" fill="#FCE7B8"/>
+                                    <!-- Hair -->
+                                    <path d="M 52 45 Q 80 20 108 45 Z" fill="#2C1D11"/>
+                                    <!-- Eyes & Smile -->
+                                    <circle cx="72" cy="48" r="3.5" fill="#2C1D11"/>
+                                    <circle cx="88" cy="48" r="3.5" fill="#2C1D11"/>
+                                    <path d="M 74 58 Q 80 64 86 58" stroke="#2C1D11" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                                    <!-- Suit & Waistcoat -->
+                                    <path d="M 45 140 L 55 80 L 105 80 L 115 140 Z" fill="#1C1810"/>
+                                    <path d="M 65 80 L 80 115 L 95 80 Z" fill="#FFF"/>
+                                    <!-- Red Bow Tie -->
+                                    <polygon points="72,82 88,82 80,88" fill="#EF4444"/>
+                                    <polygon points="72,94 88,94 80,88" fill="#EF4444"/>
+                                    <!-- Tablet in Hands -->
+                                    <rect x="55" y="105" width="50" height="32" rx="4" fill="#0E0E12" stroke="#DAA520" stroke-width="2"/>
+                                    <rect x="60" y="110" width="40" height="22" rx="2" fill="#3B82F6" opacity="0.8"/>
+                                    <text x="80" y="124" font-size="8" fill="#FFF" font-weight="bold" text-anchor="middle">TABLE #2</text>
+                                </svg>
+                            </div>
+                            <h4 class="font-bold text-sm text-gold-300">النادل ريّان في خدمتك</h4>
+                            <p class="text-xs text-gray-400 mt-1">توزيع ذكي للمهام بين طاقم الخدمة يمنع تضارب الطلبات</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SLIDE 7: Gamification - The Lucky Wheel    -->
+        <!-- ========================================== -->
+        <section class="slide items-center justify-center p-6 sm:p-12" data-slide="7">
+            <div class="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center my-auto">
+                <div class="lg:col-span-6 space-y-5 text-right">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold-500/10 text-gold-400 text-xs font-semibold">
+                        الميزة الرابعة: مضاعفة الولاء والعودة
+                    </div>
+                    <h2 class="text-3xl sm:text-5xl font-black">
+                        عجلة الحظ التفاعلية <span class="gold-gradient-text">(Lucky Wheel)</span>
+                    </h2>
+                    <p class="text-sm sm:text-base text-gray-300 leading-relaxed">
+                        حوّل لحظة دفع الحساب التقليدية إلى تجربة حماسية مبهجة! يدوّر الضيف عجلة الحظ بعد إتمام الطلب ليكسب خصماً على زيارته القادمة أو طبقاً مجانياً.
+                    </p>
+
+                    <div class="space-y-3">
+                        <div class="glass-card p-3.5 rounded-2xl border-gold-500/20 flex items-center gap-3">
+                            <span class="text-2xl">🎁</span>
+                            <div class="text-xs">
+                                <div class="font-bold text-gold-300 text-sm">+42% زيادة في معدل العودة (Repeat Rate)</div>
+                                <div class="text-gray-400">الزبون يحتفظ بالكوبون ليعود به برفقة أصدقائه أو عائلته.</div>
+                            </div>
+                        </div>
+                        <div class="glass-card p-3.5 rounded-2xl border-gold-500/20 flex items-center gap-3">
+                            <span class="text-2xl">🎯</span>
+                            <div class="text-xs">
+                                <div class="font-bold text-gold-300 text-sm">تحكم إداري كامل في نسب الاحتمالات والجوائز</div>
+                                <div class="text-gray-400">المدير يحدد الجوائز المتاحة وحدود الاستخدام وصلاحية الكوبون.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Playable Interactive Lucky Wheel Demo -->
+                <div class="lg:col-span-6 flex flex-col items-center justify-center">
+                    <div class="glass-card p-6 rounded-3xl w-full max-w-md flex flex-col items-center text-center border-gold-500/40 relative">
+                        <!-- Wheel Container -->
+                        <div class="relative w-64 h-64 sm:w-72 sm:h-72 my-2">
+                            <!-- Needle/Pointer -->
+                            <div class="absolute -top-3 left-1/2 -translate-x-1/2 z-20 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[24px] border-t-amber-400 filter drop-shadow"></div>
+
+                            <!-- The SVG Wheel -->
+                            <svg id="interactiveWheelSvg" class="w-full h-full transition-transform duration-[4000ms] cubic-bezier(0.15, 0.9, 0.2, 1)" viewBox="0 0 300 300">
+                                <circle cx="150" cy="150" r="145" fill="#1C1810" stroke="#DAA520" stroke-width="4"/>
+                                <!-- 6 Segments -->
+                                <path d="M 150 150 L 150 10 A 140 140 0 0 1 271 80 Z" fill="#B8860B"/>
+                                <path d="M 150 150 L 271 80 A 140 140 0 0 1 271 220 Z" fill="#2E230A"/>
+                                <path d="M 150 150 L 271 220 A 140 140 0 0 1 150 290 Z" fill="#DAA520"/>
+                                <path d="M 150 150 L 150 290 A 140 140 0 0 1 29 220 Z" fill="#1A1408"/>
+                                <path d="M 150 150 L 29 220 A 140 140 0 0 1 29 80 Z" fill="#E5C158"/>
+                                <path d="M 150 150 L 29 80 A 140 140 0 0 1 150 10 Z" fill="#42340E"/>
+                                <!-- Center Hub -->
+                                <circle cx="150" cy="150" r="30" fill="#0A0A0C" stroke="#FBF5B7" stroke-width="3"/>
+                                <circle cx="150" cy="150" r="12" fill="#DAA520"/>
+                            </svg>
+                        </div>
+
+                        <!-- Spin Button -->
+                        <button id="spinWheelBtn" onclick="spinDemoWheel()" class="mt-4 px-6 py-2.5 rounded-xl bg-gradient-to-r from-gold-500 to-amber-400 text-obsidian-900 font-black text-sm shadow-xl shadow-gold-500/25 hover:scale-105 transition">
+                            🎲 جـرّب الـتـدويـر الآن!
+                        </button>
+                        <div id="wheelResultText" class="mt-2 text-xs font-bold text-gold-300 min-h-[20px]">
+                            اضغط الزر لتدوير العجلة ومعاينة النتيجة
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SLIDE 8: Smart Billing & Thermal Printing  -->
+        <!-- ========================================== -->
+        <section class="slide items-center justify-center p-6 sm:p-12" data-slide="8">
+            <div class="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-center my-auto">
+                <div class="lg:col-span-7 space-y-5 text-right">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold-500/10 text-gold-400 text-xs font-semibold">
+                        الميزة الخامسة: الفوترة والطباعة الحرارية
+                    </div>
+                    <h2 class="text-3xl sm:text-5xl font-black">
+                        طباعة إيصالات حرارية <span class="gold-gradient-text">فائقة الحدة والسرعة</span>
+                    </h2>
+                    <p class="text-sm sm:text-base text-gray-300 leading-relaxed">
+                        دعم متكامل لطابعات الإيصالات الحرارية (POS Thermal Printers) بمقاسي 80mm و 58mm مع باركود QR نقي وحاد لا يسيل حبره ومصمم خصيصاً للقراءة السريعة.
+                    </p>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="glass-card p-4 rounded-2xl border-gold-500/20">
+                            <span class="text-xl">🖨️</span>
+                            <h4 class="font-bold text-sm text-gold-300 mt-1">طباعة بنقرة زر</h4>
+                            <p class="text-xs text-gray-400 mt-1">متوافقة مباشرة مع أنظمة Windows و Android و متصفحات الويب بدون برامج وسيطة.</p>
+                        </div>
+                        <div class="glass-card p-4 rounded-2xl border-gold-500/20">
+                            <span class="text-xl">🧾</span>
+                            <h4 class="font-bold text-sm text-gold-300 mt-1">تفقيط الضريبة والخدمة</h4>
+                            <p class="text-xs text-gray-400 mt-1">حساب تلقائي لضريبة القيمة المضافة ورسوم الخدمة وتقسيم الفواتير.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Realistic Thermal Receipt Mockup -->
+                <div class="lg:col-span-5 flex flex-col items-center justify-center">
+                    <div class="bg-white text-gray-900 p-6 rounded-2xl w-full max-w-xs shadow-2xl font-mono text-xs border border-gray-300 relative space-y-3">
+                        <!-- Receipt Jagged Top -->
+                        <div class="text-center border-b border-dashed border-gray-400 pb-3">
+                            <div class="font-black text-sm">مـطـعـم تـدلّـل</div>
+                            <div class="text-[10px] text-gray-500">فاتورة ضريبية مبسطة</div>
+                            <div class="text-[9px] text-gray-400 mt-1">طاولة 04 | طلب #1042</div>
+                        </div>
+
+                        <!-- Receipt Items -->
+                        <div class="space-y-1.5 text-[11px]">
+                            <div class="flex justify-between">
+                                <span>2× ستيك واغيو ملكي</span>
+                                <span class="font-bold">280.00 ر.س</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>1× باستا تروفل فريش</span>
+                                <span class="font-bold">95.00 ر.س</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>2× موهيتو توت بري</span>
+                                <span class="font-bold">50.00 ر.س</span>
+                            </div>
+                        </div>
+
+                        <!-- Totals -->
+                        <div class="border-t border-dashed border-gray-400 pt-2 space-y-1 text-[11px]">
+                            <div class="flex justify-between">
+                                <span>المجموع الفرعي:</span>
+                                <span>425.00 ر.س</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>ضريبة القيمة المضافة (15%):</span>
+                                <span>63.75 ر.س</span>
+                            </div>
+                            <div class="flex justify-between font-black text-xs pt-1 border-t border-gray-300">
+                                <span>الإجمالي النهائي:</span>
+                                <span>488.75 ر.س</span>
+                            </div>
+                        </div>
+
+                        <!-- Thermal QR Code Box -->
+                        <div class="border-t border-dashed border-gray-400 pt-3 flex flex-col items-center">
+                            <!-- Crisp QR SVG -->
+                            <svg class="w-24 h-24" viewBox="0 0 25 25" style="image-rendering: pixelated; shape-rendering: crispEdges;">
+                                <rect width="25" height="25" fill="#FFFFFF"/>
+                                <!-- Top Left Position Finder -->
+                                <rect x="1" y="1" width="7" height="7" fill="#000000"/>
+                                <rect x="2" y="2" width="5" height="5" fill="#FFFFFF"/>
+                                <rect x="3" y="3" width="3" height="3" fill="#000000"/>
+                                <!-- Top Right Position Finder -->
+                                <rect x="17" y="1" width="7" height="7" fill="#000000"/>
+                                <rect x="18" y="2" width="5" height="5" fill="#FFFFFF"/>
+                                <rect x="19" y="3" width="3" height="3" fill="#000000"/>
+                                <!-- Bottom Left Position Finder -->
+                                <rect x="1" y="17" width="7" height="7" fill="#000000"/>
+                                <rect x="2" y="18" width="5" height="5" fill="#FFFFFF"/>
+                                <rect x="3" y="19" width="3" height="3" fill="#000000"/>
+                                <!-- Data modules -->
+                                <rect x="9" y="3" width="2" height="2" fill="#000"/>
+                                <rect x="13" y="3" width="2" height="2" fill="#000"/>
+                                <rect x="10" y="8" width="3" height="2" fill="#000"/>
+                                <rect x="14" y="9" width="2" height="3" fill="#000"/>
+                                <rect x="3" y="10" width="2" height="2" fill="#000"/>
+                                <rect x="10" y="12" width="4" height="4" fill="#000"/>
+                                <rect x="18" y="12" width="3" height="2" fill="#000"/>
+                                <rect x="10" y="18" width="2" height="3" fill="#000"/>
+                                <rect x="14" y="19" width="3" height="2" fill="#000"/>
+                            </svg>
+                            <span class="text-[9px] text-gray-500 mt-1">امسح لتدوير عجلة الحظ</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SLIDE 9: Analytics & Business Intelligence -->
+        <!-- ========================================== -->
+        <section class="slide items-center justify-center p-6 sm:p-12" data-slide="9">
+            <div class="max-w-6xl w-full my-auto space-y-6">
+                <div class="text-center space-y-1">
+                    <span class="text-xs uppercase font-bold text-gold-400 tracking-widest">الميزة السادسة: اتخاذ القرار الذكي</span>
+                    <h2 class="text-3xl sm:text-5xl font-black">ذكاء الأعمال و <span class="gold-gradient-text">لوحة التحليلات المتقدمة</span></h2>
+                    <p class="text-gray-400 max-w-2xl mx-auto text-xs sm:text-sm">بياناتك تتحول إلى أرباح: الأصناف الأكثر مبيعاً، ساعات الذروة، وأداء الشيفات</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Metric Card 1 -->
+                    <div class="glass-card p-5 rounded-3xl border-gold-500/25 space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs text-gray-400">الإيراد اليومي المباشر</span>
+                            <span class="text-xs px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold">+28.4%</span>
+                        </div>
+                        <div class="text-3xl font-black text-gold-400">18,450 <span class="text-sm font-normal text-gray-300">ر.س</span></div>
+                        <div class="w-full bg-obsidian-800 h-2 rounded-full overflow-hidden">
+                            <div class="bg-gradient-to-r from-gold-600 to-gold-400 h-full w-[78%]"></div>
+                        </div>
+                        <div class="text-[11px] text-gray-400">تجاوز الهدف اليومي بنسبة 14%</div>
+                    </div>
+
+                    <!-- Metric Card 2 -->
+                    <div class="glass-card p-5 rounded-3xl border-gold-500/25 space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs text-gray-400">متوسط سرعة التحضير</span>
+                            <span class="text-xs px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 font-bold">11.2 دقيقة</span>
+                        </div>
+                        <div class="text-3xl font-black text-white">96.8% <span class="text-sm font-normal text-gray-300">في الوقت</span></div>
+                        <div class="w-full bg-obsidian-800 h-2 rounded-full overflow-hidden">
+                            <div class="bg-gradient-to-r from-blue-500 to-emerald-400 h-full w-[94%]"></div>
+                        </div>
+                        <div class="text-[11px] text-gray-400">تقليص زمن الانتظار بمقدار 8 دقائق</div>
+                    </div>
+
+                    <!-- Metric Card 3 -->
+                    <div class="glass-card p-5 rounded-3xl border-gold-500/25 space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs text-gray-400">معدل دوران الطاولات</span>
+                            <span class="text-xs px-2 py-0.5 rounded bg-gold-500/20 text-gold-400 font-bold">3.4x</span>
+                        </div>
+                        <div class="text-3xl font-black text-gold-300">42 دقيقة <span class="text-sm font-normal text-gray-300">للجلسة</span></div>
+                        <div class="w-full bg-obsidian-800 h-2 rounded-full overflow-hidden">
+                            <div class="bg-gradient-to-r from-amber-500 to-gold-300 h-full w-[85%]"></div>
+                        </div>
+                        <div class="text-[11px] text-gray-400">خدمة عدد زبائن أكبر بنسبة 40% يومياً</div>
+                    </div>
+                </div>
+
+                <!-- Mascot Cartoon: المدير بدر يحلل البيانات -->
+                <div class="glass-card p-6 rounded-3xl border-gold-500/30 flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div class="flex items-center gap-4 text-right">
+                        <div class="w-16 h-16 flex-shrink-0">
+                            <!-- Cartoon Vector: Manager Badr -->
+                            <svg class="w-full h-full animate-mascot" viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="45" fill="#1C1810" stroke="#DAA520" stroke-width="2"/>
+                                <circle cx="50" cy="40" r="20" fill="#FCE7B8"/>
+                                <!-- Glasses -->
+                                <circle cx="43" cy="40" r="6" fill="none" stroke="#DAA520" stroke-width="2"/>
+                                <circle cx="57" cy="40" r="6" fill="none" stroke="#DAA520" stroke-width="2"/>
+                                <line x1="49" y1="40" x2="51" y2="40" stroke="#DAA520" stroke-width="2"/>
+                                <!-- Suit -->
+                                <path d="M 25 90 L 35 60 L 65 60 L 75 90 Z" fill="#0A0A0C"/>
+                                <polygon points="50,60 46,75 50,85 54,75" fill="#DAA520"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-sm sm:text-base text-gold-300">تقارير لحظية تُرسل للمدير عبر التيليجرام أو لوحة التحكم</h4>
+                            <p class="text-xs text-gray-400 mt-0.5">اكتشف أي صنف بطيء الحركة فوراً، وحدد العروض الترويجية الأكثر ربحية بدقة رياضية.</p>
+                        </div>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <span class="px-4 py-2 rounded-xl bg-gold-500/10 border border-gold-500/30 text-gold-400 font-bold text-xs">
+                            تصدير Excel / PDF بضغطة زر
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SLIDE 10: Multi-Branch & Security          -->
+        <!-- ========================================== -->
+        <section class="slide items-center justify-center p-6 sm:p-12" data-slide="10">
+            <div class="max-w-6xl w-full my-auto space-y-8">
+                <div class="text-center space-y-1">
+                    <span class="text-xs uppercase font-bold text-gold-400 tracking-widest">الميزة السابعة: الحوكمة والتوسع</span>
+                    <h2 class="text-3xl sm:text-5xl font-black">إدارة الفروع و <span class="gold-gradient-text">الصلاحيات المشددة</span></h2>
+                    <p class="text-gray-400 max-w-2xl mx-auto text-xs sm:text-sm">سواء كنت تدير مقهى فاخراً أو سلسلة مطاعم بمئات الفروع في أنحاء المملكة</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <!-- Role 1: Super Admin -->
+                    <div class="glass-card p-5 rounded-2xl border-gold-500/30 text-center space-y-2">
+                        <div class="w-12 h-12 mx-auto rounded-xl bg-gold-500/20 flex items-center justify-center text-2xl">👑</div>
+                        <h4 class="font-bold text-sm text-gold-300">المدير العام (Super Admin)</h4>
+                        <p class="text-[11px] text-gray-400">إدارة الاشتراكات، الفروع، الشروط والأحكام، والربط المالي الشامل.</p>
+                    </div>
+
+                    <!-- Role 2: Restaurant Owner -->
+                    <div class="glass-card p-5 rounded-2xl border-gold-500/30 text-center space-y-2">
+                        <div class="w-12 h-12 mx-auto rounded-xl bg-gold-500/20 flex items-center justify-center text-2xl">🏢</div>
+                        <h4 class="font-bold text-sm text-gold-300">مالك المطعم (Branch Owner)</h4>
+                        <p class="text-[11px] text-gray-400">تعديل قوائم الطعام والأسعار وتتبع الأرباح اليومية والتحليلات.</p>
+                    </div>
+
+                    <!-- Role 3: Head Chef -->
+                    <div class="glass-card p-5 rounded-2xl border-gold-500/30 text-center space-y-2">
+                        <div class="w-12 h-12 mx-auto rounded-xl bg-gold-500/20 flex items-center justify-center text-2xl">👨‍🍳</div>
+                        <h4 class="font-bold text-sm text-gold-300">رئيس الطهاة (Head Chef)</h4>
+                        <p class="text-[11px] text-gray-400">إدارة شاشات KDS وتغيير حالة الأصناف (متاح / نفد الكمية فورياً).</p>
+                    </div>
+
+                    <!-- Role 4: Floor Captain -->
+                    <div class="glass-card p-5 rounded-2xl border-gold-500/30 text-center space-y-2">
+                        <div class="w-12 h-12 mx-auto rounded-xl bg-gold-500/20 flex items-center justify-center text-2xl">🤵</div>
+                        <h4 class="font-bold text-sm text-gold-300">كابتن الصالة (Floor Waiter)</h4>
+                        <p class="text-[11px] text-gray-400">الاستجابة لنداء الطاولات وتسليم الطلبات وطباعة الإيصالات.</p>
+                    </div>
+                </div>
+
+                <!-- Security Feature Pill -->
+                <div class="glass-card p-4 rounded-2xl border-emerald-500/30 bg-emerald-950/10 flex items-center justify-between">
+                    <div class="flex items-center gap-3 text-emerald-300 text-xs sm:text-sm font-semibold">
+                        <span class="text-xl">🔒</span>
+                        <span>أمان رياضي مشفر: جلسات الطاولات محصنة بـ 128-bit Entropy تمنع أي تلاعب أو طلبات وهمية.</span>
+                    </div>
+                    <span class="text-xs font-mono text-emerald-400 px-3 py-1 rounded bg-emerald-500/20">ISO 27001 READY</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SLIDE 11: ROI & Quantitative Impact        -->
+        <!-- ========================================== -->
+        <section class="slide items-center justify-center p-6 sm:p-12" data-slide="11">
+            <div class="max-w-6xl w-full my-auto space-y-8">
+                <div class="text-center space-y-1">
+                    <span class="text-xs uppercase font-bold text-gold-400 tracking-widest">العائد على الاستثمار</span>
+                    <h2 class="text-3xl sm:text-5xl font-black">أرقام تتحدث عن <span class="gold-gradient-text">نفسها</span></h2>
+                    <p class="text-gray-400 max-w-2xl mx-auto text-xs sm:text-sm">ما الذي يحققه مطعمك خلال أول 90 يوماً من تشغيل منظومة تدلّل؟</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="glass-card p-6 rounded-3xl border-gold-500/30 text-center space-y-2">
+                        <div class="text-4xl sm:text-5xl font-black text-gold-400">+35%</div>
+                        <div class="font-bold text-sm text-white">ارتفاع متوسط قيمة الفاتورة</div>
+                        <p class="text-xs text-gray-400">الصور الفاخرة وخيارات الإضافات الذكية تشجع العميل على زيادة طلباته.</p>
+                    </div>
+
+                    <div class="glass-card p-6 rounded-3xl border-gold-500/30 text-center space-y-2">
+                        <div class="text-4xl sm:text-5xl font-black text-emerald-400">-60%</div>
+                        <div class="font-bold text-sm text-white">تقليص وقت الانتظار</div>
+                        <p class="text-xs text-gray-400">الطلب يذهب مباشرة للمطبخ في ثانية واحدة دون انتظار مرور النادل.</p>
+                    </div>
+
+                    <div class="glass-card p-6 rounded-3xl border-gold-500/30 text-center space-y-2">
+                        <div class="text-4xl sm:text-5xl font-black text-blue-400">0%</div>
+                        <div class="font-bold text-sm text-white">أخطاء في نقل الطلبات</div>
+                        <p class="text-xs text-gray-400">الزبون يحدد بنفسه الملاحظات والحساسية فتصل مكتوبة كما أراد تماماً.</p>
+                    </div>
+
+                    <div class="glass-card p-6 rounded-3xl border-gold-500/30 text-center space-y-2">
+                        <div class="text-4xl sm:text-5xl font-black text-purple-400">3x</div>
+                        <div class="font-bold text-sm text-white">سرعة دوران الطاولات</div>
+                        <p class="text-xs text-gray-400">دفع سريع وحساب فوري يتيح استقبال زبائن جدد في وقت قياسي.</p>
+                    </div>
+                </div>
+
+                <div class="glass-card p-5 rounded-2xl border-gold-500/20 text-center max-w-xl mx-auto">
+                    <span class="text-xs font-semibold text-gold-300">💡 استثمار يسترد تكلفته بالكامل خلال أول شهر تشغيلي</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- SLIDE 12: Grand Conclusion & Call to Action-->
+        <!-- ========================================== -->
+        <section class="slide items-center justify-center p-6 sm:p-12 text-center" data-slide="12">
+            <div class="max-w-4xl w-full my-auto space-y-6">
+                <!-- Group Mascot Ensemble: شيف، نادل، مدير، زبون -->
+                <div class="flex items-center justify-center gap-4 py-2">
+                    <div class="w-20 h-20 rounded-full bg-gold-500/10 border border-gold-500/30 p-2 flex items-center justify-center text-3xl animate-mascot">👨‍🍳</div>
+                    <div class="w-20 h-20 rounded-full bg-gold-500/10 border border-gold-500/30 p-2 flex items-center justify-center text-3xl animate-mascot" style="animation-delay: 0.5s;">🛎️</div>
+                    <div class="w-24 h-24 rounded-full bg-gold-500/20 border-2 border-gold-400 p-2 flex items-center justify-center text-4xl shadow-xl shadow-gold-500/20 animate-mascot" style="animation-delay: 1s;">👑</div>
+                    <div class="w-20 h-20 rounded-full bg-gold-500/10 border border-gold-500/30 p-2 flex items-center justify-center text-3xl animate-mascot" style="animation-delay: 1.5s;">📱</div>
+                    <div class="w-20 h-20 rounded-full bg-gold-500/10 border border-gold-500/30 p-2 flex items-center justify-center text-3xl animate-mascot" style="animation-delay: 2s;">🎡</div>
+                </div>
+
+                <div class="space-y-3">
+                    <h2 class="text-4xl sm:text-6xl font-black">
+                        اجعل مطعمك يتحدث لغة <span class="gold-gradient-text">الفخامة الرقمية</span>
+                    </h2>
+                    <p class="text-base sm:text-xl text-gray-300 font-light max-w-2xl mx-auto leading-relaxed">
+                        انضم اليوم إلى نخبة المطاعم التي تقدم تجربة استثنائية لضيوفها مع «تدلّل». نظام واحد، حلول غير محدودة.
+                    </p>
+                </div>
+
+                <div class="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <a href="/" target="_blank" class="px-8 py-4 rounded-xl bg-gradient-to-r from-gold-500 to-amber-400 text-obsidian-900 font-black text-base shadow-xl shadow-gold-500/30 hover:scale-105 transition transform">
+                        زيارة المنصة وتجربة النظام 🌟
+                    </a>
+                    <button onclick="goToSlide(1)" class="px-8 py-4 rounded-xl glass-card border-gold-500/40 text-gold-300 font-bold text-base hover:bg-gold-500/10 transition">
+                        إعادة العرض من البداية 🔄
+                    </button>
+                </div>
+
+                <div class="pt-4 text-xs text-gray-400">
+                    TEDALLAL HOSPITALITY SUITE &bull; جميع الحقوق محفوظة &bull; 2026
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Bottom Progress Bar & Slide Thumbnails Drawer Modal -->
+    <footer class="no-print h-12 px-6 flex items-center justify-between border-t border-gold-500/15 bg-obsidian-900/90 text-xs text-gray-400 z-50">
+        <div>
+            <span>استخدم المفاتيح: </span>
+            <kbd class="px-1.5 py-0.5 rounded bg-obsidian-800 border border-gold-500/30 text-gold-400 font-mono text-[10px]">◀</kbd>
+            <kbd class="px-1.5 py-0.5 rounded bg-obsidian-800 border border-gold-500/30 text-gold-400 font-mono text-[10px]">▶</kbd>
+            <kbd class="px-1.5 py-0.5 rounded bg-obsidian-800 border border-gold-500/30 text-gold-400 font-mono text-[10px]">Space</kbd>
+            <span class="mr-2">أو <kbd class="px-1.5 py-0.5 rounded bg-obsidian-800 border border-gold-500/30 text-gold-400 font-mono text-[10px]">F</kbd> لملء الشاشة</span>
+        </div>
+
+        <!-- Progress Indicator -->
+        <div class="w-48 bg-obsidian-800 h-1.5 rounded-full overflow-hidden border border-gold-500/20">
+            <div id="slideProgressBar" class="h-full bg-gradient-to-r from-gold-600 to-gold-400 transition-all duration-300 w-[8.33%]"></div>
+        </div>
+
+        <div>
+            <span>منظومة تدلّل &copy; 2026</span>
+        </div>
+    </footer>
+
+    <!-- Slide Index Modal (Drawer) -->
+    <div id="slideIndexModal" class="no-print fixed inset-0 bg-black/80 backdrop-blur-md z-[100] hidden flex items-center justify-center p-6" onclick="toggleSlideIndexModal()">
+        <div class="glass-card max-w-2xl w-full p-6 rounded-3xl border-gold-500/40 space-y-4 max-h-[85vh] overflow-y-auto" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-between border-b border-gold-500/20 pb-3">
+                <h3 class="font-bold text-lg text-gold-300">فهرس شرائح العرض التقديمي</h3>
+                <button onclick="toggleSlideIndexModal()" class="text-gray-400 hover:text-white text-xl">✕</button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="slideIndexList">
+                <!-- Injected via JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Presentation Engine Script -->
+    <script>
+        const totalSlides = 12;
+        let currentSlide = 1;
+
+        const slidesData = [
+            { num: 1, title: 'الغلاف الملكي وهوية تدلل' },
+            { num: 2, title: 'التحديات ورؤية الحل الرقمي' },
+            { num: 3, title: 'مخطط رحلة العميل (6 خطوات)' },
+            { num: 4, title: 'الـ QR الذكي ومنيو الجوال' },
+            { num: 5, title: 'شاشة المطبخ الذكية (KDS)' },
+            { num: 6, title: 'خريطة الصالة ونداء النادل' },
+            { num: 7, title: 'عجلة الحظ التفاعلية (Lucky Wheel)' },
+            { num: 8, title: 'الفواتير والطباعة الحرارية' },
+            { num: 9, title: 'ذكاء الأعمال ولوحة التحليلات' },
+            { num: 10, title: 'إدارة الفروع والصلاحيات' },
+            { num: 11, title: 'العائد المالي والاستثماري (ROI)' },
+            { num: 12, title: 'الخاتمة وبدء التحول الرقمي' }
+        ];
+
+        function initPresentation() {
+            updateSlideUI();
+            buildSlideIndex();
+
+            // Keyboard navigation
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft' || e.key === 'PageDown' || e.key === ' ') {
+                    nextSlide();
+                } else if (e.key === 'ArrowRight' || e.key === 'PageUp') {
+                    prevSlide();
+                } else if (e.key === 'Home') {
+                    goToSlide(1);
+                } else if (e.key === 'End') {
+                    goToSlide(totalSlides);
+                } else if (e.key.toLowerCase() === 'f') {
+                    toggleFullScreen();
+                } else if (e.key.toLowerCase() === 'o') {
+                    toggleSlideIndexModal();
+                }
+            });
+
+            // Touch swiping support
+            let touchStartX = 0;
+            document.addEventListener('touchstart', (e) => {
+                touchStartX = e.touches[0].clientX;
+            });
+            document.addEventListener('touchend', (e) => {
+                const touchEndX = e.changedTouches[0].clientX;
+                const diff = touchStartX - touchEndX;
+                if (diff > 50) {
+                    nextSlide(); // Swiped left -> next
+                } else if (diff < -50) {
+                    prevSlide(); // Swiped right -> prev
+                }
+            });
+        }
+
+        function updateSlideUI() {
+            const slides = document.querySelectorAll('.slide');
+            slides.forEach((s) => {
+                const sNum = parseInt(s.getAttribute('data-slide'));
+                s.classList.remove('active', 'prev');
+                if (sNum === currentSlide) {
+                    s.classList.add('active');
+                } else if (sNum < currentSlide) {
+                    s.classList.add('prev');
+                }
+            });
+
+            // Update Counter
+            document.getElementById('currentSlideNum').textContent = String(currentSlide).padStart(2, '0');
+            document.getElementById('totalSlideNum').textContent = String(totalSlides).padStart(2, '0');
+
+            // Update Progress Bar
+            const pct = (currentSlide / totalSlides) * 100;
+            document.getElementById('slideProgressBar').style.width = pct + '%';
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides) {
+                currentSlide++;
+                updateSlideUI();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 1) {
+                currentSlide--;
+                updateSlideUI();
+            }
+        }
+
+        function goToSlide(n) {
+            if (n >= 1 && n <= totalSlides) {
+                currentSlide = n;
+                updateSlideUI();
+            }
+        }
+
+        function toggleSlideIndexModal() {
+            const modal = document.getElementById('slideIndexModal');
+            modal.classList.toggle('hidden');
+        }
+
+        function buildSlideIndex() {
+            const list = document.getElementById('slideIndexList');
+            list.innerHTML = '';
+            slidesData.forEach((item) => {
+                const btn = document.createElement('button');
+                btn.className = `p-3 rounded-xl border text-right transition flex items-center justify-between ${
+                    item.num === currentSlide 
+                        ? 'bg-gold-500/20 border-gold-400 text-gold-300 font-bold' 
+                        : 'bg-obsidian-800 border-gold-500/10 text-gray-300 hover:border-gold-500/30 hover:bg-gold-500/5'
+                }`;
+                btn.innerHTML = `
+                    <span class="text-xs">${item.title}</span>
+                    <span class="text-xs font-mono text-gold-400">#${String(item.num).padStart(2, '0')}</span>
+                `;
+                btn.onclick = () => {
+                    goToSlide(item.num);
+                    toggleSlideIndexModal();
+                };
+                list.appendChild(btn);
+            });
+        }
+
+        // Theme Toggle
+        function toggleTheme() {
+            const html = document.documentElement;
+            const sun = document.getElementById('themeIconSun');
+            const moon = document.getElementById('themeIconMoon');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                html.classList.add('light');
+                sun.classList.remove('hidden');
+                moon.classList.add('hidden');
+            } else {
+                html.classList.remove('light');
+                html.classList.add('dark');
+                sun.classList.add('hidden');
+                moon.classList.remove('hidden');
+            }
+        }
+
+        // Fullscreen Toggle
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        // Interactive Slide 5: KDS Status Cycler
+        let kdsStep = 0;
+        const kdsSteps = [
+            { text: '🔥 قيد الطهي (اضغط للتحديث)', bg: 'bg-amber-500', border: 'border-amber-500/60', badge: '⏱️ منذ 3 دقائق' },
+            { text: '✅ جاهز للتقديم (اضغط للتسليم)', bg: 'bg-emerald-500', border: 'border-emerald-500/80', badge: '🛎️ جاهز على البار' },
+            { text: '🚀 تم التسليم (إعادة تدوير)', bg: 'bg-blue-500', border: 'border-blue-500/40', badge: '✨ تم التسليم للزبون' }
+        ];
+        function cycleKdsStatus() {
+            kdsStep = (kdsStep + 1) % kdsSteps.length;
+            const cur = kdsSteps[kdsStep];
+            const btn = document.getElementById('kdsStatusBtn');
+            const ticket = document.getElementById('kdsDemoTicket');
+            const badge = document.getElementById('kdsTimerBadge');
+
+            btn.className = `px-4 py-2 rounded-xl text-obsidian-900 font-extrabold text-xs shadow-lg hover:scale-105 transition ${cur.bg}`;
+            btn.textContent = cur.text;
+
+            ticket.className = `bg-obsidian-800 p-4 rounded-2xl border-2 transition-all duration-300 ${cur.border}`;
+            badge.textContent = cur.badge;
+        }
+
+        // Interactive Slide 6: Table Mock Toggle
+        function toggleTableMock(el, name) {
+            el.classList.add('scale-110');
+            setTimeout(() => el.classList.remove('scale-110'), 200);
+        }
+
+        // Interactive Slide 7: Playable Lucky Wheel
+        let wheelRotation = 0;
+        let isSpinning = false;
+        function spinDemoWheel() {
+            if (isSpinning) return;
+            isSpinning = true;
+            const wheel = document.getElementById('interactiveWheelSvg');
+            const res = document.getElementById('wheelResultText');
+            res.textContent = 'جاري التدوير... حظاً موفقاً!';
+
+            const randomSpins = 5 + Math.floor(Math.random() * 5); // 5 to 9 full turns
+            const randomDeg = Math.floor(Math.random() * 360);
+            wheelRotation += (randomSpins * 360) + randomDeg;
+
+            wheel.style.transform = `rotate(${wheelRotation}deg)`;
+
+            setTimeout(() => {
+                isSpinning = false;
+                const gifts = [
+                    '🎉 مبروك! كود خصم 20% على طلبك القادم',
+                    '🍰 مبروك! حلى تشيز كيك ملكي مجاناً',
+                    '☕ مبروك! كوب قهوة مختصة مجانية',
+                    '🎁 مبروك! خصم 15% على الفاتورة القادمة',
+                    '🍹 مبروك! موهيتو منعش هدية الشيف'
+                ];
+                const win = gifts[Math.floor(Math.random() * gifts.length)];
+                res.textContent = win;
+            }, 4100);
+        }
+
+        // Start presentation
+        window.addEventListener('DOMContentLoaded', initPresentation);
+    </script>
+</body>
+</html>
+

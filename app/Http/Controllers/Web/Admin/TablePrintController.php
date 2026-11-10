@@ -25,10 +25,11 @@ class TablePrintController extends Controller
             ->orderBy('name')
             ->get()
             ->map(function (RestaurantTable $table) {
+                $publicUrl = $table->publicUrl();
                 return [
                     'name' => $table->name,
-                    'public_url' => $table->publicUrl(),
-                    'qr_base64' => base64_encode($this->qrCodeService->getPngContents($table)),
+                    'public_url' => $publicUrl,
+                    'qr_base64' => base64_encode($this->qrCodeService->buildRawPng($table)),
                 ];
             });
 
