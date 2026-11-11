@@ -36,16 +36,20 @@ final class TableSessionService
                 if ($isExpiredByTime || $isHardExpired) {
                     $existing->close();
                 } else {
+                    $existing->setRelation('table', $table);
                     return $existing;
                 }
             }
 
-            return TableSession::query()->create([
+            $newSession = TableSession::query()->create([
                 'table_id' => $table->id,
                 'session_token' => $this->tokenGenerator->generateSessionToken(),
                 'status' => 'active',
                 'started_at' => now(),
             ]);
+            $newSession->setRelation('table', $table);
+
+            return $newSession;
         });
     }
 
@@ -54,6 +58,7 @@ final class TableSessionService
         return TableSession::query()
             ->where('session_token', $sessionToken)
             ->where('status', 'active')
+            ->with(['table' => fn($q) => $q->withoutGlobalScopes(), 'table.restaurant'])
             ->first();
     }
 

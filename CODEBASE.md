@@ -419,8 +419,8 @@ ddaebcf  feat(launch-assets): sales rep playbook PDF + high-res golden QR
 
 1. **لا تُنشئ scratch files في الجذر** — اكتبها في `.gemini/antigravity/brain/.../scratch/`
 2. **بعد كل تعديل Vue.js** → شغّل `npm run build` وتحقق من exit code 0
-3. **بعد كل تعديل** → `git add -A && git commit -m "..."` ثم `git push origin main`
-4. **الخادم يعمل دائماً على** `php artisan serve --port=8000` (task-4518)
+3. **قيد الرفع الصارم:** لا تقم مطلقاً برفع أو نشر أي كود إلى المستودع أو السيرفر (`git push` أو deploy) دون موافقة صريحة ومباشرة من المستخدم أولاً.
+4. **مرجع السياق السريع:** راجع `PROJECT_CONTEXT.md` للاطلاع على محددات العجلة والكوبونات والطباعة واستقرار السيرفر.
 5. **العملة الافتراضية:** `ل.س` (SYP) — يُعرض كـ `ل.س` في الواجهة
 6. **CSRF مُعفى من:** `wheel/*/spin` و `wheel/*/reset`
 7. **لا تعبّر عن القيمة الوهمية** في عجلة الحظ — استخدم دائماً `discount_type` و `discount_value` من DB

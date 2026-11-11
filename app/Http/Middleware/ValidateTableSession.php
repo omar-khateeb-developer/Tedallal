@@ -38,6 +38,11 @@ class ValidateTableSession
 
         $request->attributes->set('table_session', $session);
 
+        // Pre-warm RestaurantContext cache immediately so no subsequent model access can cause circular scoping
+        if ($session->table?->restaurant) {
+            app(\App\Services\RestaurantContext::class)->set($session->table->restaurant);
+        }
+
         return $next($request);
     }
 

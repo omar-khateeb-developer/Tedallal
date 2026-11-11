@@ -28,7 +28,7 @@ class TableSession extends Model
 
     public function table(): BelongsTo
     {
-        return $this->belongsTo(RestaurantTable::class, 'table_id');
+        return $this->belongsTo(RestaurantTable::class, 'table_id')->withoutGlobalScopes();
     }
 
     public function cartItems(): HasMany

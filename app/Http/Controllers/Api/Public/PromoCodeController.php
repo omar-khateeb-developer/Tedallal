@@ -22,7 +22,7 @@ class PromoCodeController extends ApiController
         ]);
 
         $session = ValidateTableSession::sessionFrom($request);
-        $restaurant = $session->table->restaurant;
+        $restaurant = $session->table?->restaurant ?? app(\App\Services\RestaurantContext::class)->current();
 
         $isTestingMode = Setting::isPromoTestingModeEnabled();
 
@@ -131,7 +131,7 @@ class PromoCodeController extends ApiController
         ]);
 
         $session = ValidateTableSession::sessionFrom($request);
-        $restaurant = $session->table->restaurant;
+        $restaurant = $session->table?->restaurant ?? app(\App\Services\RestaurantContext::class)->current();
 
         $promo = PromoCode::withoutGlobalScopes()
             ->where('restaurant_id', $restaurant->id)

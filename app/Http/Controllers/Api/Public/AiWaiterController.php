@@ -21,7 +21,7 @@ class AiWaiterController extends ApiController
     public function status(Request $request): JsonResponse
     {
         $session = ValidateTableSession::sessionFrom($request);
-        $restaurant = $session->table->restaurant;
+        $restaurant = $session->table?->restaurant ?? app(\App\Services\RestaurantContext::class)->current();
 
         return $this->success([
             'enabled' => $restaurant->hasAiWaiterFeature(),
@@ -36,7 +36,7 @@ class AiWaiterController extends ApiController
     public function chat(Request $request): JsonResponse
     {
         $session = ValidateTableSession::sessionFrom($request);
-        $restaurant = $session->table->restaurant;
+        $restaurant = $session->table?->restaurant ?? app(\App\Services\RestaurantContext::class)->current();
 
         if (!$restaurant->hasAiWaiterFeature()) {
             return $this->error('ميزة الويتر الذكي غير مفعلة لهذا المطعم من قبل الإدارة.', 403);
