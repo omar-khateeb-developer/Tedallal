@@ -7,8 +7,10 @@ use App\Models\OrderWheelToken;
 use App\Models\PromoCode;
 use App\Models\Restaurant;
 use App\Models\RestaurantTable;
+use App\Services\CustomerCrmService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -57,7 +59,7 @@ class WheelController extends Controller
 
         // 2. Fetch real wheel token
         $wheelToken = OrderWheelToken::where('token', $token)
-            ->with(['restaurant', 'order', 'wonPromoCode', 'generatedPromoCode'])
+            ->with(['restaurant', 'order', 'wonPromoCode', 'generatedPromoCode', 'customer'])
             ->firstOrFail();
 
         $restaurant = $wheelToken->restaurant;
@@ -69,6 +71,9 @@ class WheelController extends Controller
                 'claimed_at' => null,
                 'won_promo_code_id' => null,
                 'generated_promo_code_id' => null,
+                'customer_id' => null,
+                'customer_name' => null,
+                'customer_phone' => null,
             ]);
             $wheelToken->refresh();
         }
@@ -76,11 +81,20 @@ class WheelController extends Controller
         $isExpired = $wheelToken->isExpired();
         $isClaimed = (bool) $wheelToken->is_claimed;
 
+        $requireWhatsapp = $restaurant->shouldRequireWheelWhatsapp();
+        $revealAfterSave = $restaurant->shouldRevealWheelCodeAfterSave();
+        $loyaltyConfig = $restaurant->loyaltyConfig();
+        $codeLocked = $requireWhatsapp && !$wheelToken->customer_id;
+        $shouldShowCode = !$codeLocked && (!$requireWhatsapp || $revealAfterSave);
+
         $claimedVoucher = null;
+        $claimedCustomer = null;
         if ($isClaimed && $wheelToken->generatedPromoCode) {
             $gen = $wheelToken->generatedPromoCode;
             $claimedVoucher = [
-                'code' => $gen->code,
+                'code' => $shouldShowCode ? $gen->code : null,
+                'code_locked' => $codeLocked,
+                'code_hidden_by_policy' => !$codeLocked && $requireWhatsapp && !$revealAfterSave,
                 'discount_value' => (float) $gen->discount_value,
                 'discount_type' => $gen->discount_type,
                 'discount_text' => $this->formatDiscountLabel(
@@ -93,6 +107,21 @@ class WheelController extends Controller
                 'min_order_value' => (float) $gen->min_order_value,
                 'is_used' => $gen->times_used > 0 || !$gen->is_active,
             ];
+
+            if ($wheelToken->customer_id && $wheelToken->customer) {
+                $crmService = app(CustomerCrmService::class);
+                $waMessage = "🎁 مبروك {$wheelToken->customer->name}! لقد ربحت {$claimedVoucher['discount_text']} من مطعمنا «{$restaurant->name}».\n\n"
+                    . "🎟️ كود الخصم: {$gen->code}\n"
+                    . "⏳ يبدأ من: " . ($claimedVoucher['starts_at'] ?? 'الآن') . "\n"
+                    . "📅 صالح لغاية تاريخ: " . ($claimedVoucher['expires_at'] ?? 'مفتوح') . "\n"
+                    . "\n✨ نتطلع لخدمتكم دائماً!";
+                $claimedCustomer = [
+                    'name' => $wheelToken->customer->name,
+                    'phone' => $wheelToken->customer->phone,
+                    'visits_count' => (int) $wheelToken->customer->visits_count,
+                    'whatsapp_url' => 'https://wa.me/' . $crmService->toWhatsAppDigits($wheelToken->customer->phone) . '?text=' . rawurlencode($waMessage),
+                ];
+            }
         }
 
         // Build active slices for the wheel
@@ -129,7 +158,11 @@ class WheelController extends Controller
             'token' => $token,
             'is_demo' => false,
             'restaurant_id' => $restaurant->id,
-            'has_whatsapp_feature' => $restaurant->hasFeature('whatsapp_reminders'),
+            'has_whatsapp_feature' => $restaurant->hasWhatsappRemindersFeature(),
+            'wheel_require_whatsapp' => $requireWhatsapp,
+            'wheel_reveal_code_after_save' => $revealAfterSave,
+            'loyalty_config' => $loyaltyConfig,
+            'claimed_customer' => $claimedCustomer,
             'restaurant' => [
                 'id' => $restaurant->id,
                 'name' => $restaurant->name,
@@ -189,10 +222,12 @@ class WheelController extends Controller
             $discountValue = (float) ($wonSlice['discount_value'] ?? 15);
             $minOrderValue = (float) ($wonSlice['min_order_value'] ?? 0);
 
+            $promo = null;
             if ($restaurant) {
-                PromoCode::create([
+                $promo = PromoCode::create([
                     'restaurant_id' => $restaurant->id,
                     'code' => $demoCode,
+                    'source' => 'demo_wheel',
                     'discount_type' => $discountType,
                     'discount_value' => $discountValue,
                     'min_order_value' => $minOrderValue,
@@ -204,12 +239,16 @@ class WheelController extends Controller
                 ]);
             }
 
+            $requireWhatsapp = $restaurant ? $restaurant->shouldRequireWheelWhatsapp() : false;
+
             return response()->json([
                 'success' => true,
                 'won_id' => $wonSlice['id'],
                 'won_index' => $winningIndex,
                 'voucher' => [
-                    'code' => $demoCode,
+                    'code' => $requireWhatsapp ? null : $demoCode,
+                    'code_locked' => $requireWhatsapp,
+                    'claim_ref' => $promo ? Crypt::encryptString((string) $promo->id) : null,
                     'discount_text' => $wonSlice['label'],
                     'starts_at' => 'مفعّل فوراً (الآن)',
                     'expires_at' => now()->addDays(14)->format('Y-m-d'),
@@ -307,6 +346,7 @@ class WheelController extends Controller
             $generatedPromo = PromoCode::create([
                 'restaurant_id' => $restaurant->id,
                 'code' => $uniqueCode,
+                'source' => 'wheel',
                 'discount_type' => $wonOffer->discount_type,
                 'discount_value' => $wonOffer->discount_value,
                 'min_order_value' => $minOrderValue,
@@ -324,12 +364,15 @@ class WheelController extends Controller
                 'generated_promo_code_id' => $generatedPromo->id,
             ]);
 
+            $requireWhatsapp = $restaurant->shouldRequireWheelWhatsapp();
+
             return response()->json([
                 'success' => true,
                 'won_id' => $wonOffer->id,
                 'won_index' => $winningIndex,
                 'voucher' => [
-                    'code' => $generatedPromo->code,
+                    'code' => $requireWhatsapp ? null : $generatedPromo->code,
+                    'code_locked' => $requireWhatsapp,
                     'discount_text' => $this->formatDiscountLabel(
                         $wonOffer->discount_type,
                         $wonOffer->discount_value,
@@ -341,6 +384,82 @@ class WheelController extends Controller
                 ],
             ]);
         });
+    }
+
+    /**
+     * Save customer Name + WhatsApp (09XXXXXXXX) to the restaurant's isolated CRM,
+     * evaluate loyalty milestones, and generate the formatted WhatsApp coupon message.
+     */
+    public function claimWhatsapp(Request $request, string $token, CustomerCrmService $crmService): JsonResponse
+    {
+        $request->validate([
+            'name' => ['required', 'string', 'max:60'],
+            'phone' => ['required', 'string', 'max:30'],
+            'claim_ref' => ['nullable', 'string'],
+        ]);
+
+        if ($token === 'demo') {
+            $claimRef = $request->input('claim_ref');
+            if (! $claimRef) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'انتهت جلسة التجربة، يرجى إعادة تدوير العجلة.',
+                ], 422);
+            }
+
+            try {
+                $promoId = (int) Crypt::decryptString($claimRef);
+            } catch (\Throwable) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'مرجع الكوبون غير صالح.',
+                ], 422);
+            }
+
+            $promo = PromoCode::withoutGlobalScopes()->findOrFail($promoId);
+            $restaurant = Restaurant::findOrFail($promo->restaurant_id);
+            $wheelToken = null;
+        } else {
+            $wheelToken = OrderWheelToken::where('token', $token)
+                ->with(['restaurant', 'generatedPromoCode'])
+                ->firstOrFail();
+
+            $restaurant = $wheelToken->restaurant;
+            $promo = $wheelToken->generatedPromoCode;
+
+            if (! $promo) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'يرجى تدوير العجلة أولاً للحصول على جائزتك.',
+                ], 422);
+            }
+        }
+
+        $discountLabel = $this->formatDiscountLabel(
+            $promo->discount_type,
+            $promo->discount_value,
+            $restaurant->currency
+        );
+
+        $result = $crmService->recordWheelCustomerClaim(
+            $restaurant,
+            (string) $request->input('name'),
+            (string) $request->input('phone'),
+            $promo,
+            $wheelToken,
+            $discountLabel
+        );
+
+        $revealCode = $restaurant->shouldRevealWheelCodeAfterSave() || ! $restaurant->shouldRequireWheelWhatsapp();
+
+        return response()->json([
+            'success' => true,
+            'customer' => $result['customer'],
+            'loyalty' => $result['loyalty'],
+            'whatsapp_url' => $result['whatsapp_url'],
+            'reveal_code' => $revealCode,
+            'code' => $revealCode ? $promo->code : null,
+        ]);
     }
 
     /**
@@ -367,6 +486,9 @@ class WheelController extends Controller
             'claimed_at' => null,
             'won_promo_code_id' => null,
             'generated_promo_code_id' => null,
+            'customer_id' => null,
+            'customer_name' => null,
+            'customer_phone' => null,
         ]);
 
         return response()->json(['success' => true, 'message' => 'تمت إعادة تعيين العجلة للتجربة بنجاح']);
@@ -401,7 +523,11 @@ class WheelController extends Controller
             'token' => 'demo',
             'is_demo' => true,
             'restaurant_id' => $restaurant->id,
-            'has_whatsapp_feature' => $restaurant->hasFeature('whatsapp_reminders'),
+            'has_whatsapp_feature' => $restaurant->hasWhatsappRemindersFeature(),
+            'wheel_require_whatsapp' => $restaurant->shouldRequireWheelWhatsapp(),
+            'wheel_reveal_code_after_save' => $restaurant->shouldRevealWheelCodeAfterSave(),
+            'loyalty_config' => $restaurant->loyaltyConfig(),
+            'claimed_customer' => null,
             'restaurant' => [
                 'id' => $restaurant->id,
                 'name' => $restaurant->name ?? 'مطعم تدلّل الفاخر',

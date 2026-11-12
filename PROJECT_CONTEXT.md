@@ -65,6 +65,9 @@
 | `resources/js/Pages/Menu.vue` | قائمة طعام الزبون، السلة، ونافذة تأكيد الطلب |
 | `resources/js/Pages/Admin/Orders.vue` | شاشة الكاشير، إرسال واتساب، واعتماد الدفع والطباعة |
 | `resources/js/Pages/Admin/Offers.vue` | إدارة جوائز العجلة وعروض المطعم |
+| `resources/js/Pages/Admin/Customers.vue` | لوحة الـ CRM المعزولة لكل مطعم وتذكيرات الواتساب والولاء |
+| `app/Services/CustomerCrmService.php` | تحقق الاسم الحقيقي وهاتف `09XXXXXXXX`، تتبع الزيارات وجوائز الولاء |
+| `app/Http/Controllers/Api/Admin/CustomerCrmController.php` | إدارة عملاء المطعم وإعدادات العجلة والولاء |
 | `resources/js/Pages/Admin/Settings.vue` | إعدادات المطعم (نوع التشغيل، الطباعة التلقائية، العملة) |
 | `app/Services/CartService.php` | حساب مجاميع السلة، الضرائب، والخصومات |
 | `routes/web.php` & `routes/api.php` | توجيه مسارات المنصة والـ API |

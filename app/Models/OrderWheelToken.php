@@ -9,6 +9,9 @@ class OrderWheelToken extends Model
 {
     protected $fillable = [
         'restaurant_id',
+        'customer_id',
+        'customer_name',
+        'customer_phone',
         'order_id',
         'token',
         'is_claimed',
@@ -27,6 +30,11 @@ class OrderWheelToken extends Model
     public function restaurant(): BelongsTo
     {
         return $this->belongsTo(Restaurant::class);
+    }
+
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(RestaurantCustomer::class, 'customer_id');
     }
 
     public function order(): BelongsTo

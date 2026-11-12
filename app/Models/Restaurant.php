@@ -232,8 +232,82 @@ class Restaurant extends Model
         return $this->hasFeature('menu_engineering');
     }
 
+    public function customers(): HasMany
+    {
+        return $this->hasMany(RestaurantCustomer::class);
+    }
+
     public function shouldAutoPrintOnReady(): bool
     {
         return (bool) (($this->features ?? [])['auto_print_on_ready'] ?? false);
+    }
+
+    public function shouldRequireWheelWhatsapp(): bool
+    {
+        if (! $this->hasWhatsappRemindersFeature()) {
+            return false;
+        }
+        return (bool) (($this->features ?? [])['wheel_require_whatsapp'] ?? true);
+    }
+
+    public function shouldRevealWheelCodeAfterSave(): bool
+    {
+        return (bool) (($this->features ?? [])['wheel_reveal_code_after_save'] ?? false);
+    }
+
+    /**
+     * Resolve structured loyalty milestone settings for this restaurant.
+     *
+     * @return array{enabled: bool, target_visits: int, reward_type: string, reward_value: float, menu_item_id: ?int, reward_label: string, monetary_value: float}
+     */
+    public function loyaltyConfig(): array
+    {
+        $f = $this->features ?? [];
+        $enabled = $this->hasWhatsappRemindersFeature() && (bool) ($f['loyalty_enabled'] ?? false);
+        $targetVisits = max(2, min(50, (int) ($f['loyalty_target_visits'] ?? 5)));
+        $rewardType = in_array($f['loyalty_reward_type'] ?? '', ['percentage', 'fixed', 'free_item'], true)
+            ? $f['loyalty_reward_type']
+            : 'percentage';
+        $rewardValue = (float) ($f['loyalty_reward_value'] ?? 50);
+        $menuItemId = ! empty($f['loyalty_menu_item_id']) ? (int) $f['loyalty_menu_item_id'] : null;
+
+        $currency = ($this->currency === 'SYP' || strtoupper((string) $this->currency) === 'SYP')
+            ? 'ل.س'
+            : ($this->currency ?? 'ل.س');
+
+        $rewardLabel = '';
+        $monetaryValue = $rewardValue;
+
+        if ($rewardType === 'free_item' && $menuItemId) {
+            $item = MenuItem::withoutGlobalScopes()
+                ->where('restaurant_id', $this->id)
+                ->find($menuItemId);
+            if ($item) {
+                $monetaryValue = (float) $item->price;
+                $cleanPrice = ($monetaryValue == (int) $monetaryValue) ? number_format($monetaryValue, 0) : number_format($monetaryValue, 2);
+                $rewardLabel = "طبق مجاني: {$item->name} (بقيمة {$cleanPrice} {$currency})";
+            } else {
+                $rewardType = 'percentage';
+                $rewardValue = 50;
+                $monetaryValue = 50;
+                $rewardLabel = 'خصم %50 على الطلب القادم';
+            }
+        } elseif ($rewardType === 'fixed') {
+            $cleanVal = ($rewardValue == (int) $rewardValue) ? number_format($rewardValue, 0) : number_format($rewardValue, 2);
+            $rewardLabel = "قسيمة خصم بقيمة {$cleanVal} {$currency}";
+        } else {
+            $cleanVal = ($rewardValue == (int) $rewardValue) ? (int) $rewardValue : $rewardValue;
+            $rewardLabel = "خصم %{$cleanVal} على الطلب القادم";
+        }
+
+        return [
+            'enabled' => $enabled,
+            'target_visits' => $targetVisits,
+            'reward_type' => $rewardType,
+            'reward_value' => $rewardValue,
+            'menu_item_id' => $menuItemId,
+            'reward_label' => $rewardLabel,
+            'monetary_value' => $monetaryValue,
+        ];
     }
 }

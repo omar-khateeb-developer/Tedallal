@@ -17,6 +17,9 @@ const isFeatureLocked = (href: string) => {
     if (href === 'admin.offers') {
         return !restaurant.value.features?.offers;
     }
+    if (href === 'admin.customers') {
+        return !restaurant.value.features?.whatsapp_reminders;
+    }
     return false;
 };
 
@@ -27,6 +30,7 @@ const allLinks = [
     { href: 'admin.reports', label: 'سجل المبيعات والتقارير 📊', roles: ['admin', 'supervisor'] },
     { href: 'admin.analytics', label: 'التحليلات (جديد)', roles: ['admin'] },
     { href: 'admin.offers', label: 'العروض والكوبونات (جديد)', roles: ['admin', 'supervisor'] },
+    { href: 'admin.customers', label: 'العملاء والولاء (CRM) 💬', roles: ['admin'] },
     { href: 'admin.tables', label: 'الطاولات', roles: ['admin', 'supervisor', 'waiter'], permission: 'manage_tables' },
     { href: 'admin.menu.categories', label: 'التصنيفات', roles: ['admin', 'supervisor'], permission: 'manage_menu' },
     { href: 'admin.menu.items', label: 'الأصناف', roles: ['admin', 'supervisor'], permission: 'manage_menu' },

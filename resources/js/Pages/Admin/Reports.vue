@@ -369,7 +369,17 @@ function printReport() {
                         <div class="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400 mt-2 font-mono">
                             -{{ formatNumber(reportData.summary.total_discounts) }} <span class="text-xs font-sans">{{ reportData.currency }}</span>
                         </div>
-                        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">تكلفة الحملات الترويجية المخصومة</p>
+                        <div v-if="(parseFloat(reportData.summary.loyalty_discounts || 0) > 0) || (parseFloat(reportData.summary.wheel_discounts || 0) > 0)" class="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/80 space-y-0.5 text-[10px]">
+                            <div class="flex justify-between text-purple-600 dark:text-purple-400 font-bold">
+                                <span>🏆 جوائز الولاء ({{ reportData.summary.loyalty_orders_count || 0 }}):</span>
+                                <span class="font-mono">-{{ formatNumber(reportData.summary.loyalty_discounts || 0) }} {{ reportData.currency }}</span>
+                            </div>
+                            <div class="flex justify-between text-amber-600 dark:text-amber-400 font-bold">
+                                <span>🎡 عجلة الحظ ({{ reportData.summary.wheel_orders_count || 0 }}):</span>
+                                <span class="font-mono">-{{ formatNumber(reportData.summary.wheel_discounts || 0) }} {{ reportData.currency }}</span>
+                            </div>
+                        </div>
+                        <p v-else class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">تكلفة الحملات الترويجية المخصومة</p>
                     </div>
 
                     <!-- Total Orders & AOV -->

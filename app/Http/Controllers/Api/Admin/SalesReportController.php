@@ -32,6 +32,7 @@ class SalesReportController extends ApiController
         // المبيعات المعترف بها هي الطلبات المكتملة (served) أو المسددة (paid_at is not null وليست ملغاة)
         // الطلبات الملغاة (cancelled) يتم حصرها منفصلة كفاقد مبيعات ولا تدخل في صافي الإيرادات نهائياً.
         $baseValidQuery = Order::withoutGlobalScopes()
+            ->with(['promoCode' => fn ($q) => $q->withoutGlobalScopes()->select('id', 'source')])
             ->where('restaurant_id', $restaurantId)
             ->where(function ($q) {
                 $q->where('status', OrderStatus::Served->value)
@@ -63,7 +64,7 @@ class SalesReportController extends ApiController
 
         $validOrders = (clone $baseQuery)
             ->whereBetween('created_at', [$startDate, $endDate])
-            ->get(['id', 'subtotal', 'discount_amount', 'total', 'service_type', 'created_at']);
+            ->get(['id', 'subtotal', 'discount_amount', 'total', 'service_type', 'promo_code_id', 'created_at']);
 
         $cancelledOrders = (clone $cancelledQuery)
             ->whereBetween('created_at', [$startDate, $endDate])
@@ -149,7 +150,7 @@ class SalesReportController extends ApiController
             'month'             => $month,
             'month_label'       => $startDate->translatedFormat('F Y'),
             'currency'          => $restaurant->currency ?? 'SYP',
-            'summary'           => [
+            'summary'           => array_merge([
                 'gross_sales'       => $totalGross,
                 'total_discounts'   => $totalDiscount,
                 'net_sales'         => $totalNet,
@@ -161,7 +162,7 @@ class SalesReportController extends ApiController
                 'takeaway_revenue'  => $takeawayRevenue,
                 'cancelled_orders'  => $cancelledCount,
                 'cancelled_lost'    => $cancelledLost,
-            ],
+            ], $this->computePromoDiscountBreakdown($validOrders)),
             'records'           => $daysBreakdown,
         ]);
     }
@@ -173,7 +174,7 @@ class SalesReportController extends ApiController
 
         $validOrders = (clone $baseQuery)
             ->whereBetween('created_at', [$startDate, $endDate])
-            ->get(['id', 'subtotal', 'discount_amount', 'total', 'service_type', 'created_at']);
+            ->get(['id', 'subtotal', 'discount_amount', 'total', 'service_type', 'promo_code_id', 'created_at']);
 
         $cancelledOrders = (clone $cancelledQuery)
             ->whereBetween('created_at', [$startDate, $endDate])
@@ -243,7 +244,7 @@ class SalesReportController extends ApiController
             'period_type'       => 'monthly',
             'year'              => $year,
             'currency'          => $restaurant->currency ?? 'SYP',
-            'summary'           => [
+            'summary'           => array_merge([
                 'gross_sales'       => $totalGross,
                 'total_discounts'   => $totalDiscount,
                 'net_sales'         => $totalNet,
@@ -251,14 +252,14 @@ class SalesReportController extends ApiController
                 'aov'               => $totalOrdersCount > 0 ? number_format((float) $totalNet / $totalOrdersCount, 2, '.', '') : '0.00',
                 'cancelled_orders'  => $cancelledCount,
                 'cancelled_lost'    => $cancelledLost,
-            ],
+            ], $this->computePromoDiscountBreakdown($validOrders)),
             'records'           => $monthsBreakdown,
         ]);
     }
 
     private function getYearlyReport($baseQuery, $cancelledQuery, $restaurant)
     {
-        $allOrders = (clone $baseQuery)->get(['id', 'subtotal', 'discount_amount', 'total', 'created_at']);
+        $allOrders = (clone $baseQuery)->get(['id', 'subtotal', 'discount_amount', 'total', 'promo_code_id', 'created_at']);
         $cancelledOrders = (clone $cancelledQuery)->get(['id', 'total']);
 
         $yearsGrouped = $allOrders->groupBy(fn ($o) => $o->created_at->format('Y'))->sortKeysDesc();
@@ -308,7 +309,7 @@ class SalesReportController extends ApiController
         return $this->success([
             'period_type'       => 'yearly',
             'currency'          => $restaurant->currency ?? 'SYP',
-            'summary'           => [
+            'summary'           => array_merge([
                 'gross_sales'       => $totalGross,
                 'total_discounts'   => $totalDiscount,
                 'net_sales'         => $totalNet,
@@ -316,7 +317,7 @@ class SalesReportController extends ApiController
                 'aov'               => $totalOrdersCount > 0 ? number_format((float) $totalNet / $totalOrdersCount, 2, '.', '') : '0.00',
                 'cancelled_orders'  => $cancelledCount,
                 'cancelled_lost'    => $cancelledLost,
-            ],
+            ], $this->computePromoDiscountBreakdown($allOrders)),
             'records'           => $yearsBreakdown,
         ]);
     }
@@ -328,7 +329,7 @@ class SalesReportController extends ApiController
 
         $validOrders = (clone $baseQuery)
             ->whereBetween('created_at', [$startDate, $endDate])
-            ->get(['id', 'subtotal', 'discount_amount', 'total', 'service_type', 'created_at']);
+            ->get(['id', 'subtotal', 'discount_amount', 'total', 'service_type', 'promo_code_id', 'created_at']);
 
         $cancelledOrders = (clone $cancelledQuery)
             ->whereBetween('created_at', [$startDate, $endDate])
@@ -372,7 +373,7 @@ class SalesReportController extends ApiController
             'from_date'         => $startDate->toDateString(),
             'to_date'           => $endDate->toDateString(),
             'currency'          => $restaurant->currency ?? 'SYP',
-            'summary'           => [
+            'summary'           => array_merge([
                 'gross_sales'       => $totalGross,
                 'total_discounts'   => $totalDiscount,
                 'net_sales'         => $totalNet,
@@ -384,8 +385,43 @@ class SalesReportController extends ApiController
                 'takeaway_revenue'  => $takeawayRevenue,
                 'cancelled_orders'  => $cancelledCount,
                 'cancelled_lost'    => $cancelledLost,
-            ],
+            ], $this->computePromoDiscountBreakdown($validOrders)),
             'records'           => [],
         ]);
+    }
+
+    /**
+     * Separate discount totals by promo source (Loyalty grand prizes vs Wheel coupons vs Manual).
+     *
+     * @param \Illuminate\Support\Collection $orders
+     */
+    private function computePromoDiscountBreakdown($orders): array
+    {
+        $loyaltyDiscounts = '0.00';
+        $loyaltyCount = 0;
+        $wheelDiscounts = '0.00';
+        $wheelCount = 0;
+
+        foreach ($orders as $order) {
+            $discount = number_format((float) ($order->discount_amount ?? 0), 2, '.', '');
+            if ((float) $discount <= 0) {
+                continue;
+            }
+            $source = $order->promoCode?->source;
+            if ($source === 'loyalty') {
+                $loyaltyDiscounts = MoneyCalculator::add($loyaltyDiscounts, $discount);
+                $loyaltyCount++;
+            } elseif ($source === 'wheel' || $source === 'demo_wheel') {
+                $wheelDiscounts = MoneyCalculator::add($wheelDiscounts, $discount);
+                $wheelCount++;
+            }
+        }
+
+        return [
+            'loyalty_discounts' => $loyaltyDiscounts,
+            'loyalty_orders_count' => $loyaltyCount,
+            'wheel_discounts' => $wheelDiscounts,
+            'wheel_orders_count' => $wheelCount,
+        ];
     }
 }

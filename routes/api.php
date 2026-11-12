@@ -58,6 +58,12 @@ Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
         Route::apiResource('promo-codes', AdminPromoCodeController::class)->parameters([
             'promo-codes' => 'promoCode',
         ]);
+        Route::get('customers', [\App\Http\Controllers\Api\Admin\CustomerCrmController::class, 'index']);
+        Route::post('customers', [\App\Http\Controllers\Api\Admin\CustomerCrmController::class, 'store']);
+        Route::patch('customers/{customerId}', [\App\Http\Controllers\Api\Admin\CustomerCrmController::class, 'update']);
+        Route::delete('customers/{customerId}', [\App\Http\Controllers\Api\Admin\CustomerCrmController::class, 'destroy']);
+        Route::post('customers/{customerId}/mark-reminded', [\App\Http\Controllers\Api\Admin\CustomerCrmController::class, 'markReminded']);
+        Route::post('crm-settings', [\App\Http\Controllers\Api\Admin\CustomerCrmController::class, 'updateSettings']);
     });
 
     Route::middleware('permission:manage_orders')->group(function () {

@@ -41,6 +41,7 @@ Route::get('/t/{token}/orders/{orderNumber}', [CustomerController::class, 'order
 Route::get('/wheel-demo', fn(\Illuminate\Http\Request $request) => redirect()->route('wheel.show', array_merge(['token' => 'demo'], $request->query())))->name('wheel.demo');
 Route::get('/wheel/{token}', [\App\Http\Controllers\Web\WheelController::class, 'show'])->name('wheel.show');
 Route::post('/wheel/{token}/spin', [\App\Http\Controllers\Web\WheelController::class, 'spin'])->name('wheel.spin')->middleware('throttle:10,1');
+Route::post('/wheel/{token}/claim-whatsapp', [\App\Http\Controllers\Web\WheelController::class, 'claimWhatsapp'])->name('wheel.claim_whatsapp')->middleware('throttle:15,1');
 Route::post('/wheel/{token}/reset', [\App\Http\Controllers\Web\WheelController::class, 'reset'])->name('wheel.reset')->middleware(['auth', 'verified']);
 
 Route::middleware(['auth', 'verified', 'permission:manage_orders'])->group(function () {
@@ -66,6 +67,9 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
     Route::get('/offers', function () {
         return Inertia::render('Admin/Offers');
     })->name('offers');
+    Route::get('/customers', function () {
+        return Inertia::render('Admin/Customers');
+    })->name('customers');
 });
 
 Route::middleware(['auth', 'verified', 'permission:manage_tables'])->prefix('admin')->name('admin.')->group(function () {

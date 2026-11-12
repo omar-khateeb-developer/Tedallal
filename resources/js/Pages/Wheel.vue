@@ -14,7 +14,10 @@ interface Slice {
 }
 
 interface Voucher {
-    code: string;
+    code: string | null;
+    code_locked?: boolean;
+    code_hidden_by_policy?: boolean;
+    claim_ref?: string | null;
     discount_text: string;
     starts_at: string | null;
     expires_at: string | null;
@@ -28,6 +31,19 @@ const props = defineProps<{
     is_demo?: boolean;
     restaurant_id?: number;
     has_whatsapp_feature?: boolean;
+    wheel_require_whatsapp?: boolean;
+    wheel_reveal_code_after_save?: boolean;
+    loyalty_config?: {
+        enabled: boolean;
+        target_visits: number;
+        reward_label: string;
+    };
+    claimed_customer?: {
+        name: string;
+        phone: string;
+        visits_count: number;
+        whatsapp_url?: string;
+    } | null;
     restaurant: {
         id?: number;
         name: string;
@@ -54,11 +70,108 @@ const copied = ref(false);
 const soundEnabled = ref(true);
 const pointerDeflection = ref(0);
 const lightBulbState = ref(0);
-const whatsappPhone = ref('');
+
+// Customer WhatsApp & CRM Gate states
+const whatsappPhone = ref(props.claimed_customer?.phone || '');
+const customerName = ref(props.claimed_customer?.name || '');
+const isClaimingWhatsapp = ref(false);
+const claimError = ref<string | null>(null);
+const claimedSuccess = ref(Boolean(props.claimed_customer));
+const claimedWhatsappUrl = ref<string | null>(props.claimed_customer?.whatsapp_url || null);
+const claimedVisitsCount = ref<number>(props.claimed_customer?.visits_count || 1);
+const loyaltyResult = ref<any>(null);
+
+function toWesternDigits(input: string): string {
+    const map: Record<string, string> = {
+        '٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4',
+        '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9',
+        '۰': '0', '۱': '1', '۲': '2', '۳': '3', '۴': '4',
+        '۵': '5', '۶': '6', '۷': '7', '۸': '8', '۹': '9',
+    };
+    return input.replace(/[٠-٩۰-۹]/g, ch => map[ch] ?? ch);
+}
+
+const blockedFakeNames = new Set([
+    'test', 'testing', 'asdf', 'qwer', 'zxcv', 'admin', 'user', 'guest',
+    'customer', 'client', 'none', 'null', 'na', 'anonymous', 'demo',
+    'تجربة', 'تيست', 'تست', 'مستخدم', 'زبون', 'عميل', 'ضيف', 'بدون',
+    'لايوجد', 'لا يوجد', 'غير معروف', 'مجهول', 'فلان', 'اسم',
+]);
+
+async function submitWhatsappClaim() {
+    if (!voucher.value) return;
+    claimError.value = null;
+
+    const cleanName = customerName.value.replace(/\s+/g, ' ').trim();
+    if (cleanName.length < 3 || cleanName.length > 50) {
+        claimError.value = 'يرجى كتابة اسمك الحقيقي (3 أحرف على الأقل).';
+        return;
+    }
+    if (!/^[\u0600-\u06FFa-zA-Z\s]+$/.test(cleanName)) {
+        claimError.value = 'الاسم يجب أن يحتوي على حروف عربية أو إنجليزية فقط بدون أرقام أو رموز.';
+        return;
+    }
+    if (/(.)\1{2,}/.test(cleanName.replace(/\s/g, '').toLowerCase()) || blockedFakeNames.has(cleanName.toLowerCase())) {
+        claimError.value = 'يرجى كتابة اسمك الحقيقي لتوثيق هديتك باسمك.';
+        return;
+    }
+
+    const normalizedPhone = toWesternDigits(whatsappPhone.value).replace(/[^0-9]/g, '');
+    if (!/^09[1-9]\d{7}$/.test(normalizedPhone)) {
+        claimError.value = 'يرجى إدخال رقم واتساب صحيح يبدأ بـ 09 ومكوّن من 10 أرقام (مثال: 0934567890).';
+        return;
+    }
+    if (/^09(\d)\1{7}$/.test(normalizedPhone) || ['0912345678', '0987654321', '0923456789', '0901234567'].includes(normalizedPhone)) {
+        claimError.value = 'يرجى إدخال رقم واتساب حقيقي فعال.';
+        return;
+    }
+
+    whatsappPhone.value = normalizedPhone;
+    isClaimingWhatsapp.value = true;
+
+    try {
+        const res = await axios.post(`/wheel/${props.token}/claim-whatsapp`, {
+            name: cleanName,
+            phone: normalizedPhone,
+            claim_ref: voucher.value.claim_ref || null,
+        });
+
+        const data = res.data;
+        claimedSuccess.value = true;
+        claimedWhatsappUrl.value = data.whatsapp_url;
+        claimedVisitsCount.value = data.customer?.visits_count || 1;
+        loyaltyResult.value = data.loyalty || null;
+
+        voucher.value.code_locked = false;
+        if (data.reveal_code && data.code) {
+            voucher.value.code = data.code;
+            voucher.value.code_hidden_by_policy = false;
+        } else {
+            voucher.value.code = null;
+            voucher.value.code_hidden_by_policy = true;
+        }
+
+        // Open WhatsApp automatically with the formatted coupon message
+        if (data.whatsapp_url) {
+            window.open(data.whatsapp_url, '_blank', 'noopener,noreferrer');
+        }
+    } catch (err: any) {
+        const errors = err.response?.data?.errors;
+        if (errors) {
+            const firstErr = Object.values(errors).flat()[0] as string;
+            claimError.value = firstErr || 'تعذر التحقق من البيانات المدخلة.';
+        } else {
+            claimError.value = err.response?.data?.message || 'حدث خطأ أثناء حفظ البيانات، يرجى المحاولة مرة أخرى.';
+        }
+    } finally {
+        isClaimingWhatsapp.value = false;
+    }
+}
 
 const whatsappShareUrl = computed(() => {
-    if (!voucher.value) return '#';
-    const rawDigits = whatsappPhone.value.replace(/\D/g, '');
+    if (claimedWhatsappUrl.value) return claimedWhatsappUrl.value;
+    if (!voucher.value || !voucher.value.code) return '#';
+    const rawDigits = toWesternDigits(whatsappPhone.value).replace(/\D/g, '');
     let cleanPhone = rawDigits;
     if (cleanPhone.startsWith('09') && cleanPhone.length === 10) {
         cleanPhone = '963' + cleanPhone.substring(1);
@@ -474,11 +587,22 @@ async function copyCode() {
 }
 
 // Reset for Demo or Testing
+function clearCustomerClaimState() {
+    customerName.value = '';
+    whatsappPhone.value = '';
+    claimError.value = null;
+    claimedSuccess.value = false;
+    claimedWhatsappUrl.value = null;
+    claimedVisitsCount.value = 1;
+    loyaltyResult.value = null;
+}
+
 async function resetDemoSpin() {
     if (props.is_demo) {
         hasWon.value = false;
         voucher.value = null;
         errorMessage.value = null;
+        clearCustomerClaimState();
         drawWheel(currentAngle);
         return;
     }
@@ -488,6 +612,7 @@ async function resetDemoSpin() {
         hasWon.value = false;
         voucher.value = null;
         errorMessage.value = null;
+        clearCustomerClaimState();
         drawWheel(currentAngle);
     } catch {
         router.reload();
@@ -843,8 +968,60 @@ onUnmounted(() => {
                                 {{ formatVoucherDisplay(voucher.discount_text) }}
                             </div>
 
-                            <!-- Single-Use Voucher Code Container -->
-                            <div class="my-4 p-4 rounded-2xl bg-black/60 border border-dashed border-[#D4AF37]/40 flex flex-col items-center gap-2">
+                            <!-- Case A: Code Locked until Name + 09 WhatsApp Number are saved in CRM -->
+                            <div v-if="voucher.code_locked" class="my-4 p-4 rounded-2xl bg-gradient-to-b from-emerald-950/80 via-emerald-900/40 to-black/70 border-2 border-emerald-500/60 shadow-lg shadow-emerald-950/50 space-y-3 text-start">
+                                <div class="text-center">
+                                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-extrabold mb-1.5">
+                                        <span>🔐</span>
+                                        <span>استلام كود الخصم عبر واتساب</span>
+                                    </div>
+                                    <p class="text-xs text-emerald-100/90 leading-relaxed">
+                                        أدخل اسمك الحقيقي ورقم الواتساب ليتم توثيق هديتك باسمك وإرسال كود الخصم إلى واتسابك فوراً:
+                                    </p>
+                                </div>
+
+                                <div class="space-y-2.5">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-emerald-200 mb-1">الاسم الكامل (حقيقي):</label>
+                                        <input
+                                            v-model="customerName"
+                                            type="text"
+                                            dir="rtl"
+                                            maxlength="50"
+                                            placeholder="مثال: أحمد محمد"
+                                            class="w-full text-[16px] py-2.5 px-3.5 rounded-xl bg-black/70 border border-emerald-500/40 text-white placeholder-stone-500 focus:outline-none focus:border-emerald-400"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-emerald-200 mb-1">رقم الواتساب (يبدأ بـ 09 فقط):</label>
+                                        <input
+                                            v-model="whatsappPhone"
+                                            type="tel"
+                                            inputmode="numeric"
+                                            dir="ltr"
+                                            maxlength="10"
+                                            placeholder="09XXXXXXXX"
+                                            class="w-full text-center text-[16px] py-2.5 px-3.5 rounded-xl bg-black/70 border border-emerald-500/40 text-white placeholder-stone-500 focus:outline-none focus:border-emerald-400 font-mono tracking-wider"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div v-if="claimError" class="p-2.5 rounded-xl bg-red-950/70 border border-red-500/60 text-red-200 text-xs font-bold text-center">
+                                    ⚠️ {{ claimError }}
+                                </div>
+
+                                <button
+                                    @click="submitWhatsappClaim"
+                                    :disabled="isClaimingWhatsapp"
+                                    type="button"
+                                    class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-sm shadow-lg shadow-emerald-950/60 transition active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
+                                >
+                                    <span>{{ isClaimingWhatsapp ? 'جاري التوثيق والإرسال...' : '📲 أرسل كود الخصم إلى واتسابي الآن' }}</span>
+                                </button>
+                            </div>
+
+                            <!-- Case B: Code Revealed (either unlocked after save per manager setting, or feature off) -->
+                            <div v-else-if="voucher.code" class="my-4 p-4 rounded-2xl bg-black/60 border border-dashed border-[#D4AF37]/40 flex flex-col items-center gap-2">
                                 <span class="text-xs text-[#9CA3AF] font-medium">كوبون خصم زيارتك القادمة:</span>
                                 <div class="flex items-center justify-center gap-3 w-full">
                                     <span class="font-mono text-2xl font-black tracking-widest text-emerald-400 select-all" dir="ltr">
@@ -857,6 +1034,55 @@ onUnmounted(() => {
                                     >
                                         <span>{{ copied ? 'تم النسخ ✓' : 'نسخ الكود' }}</span>
                                     </button>
+                                </div>
+                            </div>
+
+                            <!-- Case C: Saved in CRM, Code Hidden on Screen by Manager Policy (WhatsApp-only) -->
+                            <div v-else-if="voucher.code_hidden_by_policy" class="my-4 p-4 rounded-2xl bg-emerald-950/60 border border-emerald-500/50 flex flex-col items-center gap-2.5 text-center">
+                                <span class="text-2xl">✅</span>
+                                <div class="text-xs font-extrabold text-emerald-300">
+                                    تم حفظ هديتك باسم «{{ customerName }}» في سجل المطعم بنجاح!
+                                </div>
+                                <p class="text-[11px] text-emerald-100/80 leading-relaxed">
+                                    تم تجهيز كود الخصم الخاص بك في رسالة الواتساب. اضغط الزر أدناه لفتح واتساب وحفظ الرسالة لديك:
+                                </p>
+                                <a
+                                    v-if="claimedWhatsappUrl"
+                                    :href="claimedWhatsappUrl"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black transition shadow-md flex items-center justify-center gap-2"
+                                >
+                                    <span>📲 فتح الواتساب لاستلام وحفظ الكود</span>
+                                </a>
+                            </div>
+
+                            <!-- Loyalty Progress & Grand Prize Banner -->
+                            <div v-if="claimedSuccess && (claimedVisitsCount >= 2 || loyaltyResult?.enabled || props.loyalty_config?.enabled)" class="my-3 p-3.5 rounded-2xl bg-gradient-to-r from-[#D4AF37]/15 via-amber-950/40 to-[#D4AF37]/15 border border-[#D4AF37]/40 text-start space-y-1.5">
+                                <div v-if="loyaltyResult?.milestone_reached && loyaltyResult?.loyalty_voucher" class="space-y-1.5 text-center">
+                                    <div class="text-sm font-black text-[#FCF6BA]">
+                                        🏆 ألف مبروك يا {{ customerName }}! استحققت جائزة الولاء الكبرى!
+                                    </div>
+                                    <div class="text-xs text-emerald-300 font-bold">
+                                        هذه زيارتك رقم ({{ claimedVisitsCount }}) — جائزتك: {{ loyaltyResult.loyalty_voucher.reward_label }}
+                                    </div>
+                                    <div v-if="voucher.code" class="font-mono text-base font-black text-[#FCF6BA] bg-black/50 py-1.5 px-3 rounded-xl inline-block border border-[#D4AF37]/40" dir="ltr">
+                                        {{ loyaltyResult.loyalty_voucher.code }}
+                                    </div>
+                                </div>
+                                <div v-else class="flex items-center gap-2.5">
+                                    <span class="text-xl shrink-0">🌟</span>
+                                    <div class="text-xs text-[#F3E5AB] leading-relaxed">
+                                        <span v-if="claimedVisitsCount >= 2" class="font-extrabold">
+                                            أهلاً بعودتك يا {{ customerName }}! هذه زيارتك رقم ({{ claimedVisitsCount }}) في {{ restaurant.name }}.
+                                        </span>
+                                        <span v-else class="font-bold">
+                                            تم تسجيل زيارتك الأولى باسم «{{ customerName }}»!
+                                        </span>
+                                        <span v-if="(loyaltyResult?.enabled ?? props.loyalty_config?.enabled)" class="block text-[11px] text-amber-200/80 mt-0.5">
+                                            تبقّى لك {{ loyaltyResult?.remaining_visits ?? ((props.loyalty_config?.target_visits || 5) - (claimedVisitsCount % (props.loyalty_config?.target_visits || 5))) }} زيارات فقط لتحصل على: {{ loyaltyResult?.reward_label || props.loyalty_config?.reward_label }}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
 
@@ -881,37 +1107,21 @@ onUnmounted(() => {
                                 </div>
                             </div>
 
-                            <!-- WhatsApp Save / Share Box (When whatsapp_reminders is enabled for the restaurant) -->
-                            <div v-if="props.has_whatsapp_feature" class="mt-3 p-3 rounded-2xl bg-gradient-to-r from-emerald-950/70 via-emerald-900/50 to-emerald-950/70 border border-emerald-500/50 text-center shadow-lg shadow-emerald-950/40">
-                                <div class="flex items-center justify-center gap-1.5 text-emerald-300 font-bold text-xs mb-1.5">
-                                    <span class="text-base">💬</span>
-                                    <span>احفظ هديتك في واتساب لزيارتك القادمة</span>
-                                </div>
-                                <p class="text-[11px] text-emerald-100/70 mb-2 leading-relaxed">
-                                    أدخل رقم هاتفك لتصلك تفاصيل الكوبون، أو اضغط مباشرة لإرساله لنفسك:
-                                </p>
-                                <div class="flex items-center gap-2">
-                                    <input
-                                        v-model="whatsappPhone"
-                                        type="tel"
-                                        dir="ltr"
-                                        placeholder="رقم الهاتف (اختياري)"
-                                        class="w-full text-center text-xs py-2 px-3 rounded-xl bg-black/60 border border-emerald-500/40 text-white placeholder-stone-500 focus:outline-none focus:border-emerald-400 font-mono"
-                                    />
-                                    <a
-                                        :href="whatsappShareUrl"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        class="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-md shadow-emerald-950/50 cursor-pointer active:scale-95"
-                                    >
-                                        <span>📱</span>
-                                        <span>واتساب</span>
-                                    </a>
-                                </div>
+                            <!-- Re-open WhatsApp Share Button if already claimed & feature enabled -->
+                            <div v-if="props.has_whatsapp_feature && claimedSuccess && claimedWhatsappUrl && !voucher.code_hidden_by_policy" class="mt-3">
+                                <a
+                                    :href="claimedWhatsappUrl"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="w-full py-2.5 px-4 rounded-xl bg-emerald-600/90 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-md flex items-center justify-center gap-2"
+                                >
+                                    <span>💬</span>
+                                    <span>إعادة فتح رسالة الكوبون في واتساب</span>
+                                </a>
                             </div>
 
                             <!-- Action Buttons: Return to Menu & Copy Code -->
-                            <div class="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-white/10">
+                            <div class="grid gap-2 mt-4 pt-3 border-t border-white/10" :class="voucher.code ? 'grid-cols-2' : 'grid-cols-1'">
                                 <a
                                     v-if="restaurant.menu_url"
                                     :href="restaurant.menu_url"
@@ -920,15 +1130,7 @@ onUnmounted(() => {
                                     <span>🍽️ تصفح قائمة الطعام</span>
                                 </a>
                                 <button
-                                    v-else
-                                    @click="copyCode"
-                                    type="button"
-                                    class="py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/10 text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer active:scale-95"
-                                >
-                                    <span>📋 {{ copied ? 'تم النسخ ✓' : 'حفظ الكود' }}</span>
-                                </button>
-
-                                <button
+                                    v-if="voucher.code"
                                     @click="copyCode"
                                     type="button"
                                     class="py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/10 text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer active:scale-95"

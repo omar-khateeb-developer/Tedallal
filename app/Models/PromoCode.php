@@ -10,23 +10,30 @@ class PromoCode extends Model
     use HasTenant;
     protected $fillable = [
         'restaurant_id',
+        'customer_id',
         'code',
+        'source',
         'discount_type',
         'discount_value',
         'min_order_value',
+        'free_menu_item_id',
         'is_active',
         'starts_at',
         'is_single_use',
         'times_used',
         'expires_at',
+        'reminded_at',
+        'reminders_count',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'is_single_use' => 'boolean',
         'times_used' => 'integer',
+        'reminders_count' => 'integer',
         'starts_at' => 'datetime',
         'expires_at' => 'datetime',
+        'reminded_at' => 'datetime',
         'discount_value' => 'decimal:2',
         'min_order_value' => 'decimal:2',
     ];
@@ -36,9 +43,24 @@ class PromoCode extends Model
         return $this->belongsTo(Restaurant::class);
     }
 
+    public function customer()
+    {
+        return $this->belongsTo(RestaurantCustomer::class, 'customer_id');
+    }
+
+    public function freeMenuItem()
+    {
+        return $this->belongsTo(MenuItem::class, 'free_menu_item_id')->withoutGlobalScopes();
+    }
+
     public function orders()
     {
         return $this->hasMany(Order::class);
+    }
+
+    public function isLoyaltyCode(): bool
+    {
+        return $this->source === 'loyalty' || str_starts_with($this->code, 'LOYAL-');
     }
 
     public function isDemoCode(): bool
