@@ -77,6 +77,7 @@ const customerName = ref(props.claimed_customer?.name || '');
 const isClaimingWhatsapp = ref(false);
 const claimError = ref<string | null>(null);
 const claimedSuccess = ref(Boolean(props.claimed_customer));
+const isAutoSent = ref(false);
 const claimedWhatsappUrl = ref<string | null>(props.claimed_customer?.whatsapp_url || null);
 const claimedVisitsCount = ref<number>(props.claimed_customer?.visits_count || 1);
 const loyaltyResult = ref<any>(null);
@@ -138,6 +139,7 @@ async function submitWhatsappClaim() {
 
         const data = res.data;
         claimedSuccess.value = true;
+        isAutoSent.value = Boolean(data.auto_sent);
         claimedWhatsappUrl.value = data.whatsapp_url;
         claimedVisitsCount.value = data.customer?.visits_count || 1;
         loyaltyResult.value = data.loyalty || null;
@@ -151,8 +153,8 @@ async function submitWhatsappClaim() {
             voucher.value.code_hidden_by_policy = true;
         }
 
-        // Open WhatsApp automatically with the formatted coupon message
-        if (data.whatsapp_url) {
+        // Open WhatsApp automatically only if not already sent by the server gateway
+        if (!data.auto_sent && data.whatsapp_url) {
             window.open(data.whatsapp_url, '_blank', 'noopener,noreferrer');
         }
     } catch (err: any) {
@@ -1043,11 +1045,17 @@ onUnmounted(() => {
                                 <div class="text-xs font-extrabold text-emerald-300">
                                     تم حفظ هديتك باسم «{{ customerName }}» في سجل المطعم بنجاح!
                                 </div>
-                                <p class="text-[11px] text-emerald-100/80 leading-relaxed">
+                                <p v-if="isAutoSent" class="text-xs font-bold text-emerald-200 leading-relaxed">
+                                    🎉 تم إرسال كود الخصم ورابط تفعيله في المنيو مباشرة إلى واتساب الخاص بك (09...) بنجاح! تفقد رسائلك الآن.
+                                </p>
+                                <p v-else class="text-[11px] text-emerald-100/80 leading-relaxed">
                                     تم تجهيز كود الخصم الخاص بك في رسالة الواتساب. اضغط الزر أدناه لفتح واتساب وحفظ الرسالة لديك:
                                 </p>
+                                <div v-if="isAutoSent" class="w-full py-2.5 px-4 rounded-xl bg-emerald-800/80 border border-emerald-400/40 text-emerald-100 text-xs font-bold flex items-center justify-center gap-2">
+                                    <span>✓ تم الإرسال التلقائي للواتساب بنجاح</span>
+                                </div>
                                 <a
-                                    v-if="claimedWhatsappUrl"
+                                    v-else-if="claimedWhatsappUrl"
                                     :href="claimedWhatsappUrl"
                                     target="_blank"
                                     rel="noopener noreferrer"

@@ -46,3 +46,8 @@ Artisan::command('tables:generate-qr {--force : Force re-generate all QR codes e
 
     $this->info("✅ اكتملت العملية بنجاح: تم توليد/تحديث {$generated} رمز QR (تم تخطي {$skipped} موجود مسبقاً).");
 })->purpose('Generate or regenerate QR code images for all tables');
+
+\Illuminate\Support\Facades\Schedule::command('crm:send-expiring-reminders')
+    ->dailyAt('13:00')
+    ->withoutOverlapping();
+

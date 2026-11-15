@@ -41,6 +41,9 @@ Route::prefix('public')->middleware('throttle:public-api')->group(function () {
     });
 });
 
+// WhatsApp Gateway Internal Webhook (Secured with X-Gateway-Secret)
+Route::post('whatsapp/webhook', [\App\Http\Controllers\Api\Public\WhatsAppWebhookController::class, 'handle']);
+
 Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
     Route::middleware('role:admin')->group(function () {
         Route::get('dashboard/stats', [AdminDashboardController::class, 'stats']);
@@ -64,6 +67,12 @@ Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
         Route::delete('customers/{customerId}', [\App\Http\Controllers\Api\Admin\CustomerCrmController::class, 'destroy']);
         Route::post('customers/{customerId}/mark-reminded', [\App\Http\Controllers\Api\Admin\CustomerCrmController::class, 'markReminded']);
         Route::post('crm-settings', [\App\Http\Controllers\Api\Admin\CustomerCrmController::class, 'updateSettings']);
+        Route::get('whatsapp/status', [\App\Http\Controllers\Api\Admin\WhatsAppController::class, 'status']);
+        Route::post('whatsapp/connect', [\App\Http\Controllers\Api\Admin\WhatsAppController::class, 'connect']);
+        Route::post('whatsapp/disconnect', [\App\Http\Controllers\Api\Admin\WhatsAppController::class, 'disconnect']);
+        Route::post('whatsapp/settings', [\App\Http\Controllers\Api\Admin\WhatsAppController::class, 'updateSettings']);
+        Route::post('whatsapp/send-test', [\App\Http\Controllers\Api\Admin\WhatsAppController::class, 'sendTest']);
+        Route::post('customers/{customerId}/send-direct-reminder', [\App\Http\Controllers\Api\Admin\WhatsAppController::class, 'sendDirectReminder']);
     });
 
     Route::middleware('permission:manage_orders')->group(function () {

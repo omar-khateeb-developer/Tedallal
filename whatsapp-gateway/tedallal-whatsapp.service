@@ -1,0 +1,22 @@
+[Unit]
+Description=Tedallal WhatsApp Gateway Service
+After=network.target
+
+[Service]
+Type=simple
+User=deployer
+WorkingDirectory=/var/www/tedallal/whatsapp-gateway
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=5
+Environment=NODE_ENV=production
+Environment=PORT=8082
+Environment=HOST=127.0.0.1
+Environment=GATEWAY_SECRET=tedallal_wa_gateway_2026_secure_key
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=tedallal-whatsapp
+
+[Install]
+WantedBy=multi-user.target
+

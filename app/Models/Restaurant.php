@@ -25,6 +25,12 @@ class Restaurant extends Model
         'subscription_expires_at',
         'navbar_image',
         'features',
+        'whatsapp_status',
+        'whatsapp_phone',
+        'whatsapp_connected_at',
+        'whatsapp_auto_reply_enabled',
+        'whatsapp_auto_reply_message',
+        'whatsapp_expiring_reminders_enabled',
     ];
 
     protected $attributes = [
@@ -50,6 +56,9 @@ class Restaurant extends Model
             'features' => 'array',
             'windows_count' => 'integer',
             'subscription_expires_at' => 'datetime',
+            'whatsapp_connected_at' => 'datetime',
+            'whatsapp_auto_reply_enabled' => 'boolean',
+            'whatsapp_expiring_reminders_enabled' => 'boolean',
         ];
     }
 
@@ -225,6 +234,16 @@ class Restaurant extends Model
     public function hasWhatsappRemindersFeature(): bool
     {
         return $this->hasFeature('whatsapp_reminders');
+    }
+
+    public function isWhatsappConnected(): bool
+    {
+        return $this->whatsapp_status === 'connected';
+    }
+
+    public function isWhatsappAutoReplyActive(): bool
+    {
+        return (bool) $this->whatsapp_auto_reply_enabled && ! empty($this->whatsapp_auto_reply_message);
     }
 
     public function hasMenuEngineeringFeature(): bool

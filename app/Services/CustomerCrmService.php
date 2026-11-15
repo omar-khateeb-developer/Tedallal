@@ -287,7 +287,10 @@ final class CustomerCrmService
             : ($promo->starts_at ? $promo->starts_at->format('Y-m-d h:i A') : 'الآن');
         $expiresText = $promo->expires_at ? $promo->expires_at->format('Y-m-d') : 'مفتوح';
 
-        $msg = "🎁 مبروك {$customer->name}! لقد ربحت {$discountLabel} من مطعمنا «{$restaurant->name}».\n\n"
+        $greeting = $this->getRandomVoucherGreeting($customer->name, $restaurant->name);
+
+        $msg = "{$greeting}\n\n"
+            . "🎯 الجائزة: {$discountLabel}\n"
             . "🎟️ كود الخصم: {$promo->code}\n"
             . "⏳ يبدأ من: {$startsText}\n"
             . "📅 صالح لغاية تاريخ: {$expiresText}\n";
@@ -300,12 +303,17 @@ final class CustomerCrmService
             $msg .= "🛒 الحد الأدنى للطلب: {$cleanMin} {$currency}\n";
         }
 
+        // Direct 1-click menu link with auto-applied coupon
+        $baseUrl = rtrim((string) config('app.url', 'https://tedallal.tech'), '/');
+        $menuUrl = "{$baseUrl}/m/{$restaurant->slug}?coupon={$promo->code}";
+        $msg .= "\n📲 للطلب وتطبيق الخصم فوراً في السلة:\n{$menuUrl}\n";
+
         $visits = (int) $customer->visits_count;
         if ($loyalty['enabled']) {
             $target = (int) $loyalty['target_visits'];
             if ($loyaltyVoucher) {
                 $msg .= "\n🏆 مفاجأة الولاء الكبرى! لأنها زيارتك رقم ({$visits}) في مطعمنا، لقد استحققت الجائزة الكبرى: {$loyalty['reward_label']}!\n"
-                    . "🎖️ كود جائزة الولاء: {$loyaltyVoucher->code} (صالح لغاية {$loyaltyVoucher->expires_at?->format('Y-m-d')})\n";
+                    . "🎗️ كود جائزة الولاء: {$loyaltyVoucher->code} (صالح لغاية {$loyaltyVoucher->expires_at?->format('Y-m-d')})\n";
             } elseif ($visits >= 2) {
                 $remaining = $target - ($visits % $target);
                 $msg .= "\n🌟 أهلاً بعودتك مجدداً! هذه زيارتك رقم ({$visits}) لدينا — تبقى لك {$remaining} زيارات فقط لتحصل على الجائزة الكبرى: {$loyalty['reward_label']}!\n";
@@ -322,6 +330,27 @@ final class CustomerCrmService
         return $msg;
     }
 
+    private function getRandomVoucherGreeting(string $customerName, string $restaurantName): string
+    {
+        $templates = [
+            "🎁 مبروك يا {$customerName}! حالفك الحظ معنا في مطعمنا «{$restaurantName}» 🎉",
+            "✨ يسعد أوقاتك يا {$customerName}! مبروك فوزك اليوم في مطعم «{$restaurantName}» 🌟",
+            "🎉 أهلاً وسهلاً بك يا {$customerName}! لقد ربحت معنا في مطعمنا «{$restaurantName}» 🥳",
+            "🌟 نورتنا يا {$customerName}! مبروك حصولك على الهدية المميزة من «{$restaurantName}» 🎁",
+        ];
+        return $templates[array_rand($templates)];
+    }
+
+    private function getRandomReminderGreeting(string $customerName, string $restaurantName): string
+    {
+        $templates = [
+            "مرحباً {$customerName} 👋 نود تذكيرك من مطعمنا «{$restaurantName}» بأن لديك هدية خاصة منتظرة! ✨",
+            "يسعد أوقاتك يا {$customerName} 🌸 من مطعم «{$restaurantName}» نذكّرك بخصمك الرائع قبل فوات الأوان!",
+            "أهلاً بك يا {$customerName} 🌟 لا تنسَ أن لديك خصماً مميزاً في مطعم «{$restaurantName}» نتمنى أن يسعدك!",
+        ];
+        return $templates[array_rand($templates)];
+    }
+
     /**
      * Build the WhatsApp reminder message and deep link for the restaurant manager's CRM.
      */
@@ -330,9 +359,16 @@ final class CustomerCrmService
         $discountLabel = $this->formatPromoLabel($promo, $restaurant);
         $expiresText = $promo->expires_at ? $promo->expires_at->format('Y-m-d') : 'قريباً';
 
-        $message = "مرحباً {$customer->name} 👋\n"
-            . "نذكّرك من مطعمنا «{$restaurant->name}» بأن لديك {$discountLabel} عبر الكود: {$promo->code}\n"
-            . "📅 ينتهي بتاريخ: {$expiresText}\n";
+        $greeting = $this->getRandomReminderGreeting($customer->name, $restaurant->name);
+
+        $baseUrl = rtrim((string) config('app.url', 'https://tedallal.tech'), '/');
+        $menuUrl = "{$baseUrl}/m/{$restaurant->slug}?coupon={$promo->code}";
+
+        $message = "{$greeting}\n\n"
+            . "🎯 الهدية: {$discountLabel}\n"
+            . "🎟️ كود الخصم: {$promo->code}\n"
+            . "📅 ينتهي بتاريخ: {$expiresText}\n"
+            . "📲 رابط تطبيق الخصم مباشرة في المنيو:\n{$menuUrl}\n";
 
         $loyalty = $restaurant->loyaltyConfig();
         if ($loyalty['enabled']) {
@@ -340,7 +376,7 @@ final class CustomerCrmService
             $target = (int) $loyalty['target_visits'];
             $rem = $visits % $target === 0 ? 0 : ($target - ($visits % $target));
             if ($rem > 0) {
-                $message .= "🌟 رصيدك الحالي: {$visits} زيارة (متبقي {$rem} زيارات للحصول على: {$loyalty['reward_label']}).\n";
+                $message .= "\n🌟 رصيدك الحالي: {$visits} زيارة (متبقي {$rem} زيارات للحصول على: {$loyalty['reward_label']}).\n";
             }
         }
 
@@ -352,6 +388,24 @@ final class CustomerCrmService
             'message' => $message,
             'whatsapp_url' => $url,
         ];
+    }
+
+    /**
+     * Build 24-hour expiration reminder message (FOMO Alert).
+     */
+    public function buildExpiringSoonMessage(Restaurant $restaurant, RestaurantCustomer $customer, PromoCode $promo): string
+    {
+        $discountLabel = $this->formatPromoLabel($promo, $restaurant);
+        $expiresText = $promo->expires_at ? $promo->expires_at->format('Y-m-d') : 'غداً';
+
+        $baseUrl = rtrim((string) config('app.url', 'https://tedallal.tech'), '/');
+        $menuUrl = "{$baseUrl}/m/{$restaurant->slug}?coupon={$promo->code}";
+
+        return "⏳ تنبيه ينتهي قريباً! عزيزي {$customer->name} ✨\n\n"
+            . "نود تذكيرك بأن خصمك الرائع ({$discountLabel}) من مطعم «{$restaurant->name}» سينتهي غداً بتاريخ: {$expiresText}!\n\n"
+            . "🎟️ كود الخصم الخاص بك: {$promo->code}\n"
+            . "📲 اطلب واستفد من الخصم فوراً من الرابط:\n{$menuUrl}\n\n"
+            . "يسعدنا جداً حضورك أو طلبك اليوم قبل انتهاء الصلاحية 🎉";
     }
 }
 

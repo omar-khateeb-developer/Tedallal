@@ -8,6 +8,7 @@ use App\Models\PromoCode;
 use App\Models\Restaurant;
 use App\Models\RestaurantTable;
 use App\Services\CustomerCrmService;
+use App\Services\WhatsAppGatewayService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -390,7 +391,12 @@ class WheelController extends Controller
      * Save customer Name + WhatsApp (09XXXXXXXX) to the restaurant's isolated CRM,
      * evaluate loyalty milestones, and generate the formatted WhatsApp coupon message.
      */
-    public function claimWhatsapp(Request $request, string $token, CustomerCrmService $crmService): JsonResponse
+    public function claimWhatsapp(
+        Request $request,
+        string $token,
+        CustomerCrmService $crmService,
+        WhatsAppGatewayService $whatsappGateway
+    ): JsonResponse
     {
         $request->validate([
             'name' => ['required', 'string', 'max:60'],
@@ -450,6 +456,17 @@ class WheelController extends Controller
             $discountLabel
         );
 
+        // Auto-send via restaurant's connected WhatsApp gateway if active
+        $autoSent = false;
+        if ($restaurant->isWhatsappConnected()) {
+            $sendRes = $whatsappGateway->sendMessage(
+                $restaurant,
+                $result['customer']['phone'],
+                $result['whatsapp_message']
+            );
+            $autoSent = ! empty($sendRes['success']);
+        }
+
         $revealCode = $restaurant->shouldRevealWheelCodeAfterSave() || ! $restaurant->shouldRequireWheelWhatsapp();
 
         return response()->json([
@@ -457,6 +474,7 @@ class WheelController extends Controller
             'customer' => $result['customer'],
             'loyalty' => $result['loyalty'],
             'whatsapp_url' => $result['whatsapp_url'],
+            'auto_sent' => $autoSent,
             'reveal_code' => $revealCode,
             'code' => $revealCode ? $promo->code : null,
         ]);

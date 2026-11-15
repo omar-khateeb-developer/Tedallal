@@ -334,6 +334,15 @@ onMounted(() => {
     if (props.openCart) {
         cartOpen.value = true;
     }
+
+    // Auto-apply coupon from URL query param (?coupon=XYZ or ?promo=XYZ)
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlPromo = urlParams.get('coupon') || urlParams.get('promo');
+        if (urlPromo) {
+            promoCode.value = urlPromo.trim().toUpperCase();
+        }
+    } catch (_) {}
 });
 </script>
 

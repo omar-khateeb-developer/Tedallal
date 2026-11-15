@@ -24,11 +24,13 @@ class PromoCode extends Model
         'expires_at',
         'reminded_at',
         'reminders_count',
+        'is_expiring_reminded',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'is_single_use' => 'boolean',
+        'is_expiring_reminded' => 'boolean',
         'times_used' => 'integer',
         'reminders_count' => 'integer',
         'starts_at' => 'datetime',
