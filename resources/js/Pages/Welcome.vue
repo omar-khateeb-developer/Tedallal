@@ -4,6 +4,7 @@ import { Head, Link } from '@inertiajs/vue3';
 import { translations, type Locale } from '@/locales/landing';
 import { useTheme } from '@/composables/useTheme';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
+import AiBusinessConsultant from '@/Components/AiBusinessConsultant.vue';
 
 interface Props {
     canLogin?: boolean;
@@ -479,7 +480,15 @@ function handleGlobalClick(e: MouseEvent) {
     }
 }
 
+const isScrolled = ref(false);
+
+function handleScroll() {
+    isScrolled.value = window.scrollY > 30;
+}
+
 onMounted(() => {
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
     initTheme('dark');
     try {
         const savedLocale = localStorage.getItem('tedallal_locale') as Locale | null;
@@ -499,6 +508,7 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+    window.removeEventListener('scroll', handleScroll);
     window.removeEventListener('click', handleGlobalClick);
 });
 </script>
@@ -517,7 +527,7 @@ onUnmounted(() => {
     <div
         :dir="currentLocale === 'ar' ? 'rtl' : 'ltr'"
         :class="[
-            'font-sans min-h-screen selection:bg-amber-400 selection:text-black antialiased overflow-x-hidden relative transition-colors duration-500',
+            'font-sans min-h-screen selection:bg-amber-400 selection:text-black antialiased overflow-x-clip relative transition-colors duration-500',
             isDark ? 'dark-mode-theme bg-[#08080A] text-stone-100' : 'light-mode-theme bg-[#FAF8F5] text-stone-900'
         ]"
     >
@@ -538,30 +548,47 @@ onUnmounted(() => {
         </div>
 
         <!-- ========================================================================= -->
-        <!-- 1. ROYAL GLASSMORPHISM NAVIGATION -->
+        <!-- 1. ROYAL GLASSMORPHISM NAVIGATION (Fluid Dynamic Compression on Scroll) -->
         <!-- ========================================================================= -->
         <header
-            class="sticky top-0 z-50 backdrop-blur-2xl border-b transition-all duration-300"
-            :class="isDark ? 'bg-[#08080A]/90 border-[rgba(226,196,133,0.18)] shadow-[0_10px_35px_rgba(0,0,0,0.95)]' : 'bg-[#FAF8F5]/92 border-b border-[#C5A059]/30 shadow-[0_8px_30px_rgba(180,140,60,0.09)]'"
+            class="sticky top-0 z-50 transition-all duration-300 ease-out border-b"
+            :class="[
+                isScrolled
+                    ? (isDark
+                        ? 'bg-[#08080A]/95 backdrop-blur-2xl border-b border-amber-500/25 shadow-[0_12px_40px_rgba(0,0,0,0.95)]'
+                        : 'bg-[#FAF8F5]/96 backdrop-blur-2xl border-b border-[#C5A059]/40 shadow-[0_10px_35px_rgba(180,140,60,0.15)]')
+                    : (isDark
+                        ? 'bg-[#08080A]/85 backdrop-blur-xl border-b border-[rgba(226,196,133,0.16)] shadow-[0_4px_20px_rgba(0,0,0,0.4)]'
+                        : 'bg-[#FAF8F5]/88 backdrop-blur-xl border-b border-[#C5A059]/25 shadow-[0_4px_15px_rgba(180,140,60,0.06)]')
+            ]"
         >
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex items-center justify-between h-20">
+                <div class="flex items-center justify-between transition-all duration-300" :class="isScrolled ? 'h-14 sm:h-15' : 'h-18 sm:h-20'">
                     <!-- Brand Identity (Animated Royal Emblem + Tedallal Luxury Typography) -->
-                    <Link href="/" class="flex items-center gap-3 group">
+                    <Link href="/" class="flex items-center gap-2.5 sm:gap-3 group">
                         <!-- Pristine Borderless Floating Royal Emblem -->
-                        <div class="relative w-11 h-11 shrink-0 group-hover:scale-105 transition-transform duration-300 filter drop-shadow-[0_4px_14px_rgba(218,165,32,0.4)]">
+                        <div
+                            class="relative shrink-0 group-hover:scale-105 transition-all duration-300 filter drop-shadow-[0_4px_14px_rgba(218,165,32,0.4)]"
+                            :class="isScrolled ? 'w-8 h-8 sm:w-9 sm:h-9' : 'w-10 h-10 sm:w-11 sm:h-11'"
+                        >
                             <ApplicationLogo variant="emblem" :animated="true" class="w-full h-full" />
                         </div>
                         <div class="flex flex-col">
                             <div class="flex items-center gap-1.5">
-                                <span class="text-xl sm:text-2xl font-black tracking-tight" :class="isDark ? 'text-white' : 'text-stone-900'">
+                                <span
+                                    class="font-black tracking-tight transition-all duration-300"
+                                    :class="[
+                                        isDark ? 'text-white' : 'text-stone-900',
+                                        isScrolled ? 'text-lg sm:text-xl' : 'text-xl sm:text-2xl'
+                                    ]"
+                                >
                                     {{ currentLocale === 'ar' ? 'تَدلَّـل' : 'Tedallal' }}
                                 </span>
                                 <span class="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-400 border border-amber-500/30">
                                     ROYAL
                                 </span>
                             </div>
-                            <span class="text-[10px] font-bold text-amber-400/80 tracking-widest uppercase">
+                            <span class="text-[9px] sm:text-[10px] font-bold text-amber-400/80 tracking-widest uppercase transition-all duration-300" :class="isScrolled ? 'hidden sm:block' : 'block'">
                                 TEDALLAL
                             </span>
                         </div>
@@ -1948,6 +1975,13 @@ onUnmounted(() => {
             </svg>
             <span class="font-extrabold tracking-wide">{{ currentLocale === 'ar' ? 'محادثة واتساب مباشرة' : 'WhatsApp Direct' }}</span>
         </a>
+
+        <!-- Floating AI Business Consultant (Royal B2B Sales & Operations Advisor) -->
+        <AiBusinessConsultant
+            :is-dark="isDark"
+            :locale="currentLocale"
+            @open-demo="isDemoModalOpen = true"
+        />
     </div>
 </template>
 

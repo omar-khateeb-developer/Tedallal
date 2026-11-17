@@ -25,6 +25,10 @@ Route::prefix('public')->middleware('throttle:public-api')->group(function () {
     Route::get('menu', [MenuController::class, 'index']);
     Route::get('menu/categories', [MenuController::class, 'categories']);
 
+    // مستشار تدلّل الذكي للأعمال (AI Restaurant Business Consultant)
+    Route::get('ai-consultant/status', [\App\Http\Controllers\Api\Public\AiConsultantController::class, 'status']);
+    Route::post('ai-consultant/chat', [\App\Http\Controllers\Api\Public\AiConsultantController::class, 'chat'])->middleware('throttle:25,1');
+
     Route::middleware(ValidateTableSession::class)->group(function () {
         Route::get('cart', [CartController::class, 'index']);
         Route::post('cart/items', [CartController::class, 'store']);
