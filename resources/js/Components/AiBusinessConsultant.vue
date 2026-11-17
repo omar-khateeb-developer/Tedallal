@@ -207,7 +207,7 @@ async function sendMessage(textToSend?: string) {
                     url: 'https://wa.me/963934578117',
                 },
                 {
-                    label: 'استكشف الملف التعريفي ↗',
+                    label: props.locale === 'ar' ? 'استكشف الملف التَعريفي لمُلَّاك المطاعِم ↗' : 'Explore Pitch Deck ↗',
                     action: 'open_presentation',
                     url: '/presentation',
                 },
@@ -255,7 +255,7 @@ function formatText(text: string): string {
 </script>
 
 <template>
-    <div class="fixed z-50" :class="locale === 'ar' ? 'right-4 sm:right-6 bottom-5 sm:bottom-6' : 'left-4 sm:left-6 bottom-5 sm:bottom-6'">
+    <div class="fixed z-50" :class="locale === 'ar' ? 'right-3 sm:right-6 bottom-3.5 sm:bottom-6' : 'left-3 sm:left-6 bottom-3.5 sm:bottom-6'">
         <!-- ========================================================
              1. THE FLOATING LAUNCHER PILL (Always Visible & High-Contrast)
              ======================================================== -->
