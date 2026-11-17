@@ -743,17 +743,19 @@ onUnmounted(() => {
                         :class="currentLocale === 'ar' ? 'lg:me-auto lg:ms-6' : 'lg:ms-auto lg:me-6'"
                     >
                         <div :class="isDark ? 'glass-ultra text-white shadow-xl' : 'glass-ultra text-stone-900 shadow-[0_12px_30px_rgba(28,25,23,0.06)]'" class="rounded-3xl p-7 sm:p-10 relative overflow-hidden transition-all duration-300">
-                            <!-- Origami Crown Badge & Sub-label -->
-                            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border mb-4" :class="isDark ? 'bg-amber-500/10 border-amber-500/30 text-amber-300' : 'bg-amber-500/10 border-[#C5A059]/30 text-[#7A5208] shadow-2xs'">
-                                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 18h18M4 18l2.5-11 4.5 6 3-8 3 8 4.5-6L20 18" />
-                                    <circle cx="6.5" cy="7" r="0.75" fill="currentColor" />
-                                    <circle cx="14" cy="5" r="0.75" fill="currentColor" />
-                                    <circle cx="21.5" cy="7" r="0.75" fill="currentColor" />
-                                </svg>
-                                <span class="text-xs font-black uppercase tracking-widest">
-                                    {{ currentLocale === 'ar' ? 'المنظومة السحابية الفاخرة للضيافة' : 'EXQUISITE HOSPITALITY OS' }}
-                                </span>
+                            <!-- Official Animated Royal Emblem & Sub-label Badge -->
+                            <div class="flex items-center gap-3.5 mb-5">
+                                <div class="relative w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-[#BF953F] via-[#FCF6BA] to-[#B38728] p-0.5 shadow-md shrink-0">
+                                    <div class="w-full h-full rounded-[14px] flex items-center justify-center p-1 overflow-hidden" :class="isDark ? 'bg-[#0C0C0E]' : 'bg-white'">
+                                        <ApplicationLogo variant="emblem" :animated="true" class="w-full h-full" />
+                                    </div>
+                                </div>
+                                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border" :class="isDark ? 'bg-amber-500/10 border-amber-500/30 text-amber-300' : 'bg-amber-500/10 border-[#C5A059]/30 text-[#7A5208] shadow-2xs'">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                                    <span class="text-xs font-black uppercase tracking-widest">
+                                        {{ currentLocale === 'ar' ? 'المنظومة السحابية الفاخرة للضيافة' : 'EXQUISITE HOSPITALITY OS' }}
+                                    </span>
+                                </div>
                             </div>
 
                             <!-- Main Title (Matching the mockup exact wording) -->
@@ -1850,7 +1852,7 @@ onUnmounted(() => {
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-right">
                     <div class="flex items-center gap-3">
-                        <img src="/images/tedallal-luxury-transparent.png" alt="تدلل" class="w-9 h-9 object-contain" />
+                        <ApplicationLogo variant="emblem" :animated="true" class="w-9 h-9 shrink-0" />
                         <div>
                             <p class="font-black text-sm text-white">
                                 {{ currentLocale === 'ar' ? 'منظومة تدلّـل الملكية للضيافة الفاخرة' : 'Tedallal Royal Hospitality Suite' }}
