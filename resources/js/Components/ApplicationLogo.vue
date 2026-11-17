@@ -112,10 +112,10 @@ function replay() {
                     </template>
                 </linearGradient>
 
-                <!-- ظل وعزل كونتور دقيق عميق ثلاثي الأبعاد -->
+                <!-- ظل وعزل كونتور دقيق وناعم ثلاثي الأبعاد -->
                 <filter :id="'chiseled-shadow-' + uid" x="-20%" y="-20%" width="140%" height="140%">
-                    <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000000" flood-opacity="0.95" />
-                    <feDropShadow dx="0" dy="0" stdDeviation="1" flood-color="#000000" flood-opacity="0.85" />
+                    <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity="0.60" />
+                    <feDropShadow dx="0" dy="0" stdDeviation="0.8" flood-color="#000000" flood-opacity="0.50" />
                 </filter>
             </defs>
 
@@ -135,7 +135,7 @@ function replay() {
                 :id="'tedallal-contour-' + uid"
                 fill="none"
                 :stroke="isDark ? '#080704' : 'rgba(28,25,23,0.85)'"
-                stroke-width="5.5"
+                stroke-width="2.0"
                 stroke-linejoin="round"
                 stroke-linecap="round"
                 :class="animated ? 'tld-living-emblem' : 'tld-static-logo'"
@@ -181,7 +181,7 @@ function replay() {
                 :fill="'url(#tedallal-gold-' + uid + ')'"
                 fill-rule="evenodd"
                 :stroke="'url(#rim-highlight-' + uid + ')'"
-                stroke-width="1.3"
+                stroke-width="0.75"
                 stroke-linejoin="round"
                 style="paint-order: stroke fill;"
                 :class="animated ? 'tld-living-emblem' : 'tld-static-logo'"
