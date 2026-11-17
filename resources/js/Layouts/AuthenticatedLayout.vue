@@ -79,11 +79,11 @@ onMounted(() => {
                             <!-- Logo & Restaurant Info -->
                             <div class="flex shrink-0 items-center bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-3 py-1.5 sm:px-4 sm:py-2 rounded-2xl shadow-xs border border-white/50 dark:border-slate-700/80 transition-all hover:shadow-md min-w-0">
                                 <Link :href="route('dashboard')" class="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
-                                    <img v-if="restaurant?.logo" :src="restaurant.logo" class="h-10 sm:h-14 w-auto max-w-[120px] sm:max-w-[180px] object-contain rounded-xl shadow-xs" alt="Restaurant Logo" />
+                                    <img v-if="restaurant?.logo && userRole !== 'super_admin'" :src="restaurant.logo" class="h-10 sm:h-14 w-auto max-w-[120px] sm:max-w-[180px] object-contain rounded-xl shadow-xs" alt="Restaurant Logo" />
                                     <ApplicationLogo v-else variant="emblem" :animated="true" class="block h-10 w-10 sm:h-12 sm:w-12 shrink-0" />
                                     
                                     <!-- Restaurant Name & Operating Type Badge -->
-                                    <div v-if="restaurant" class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2.5 min-w-0">
+                                    <div v-if="restaurant && userRole !== 'super_admin'" class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2.5 min-w-0">
                                         <span class="text-sm sm:text-lg font-extrabold bg-gradient-to-l from-amber-600 to-orange-500 dark:from-amber-400 dark:to-orange-400 bg-clip-text text-transparent drop-shadow-xs font-sans tracking-wide truncate max-w-[140px] sm:max-w-none">
                                             {{ restaurant.name }}
                                         </span>

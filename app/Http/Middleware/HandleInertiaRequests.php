@@ -37,8 +37,10 @@ class HandleInertiaRequests extends Middleware
                     'id' => $request->user()->id,
                     'name' => $request->user()->name,
                     'email' => $request->user()->email,
-                    'role' => $request->user()->roles->first()?->name,
-                    'role_label' => UserRole::labelFor($request->user()->roles->first()?->name, $request->user()->default_window),
+                    'role' => $request->user()->isSuperAdmin() ? 'super_admin' : $request->user()->roles->first()?->name,
+                    'role_label' => $request->user()->isSuperAdmin()
+                        ? ($request->user()->email === 'super@tedallal.test' ? 'مدير النظام الرئيسي' : 'مدير النظام')
+                        : UserRole::labelFor($request->user()->roles->first()?->name, $request->user()->default_window),
                     'default_window' => $request->user()->default_window,
                     'status' => $request->user()->status,
                     'permissions' => $request->user()->email === 'admin@tedallal.test'
@@ -46,7 +48,7 @@ class HandleInertiaRequests extends Middleware
                         : $request->user()->getAllPermissions()->pluck('name'),
                     'can_toggle_maintenance' => $request->user()->canToggleMaintenance(),
                 ] : null,
-                'restaurant' => $request->user() && $request->user()->restaurant ? [
+                'restaurant' => $request->user() && ! $request->user()->isSuperAdmin() && $request->user()->restaurant ? [
                     'id' => $request->user()->restaurant->id,
                     'name' => $request->user()->restaurant->name,
                     'type' => $request->user()->restaurant->type ?? 'postpaid',
