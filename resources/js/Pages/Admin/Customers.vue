@@ -986,6 +986,18 @@ function statusBadge(promo: PromoItem) {
                                 <img :src="waQrCode" alt="WhatsApp QR Code" class="w-56 h-56 mx-auto object-contain" />
                             </div>
 
+                            <!-- QR Expiry & Live Refresh Indicator -->
+                            <div class="max-w-xs mx-auto space-y-1.5">
+                                <div class="flex items-center justify-between text-[11px] text-amber-600 dark:text-amber-400 font-bold px-1">
+                                    <span>صلاحية الباركود النشطة</span>
+                                    <span class="font-mono text-emerald-600 dark:text-emerald-400" dir="ltr">نشط 🟢</span>
+                                </div>
+                                <div class="h-1.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                                    <div class="h-full bg-gradient-to-r from-amber-500 to-emerald-500 rounded-full animate-pulse w-full"></div>
+                                </div>
+                                <p class="text-[10px] text-slate-400">يتجدد الباركود تلقائياً لحماية أمان حساب واتساب مطعمك</p>
+                            </div>
+
                             <div class="text-xs text-slate-600 dark:text-slate-400 max-w-xs mx-auto leading-relaxed text-start space-y-1 bg-white dark:bg-slate-900/80 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
                                 <div class="font-bold text-slate-800 dark:text-white mb-1">خطوات الربط:</div>
                                 <div>1. افتح تطبيق واتساب على هاتفك.</div>

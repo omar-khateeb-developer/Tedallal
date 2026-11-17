@@ -388,9 +388,10 @@ const faqItems = computed(() => [
 ]);
 
 // =========================================================================
-// 9. Consultation Demo Request Modal
+// 9. Consultation Demo Request Modal & AI Consultant State
 // =========================================================================
 const isDemoModalOpen = ref(false);
+const isAiConsultantOpen = ref(false);
 const demoForm = ref({
     restaurantName: '',
     contactPerson: '',
@@ -749,35 +750,35 @@ onUnmounted(() => {
                     <div class="hidden lg:block absolute inset-0 pointer-events-none bg-gradient-to-t from-stone-950/70 via-transparent to-transparent"></div>
 
                     <!-- Mobile Chef Upper Visual Banner (< lg) -->
-                    <div class="block lg:hidden relative w-full h-52 sm:h-72 overflow-hidden shrink-0">
+                    <div class="block lg:hidden relative w-full h-36 sm:h-52 overflow-hidden shrink-0">
                         <img
                             src="/images/tedallal-chef-hero.jpg"
                             alt="Executive Chef Plating Exquisite Cuisine"
                             class="w-full h-full object-cover object-[center_28%]"
                         />
                         <div class="absolute inset-0 bg-gradient-to-t from-[#0C0C0E] via-transparent to-black/30"></div>
-                        <div class="absolute bottom-3 start-4 flex items-center gap-2 px-3 py-1 rounded-full bg-black/70 border border-amber-500/40 backdrop-blur-md">
-                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                            <span class="text-[11px] font-black text-amber-300">ميشلان ستار • أعلى معايير الضيافة</span>
+                        <div class="absolute bottom-2.5 start-3 sm:bottom-3 sm:start-4 flex items-center gap-1.5 sm:gap-2 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-black/75 border border-amber-500/40 backdrop-blur-md">
+                            <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                            <span class="text-[10px] sm:text-[11px] font-black text-amber-300">ميشلان ستار • أعلى معايير الضيافة</span>
                         </div>
                     </div>
 
                     <!-- Dual-Column Hero Arrangement (Grand Emblem + Luxury Glassmorphic Card) -->
-                    <div class="relative z-10 w-full p-4 sm:p-8 lg:p-12">
-                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
+                    <div class="relative z-10 w-full p-3 sm:p-8 lg:p-12">
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8 items-center">
                             
                             <!-- Grand Royal Animated Emblem Showcase (Borderless & Majestic) -->
-                            <div class="lg:col-span-5 flex flex-col items-center justify-center p-3 sm:p-4 text-center order-1 lg:order-2">
-                                <div class="relative w-32 h-32 sm:w-44 sm:h-44 lg:w-60 lg:h-60 filter drop-shadow-[0_15px_35px_rgba(218,165,32,0.55)] transition-transform duration-500 hover:scale-105">
+                            <div class="lg:col-span-5 flex flex-col items-center justify-center p-1 sm:p-4 text-center order-1 lg:order-2">
+                                <div class="relative w-20 h-20 sm:w-36 sm:h-36 lg:w-60 lg:h-60 filter drop-shadow-[0_10px_25px_rgba(218,165,32,0.5)] transition-transform duration-500 hover:scale-105">
                                     <!-- Ambient Halo Pulse behind Emblem -->
-                                    <div class="absolute -inset-6 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.4)_0%,rgba(245,158,11,0.12)_55%,transparent_75%)] blur-2xl pointer-events-none" aria-hidden="true"></div>
+                                    <div class="absolute -inset-4 sm:-inset-6 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.4)_0%,rgba(245,158,11,0.12)_55%,transparent_75%)] blur-xl sm:blur-2xl pointer-events-none" aria-hidden="true"></div>
                                     <ApplicationLogo variant="emblem" :animated="true" class="w-full h-full relative z-10" />
                                 </div>
 
                                 <!-- Sub-label Badge -->
-                                <div class="mt-3 sm:mt-4 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border shadow-lg transition-transform hover:scale-105" :class="isDark ? 'bg-amber-500/15 border-amber-500/35 text-amber-300' : 'bg-amber-50/90 border-[#C5A059]/40 text-[#7A5208]'">
-                                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                                    <span class="text-[11px] sm:text-xs font-black uppercase tracking-widest">
+                                <div class="mt-2 sm:mt-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full border shadow-lg transition-transform hover:scale-105" :class="isDark ? 'bg-amber-500/15 border-amber-500/35 text-amber-300' : 'bg-amber-50/90 border-[#C5A059]/40 text-[#7A5208]'">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                                    <span class="text-[10px] sm:text-xs font-black uppercase tracking-widest">
                                         {{ currentLocale === 'ar' ? 'المنظومة السحابية الفاخرة للضيافة' : 'EXQUISITE HOSPITALITY OS' }}
                                     </span>
                                 </div>
@@ -785,46 +786,46 @@ onUnmounted(() => {
 
                             <!-- Luxury Glassmorphic Card -->
                             <div class="lg:col-span-7 order-2 lg:order-1">
-                                <div :class="isDark ? 'glass-ultra text-white shadow-2xl' : 'glass-ultra text-stone-900 shadow-[0_15px_45px_rgba(28,25,23,0.08)]'" class="rounded-3xl p-5 sm:p-8 lg:p-10 relative overflow-hidden transition-all duration-300">
+                                <div :class="isDark ? 'glass-ultra text-white shadow-2xl' : 'glass-ultra text-stone-900 shadow-[0_15px_45px_rgba(28,25,23,0.08)]'" class="rounded-3xl p-4 sm:p-8 lg:p-10 relative overflow-hidden transition-all duration-300">
                                     
                                     <!-- Main Title -->
-                                    <h1 class="text-xl sm:text-3xl lg:text-5xl font-black leading-tight mb-2 tracking-tight transition-colors" :class="isDark ? 'text-white' : 'text-stone-900'">
+                                    <h1 class="text-lg sm:text-3xl lg:text-5xl font-black leading-snug mb-1 tracking-tight transition-colors" :class="isDark ? 'text-white' : 'text-stone-900'">
                                         {{ currentLocale === 'ar' ? 'تَدلَّل - لإدارةٍ راقيةٍ للمطاعم' : 'TEDALLAL - For Exquisite Restaurant Management' }}
                                     </h1>
 
                                     <!-- Subtitle / English line -->
-                                    <p class="text-xs sm:text-sm font-bold tracking-wide mb-3" :class="isDark ? 'text-amber-400' : 'text-[#8C6010]'">
+                                    <p class="text-[11px] sm:text-sm font-bold tracking-wide mb-2" :class="isDark ? 'text-amber-400' : 'text-[#8C6010]'">
                                         TEDALLAL - For Exquisite Restaurant Management
                                     </p>
 
                                     <!-- Tagline -->
-                                    <p class="text-xs sm:text-sm leading-relaxed mb-6 font-medium transition-colors" :class="isDark ? 'text-stone-300' : 'text-stone-700'">
+                                    <p class="text-xs sm:text-sm leading-relaxed mb-4 font-medium transition-colors" :class="isDark ? 'text-stone-300' : 'text-stone-700'">
                                         {{ currentLocale === 'ar'
                                             ? 'تدلّل • الإدارة الراقية للمطاعم. تجربة طعام ملكية لرواد مطعمك، مع شاشات مطبخ KDS فورية، تحليلات مالية شفافة، و0% عمولات مجحفة.'
                                             : 'Empowering fine-dining establishments with flawless digital QR menus, chef-centric kitchen automation, and full executive financial control.' }}
                                     </p>
 
                                     <!-- Key Pillars Grid (Pillars from Option B) -->
-                                    <div class="grid grid-cols-3 gap-2 sm:gap-2.5 py-3 mb-6 text-center text-xs">
+                                    <div class="grid grid-cols-3 gap-2 sm:gap-2.5 py-2.5 mb-4 sm:mb-6 text-center text-xs">
                                         <div class="p-2 sm:p-2.5 rounded-2xl border transition-all" :class="isDark ? 'bg-[#08080A]/60 border-amber-500/20' : 'bg-white/80 border-[#C5A059]/25 shadow-2xs'">
-                                            <span class="font-black text-sm sm:text-base lg:text-lg block" :class="isDark ? 'text-amber-400' : 'text-[#8C6010]'">100%</span>
+                                            <span dir="ltr" class="font-black text-sm sm:text-base lg:text-lg block font-mono" :class="isDark ? 'text-amber-400' : 'text-[#8C6010]'">100%</span>
                                             <span class="text-[9px] sm:text-[11px] block font-medium mt-0.5" :class="isDark ? 'text-stone-300' : 'text-stone-600'">{{ currentLocale === 'ar' ? 'أرباح بدون عمولة' : 'Zero Commission' }}</span>
                                         </div>
                                         <div class="p-2 sm:p-2.5 rounded-2xl border transition-all" :class="isDark ? 'bg-[#08080A]/60 border-amber-500/20' : 'bg-white/80 border-[#C5A059]/25 shadow-2xs'">
-                                            <span class="font-black text-sm sm:text-base lg:text-lg block" :class="isDark ? 'text-amber-400' : 'text-[#8C6010]'">60%-</span>
+                                            <span dir="ltr" class="font-black text-sm sm:text-base lg:text-lg block font-mono" :class="isDark ? 'text-amber-400' : 'text-[#8C6010]'">-60%</span>
                                             <span class="text-[9px] sm:text-[11px] block font-medium mt-0.5" :class="isDark ? 'text-stone-300' : 'text-stone-600'">{{ currentLocale === 'ar' ? 'زمن انتظار الطلب' : 'Wait Time' }}</span>
                                         </div>
                                         <div class="p-2 sm:p-2.5 rounded-2xl border transition-all" :class="isDark ? 'bg-[#08080A]/60 border-amber-500/20' : 'bg-white/80 border-[#C5A059]/25 shadow-2xs'">
-                                            <span class="font-black text-sm sm:text-base lg:text-lg block" :class="isDark ? 'text-amber-400' : 'text-[#8C6010]'">35%+</span>
+                                            <span dir="ltr" class="font-black text-sm sm:text-base lg:text-lg block font-mono" :class="isDark ? 'text-amber-400' : 'text-[#8C6010]'">+35%</span>
                                             <span class="text-[9px] sm:text-[11px] block font-medium mt-0.5" :class="isDark ? 'text-stone-300' : 'text-stone-600'">{{ currentLocale === 'ar' ? 'رفع متوسط الفاتورة' : 'Higher Spend' }}</span>
                                         </div>
                                     </div>
 
                                     <!-- Golden Action Buttons (Pill matching mockup, Calm Luxury) -->
-                                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3">
+                                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
                                         <button
                                             type="button"
-                                            class="w-full sm:w-auto px-6 sm:px-8 py-3.5 rounded-full bg-gradient-to-r from-[#BF953F] via-[#E8C265] to-[#B38728] text-stone-950 font-black text-xs sm:text-sm shadow-sm hover:shadow-md hover:shadow-amber-500/15 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                                            class="w-full sm:w-auto px-5 sm:px-8 py-3 sm:py-3.5 rounded-full bg-gradient-to-r from-[#BF953F] via-[#E8C265] to-[#B38728] text-stone-950 font-black text-xs sm:text-sm shadow-sm hover:shadow-md hover:shadow-amber-500/15 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
                                             @click="isDemoModalOpen = true"
                                         >
                                             <span>{{ currentLocale === 'ar' ? 'تدلّل - للمطاعم' : 'Tedallal - For Restaurants' }}</span>
@@ -1751,7 +1752,7 @@ onUnmounted(() => {
         <!-- ========================================================================= -->
         <div
             v-if="isDemoModalOpen"
-            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+            class="fixed inset-0 z-[90] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto"
             @click.self="isDemoModalOpen = false"
         >
             <div class="w-full max-w-lg rounded-3xl border p-6 sm:p-8 shadow-2xl relative transition-all"
@@ -1964,7 +1965,10 @@ onUnmounted(() => {
             target="_blank"
             rel="noopener noreferrer"
             class="fixed bottom-5 sm:bottom-6 z-50 inline-flex items-center gap-2 p-3 sm:px-4 sm:py-3 rounded-full bg-[#25D366] hover:bg-[#20ba59] text-white font-bold text-xs sm:text-sm shadow-xl shadow-emerald-600/35 hover:scale-105 active:scale-95 transition-all duration-300 select-none cursor-pointer group"
-            :class="currentLocale === 'ar' ? 'left-4 sm:left-6' : 'right-4 sm:right-6'"
+            :class="[
+                currentLocale === 'ar' ? 'left-4 sm:left-6' : 'right-4 sm:right-6',
+                (isAiConsultantOpen || isDemoModalOpen) ? 'opacity-0 pointer-events-none translate-y-4 scale-90' : 'opacity-100 pointer-events-auto translate-y-0 scale-100'
+            ]"
             title="تواصل مباشر عبر واتساب (+963 934 578 117)"
         >
             <span class="relative flex h-2.5 w-2.5 sm:h-3 sm:w-3">
@@ -1981,6 +1985,8 @@ onUnmounted(() => {
         <AiBusinessConsultant
             :is-dark="isDark"
             :locale="currentLocale"
+            :is-external-modal-open="isDemoModalOpen"
+            @toggle="isAiConsultantOpen = $event"
             @open-demo="isDemoModalOpen = true"
         />
     </div>

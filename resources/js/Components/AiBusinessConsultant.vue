@@ -5,15 +5,18 @@ import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 interface Props {
     isDark?: boolean;
     locale?: 'ar' | 'en';
+    isExternalModalOpen?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
     isDark: true,
     locale: 'ar',
+    isExternalModalOpen: false,
 });
 
 const emit = defineEmits<{
     (e: 'open-demo'): void;
+    (e: 'toggle', isOpen: boolean): void;
 }>();
 
 interface Message {
@@ -219,11 +222,22 @@ async function sendMessage(textToSend?: string) {
 
 function handleAction(action: { label: string; action: string; url?: string }) {
     if (action.action === 'open_demo_modal') {
+        isOpen.value = false;
         emit('open-demo');
     } else if (action.url) {
         window.open(action.url, '_blank', 'noopener,noreferrer');
     }
 }
+
+watch(isOpen, (val) => {
+    emit('toggle', val);
+});
+
+watch(() => props.isExternalModalOpen, (val) => {
+    if (val) {
+        isOpen.value = false;
+    }
+});
 
 function handleStarterPrompt(prompt: string) {
     sendMessage(prompt);
