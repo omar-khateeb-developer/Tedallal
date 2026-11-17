@@ -54,12 +54,41 @@ onMounted(() => {
         </div>
 
         <!-- Brand Centerpiece: Animated Royal Tedallal Emblem -->
-        <div class="relative z-10 mb-2">
+        <div class="relative z-10 mb-4">
             <Link href="/" class="flex flex-col items-center group">
-                <div class="w-60 sm:w-72 h-auto filter drop-shadow-[0_12px_30px_rgba(212,175,55,0.3)] group-hover:scale-105 transition-transform duration-300">
-                    <ApplicationLogo variant="full" :animated="true" />
+                <!-- Royal Living Emblem -->
+                <div class="relative w-24 h-24 sm:w-28 sm:h-28 filter drop-shadow-[0_10px_25px_rgba(218,165,32,0.4)] group-hover:scale-105 transition-transform duration-300">
+                    <ApplicationLogo variant="emblem" :animated="true" class="w-full h-full" />
                 </div>
-                <span class="text-[11px] font-bold tracking-wider -mt-1" :class="isDark ? 'text-amber-400/90' : 'text-amber-800'">
+
+                <!-- Brand Name & Royal Badge -->
+                <div class="flex items-center gap-2 mt-2.5">
+                    <span
+                        class="text-2xl sm:text-3xl font-black tracking-tight"
+                        :class="isDark ? 'text-white' : 'text-stone-900'"
+                        style="font-family: 'Cairo', 'Tajawal', sans-serif;"
+                    >
+                        تَدلَّـل
+                    </span>
+                    <span class="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                        ROYAL
+                    </span>
+                </div>
+
+                <!-- Sub-branding -->
+                <span
+                    class="text-[10px] sm:text-[11px] font-bold tracking-[0.22em] uppercase mt-0.5"
+                    :class="isDark ? 'text-amber-400/80' : 'text-[#8C6010]'"
+                    style="font-family: 'Montserrat', sans-serif;"
+                >
+                    TEDALLAL • HOSPITALITY OS
+                </span>
+
+                <!-- Portal Badge -->
+                <span
+                    class="text-[11px] font-medium mt-2 px-3.5 py-0.5 rounded-full border shadow-sm transition-all"
+                    :class="isDark ? 'bg-stone-900/90 border-stone-800 text-stone-300' : 'bg-white/90 border-stone-200 text-stone-700'"
+                >
                     بوابة الإدارة والضيافة الملكية
                 </span>
             </Link>

@@ -114,8 +114,8 @@ function replay() {
 
                 <!-- ظل وعزل كونتور دقيق وناعم ثلاثي الأبعاد -->
                 <filter :id="'chiseled-shadow-' + uid" x="-20%" y="-20%" width="140%" height="140%">
-                    <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity="0.60" />
-                    <feDropShadow dx="0" dy="0" stdDeviation="0.8" flood-color="#000000" flood-opacity="0.50" />
+                    <feDropShadow dx="0" dy="2" stdDeviation="2" :flood-color="isDark ? '#000000' : '#C59B28'" :flood-opacity="isDark ? 0.60 : 0.25" />
+                    <feDropShadow dx="0" dy="0" stdDeviation="0.8" :flood-color="isDark ? '#000000' : '#8C6010'" :flood-opacity="isDark ? 0.50 : 0.20" />
                 </filter>
             </defs>
 
@@ -134,7 +134,7 @@ function replay() {
             <g
                 :id="'tedallal-contour-' + uid"
                 fill="none"
-                :stroke="isDark ? '#080704' : 'rgba(28,25,23,0.85)'"
+                :stroke="isDark ? '#080704' : 'rgba(146, 104, 28, 0.40)'"
                 stroke-width="2.0"
                 stroke-linejoin="round"
                 stroke-linecap="round"
@@ -246,19 +246,24 @@ function replay() {
             class="flex flex-col items-center justify-center mt-2 text-center"
             :class="{ 'tld-text-reveal': animated }"
         >
+            <div class="flex items-center gap-1.5">
+                <span
+                    class="font-black text-base sm:text-lg tracking-tight"
+                    :class="isDark ? 'text-white' : 'text-stone-900'"
+                    style="font-family: 'Cairo', 'Tajawal', sans-serif;"
+                >
+                    تَدلَّـل
+                </span>
+                <span class="text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                    ROYAL
+                </span>
+            </div>
             <span
-                class="font-black text-sm sm:text-base tracking-[0.25em] uppercase"
-                :class="isDark ? 'text-amber-300' : 'text-[#8C6010]'"
-                style="font-family: 'Cinzel', 'Montserrat', 'Cairo', sans-serif;"
+                class="font-bold text-[10px] tracking-[0.2em] uppercase mt-0.5"
+                :class="isDark ? 'text-amber-400/80' : 'text-[#8C6010]'"
+                style="font-family: 'Montserrat', sans-serif;"
             >
                 TEDALLAL
-            </span>
-            <span
-                class="font-bold text-xs sm:text-sm tracking-wider mt-0.5"
-                :class="isDark ? 'text-amber-200/90' : 'text-[#A87E38]'"
-                style="font-family: 'Cairo', 'Tajawal', sans-serif;"
-            >
-                تَـدَلَّـلْ
             </span>
         </div>
     </div>
