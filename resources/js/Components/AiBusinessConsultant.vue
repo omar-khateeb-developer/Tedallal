@@ -257,48 +257,44 @@ function formatText(text: string): string {
 <template>
     <div class="fixed z-50" :class="locale === 'ar' ? 'right-4 sm:right-6 bottom-5 sm:bottom-6' : 'left-4 sm:left-6 bottom-5 sm:bottom-6'">
         <!-- ========================================================
-             1. THE FLOATING LAUNCHER PILL (Always Visible)
+             1. THE FLOATING LAUNCHER PILL (Always Visible & High-Contrast)
              ======================================================== -->
         <button
             type="button"
             @click="toggleChat"
-            class="group relative inline-flex items-center gap-2 px-3 py-2.5 sm:px-4 sm:py-3 rounded-full border shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer select-none"
+            class="group relative inline-flex items-center gap-2 px-3.5 py-2.5 sm:px-5 sm:py-3 rounded-full border shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer select-none ring-2"
             :class="[
                 isOpen
-                    ? (isDark ? 'bg-amber-500/25 border-amber-400 text-amber-200' : 'bg-amber-100 border-[#C5A059] text-stone-900')
-                    : (isDark
-                        ? 'bg-[#0E0E12]/92 hover:bg-[#16161D] border-amber-500/40 text-stone-100 hover:border-amber-400 shadow-amber-500/10'
-                        : 'bg-white/95 hover:bg-[#FAF8F5] border-[#C5A059]/60 text-stone-900 hover:border-[#9B7328] shadow-amber-700/10')
+                    ? (isDark ? 'bg-stone-900 border-amber-400 text-amber-300 ring-amber-400/40 shadow-amber-500/20' : 'bg-stone-900 border-[#C5A059] text-amber-300 ring-amber-500/30')
+                    : 'bg-gradient-to-r from-[#BF953F] via-[#F3D784] to-[#B38728] hover:from-[#CFA54F] hover:via-[#FFE294] hover:to-[#C39738] text-stone-950 border-amber-200/90 ring-amber-400/40 shadow-amber-500/35'
             ]"
-            :title="isOpen ? 'إغلاق مستشار تدلّل الذكي' : 'استشر ذكاء تدلّل الاصطناعي حول مزايا وأرباح مطعمك'"
+            :title="isOpen ? 'إغلاق مستشار تدلّل الذكي' : 'تدلّل مع مستشارنا الذكي 🤖'"
         >
-            <!-- Ambient Golden Halo -->
-            <span class="absolute -inset-1 rounded-full bg-radial from-amber-500/25 to-transparent blur-md pointer-events-none group-hover:opacity-100 opacity-60 transition-opacity"></span>
+            <!-- Ambient Golden Radiant Pulse Halo -->
+            <span class="absolute -inset-1 rounded-full bg-gradient-to-r from-amber-400/40 via-amber-300/30 to-amber-500/40 blur-md pointer-events-none group-hover:opacity-100 opacity-75 transition-opacity"></span>
 
             <!-- Official Royal Animated Emblem Thumbnail -->
-            <div class="relative w-5 h-5 sm:w-6 sm:h-6 shrink-0">
+            <div class="relative w-5 h-5 sm:w-6 sm:h-6 shrink-0 filter drop-shadow-xs">
                 <ApplicationLogo variant="emblem" :animated="true" class="w-full h-full" />
             </div>
 
             <!-- Pulsing AI Active Dot -->
             <span class="relative flex h-2 w-2 sm:h-2.5 sm:w-2.5 shrink-0">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-2 w-2 sm:h-2.5 sm:w-2.5 bg-amber-500"></span>
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-60" :class="isOpen ? 'bg-amber-400' : 'bg-stone-950'"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 sm:h-2.5 sm:w-2.5" :class="isOpen ? 'bg-amber-400' : 'bg-stone-950'"></span>
             </span>
 
             <!-- Label -->
             <div class="flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm font-black tracking-wide">
-                <span class="hidden sm:inline">{{ locale === 'ar' ? 'مستشار تدلّل للأعمال' : 'Tedallal AI Consultant' }}</span>
-                <span class="inline sm:hidden">{{ locale === 'ar' ? 'مستشار تدلّل' : 'AI Consultant' }}</span>
-                <span class="text-amber-400 font-bold text-xs">✦</span>
+                <span>{{ locale === 'ar' ? 'تدلّل مع مستشارنا الذكي 🤖' : 'Consult Tedallal AI 🤖' }}</span>
             </div>
 
             <!-- Toggle Icon -->
             <span
-                class="text-xs transition-transform duration-300 opacity-70 group-hover:opacity-100"
-                :class="isOpen ? 'rotate-180 text-amber-400' : ''"
+                class="text-xs font-bold transition-transform duration-300 opacity-80 group-hover:opacity-100 shrink-0"
+                :class="isOpen ? 'rotate-180 text-amber-300' : 'text-stone-950'"
             >
-                {{ isOpen ? '✕' : '💬' }}
+                {{ isOpen ? '✕' : '✦' }}
             </span>
         </button>
 
