@@ -64,6 +64,8 @@ const tables = ref<TableItem[]>(props.tables.map(t => ({
 const reservations = ref<ReservationItem[]>(props.todayReservations || []);
 const activeZone = ref<string>('all');
 const selectedTable = ref<TableItem | null>(null);
+const activeTableId = ref<number | null>(null);
+const activeTable = computed(() => tables.value.find(t => t.id === activeTableId.value));
 const editorMode = ref<'monitor' | 'designer'>('monitor'); // monitor mode prevents accidental drag
 const zoomLevel = ref<number>(1);
 const isSaving = ref(false);
@@ -112,12 +114,22 @@ function getTableReservation(tableId: number): ReservationItem | undefined {
     return reservations.value.find(r => r.table_id === tableId && (r.status === 'confirmed' || r.status === 'seated'));
 }
 
+// Table selection & Drawer actions
+function selectTable(table: TableItem) {
+    activeTableId.value = table.id;
+}
+
+function openTableDrawer(table: TableItem) {
+    selectedTable.value = table;
+    activeTableId.value = table.id;
+}
+
 // Dragging logic
 function onMouseDown(e: MouseEvent, table: TableItem) {
     if (props.isFeatureLocked || editorMode.value !== 'designer') return;
     isDragging.value = true;
     draggedTableId.value = table.id;
-    selectedTable.value = table;
+    activeTableId.value = table.id; // Do not open drawer during dragging
 
     const canvas = document.getElementById('cad-canvas');
     if (!canvas) return;
@@ -307,13 +319,17 @@ async function updateSelectedTable() {
 }
 
 // Close active session & vacate table
-async function closeSessionForTable() {
-    if (!selectedTable.value) return;
-    if (!confirm(`هل أنت متأكد من إنهاء جلسة ${selectedTable.value.name} وإخلائها للزبائن القادمين؟`)) return;
+async function closeSessionForTable(targetTable?: TableItem) {
+    const table = targetTable || selectedTable.value;
+    if (!table) return;
+    if (!confirm(`هل أنت متأكد من إنهاء جلسة ${table.name} وإخلائها للزبائن القادمين؟`)) return;
     try {
-        await axios.post(`/api/admin/tables/${selectedTable.value.id}/close-session`);
-        selectedTable.value.active_session = null;
-        const t = tables.value.find(item => item.id === selectedTable.value?.id);
+        await axios.post(`/api/admin/tables/${table.id}/close-session`);
+        table.active_session = null;
+        if (selectedTable.value && selectedTable.value.id === table.id) {
+            selectedTable.value.active_session = null;
+        }
+        const t = tables.value.find(item => item.id === table.id);
         if (t) t.active_session = null;
         saveSuccess.value = true;
         setTimeout(() => { saveSuccess.value = false; }, 3000);
@@ -596,7 +612,7 @@ async function deleteSelectedTable() {
                             id="cad-canvas"
                             class="relative w-[1140px] h-[640px] origin-top-right transition-transform duration-100 mx-auto"
                             :style="{ transform: `scale(${zoomLevel})` }"
-                            @click="selectedTable = null"
+                            @click="selectedTable = null; activeTableId = null"
                         >
                             <!-- ================= ARCHITECTURAL WALLS & STRUCTURE ================= -->
                             <template v-if="showArchitecturalElements">
@@ -675,7 +691,9 @@ async function deleteSelectedTable() {
                                 class="absolute transition-all duration-200 group z-20 select-none"
                                 :class="[
                                     editorMode === 'designer' ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer hover:scale-105',
-                                    selectedTable?.id === table.id ? 'z-30' : ''
+                                    activeTableId === table.id ? 'z-30 ring-2 ring-amber-400 shadow-xl' : '',
+                                    selectedTable?.id === table.id ? 'z-30 ring-2 ring-emerald-400 shadow-xl' : '',
+                                    table.shape === 'circle' ? 'rounded-full' : (table.shape === 'vip' ? 'rounded-3xl' : 'rounded-2xl')
                                 ]"
                                 :style="{
                                     left: table.pos_x + 'px',
@@ -685,8 +703,19 @@ async function deleteSelectedTable() {
                                     transform: `rotate(${table.rotation || 0}deg)`,
                                 }"
                                 @mousedown.stop="onMouseDown($event, table)"
-                                @click.stop="selectedTable = table"
+                                @click.stop="selectTable(table)"
                             >
+                                <!-- 3-Dots Action Button to Open Drawer / Settings -->
+                                <button
+                                    type="button"
+                                    @click.stop="openTableDrawer(table)"
+                                    class="absolute -top-2.5 -right-2.5 z-40 w-7 h-7 rounded-full bg-slate-900/95 border-2 border-slate-700 hover:border-amber-400 text-slate-300 hover:text-amber-300 flex items-center justify-center text-xs font-black shadow-xl hover:scale-115 active:scale-95 transition-all group-hover:border-slate-500"
+                                    :style="{ transform: `rotate(${-(table.rotation || 0)}deg)` }"
+                                    title="خيارات وإعدادات الطاولة"
+                                >
+                                    ⋮
+                                </button>
+
                                 <!-- ================= CHAIRS RENDERING AROUND TABLES ================= -->
                                 <!-- 4 Chairs for Circular Table -->
                                 <template v-if="table.shape === 'circle'">
@@ -763,6 +792,77 @@ async function deleteSelectedTable() {
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Quick Info HUD Bar (When Table Selected in Live Monitor Mode) -->
+                        <transition
+                            enter-active-class="transition duration-200 ease-out"
+                            enter-from-class="opacity-0 translate-y-4"
+                            enter-to-class="opacity-100 translate-y-0"
+                            leave-active-class="transition duration-150 ease-in"
+                            leave-from-class="opacity-100 translate-y-0"
+                            leave-to-class="opacity-0 translate-y-4"
+                        >
+                            <div
+                                v-if="editorMode === 'monitor' && activeTable && !selectedTable"
+                                class="absolute bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900/95 backdrop-blur-md border border-slate-700/80 shadow-2xl rounded-2xl p-4 flex flex-wrap items-center gap-4 text-white min-w-[340px] max-w-xl animate-fade-in"
+                                dir="rtl"
+                            >
+                                <!-- Table Info & Badge -->
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center font-black text-amber-400 text-base shadow-inner">
+                                        {{ activeTable.name.replace(/[^0-9]/g, '') ? '#' + activeTable.name.replace(/[^0-9]/g, '') : activeTable.name }}
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-sm text-white flex items-center gap-2">
+                                            <span>{{ activeTable.name }}</span>
+                                            <span class="text-[10px] px-2 py-0.5 rounded-full font-mono" :class="activeTable.active_session ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : (getTableReservation(activeTable.id) ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' : 'bg-slate-800 text-slate-400')">
+                                                {{ activeTable.active_session ? 'جلسة نشطة' : (getTableReservation(activeTable.id) ? 'محجوزة اليوم' : 'شاغرة') }}
+                                            </span>
+                                        </h4>
+                                        <p class="text-[11px] text-slate-400 mt-0.5">
+                                            {{ getZoneLabel(activeTable.zone) }} • {{ activeTable.capacity }} مقاعد
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Session or Reservation Summary -->
+                                <div v-if="activeTable.active_session" class="text-xs bg-emerald-950/60 border border-emerald-800/60 px-3 py-1.5 rounded-xl text-emerald-300">
+                                    <span>فاتورة: </span>
+                                    <span class="font-mono font-bold">{{ activeTable.active_session.total_amount || 0 }} ل.س</span>
+                                </div>
+                                <div v-else-if="getTableReservation(activeTable.id)" class="text-xs bg-amber-950/60 border border-amber-800/60 px-3 py-1.5 rounded-xl text-amber-300">
+                                    <span>حجز: {{ getTableReservation(activeTable.id)?.guest_name }} ({{ getTableReservation(activeTable.id)?.time_slot }})</span>
+                                </div>
+
+                                <!-- Actions -->
+                                <div class="flex items-center gap-2 ms-auto">
+                                    <button
+                                        v-if="activeTable.active_session"
+                                        type="button"
+                                        @click="closeSessionForTable(activeTable)"
+                                        class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-xs"
+                                    >
+                                        🧹 إنهاء الجلسة
+                                    </button>
+                                    <button
+                                        type="button"
+                                        @click="openTableDrawer(activeTable)"
+                                        class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 text-xs font-bold transition shadow-xs flex items-center gap-1"
+                                    >
+                                        <span>⚙️</span>
+                                        <span>إعدادات الطاولة</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        @click="activeTableId = null"
+                                        class="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                                        title="إغلاق"
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
+                            </div>
+                        </transition>
                     </div>
                 </div>
 
