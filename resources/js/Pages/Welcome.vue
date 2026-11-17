@@ -3,7 +3,6 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { translations, type Locale } from '@/locales/landing';
 import { useTheme } from '@/composables/useTheme';
-import TedallalHeroLogo from '@/Components/TedallalHeroLogo.vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 
 interface Props {
