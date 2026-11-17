@@ -241,14 +241,14 @@ function formatText(text: string): string {
 </script>
 
 <template>
-    <div class="fixed z-50" :class="locale === 'ar' ? 'right-4 sm:right-6 bottom-6' : 'left-4 sm:left-6 bottom-6'">
+    <div class="fixed z-50" :class="locale === 'ar' ? 'right-4 sm:right-6 bottom-5 sm:bottom-6' : 'left-4 sm:left-6 bottom-5 sm:bottom-6'">
         <!-- ========================================================
              1. THE FLOATING LAUNCHER PILL (Always Visible)
              ======================================================== -->
         <button
             type="button"
             @click="toggleChat"
-            class="group relative inline-flex items-center gap-2.5 px-4 py-3 rounded-full border shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer select-none"
+            class="group relative inline-flex items-center gap-2 px-3 py-2.5 sm:px-4 sm:py-3 rounded-full border shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer select-none"
             :class="[
                 isOpen
                     ? (isDark ? 'bg-amber-500/25 border-amber-400 text-amber-200' : 'bg-amber-100 border-[#C5A059] text-stone-900')
@@ -262,19 +262,20 @@ function formatText(text: string): string {
             <span class="absolute -inset-1 rounded-full bg-radial from-amber-500/25 to-transparent blur-md pointer-events-none group-hover:opacity-100 opacity-60 transition-opacity"></span>
 
             <!-- Official Royal Animated Emblem Thumbnail -->
-            <div class="relative w-6 h-6 shrink-0">
+            <div class="relative w-5 h-5 sm:w-6 sm:h-6 shrink-0">
                 <ApplicationLogo variant="emblem" :animated="true" class="w-full h-full" />
             </div>
 
             <!-- Pulsing AI Active Dot -->
-            <span class="relative flex h-2.5 w-2.5 shrink-0">
+            <span class="relative flex h-2 w-2 sm:h-2.5 sm:w-2.5 shrink-0">
                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 sm:h-2.5 sm:w-2.5 bg-amber-500"></span>
             </span>
 
             <!-- Label -->
-            <div class="flex items-center gap-1.5 text-xs sm:text-sm font-black tracking-wide">
-                <span>{{ locale === 'ar' ? 'مستشار تدلّل للأعمال' : 'Tedallal AI Consultant' }}</span>
+            <div class="flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm font-black tracking-wide">
+                <span class="hidden sm:inline">{{ locale === 'ar' ? 'مستشار تدلّل للأعمال' : 'Tedallal AI Consultant' }}</span>
+                <span class="inline sm:hidden">{{ locale === 'ar' ? 'مستشار تدلّل' : 'AI Consultant' }}</span>
                 <span class="text-amber-400 font-bold text-xs">✦</span>
             </div>
 
