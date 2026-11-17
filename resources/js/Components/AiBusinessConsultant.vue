@@ -34,6 +34,67 @@ const inputMessage = ref('');
 const isLoading = ref(false);
 const messagesContainer = ref<HTMLDivElement | null>(null);
 
+// النغمة التنبيهية الفاخرة للاستجابة الذكية (Pure Web Audio API)
+const soundEnabled = ref(true);
+let aiAudioCtx: AudioContext | null = null;
+
+function playLuxuryChime() {
+    if (!soundEnabled.value || typeof window === 'undefined') return;
+    try {
+        const AudioClass = window.AudioContext || (window as any).webkitAudioContext;
+        if (!AudioClass) return;
+        if (!aiAudioCtx) {
+            aiAudioCtx = new AudioClass();
+        }
+        if (aiAudioCtx.state === 'suspended') {
+            aiAudioCtx.resume();
+        }
+
+        const now = aiAudioCtx.currentTime;
+
+        // النغمة الأولى: E5 (659.25 Hz) رنة زجاجية رخيمة
+        const osc1 = aiAudioCtx.createOscillator();
+        const gain1 = aiAudioCtx.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(659.25, now);
+        gain1.gain.setValueAtTime(0.001, now);
+        gain1.gain.exponentialRampToValueAtTime(0.08, now + 0.02);
+        gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+        osc1.connect(gain1);
+        gain1.connect(aiAudioCtx.destination);
+        osc1.start(now);
+        osc1.stop(now + 0.55);
+
+        // النغمة الثانية: B5 (987.77 Hz) رنة تأكيد فاخرة بعد 95ms
+        const osc2 = aiAudioCtx.createOscillator();
+        const gain2 = aiAudioCtx.createGain();
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(987.77, now + 0.095);
+        gain2.gain.setValueAtTime(0.001, now + 0.095);
+        gain2.gain.exponentialRampToValueAtTime(0.09, now + 0.12);
+        gain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.75);
+        osc2.connect(gain2);
+        gain2.connect(aiAudioCtx.destination);
+        osc2.start(now + 0.095);
+        osc2.stop(now + 0.75);
+
+        // نغمة توافقية خافتة: E6 (1318.51 Hz) لإضفاء لمسة فندقية ملكية
+        const osc3 = aiAudioCtx.createOscillator();
+        const gain3 = aiAudioCtx.createGain();
+        osc3.type = 'triangle';
+        osc3.frequency.setValueAtTime(1318.51, now + 0.14);
+        gain3.gain.setValueAtTime(0.001, now + 0.14);
+        gain3.gain.exponentialRampToValueAtTime(0.02, now + 0.16);
+        gain3.gain.exponentialRampToValueAtTime(0.0001, now + 0.65);
+        osc3.connect(gain3);
+        gain3.connect(aiAudioCtx.destination);
+        osc3.start(now + 0.14);
+        osc3.stop(now + 0.65);
+    } catch {
+        // Audio error gracefully ignored
+    }
+}
+
 const starterPrompts = [
     'كيف تزيد تدلّل مبيعات وأرباح مطعمي وتلغي الهدر؟',
     'هل أحتاج لشراء أجهزة كاشير مخصصة ومكلفة؟',
@@ -126,6 +187,7 @@ async function sendMessage(textToSend?: string) {
             timestamp: new Date(),
             suggestedActions: actions,
         });
+        playLuxuryChime();
     } catch (err) {
         console.error('AI Consultant Error:', err);
         messages.value.push({
@@ -148,6 +210,7 @@ async function sendMessage(textToSend?: string) {
                 },
             ],
         });
+        playLuxuryChime();
     } finally {
         isLoading.value = false;
         scrollToBottom();
@@ -270,16 +333,27 @@ function formatText(text: string): string {
                         </div>
                     </div>
 
-                    <!-- Close button -->
-                    <button
-                        type="button"
-                        @click="isOpen = false"
-                        class="p-2 rounded-xl text-stone-400 hover:text-stone-200 transition-colors"
-                        :class="isDark ? 'hover:bg-white/10' : 'hover:bg-stone-200/60'"
-                        title="إغلاق المحادثة"
-                    >
-                        ✕
-                    </button>
+                    <!-- Header Controls: Sound & Close -->
+                    <div class="flex items-center gap-1">
+                        <button
+                            type="button"
+                            @click="soundEnabled = !soundEnabled"
+                            class="p-2 rounded-xl text-stone-400 hover:text-stone-200 transition-colors"
+                            :class="isDark ? 'hover:bg-white/10' : 'hover:bg-stone-200/60'"
+                            :title="soundEnabled ? 'كتم الرنة الفاخرة' : 'تشغيل الرنة الفاخرة'"
+                        >
+                            <span class="text-xs">{{ soundEnabled ? '🔔' : '🔕' }}</span>
+                        </button>
+                        <button
+                            type="button"
+                            @click="isOpen = false"
+                            class="p-2 rounded-xl text-stone-400 hover:text-stone-200 transition-colors"
+                            :class="isDark ? 'hover:bg-white/10' : 'hover:bg-stone-200/60'"
+                            title="إغلاق المحادثة"
+                        >
+                            ✕
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Messages Container -->

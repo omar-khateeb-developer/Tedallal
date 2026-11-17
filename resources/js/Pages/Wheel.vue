@@ -145,6 +145,7 @@ async function submitWhatsappClaim() {
         loyaltyResult.value = data.loyalty || null;
 
         voucher.value.code_locked = false;
+        triggerHaptic('success');
         if (data.reveal_code && data.code) {
             voucher.value.code = data.code;
             voucher.value.code_hidden_by_policy = false;
@@ -201,9 +202,21 @@ let animationFrameId: number | null = null;
 let bulbInterval: ReturnType<typeof setInterval> | null = null;
 
 // =========================================================================
-// Synthesized Web Audio API (Zero external assets required)
+// Synthesized Web Audio API & Tactile Haptics (Zero external assets required)
 // =========================================================================
 let audioCtx: AudioContext | null = null;
+
+function triggerHaptic(type: 'light' | 'medium' | 'success' | 'spin' | 'win' = 'light') {
+    if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+        try {
+            if (type === 'light') navigator.vibrate(12);
+            else if (type === 'medium') navigator.vibrate(25);
+            else if (type === 'spin') navigator.vibrate([20, 30, 20]);
+            else if (type === 'win') navigator.vibrate([40, 60, 40, 100]);
+            else if (type === 'success') navigator.vibrate([15, 35, 20]);
+        } catch {}
+    }
+}
 
 function getAudioContext(): AudioContext | null {
     if (!audioCtx && typeof window !== 'undefined') {
@@ -452,6 +465,7 @@ async function spinWheel() {
 
     errorMessage.value = null;
     isSpinning.value = true;
+    triggerHaptic('spin');
     getAudioContext();
 
     const numSlices = props.slices.length;
@@ -546,6 +560,7 @@ async function spinWheel() {
                 isSpinning.value = false;
                 hasWon.value = true;
                 voucher.value = wonVoucherData;
+                triggerHaptic('win');
                 playFanfareSound();
                 triggerConfetti();
                 return;
@@ -580,6 +595,7 @@ async function copyCode() {
     try {
         await navigator.clipboard.writeText(voucher.value.code);
         copied.value = true;
+        triggerHaptic('success');
         setTimeout(() => {
             copied.value = false;
         }, 2500);

@@ -50,6 +50,29 @@ const viewMode = ref<'grid' | 'list'>(
     typeof window !== 'undefined' && localStorage.getItem('tedallal_menu_view') === 'list' ? 'list' : 'grid'
 );
 
+function triggerHaptic(type: 'light' | 'medium' | 'success' | 'warning' = 'light') {
+    if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+        try {
+            if (type === 'light') navigator.vibrate(10);
+            else if (type === 'medium') navigator.vibrate(22);
+            else if (type === 'success') navigator.vibrate([15, 35, 20]);
+            else if (type === 'warning') navigator.vibrate([30, 50, 30]);
+        } catch {}
+    }
+}
+
+function selectCategory(id: number | 'all', event?: MouseEvent) {
+    activeCategory.value = id;
+    triggerHaptic('light');
+    if (event?.currentTarget) {
+        (event.currentTarget as HTMLElement).scrollIntoView({
+            behavior: 'smooth',
+            inline: 'center',
+            block: 'nearest',
+        });
+    }
+}
+
 function setViewMode(mode: 'grid' | 'list') {
     viewMode.value = mode;
     try {
@@ -194,6 +217,7 @@ async function confirmAdd(payload: { quantity: number; note: string | null }) {
         selectedItem.value = null;
         await refreshCartSummary();
         showAddFeedback(item.name);
+        triggerHaptic('success');
         // تجربة مستخدم عصرية: نبقي السلة عائمة دون حجب الشاشة بالنافذة الكبيرة
     } catch (e: any) {
         if (e.response?.status === 404 || e.response?.data?.message?.includes('Model') || e.response?.data?.message?.includes('query results')) {
@@ -218,6 +242,7 @@ async function quickAdd(item: MenuItem) {
         });
         await refreshCartSummary();
         showAddFeedback(item.name);
+        triggerHaptic('medium');
     } catch (e: any) {
         if (e.response?.status === 404 || e.response?.data?.message?.includes('Model') || e.response?.data?.message?.includes('query results')) {
             errorMessage.value = 'عذراً، هذا الصنف غير متوفر حالياً.';
@@ -245,6 +270,7 @@ async function quickIncrement(item: MenuItem) {
         });
         await refreshCartSummary();
         triggerCartAnimation();
+        triggerHaptic('light');
     } catch (e: any) {
         if (e.response?.status === 404 || e.response?.data?.message?.includes('Model') || e.response?.data?.message?.includes('query results')) {
             errorMessage.value = 'عذراً، هذا الصنف غير متوفر حالياً.';
@@ -275,6 +301,7 @@ async function quickDecrement(item: MenuItem) {
         }
         await refreshCartSummary();
         triggerCartAnimation();
+        triggerHaptic('light');
     } catch (e: any) {
         errorMessage.value = e.response?.data?.message || 'تعذر تقليل الكمية.';
     } finally {
@@ -301,6 +328,7 @@ async function submitOrder() {
         checkoutOpen.value = false;
         customerNote.value = '';
         promoCode.value = '';
+        triggerHaptic('success');
         router.visit(`/t/${props.table.public_token}/orders/${data.data.order_number}`);
     } catch (e: any) {
         errorMessage.value = e.response?.data?.message || 'تعذر إرسال الطلب. تحقق من السلة وحاول مرة أخرى.';
@@ -412,17 +440,17 @@ onMounted(() => {
             </button>
         </div>
 
-        <!-- تبويبات الأصناف - تثبت عند التمرير -->
-        <div class="sticky top-0 z-10 -mx-4 bg-stone-50/95 dark:bg-[#060913]/95 backdrop-blur-md px-4 pt-2 pb-3 mb-3 border-b border-stone-200/60 dark:border-slate-800/80 transition-colors">
-            <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+        <!-- تبويبات الأصناف - تثبت بسلاسة تحت الهيدر عند التمرير مع تأثير زجاجي فاخر -->
+        <div class="sticky top-[64px] sm:top-[68px] z-10 -mx-4 bg-stone-50/90 dark:bg-[#060913]/90 backdrop-blur-xl px-4 pt-2.5 pb-3 mb-3 border-b border-stone-200/70 dark:border-slate-800/80 shadow-xs transition-all">
+            <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide scroll-smooth">
                 <!-- تبويب الكل -->
                 <button
                     type="button"
-                    class="whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 shrink-0 flex items-center gap-1.5"
+                    class="whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 shrink-0 flex items-center gap-1.5 active:scale-95 select-none"
                     :class="activeCategory === 'all'
-                        ? 'bg-amber-600 text-white shadow-md shadow-amber-200 dark:shadow-amber-900/50'
-                        : 'bg-white text-stone-600 ring-1 ring-stone-200 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-800 hover:dark:bg-slate-800'"
-                    @click="activeCategory = 'all'"
+                        ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold shadow-md shadow-amber-500/25 ring-1 ring-amber-400/50 scale-[1.02]'
+                        : 'bg-white/90 text-stone-600 ring-1 ring-stone-200 dark:bg-slate-900/90 dark:text-slate-300 dark:ring-slate-800 hover:dark:bg-slate-800'"
+                    @click="selectCategory('all', $event)"
                 >
                     <span>الكل</span>
                 </button>
@@ -431,11 +459,11 @@ onMounted(() => {
                     v-for="category in categories"
                     :key="category.id"
                     type="button"
-                    class="whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 shrink-0"
+                    class="whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 shrink-0 active:scale-95 select-none"
                     :class="activeCategory === category.id
-                        ? 'bg-amber-600 text-white shadow-md shadow-amber-200 dark:shadow-amber-900/50'
-                        : 'bg-white text-stone-600 ring-1 ring-stone-200 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-800 hover:dark:bg-slate-800'"
-                    @click="activeCategory = category.id"
+                        ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold shadow-md shadow-amber-500/25 ring-1 ring-amber-400/50 scale-[1.02]'
+                        : 'bg-white/90 text-stone-600 ring-1 ring-stone-200 dark:bg-slate-900/90 dark:text-slate-300 dark:ring-slate-800 hover:dark:bg-slate-800'"
+                    @click="selectCategory(category.id, $event)"
                 >
                     {{ category.name }}
                 </button>

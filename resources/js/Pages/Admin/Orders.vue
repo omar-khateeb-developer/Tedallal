@@ -9,12 +9,13 @@ import { useWakeLock } from '@/composables/useWakeLock';
 import { useLiveConnection } from '@/composables/useLiveConnection';
 import { soundAlerts } from '@/utils/soundAlerts';
 import { Head, usePage } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
 import axios from 'axios';
 
 interface OrderItem {
     id: number;
     item_name_snapshot: string;
+    unit_price?: string;
     quantity: number;
     subtotal: string;
     note?: string;
@@ -30,9 +31,11 @@ interface Order {
     paid_at?: string | null;
     restaurant_type?: string;
     windows_count?: number;
+    subtotal?: string;
     total: string;
     table?: { name: string };
     customer_note?: string | null;
+    created_at?: string | null;
     items?: OrderItem[];
 }
 
@@ -93,6 +96,53 @@ function shareOnWhatsApp(order: Order) {
         `📄 رابط الفاتورة الإلكترونية:\n${printUrl}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
 }
+
+// حالة نافذة المعاينة التفاعلية للفاتورة الحرارية (80mm)
+const receiptOrder = ref<Order | null>(null);
+const showReceiptModal = ref(false);
+
+function openReceiptModal(order: Order) {
+    receiptOrder.value = order;
+    showReceiptModal.value = true;
+}
+
+function closeReceiptModal() {
+    showReceiptModal.value = false;
+    receiptOrder.value = null;
+}
+
+function printReceipt(orderId: number) {
+    window.open(`/admin/orders/${orderId}/print`, '_blank');
+}
+
+function formatReceiptTime(isoStr?: string | null): string {
+    if (!isoStr) return new Date().toLocaleTimeString('ar-SY', { hour: '2-digit', minute: '2-digit' });
+    try {
+        const d = new Date(isoStr);
+        return d.toLocaleDateString('ar-SY', { year: 'numeric', month: 'short', day: 'numeric' }) + ' ' +
+               d.toLocaleTimeString('ar-SY', { hour: '2-digit', minute: '2-digit' });
+    } catch {
+        return String(isoStr);
+    }
+}
+
+function onKeyDown(e: KeyboardEvent) {
+    if (e.key === 'Escape' && showReceiptModal.value) {
+        closeReceiptModal();
+    }
+}
+
+onMounted(() => {
+    if (typeof window !== 'undefined') {
+        window.addEventListener('keydown', onKeyDown);
+    }
+});
+
+onUnmounted(() => {
+    if (typeof window !== 'undefined') {
+        window.removeEventListener('keydown', onKeyDown);
+    }
+});
 
 // الطباعة التلقائية للفاتورة عند اكتمال التحضير (جاهز)
 const isAutoPrintActive = ref<boolean>(
@@ -210,7 +260,12 @@ useRestaurantOrders(restaurantId.value, {
 
                     <div v-if="isPrepaid" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-xs font-bold text-amber-800 dark:text-amber-300 shrink-0">
                         <span>💳 بانتظار المحاسبة:</span>
-                        <span class="rounded-full bg-amber-500 text-white px-2 py-0.5 text-xs font-black">{{ pendingCashierOrdersCount }}</span>
+                        <span
+                            class="rounded-full bg-amber-500 text-white px-2 py-0.5 text-xs font-black transition-all"
+                            :class="{ 'animate-pulse shadow-md shadow-amber-500/40 ring-2 ring-amber-400': pendingCashierOrdersCount > 0 }"
+                        >
+                            {{ pendingCashierOrdersCount }}
+                        </span>
                     </div>
 
                     <!-- تقرير إغلاق الوردية Z-Report -->
@@ -273,11 +328,20 @@ useRestaurantOrders(restaurantId.value, {
                 <article
                     v-for="order in filteredOrders"
                     :key="order.id"
-                    class="rounded-2xl bg-white dark:bg-[#0a0f1d] p-4 shadow-xs border border-slate-100 dark:border-slate-800"
+                    class="rounded-2xl bg-white dark:bg-[#0a0f1d] p-4 shadow-xs border transition-all duration-300"
+                    :class="[
+                        order.status === 'pending' && !order.paid_at
+                            ? 'border-amber-400 dark:border-amber-500/80 ring-2 ring-amber-400/40 dark:ring-amber-500/30 shadow-lg shadow-amber-500/10'
+                            : 'border-slate-100 dark:border-slate-800'
+                    ]"
                 >
                     <div class="flex flex-wrap items-center justify-between gap-3">
                         <div>
                             <div class="flex items-center gap-2">
+                                <span v-if="order.status === 'pending' && !order.paid_at" class="relative flex h-2.5 w-2.5" title="طلب بانتظار المحاسبة الفورية">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                                </span>
                                 <p class="font-black text-gray-900 dark:text-white text-base">{{ order.order_number }}</p>
                                 <span class="text-xs font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded-full border border-amber-200/50 dark:border-amber-800/40">
                                     {{ (order.service_type ?? 'dine_in') === 'takeaway' ? '🥡 سفري' : (order.table?.name ? `🍽️ محلي (${order.table.name})` : '🍽️ محلي') }}
@@ -346,6 +410,17 @@ useRestaurantOrders(restaurantId.value, {
                                 ✕ تم إلغاء الطلب
                             </span>
 
+                            <!-- معاينة الفاتورة الحرارية 80mm -->
+                            <button
+                                @click="openReceiptModal(order)"
+                                type="button"
+                                class="rounded-lg bg-stone-100 hover:bg-amber-500/10 hover:text-amber-600 hover:border-amber-300 dark:bg-slate-800 dark:hover:bg-amber-500/15 dark:hover:text-amber-300 dark:hover:border-amber-500/40 px-2.5 py-2 text-xs font-bold text-stone-700 dark:text-stone-200 border border-stone-200 dark:border-slate-700 transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs select-none"
+                                title="معاينة إيصال الفاتورة الحرارية (80mm)"
+                            >
+                                <span>🧾</span>
+                                <span class="hidden sm:inline">معاينة الإيصال</span>
+                            </button>
+
                             <!-- مشاركة الفاتورة عبر واتساب -->
                             <button
                                 @click="shareOnWhatsApp(order)"
@@ -395,6 +470,181 @@ useRestaurantOrders(restaurantId.value, {
                 </article>
             </div>
         </div>
+
+        <!-- نافذة معاينة الفاتورة الحرارية الواقعية (80mm Thermal Receipt Modal) -->
+        <Teleport to="body">
+            <div
+                v-if="showReceiptModal && receiptOrder"
+                class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm transition-opacity duration-300 overflow-y-auto"
+                dir="rtl"
+                @click.self="closeReceiptModal"
+            >
+                <div class="relative w-full max-w-[390px] my-auto flex flex-col items-center animate-in fade-in zoom-in-95 duration-200">
+                    <!-- أزرار الإجراءات السريعة العلوية -->
+                    <div class="w-full flex items-center justify-between mb-2 px-1 text-white text-xs">
+                        <span class="font-bold flex items-center gap-1.5 text-amber-300">
+                            <span>🧾</span>
+                            <span>معاينة إيصال طابعة 80mm</span>
+                        </span>
+                        <button
+                            type="button"
+                            @click="closeReceiptModal"
+                            class="p-1.5 rounded-full bg-white/20 hover:bg-white/30 text-white transition cursor-pointer"
+                            title="إغلاق النافذة (Esc)"
+                        >
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- ورقة الإيصال الحراري الواقعية -->
+                    <div class="relative w-full bg-[#fbfbf8] text-stone-900 rounded-lg shadow-2xl p-5 border-t-8 border-dashed border-stone-300 select-text font-mono text-xs overflow-hidden">
+                        <!-- ترويسة المطعم -->
+                        <div class="text-center pb-3 border-b border-dashed border-stone-300">
+                            <h3 class="text-lg font-black tracking-tight text-stone-950 font-sans">
+                                {{ authRestaurant?.name || 'مطعم قلعة حلب' }}
+                            </h3>
+                            <p class="text-[11px] text-stone-600 font-sans mt-0.5">
+                                منظومة ضيافة سحابية متطورة • تدلّل
+                            </p>
+                            <div class="mt-2.5 inline-block border-2 border-stone-900 rounded-md px-3 py-1 bg-stone-100">
+                                <span class="text-[10px] block font-bold text-stone-600">رقم الطلب</span>
+                                <span class="text-xl font-black tracking-wider text-stone-950">{{ receiptOrder.order_number }}</span>
+                            </div>
+                        </div>
+
+                        <!-- تفاصيل الجلسة والخدمة -->
+                        <div class="py-2.5 border-b border-dashed border-stone-300 space-y-1 text-[11px]">
+                            <div class="flex justify-between">
+                                <span class="text-stone-500">التاريخ والوقت:</span>
+                                <span class="font-bold">{{ formatReceiptTime(receiptOrder.created_at) }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-stone-500">نوع الطلب:</span>
+                                <span class="font-bold">
+                                    {{ receiptOrder.service_type === 'takeaway' ? '🥡 سفري' : (receiptOrder.table?.name ? `🍽️ محلي (${receiptOrder.table.name})` : '🍽️ محلي') }}
+                                    <span v-if="receiptOrder.pickup_window" class="text-stone-700"> - نافذة {{ receiptOrder.pickup_window }}</span>
+                                </span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-stone-500">حالة الدفع:</span>
+                                <span class="font-bold" :class="receiptOrder.paid_at ? 'text-emerald-700' : 'text-amber-700'">
+                                    {{ receiptOrder.paid_at ? '✓ تم الدفع' : '⏳ بانتظار المحاسبة' }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- جدول الأصناف -->
+                        <div class="py-3 border-b border-dashed border-stone-300">
+                            <div class="flex justify-between font-bold text-stone-700 pb-1.5 border-b border-stone-200 text-[11px]">
+                                <span>الصنف / الكمية</span>
+                                <span>الإجمالي</span>
+                            </div>
+                            <div class="divide-y divide-stone-100">
+                                <div
+                                    v-for="item in (receiptOrder.items ?? [])"
+                                    :key="item.id"
+                                    class="py-1.5"
+                                >
+                                    <div class="flex justify-between items-start gap-2">
+                                        <div class="min-w-0">
+                                            <span class="font-black text-stone-950 ml-1">{{ item.quantity }}x</span>
+                                            <span class="font-semibold text-stone-800">{{ item.item_name_snapshot }}</span>
+                                        </div>
+                                        <span class="font-black text-stone-900 shrink-0">
+                                            {{ item.subtotal }} {{ authRestaurant?.currency || 'ل.س' }}
+                                        </span>
+                                    </div>
+                                    <div v-if="item.note" class="text-[10px] text-stone-500 mt-0.5 pr-4 italic">
+                                        ↳ {{ item.note }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- الإجماليات المالية -->
+                        <div class="py-3 border-b-2 border-dashed border-stone-400 space-y-1.5">
+                            <div v-if="receiptOrder.subtotal" class="flex justify-between text-stone-600 text-[11px]">
+                                <span>المجموع الفرعي:</span>
+                                <span>{{ receiptOrder.subtotal }} {{ authRestaurant?.currency || 'ل.س' }}</span>
+                            </div>
+                            <div class="flex justify-between items-center text-sm font-black text-stone-950 pt-1">
+                                <span class="text-base">المجموع النهائي:</span>
+                                <span class="text-lg bg-stone-100 px-2 py-0.5 rounded border border-stone-300">
+                                    {{ receiptOrder.total }} {{ authRestaurant?.currency || 'ل.س' }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- ملاحظة الزبون إن وجدت -->
+                        <div v-if="receiptOrder.customer_note" class="py-2 border-b border-dashed border-stone-300 text-[10px] text-stone-600">
+                            <span class="font-bold text-stone-800">ملاحظة الزبون:</span>
+                            <p class="mt-0.5 italic bg-amber-50/60 p-1 rounded">{{ receiptOrder.customer_note }}</p>
+                        </div>
+
+                        <!-- كود باركود محاكى للطابعات الحرارية -->
+                        <div class="py-3 text-center">
+                            <div class="flex items-center justify-center gap-[2px] h-8 max-w-[220px] mx-auto opacity-80">
+                                <div class="w-[2px] h-full bg-stone-900"></div>
+                                <div class="w-[1px] h-full bg-stone-900"></div>
+                                <div class="w-[3px] h-full bg-stone-900"></div>
+                                <div class="w-[1px] h-full bg-stone-900"></div>
+                                <div class="w-[2px] h-full bg-stone-900"></div>
+                                <div class="w-[4px] h-full bg-stone-900"></div>
+                                <div class="w-[1px] h-full bg-stone-900"></div>
+                                <div class="w-[3px] h-full bg-stone-900"></div>
+                                <div class="w-[2px] h-full bg-stone-900"></div>
+                                <div class="w-[1px] h-full bg-stone-900"></div>
+                                <div class="w-[3px] h-full bg-stone-900"></div>
+                                <div class="w-[2px] h-full bg-stone-900"></div>
+                                <div class="w-[4px] h-full bg-stone-900"></div>
+                                <div class="w-[1px] h-full bg-stone-900"></div>
+                                <div class="w-[2px] h-full bg-stone-900"></div>
+                            </div>
+                            <p class="text-[9px] tracking-widest text-stone-500 mt-1 font-mono">{{ receiptOrder.order_number }}</p>
+                        </div>
+
+                        <!-- خاتمة الإيصال -->
+                        <div class="text-center pt-1 pb-1 text-[11px] font-sans text-stone-600">
+                            <p class="font-bold">شكراً لزيارتكم الكريمة ✨</p>
+                            <p class="text-[10px] text-stone-500">نسعد دائماً بخدمتكم وتلبية طلباتكم</p>
+                        </div>
+
+                        <!-- الحافة السفلية المشرشرة -->
+                        <div class="absolute -bottom-1 left-0 right-0 h-2 bg-transparent border-b-8 border-dashed border-stone-300"></div>
+                    </div>
+
+                    <!-- أزرار التحكم والطباعة أسفل الإيصال -->
+                    <div class="w-full mt-3 flex items-center gap-2">
+                        <button
+                            type="button"
+                            @click="printReceipt(receiptOrder.id)"
+                            class="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-stone-950 font-bold text-xs shadow-lg shadow-amber-500/25 transition active:scale-95 cursor-pointer"
+                        >
+                            <span>🖨️</span>
+                            <span>طباعة الفاتورة الآن</span>
+                        </button>
+                        <button
+                            type="button"
+                            @click="shareOnWhatsApp(receiptOrder)"
+                            class="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition active:scale-95 cursor-pointer"
+                            title="إرسال الفاتورة عبر واتساب"
+                        >
+                            <span>💬</span>
+                            <span class="hidden sm:inline">واتساب</span>
+                        </button>
+                        <button
+                            type="button"
+                            @click="closeReceiptModal"
+                            class="py-2.5 px-3 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 font-bold text-xs transition active:scale-95 cursor-pointer border border-stone-700"
+                        >
+                            إغلاق
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </Teleport>
         <NotificationToast />
     </AuthenticatedLayout>
 </template>
