@@ -549,10 +549,9 @@ onUnmounted(() => {
                 <div class="flex items-center justify-between h-20">
                     <!-- Brand Identity (Animated Royal Emblem + Tedallal Luxury Typography) -->
                     <Link href="/" class="flex items-center gap-3 group">
-                        <div class="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-[#BF953F] via-[#FCF6BA] to-[#B38728] p-0.5 shadow-sm group-hover:scale-105 transition-transform duration-300">
-                            <div class="w-full h-full rounded-[14px] flex items-center justify-center p-1 overflow-hidden" :class="isDark ? 'bg-[#0C0C0E]' : 'bg-white'">
-                                <ApplicationLogo variant="emblem" :animated="true" class="w-full h-full" />
-                            </div>
+                        <!-- Pristine Borderless Floating Royal Emblem -->
+                        <div class="relative w-11 h-11 shrink-0 group-hover:scale-105 transition-transform duration-300 filter drop-shadow-[0_4px_14px_rgba(218,165,32,0.4)]">
+                            <ApplicationLogo variant="emblem" :animated="true" class="w-full h-full" />
                         </div>
                         <div class="flex flex-col">
                             <div class="flex items-center gap-1.5">
@@ -701,27 +700,27 @@ onUnmounted(() => {
         </header>
 
         <!-- ========================================================================= -->
-        <!-- 2. EXECUTIVE CHEF LUXURY HERO STAGE (Matching High-End Mockup) -->
+        <!-- 2. EXECUTIVE CHEF LUXURY HERO STAGE (Option 2: Grand Royal Emblem & Luxury Glassmorphic Suite) -->
         <!-- ========================================================================= -->
         <section class="relative pt-4 pb-10 md:pt-8 md:pb-16 overflow-hidden z-10">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <!-- Widescreen Framing Card with Executive Chef Background -->
-                <div :class="isDark ? 'border-[rgba(226,196,133,0.18)] bg-[#0C0C0E] shadow-[0_20px_60px_rgba(0,0,0,0.85)]' : 'border-stone-200/90 bg-[#FBF9F5] shadow-[0_15px_45px_rgba(28,25,23,0.06)]'" class="relative rounded-[2.5rem] overflow-hidden border min-h-[500px] lg:min-h-[620px] flex flex-col lg:flex-row items-center transition-colors">
+                <div :class="isDark ? 'border-[rgba(226,196,133,0.18)] bg-[#0C0C0E] shadow-[0_20px_60px_rgba(0,0,0,0.85)]' : 'border-stone-200/90 bg-[#FBF9F5] shadow-[0_15px_45px_rgba(28,25,23,0.06)]'" class="relative rounded-[2.5rem] overflow-hidden border min-h-[540px] lg:min-h-[640px] flex items-center transition-colors">
                     <!-- High-Resolution Executive Chef Plating Image (Desktop) -->
                     <img
                         src="/images/tedallal-chef-hero.jpg"
                         alt="Executive Chef Plating Exquisite Cuisine"
-                        class="hidden lg:block absolute inset-0 w-full h-full object-cover object-[16%_center] transform scale-[1.03] transition-transform duration-1000"
+                        class="hidden lg:block absolute inset-0 w-full h-full object-cover object-[16%_center] transform scale-[1.03] transition-transform duration-1000 filter brightness-[0.75] contrast-[1.05]"
                     />
 
-                    <!-- Atmospheric Cinematic Gradients for Desktop (Gentle, Natural Contrast - No Overly Glowing Wash) -->
+                    <!-- Atmospheric Cinematic Gradients for Desktop -->
                     <div
                         class="hidden lg:block absolute inset-0 pointer-events-none"
                         :class="isDark
-                            ? (currentLocale === 'ar' ? 'bg-gradient-to-l from-[#0C0C0E]/90 via-[#0C0C0E]/55 to-transparent' : 'bg-gradient-to-r from-transparent via-[#0C0C0E]/55 to-[#0C0C0E]/90')
-                            : (currentLocale === 'ar' ? 'bg-gradient-to-l from-stone-900/60 via-stone-900/20 to-transparent' : 'bg-gradient-to-r from-transparent via-stone-900/20 to-stone-900/60')"
+                            ? (currentLocale === 'ar' ? 'bg-gradient-to-l from-[#0C0C0E]/95 via-[#0C0C0E]/60 to-[#0C0C0E]/80' : 'bg-gradient-to-r from-[#0C0C0E]/80 via-[#0C0C0E]/60 to-[#0C0C0E]/95')
+                            : (currentLocale === 'ar' ? 'bg-gradient-to-l from-stone-900/65 via-stone-900/30 to-stone-900/50' : 'bg-gradient-to-r from-stone-900/50 via-stone-900/30 to-stone-900/65')"
                     ></div>
-                    <div class="hidden lg:block absolute inset-0 pointer-events-none bg-gradient-to-t from-stone-950/40 via-transparent to-transparent"></div>
+                    <div class="hidden lg:block absolute inset-0 pointer-events-none bg-gradient-to-t from-stone-950/70 via-transparent to-transparent"></div>
 
                     <!-- Mobile Chef Upper Visual Banner (< lg) -->
                     <div class="block lg:hidden relative w-full h-64 sm:h-80 overflow-hidden">
@@ -737,75 +736,98 @@ onUnmounted(() => {
                         </div>
                     </div>
 
-                    <!-- Floating Glassmorphism Hero Box (Placed on the RIGHT side on Desktop) -->
-                    <div
-                        class="relative z-10 w-full lg:w-[48%] xl:w-[46%] p-4 sm:p-8 lg:p-12"
-                        :class="currentLocale === 'ar' ? 'lg:me-auto lg:ms-6' : 'lg:ms-auto lg:me-6'"
-                    >
-                        <div :class="isDark ? 'glass-ultra text-white shadow-xl' : 'glass-ultra text-stone-900 shadow-[0_12px_30px_rgba(28,25,23,0.06)]'" class="rounded-3xl p-7 sm:p-10 relative overflow-hidden transition-all duration-300">
-                            <!-- Official Animated Royal Emblem & Sub-label Badge -->
-                            <div class="flex items-center gap-3.5 mb-5">
-                                <div class="relative w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-[#BF953F] via-[#FCF6BA] to-[#B38728] p-0.5 shadow-md shrink-0">
-                                    <div class="w-full h-full rounded-[14px] flex items-center justify-center p-1 overflow-hidden" :class="isDark ? 'bg-[#0C0C0E]' : 'bg-white'">
-                                        <ApplicationLogo variant="emblem" :animated="true" class="w-full h-full" />
-                                    </div>
+                    <!-- Dual-Column Hero Arrangement (Grand Emblem + Luxury Glassmorphic Card) -->
+                    <div class="relative z-10 w-full p-4 sm:p-8 lg:p-12">
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                            
+                            <!-- Grand Royal Animated Emblem Showcase (Borderless & Majestic) -->
+                            <div class="lg:col-span-5 flex flex-col items-center justify-center p-4 text-center order-1 lg:order-2">
+                                <div class="relative w-48 h-48 sm:w-56 sm:h-56 lg:w-60 lg:h-60 filter drop-shadow-[0_15px_35px_rgba(218,165,32,0.55)] transition-transform duration-500 hover:scale-105">
+                                    <!-- Ambient Halo Pulse behind Emblem -->
+                                    <div class="absolute -inset-6 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.4)_0%,rgba(245,158,11,0.12)_55%,transparent_75%)] blur-2xl pointer-events-none" aria-hidden="true"></div>
+                                    <ApplicationLogo variant="emblem" :animated="true" class="w-full h-full relative z-10" />
                                 </div>
-                                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border" :class="isDark ? 'bg-amber-500/10 border-amber-500/30 text-amber-300' : 'bg-amber-500/10 border-[#C5A059]/30 text-[#7A5208] shadow-2xs'">
-                                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+
+                                <!-- Sub-label Badge -->
+                                <div class="mt-4 inline-flex items-center gap-2 px-4 py-1.5 rounded-full border shadow-lg transition-transform hover:scale-105" :class="isDark ? 'bg-amber-500/15 border-amber-500/35 text-amber-300' : 'bg-amber-50/90 border-[#C5A059]/40 text-[#7A5208]'">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
                                     <span class="text-xs font-black uppercase tracking-widest">
                                         {{ currentLocale === 'ar' ? 'المنظومة السحابية الفاخرة للضيافة' : 'EXQUISITE HOSPITALITY OS' }}
                                     </span>
                                 </div>
                             </div>
 
-                            <!-- Main Title (Matching the mockup exact wording) -->
-                            <h1 class="text-2xl sm:text-4xl lg:text-5xl font-black leading-tight mb-2 tracking-tight transition-colors" :class="isDark ? 'text-white' : 'text-stone-900'">
-                                {{ currentLocale === 'ar' ? 'تَدلَّل - لإدارةٍ راقيةٍ للمطاعم' : 'TEDALLAL - For Exquisite Restaurant Management' }}
-                            </h1>
+                            <!-- Luxury Glassmorphic Card -->
+                            <div class="lg:col-span-7 order-2 lg:order-1">
+                                <div :class="isDark ? 'glass-ultra text-white shadow-2xl' : 'glass-ultra text-stone-900 shadow-[0_15px_45px_rgba(28,25,23,0.08)]'" class="rounded-3xl p-7 sm:p-10 relative overflow-hidden transition-all duration-300">
+                                    
+                                    <!-- Main Title -->
+                                    <h1 class="text-2xl sm:text-4xl lg:text-5xl font-black leading-tight mb-2 tracking-tight transition-colors" :class="isDark ? 'text-white' : 'text-stone-900'">
+                                        {{ currentLocale === 'ar' ? 'تَدلَّل - لإدارةٍ راقيةٍ للمطاعم' : 'TEDALLAL - For Exquisite Restaurant Management' }}
+                                    </h1>
 
-                            <!-- Subtitle / English line -->
-                            <p class="text-xs sm:text-sm font-bold tracking-wide mb-3" :class="isDark ? 'text-amber-400' : 'text-[#8C6010]'">
-                                TEDALLAL - For Exquisite Restaurant Management
-                            </p>
+                                    <!-- Subtitle / English line -->
+                                    <p class="text-xs sm:text-sm font-bold tracking-wide mb-3" :class="isDark ? 'text-amber-400' : 'text-[#8C6010]'">
+                                        TEDALLAL - For Exquisite Restaurant Management
+                                    </p>
 
-                            <!-- Tagline -->
-                            <p class="text-xs sm:text-sm leading-relaxed mb-8 font-medium transition-colors" :class="isDark ? 'text-stone-300' : 'text-stone-700'">
-                                {{ currentLocale === 'ar'
-                                    ? 'تدلّل • الإدارة الراقية للمطاعم. تجربة طعام ملكية لرواد مطعمك، مع شاشات مطبخ KDS فورية، تحليلات مالية شفافة، و0% عمولات مجحفة.'
-                                    : 'Empowering fine-dining establishments with flawless digital QR menus, chef-centric kitchen automation, and full executive financial control.' }}
-                            </p>
+                                    <!-- Tagline -->
+                                    <p class="text-xs sm:text-sm leading-relaxed mb-6 font-medium transition-colors" :class="isDark ? 'text-stone-300' : 'text-stone-700'">
+                                        {{ currentLocale === 'ar'
+                                            ? 'تدلّل • الإدارة الراقية للمطاعم. تجربة طعام ملكية لرواد مطعمك، مع شاشات مطبخ KDS فورية، تحليلات مالية شفافة، و0% عمولات مجحفة.'
+                                            : 'Empowering fine-dining establishments with flawless digital QR menus, chef-centric kitchen automation, and full executive financial control.' }}
+                                    </p>
 
-                            <!-- Golden Action Button (Pill matching mockup, Calm Luxury) -->
-                            <div class="flex flex-wrap items-center gap-3">
-                                <button
-                                    type="button"
-                                    class="px-8 py-3.5 rounded-full bg-gradient-to-r from-[#BF953F] via-[#E8C265] to-[#B38728] text-stone-950 font-black text-xs sm:text-sm shadow-sm hover:shadow-md hover:shadow-amber-500/15 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
-                                    @click="isDemoModalOpen = true"
-                                >
-                                    <span>{{ currentLocale === 'ar' ? 'تدلّل - للمطاعم' : 'Tedallal - For Restaurants' }}</span>
-                                    <span class="text-stone-950">✦</span>
-                                </button>
-                                <a
-                                    href="/presentation"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    class="px-6 py-3.5 rounded-full border border-amber-500/50 hover:border-amber-400 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 hover:text-amber-200 text-xs sm:text-sm font-black flex items-center gap-2 transition-all shadow-sm hover:shadow-amber-500/15 hover:scale-105 active:scale-95"
-                                    :class="!isDark && 'bg-amber-50/90 border-[#C5A059]/60 text-[#7A5208] hover:bg-amber-100'"
-                                    :title="currentLocale === 'ar' ? 'عرض الملف التعريفي الشامل لملاك ومستثمري المطاعم' : 'Restaurant Owner Pitch Deck'"
-                                >
-                                    <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
-                                    </svg>
-                                    <span>{{ currentLocale === 'ar' ? 'الملف التعريفي لملاك المطاعم' : 'Pitch Deck' }}</span>
-                                    <span class="text-xs">↗</span>
-                                </a>
-                                <a
-                                    href="#platform-mockups"
-                                    :class="isDark ? 'border-white/20 text-stone-200 hover:bg-white/10' : 'border-stone-300 text-stone-900 bg-white/90 hover:bg-stone-100 shadow-xs'" class="px-5 py-3 rounded-full border text-xs sm:text-sm font-bold transition-colors"
-                                >
-                                    {{ currentLocale === 'ar' ? 'استكشف الواجهات الحية' : 'Explore Platform' }} ↓
-                                </a>
+                                    <!-- Key Pillars Grid (Pillars from Option B) -->
+                                    <div class="grid grid-cols-3 gap-2.5 py-3 mb-6 text-center text-xs">
+                                        <div class="p-2.5 rounded-2xl border transition-all" :class="isDark ? 'bg-[#08080A]/60 border-amber-500/20' : 'bg-white/80 border-[#C5A059]/25 shadow-2xs'">
+                                            <span class="font-black text-base sm:text-lg block" :class="isDark ? 'text-amber-400' : 'text-[#8C6010]'">100%</span>
+                                            <span class="text-[10px] sm:text-[11px] block font-medium" :class="isDark ? 'text-stone-300' : 'text-stone-600'">{{ currentLocale === 'ar' ? 'أرباح بدون عمولة' : 'Zero Commission' }}</span>
+                                        </div>
+                                        <div class="p-2.5 rounded-2xl border transition-all" :class="isDark ? 'bg-[#08080A]/60 border-amber-500/20' : 'bg-white/80 border-[#C5A059]/25 shadow-2xs'">
+                                            <span class="font-black text-base sm:text-lg block" :class="isDark ? 'text-amber-400' : 'text-[#8C6010]'">60%-</span>
+                                            <span class="text-[10px] sm:text-[11px] block font-medium" :class="isDark ? 'text-stone-300' : 'text-stone-600'">{{ currentLocale === 'ar' ? 'زمن انتظار الطلب' : 'Wait Time' }}</span>
+                                        </div>
+                                        <div class="p-2.5 rounded-2xl border transition-all" :class="isDark ? 'bg-[#08080A]/60 border-amber-500/20' : 'bg-white/80 border-[#C5A059]/25 shadow-2xs'">
+                                            <span class="font-black text-base sm:text-lg block" :class="isDark ? 'text-amber-400' : 'text-[#8C6010]'">35%+</span>
+                                            <span class="text-[10px] sm:text-[11px] block font-medium" :class="isDark ? 'text-stone-300' : 'text-stone-600'">{{ currentLocale === 'ar' ? 'رفع متوسط الفاتورة' : 'Higher Spend' }}</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Golden Action Buttons (Pill matching mockup, Calm Luxury) -->
+                                    <div class="flex flex-wrap items-center gap-3">
+                                        <button
+                                            type="button"
+                                            class="px-8 py-3.5 rounded-full bg-gradient-to-r from-[#BF953F] via-[#E8C265] to-[#B38728] text-stone-950 font-black text-xs sm:text-sm shadow-sm hover:shadow-md hover:shadow-amber-500/15 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                                            @click="isDemoModalOpen = true"
+                                        >
+                                            <span>{{ currentLocale === 'ar' ? 'تدلّل - للمطاعم' : 'Tedallal - For Restaurants' }}</span>
+                                            <span class="text-stone-950">✦</span>
+                                        </button>
+                                        <a
+                                            href="/presentation"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            class="px-6 py-3.5 rounded-full border border-amber-500/50 hover:border-amber-400 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 hover:text-amber-200 text-xs sm:text-sm font-black flex items-center gap-2 transition-all shadow-sm hover:shadow-amber-500/15 hover:scale-105 active:scale-95"
+                                            :class="!isDark && 'bg-amber-50/90 border-[#C5A059]/60 text-[#7A5208] hover:bg-amber-100'"
+                                            :title="currentLocale === 'ar' ? 'عرض الملف التعريفي الشامل لملاك ومستثمري المطاعم' : 'Restaurant Owner Pitch Deck'"
+                                        >
+                                            <svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                                            </svg>
+                                            <span>{{ currentLocale === 'ar' ? 'الملف التعريفي لملاك المطاعم' : 'Pitch Deck' }}</span>
+                                            <span class="text-xs">↗</span>
+                                        </a>
+                                        <a
+                                            href="#platform-mockups"
+                                            :class="isDark ? 'border-white/20 text-stone-200 hover:bg-white/10' : 'border-stone-300 text-stone-900 bg-white/90 hover:bg-stone-100 shadow-xs'" class="px-5 py-3 rounded-full border text-xs sm:text-sm font-bold transition-colors"
+                                        >
+                                            {{ currentLocale === 'ar' ? 'استكشف الواجهات الحية' : 'Explore Platform' }} ↓
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
+
                         </div>
                     </div>
                 </div>
