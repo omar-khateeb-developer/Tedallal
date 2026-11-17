@@ -42,6 +42,40 @@ class DashboardController extends Controller
         ]);
     }
 
+    public function floorPlan(): Response
+    {
+        $restaurant = $this->restaurantContext->current();
+
+        $tables = RestaurantTable::query()
+            ->where('restaurant_id', $restaurant->id)
+            ->with(['activeSession'])
+            ->orderBy('name')
+            ->get();
+
+        $zones = RestaurantTable::query()
+            ->where('restaurant_id', $restaurant->id)
+            ->whereNotNull('zone')
+            ->distinct()
+            ->pluck('zone')
+            ->toArray();
+
+        $defaultZones = ['main', 'vip', 'terrace'];
+        $allZones = array_values(array_unique(array_merge($defaultZones, $zones)));
+
+        $todayReservations = \App\Models\TableReservation::where('restaurant_id', $restaurant->id)
+            ->where('reservation_date', now()->toDateString())
+            ->whereIn('status', ['confirmed', 'seated'])
+            ->get(['id', 'uuid', 'table_id', 'guest_name', 'time_slot', 'guests_count', 'status']);
+
+        return Inertia::render('Admin/FloorPlan', [
+            'tables' => \App\Http\Resources\RestaurantTableResource::collection($tables)->resolve(),
+            'zones' => $allZones,
+            'todayReservations' => $todayReservations,
+            'restaurant' => $restaurant,
+            'isFeatureLocked' => ! $restaurant->hasFloorPlanFeature(),
+        ]);
+    }
+
     public function menuCategories(): Response
     {
         return Inertia::render('Admin/MenuCategories');

@@ -21,12 +21,27 @@ class RestaurantTable extends Model
         'name',
         'public_token',
         'status',
+        'pos_x',
+        'pos_y',
+        'shape',
+        'rotation',
+        'capacity',
+        'zone',
+        'width',
+        'height',
+        'iot_device_id',
     ];
 
     protected function casts(): array
     {
         return [
             'status' => TableStatus::class,
+            'pos_x' => 'float',
+            'pos_y' => 'float',
+            'rotation' => 'integer',
+            'capacity' => 'integer',
+            'width' => 'float',
+            'height' => 'float',
         ];
     }
 
@@ -50,6 +65,11 @@ class RestaurantTable extends Model
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class, 'table_id');
+    }
+
+    public function reservations(): HasMany
+    {
+        return $this->hasMany(TableReservation::class, 'table_id');
     }
 
     public function isActive(): bool

@@ -17,6 +17,9 @@ php artisan storage:link || true
 chmod -R 777 /var/www/tedallal/storage/app/public/qr 2>/dev/null || true
 chmod 777 /var/www/tedallal/storage/logs/laravel.log 2>/dev/null || true
 
+echo "🔒 [3.5/5] تحصين الأمان وضمان تعطيل وضع التطوير APP_DEBUG=false في السيرفر..."
+sed -i 's/^APP_DEBUG=.*/APP_DEBUG=false/' /var/www/tedallal/.env 2>/dev/null || true
+
 echo "⚡ [4/5] تحديث التخزين المؤقت الذكي..."
 php artisan optimize:clear
 php artisan config:cache

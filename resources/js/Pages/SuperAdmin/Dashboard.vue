@@ -1194,6 +1194,18 @@ onMounted(() => {
                                                     <span>هندسة المنيو والربحية</span>
                                                 </span>
                                             </label>
+
+                                            <label class="inline-flex items-center gap-2 cursor-pointer">
+                                                <input type="checkbox"
+                                                    :checked="!!((restaurant.effective_features || restaurant.features)?.floor_plan)"
+                                                    @change="toggleFeature(restaurant, 'floor_plan')"
+                                                    class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                                >
+                                                <span class="text-sm font-medium text-indigo-700 dark:text-indigo-300 flex items-center gap-1">
+                                                    <span>🗺️</span>
+                                                    <span>مخطط الصالة الذكي</span>
+                                                </span>
+                                            </label>
                                         </div>
                                     </td>
                                     <td class="p-3 border" dir="ltr">{{ restaurant.phone }}</td>

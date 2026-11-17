@@ -25,6 +25,15 @@ class StoreTableRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:100'],
             'status' => ['sometimes', 'in:active,inactive'],
+            'pos_x' => ['sometimes', 'numeric'],
+            'pos_y' => ['sometimes', 'numeric'],
+            'shape' => ['sometimes', 'string', 'in:circle,rectangle,booth,vip'],
+            'rotation' => ['sometimes', 'integer'],
+            'capacity' => ['sometimes', 'integer', 'min:1', 'max:50'],
+            'zone' => ['sometimes', 'string', 'max:64'],
+            'width' => ['sometimes', 'numeric', 'min:40', 'max:500'],
+            'height' => ['sometimes', 'numeric', 'min:40', 'max:500'],
+            'iot_device_id' => ['sometimes', 'nullable', 'string', 'max:64'],
         ];
     }
 }

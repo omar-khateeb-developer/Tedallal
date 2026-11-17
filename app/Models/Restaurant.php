@@ -128,6 +128,11 @@ class Restaurant extends Model
         return $this->hasMany(Order::class);
     }
 
+    public function reservations(): HasMany
+    {
+        return $this->hasMany(TableReservation::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === RestaurantStatus::Active;
@@ -249,6 +254,11 @@ class Restaurant extends Model
     public function hasMenuEngineeringFeature(): bool
     {
         return $this->hasFeature('menu_engineering');
+    }
+
+    public function hasFloorPlanFeature(): bool
+    {
+        return $this->hasFeature('floor_plan');
     }
 
     public function customers(): HasMany

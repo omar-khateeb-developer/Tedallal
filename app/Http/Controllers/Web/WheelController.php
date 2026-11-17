@@ -65,8 +65,8 @@ class WheelController extends Controller
 
         $restaurant = $wheelToken->restaurant;
 
-        // Allow resetting token if requested by admin/developer in debug mode or query
-        if ($request->has('reset') && (auth()->check() || config('app.debug'))) {
+        // Allow resetting token if requested by authorized admin/manager only
+        if ($request->has('reset') && auth()->check() && (auth()->user()->isAdmin() || auth()->user()->isSuperAdmin() || auth()->user()->can('manage_orders'))) {
             $wheelToken->update([
                 'is_claimed' => false,
                 'claimed_at' => null,
@@ -224,7 +224,7 @@ class WheelController extends Controller
             $minOrderValue = (float) ($wonSlice['min_order_value'] ?? 0);
 
             $promo = null;
-            if ($restaurant) {
+            if ($restaurant && auth()->check() && (auth()->user()->isAdmin() || auth()->user()->isSuperAdmin())) {
                 $promo = PromoCode::create([
                     'restaurant_id' => $restaurant->id,
                     'code' => $demoCode,
@@ -232,8 +232,8 @@ class WheelController extends Controller
                     'discount_type' => $discountType,
                     'discount_value' => $discountValue,
                     'min_order_value' => $minOrderValue,
-                    'is_active' => true,
-                    'starts_at' => now()->subHours(2), // Immediately active for testing
+                    'is_active' => false, // Strictly for demonstration preview
+                    'starts_at' => now()->subHours(2),
                     'expires_at' => now()->addDays(14),
                     'is_single_use' => true,
                     'times_used' => 0,

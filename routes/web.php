@@ -37,6 +37,11 @@ Route::get('/t/{token}', [CustomerController::class, 'table'])->name('customer.m
 Route::get('/t/{token}/cart', [CustomerController::class, 'cart'])->name('customer.cart');
 Route::get('/t/{token}/orders/{orderNumber}', [CustomerController::class, 'order'])->name('customer.order');
 
+// Public VIP Table Booking Engine (حجز طاولات VIP المسبق والمرئي)
+Route::get('/r/{slug}/vip-booking', [\App\Http\Controllers\Web\Public\TableBookingController::class, 'show'])->name('public.booking.show');
+Route::get('/r/{slug}/booking/{uuid}', [\App\Http\Controllers\Web\Public\TableBookingController::class, 'showTicket'])->name('public.booking.ticket');
+Route::get('/book/{slug}', fn(string $slug) => redirect()->route('public.booking.show', ['slug' => $slug]));
+
 // Lucky Wheel routes (Marketing Gamification)
 Route::get('/wheel-demo', fn(\Illuminate\Http\Request $request) => redirect()->route('wheel.show', array_merge(['token' => 'demo'], $request->query())))->name('wheel.demo');
 Route::get('/wheel/{token}', [\App\Http\Controllers\Web\WheelController::class, 'show'])->name('wheel.show');
@@ -74,6 +79,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('ad
 
 Route::middleware(['auth', 'verified', 'permission:manage_tables'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/tables', [AdminDashboardController::class, 'tables'])->name('tables');
+    Route::get('/floor-plan', [AdminDashboardController::class, 'floorPlan'])->name('floor_plan');
     Route::get('/tables/print', TablePrintController::class)->name('tables.print');
 });
 

@@ -20,6 +20,9 @@ const isFeatureLocked = (href: string) => {
     if (href === 'admin.customers') {
         return !restaurant.value.features?.whatsapp_reminders;
     }
+    if (href === 'admin.floor_plan') {
+        return !restaurant.value.features?.floor_plan;
+    }
     return false;
 };
 
@@ -27,11 +30,12 @@ const allLinks = [
     { href: 'admin.dashboard', label: 'لوحة التحكم', roles: ['admin', 'supervisor'] },
     { href: 'admin.orders', label: 'شاشة الكاشير', roles: ['admin', 'cashier', 'supervisor'] },
     { href: 'staff.orders', label: 'شاشة المطبخ (KDS)', roles: ['admin', 'chef', 'supervisor', 'waiter', 'staff'] },
+    { href: 'admin.floor_plan', label: 'مخطط الصالة 🗺️', roles: ['admin', 'supervisor', 'cashier'], permission: 'manage_tables' },
     { href: 'admin.reports', label: 'سجل المبيعات والتقارير 📊', roles: ['admin', 'supervisor'] },
     { href: 'admin.analytics', label: 'التحليلات (جديد)', roles: ['admin'] },
     { href: 'admin.offers', label: 'العروض والكوبونات (جديد)', roles: ['admin', 'supervisor'] },
     { href: 'admin.customers', label: 'العملاء والولاء (CRM) 💬', roles: ['admin'] },
-    { href: 'admin.tables', label: 'الطاولات', roles: ['admin', 'supervisor', 'waiter'], permission: 'manage_tables' },
+    { href: 'admin.tables', label: 'الطاولات (QR)', roles: ['admin', 'supervisor', 'waiter'], permission: 'manage_tables' },
     { href: 'admin.menu.categories', label: 'التصنيفات', roles: ['admin', 'supervisor'], permission: 'manage_menu' },
     { href: 'admin.menu.items', label: 'الأصناف', roles: ['admin', 'supervisor'], permission: 'manage_menu' },
     { href: 'admin.settings', label: 'الإعدادات', roles: ['admin'] },

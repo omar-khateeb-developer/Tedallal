@@ -92,6 +92,9 @@ final class OrderCreationService
                     $msg = $diagnostics['reason_message'] ?? 'الكوبون غير صالح أو لا يغطي الحد الأدنى للطلب.';
                     throw ValidationException::withMessages(['promo_code' => [$msg]]);
                 }
+                if ($promoCode->source === 'demo_wheel' || $promoCode->isDemoCode()) {
+                    throw ValidationException::withMessages(['promo_code' => ['عذراً، هذا الكوبون مخصص للعرض التوضيحي والتجريبي فقط ولا يمكن تطبيقه على الطلبات الفعلية.']]);
+                }
                 $discountAmount = (string) $promoCode->calculateDiscount((float)$subtotal);
             }
             

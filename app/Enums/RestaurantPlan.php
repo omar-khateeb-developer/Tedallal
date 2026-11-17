@@ -36,6 +36,7 @@ enum RestaurantPlan: string
                 'custom_branding' => false,
                 'whatsapp_reminders' => false,
                 'menu_engineering' => false,
+                'floor_plan' => false,
             ],
             self::Pro => [
                 'analytics' => true,
@@ -44,6 +45,7 @@ enum RestaurantPlan: string
                 'custom_branding' => false,
                 'whatsapp_reminders' => false,
                 'menu_engineering' => false,
+                'floor_plan' => false,
             ],
             self::Max => [
                 'analytics' => true,
@@ -52,6 +54,7 @@ enum RestaurantPlan: string
                 'custom_branding' => true,
                 'whatsapp_reminders' => true,
                 'menu_engineering' => true,
+                'floor_plan' => true,
             ],
         };
     }

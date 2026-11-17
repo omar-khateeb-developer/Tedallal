@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>منصة تدلّل • المخطط المعماري الهندسي لميزة تخطيط الصالة الذكي وربط عتاد الـ IoT (ESP32)</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap');
+
+        @page {
+            size: A4 portrait;
+            margin: 14mm 12mm 14mm 12mm;
+            @bottom-right {
+                content: "منصة تدلّل • الوثيقة المعمارية السرية";
+                font-family: 'Cairo', sans-serif;
+                font-size: 8pt;
+                color: #64748b;
+            }
+            @bottom-left {
+                content: counter(page);
+                font-family: 'Cairo', sans-serif;
+                font-size: 8pt;
+                color: #64748b;
+            }
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cairo', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #ffffff;
+            color: #0f172a;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            font-size: 10pt;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        .page-break {
+            page-break-after: always;
+            break-after: page;
+        }
+
+        .no-break {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+
+        /* Cover Page */
+        .cover-page {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            background: radial-gradient(circle at 80% 20%, #1e1b4b 0%, #0f172a 60%, #020617 100%);
+            color: #ffffff;
+            padding: 40px;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+        }
+
+        .cover-page::after {
+            content: "";
+            position: absolute;
+            top: -100px;
+            right: -100px;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .cover-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 20px;
+        }
+
+        .cover-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .crown-icon {
+            font-size: 28pt;
+            filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.6));
+        }
+
+        .logo-text {
+            font-size: 20pt;
+            font-weight: 900;
+            background: linear-gradient(135deg, #fbbf24 0%, #d4af37 50%, #fef3c7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .badge-confidential {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            color: #fca5a5;
+            padding: 4px 14px;
+            border-radius: 999px;
+            font-size: 9pt;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .cover-body {
+            margin: auto 0;
+        }
+
+        .cover-subtitle {
+            font-size: 12pt;
+            color: #94a3b8;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+
+        .cover-title {
+            font-size: 26pt;
+            font-weight: 900;
+            line-height: 1.3;
+            margin: 0 0 15px 0;
+            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .cover-desc {
+            font-size: 11pt;
+            color: #cbd5e1;
+            max-width: 90%;
+            line-height: 1.8;
+            border-right: 3px solid #d4af37;
+            padding-right: 15px;
+            margin-top: 20px;
+        }
+
+        .cover-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 20px;
+            font-size: 9pt;
+            color: #94a3b8;
+        }
+
+        .meta-item {
+            margin-bottom: 4px;
+        }
+
+        .meta-label {
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .meta-val {
+            color: #f1f5f9;
+            font-weight: 700;
+        }
+
+        /* Typography & Headings */
+        h1, h2, h3, h4 {
+            color: #0f172a;
+            font-weight: 800;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            font-size: 15pt;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #1e293b;
+        }
+
+        h2 .section-num {
+            background: #d4af37;
+            color: #0f172a;
+            width: 26px;
+            height: 26px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 10pt;
+            font-weight: 900;
+        }
+
+        h3 {
+            font-size: 12pt;
+            color: #334155;
+            margin-top: 16px;
+        }
+
+        p {
+            margin: 0 0 10px 0;
+            color: #334155;
+            text-align: justify;
+        }
+
+        /* Cards & Grids */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin: 14px 0;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin: 14px 0;
+        }
+
+        .card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 14px;
+            position: relative;
+        }
+
+        .card-dark {
+            background: #0f172a;
+            color: #f8fafc;
+            border: 1px solid #334155;
+        }
+
+        .card-gold {
+            border-color: rgba(212, 175, 55, 0.4);
+            background: #fffbeb;
+        }
+
+        .card-title {
+            font-size: 11pt;
+            font-weight: 700;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Color Badges & Rings */
+        .color-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 8.5pt;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 14px 0;
+            font-size: 9pt;
+        }
+
+        th {
+            background: #1e293b;
+            color: #ffffff;
+            font-weight: 700;
+            padding: 9px 12px;
+            text-align: right;
+            border: 1px solid #334155;
+        }
+
+        td {
+            padding: 8px 12px;
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #1e293b;
+        }
+
+        tr:nth-child(even) td {
+            background: #f8fafc;
+        }
+
+        /* Code & Pre */
+        pre, code {
+            font-family: 'JetBrains Mono', Consolas, monospace;
+            font-size: 8pt;
+            direction: ltr;
+            text-align: left;
+        }
+
+        pre {
+            background: #090d16;
+            color: #e2e8f0;
+            padding: 12px 14px;
+            border-radius: 10px;
+            overflow-x: auto;
+            border: 1px solid #1e293b;
+            margin: 10px 0;
+            line-height: 1.45;
+        }
+
+        .code-keyword { color: #f43f5e; font-weight: bold; }
+        .code-string { color: #10b981; }
+        .code-func { color: #38bdf8; }
+        .code-comment { color: #64748b; font-style: italic; }
+        .code-type { color: #fbbf24; }
+
+        /* LTR Helper */
+        .ltr {
+            direction: ltr;
+            display: inline-block;
+            unicode-bidi: embed;
+        }
+
+        /* Diagram Box */
+        .diagram-box {
+            background: #0f172a;
+            color: #f8fafc;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 14px 0;
+            direction: ltr;
+            text-align: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 8pt;
+            line-height: 1.6;
+        }
+
+        .callout {
+            border-right: 4px solid #d4af37;
+            background: #fefce8;
+            padding: 12px 16px;
+            border-radius: 0 10px 10px 0;
+            margin: 12px 0;
+            font-size: 9.5pt;
+        }
+
+        .callout-title {
+            font-weight: 800;
+            color: #854d0e;
+            margin-bottom: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== COVER PAGE ==================== -->
+    <div class="cover-page page-break">
+        <div class="cover-header">
+            <div class="cover-logo">
+                <span class="crown-icon">👑</span>
+                <span class="logo-text">تدلّل • TEDALLAL</span>
+            </div>
+            <span class="badge-confidential">وثيقة معمارية وتصنيعية سرية</span>
+        </div>
+
+        <div class="cover-body">
+            <div class="cover-subtitle">نظام الضيافة الذكية الفاخرة • Smart Hospitality Architecture</div>
+            <h1 class="cover-title">المخطط المعماري الشامل:<br>محرر الصالة التفاعلي الحي وربط إضاءة الطاولات بالـ IoT (ESP32)</h1>
+            <div class="cover-desc">
+                توثيق هندسي وتنفيذي دقيق لميزة تخطيط صالات المطاعم ثنائية الأبعاد (<span class="ltr">2D Interactive Floor Plan Canvas</span>)، ومزامنة حالات الطاولات اللحظية عبر <span class="ltr">Laravel Reverb</span>، والربط بالعتاد المادي الذكي لشريحة <span class="ltr">ESP32</span> للتحكم بالإضاءة المحيطية المتناغمة مع نظام حجز طاولات زبائن <span class="ltr">VIP</span>.
+            </div>
+        </div>
+
+        <div class="cover-footer">
+            <div>
+                <div class="meta-item"><span class="meta-label">إصدار الوثيقة:</span> <span class="meta-val">v1.0.0 (Production Blueprint)</span></div>
+                <div class="meta-item"><span class="meta-label">تاريخ الإصدار:</span> <span class="meta-val">نوفمبر 2026</span></div>
+            </div>
+            <div style="text-align: left;" dir="ltr">
+                <div class="meta-item"><span class="meta-label">Target Architecture:</span> <span class="meta-val">Vue 3 + Laravel 12 + ESP32</span></div>
+                <div class="meta-item"><span class="meta-label">Protocol:</span> <span class="meta-val">WebSockets / MQTT (WS2812B LEDs)</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== PAGE 1: EXECUTIVE SUMMARY & ARCHITECTURE ==================== -->
+    <div class="page-break">
+        <h2><span class="section-num">1</span> الرؤية الاستراتيجية والقيمة التنافسية</h2>
+        <p>
+            تنتقل منصة <strong>«تدلّل»</strong> بهذه الميزة من مجرد برنامج إدارة نقاط بيع وقوائم طعام رقمية (<span class="ltr">POS & Digital Menu</span>) إلى منظومة ضيافة حية فاخرة (<span class="ltr">Luxury Smart Hospitality</span>). تجمع الميزة بين ثلاثة أبعاد غير مسبوقة في السوق:
+        </p>
+
+        <div class="grid-3">
+            <div class="card card-gold">
+                <div class="card-title">🗺️ محرر صالة تفاعلي</div>
+                <p style="font-size: 8.5pt; margin: 0;">لوحة تحكم حية لمدير المطعم والكاشير لرسم مخطط الصالة وتوزيع الطاولات بأشكالها الواقعية، ومراقبة حالة كل طاولة ومبيعاتها لحظياً.</p>
+            </div>
+            <div class="card card-gold">
+                <div class="card-title">💎 حجز VIP مرئي للزبائن</div>
+                <p style="font-size: 8.5pt; margin: 0;">صفحة فاخرة مخصصة لزبائن النخبة تتيح لهم استعراض صالة المطعم ثلاثية الأبعاد واختيار الطاولة المحببة وتأكيد الحجز المسبق قبل الحضور.</p>
+            </div>
+            <div class="card card-gold">
+                <div class="card-title">💡 تناغم الإضاءة المحيطية (IoT)</div>
+                <p style="font-size: 8.5pt; margin: 0;">شريحة <span class="ltr">ESP32</span> مدمجة بكل طاولة تتحكم بحلقات إضاءة متوهجة تعكس حالة الطاولة على المنصة بريقاً ولوناً دون أي تدخل بشري.</p>
+            </div>
+        </div>
+
+        <h2><span class="section-num">2</span> المعمارية التقنية الشاملة (<span class="ltr">End-to-End Pipeline</span>)</h2>
+        <p>
+            تعتمد المنظومة على خط بيانات فوري فائق السرعة بزمن استجابة أقل من <span class="ltr">50ms</span> لضمان مزامنة التغييرات الرقمية مع الإضاءة الفيزيائية فوراً:
+        </p>
+
+        <div class="diagram-box">
+            +-------------------------------------------------------------+<br>
+            |                    Client Layer (Browsers)                  |<br>
+            |  [Manager Floor Canvas]   [Cashier POS]   [VIP Booking Web] |<br>
+            +------------------------------+------------------------------+<br>
+                                           | Inertia / REST API<br>
+                                           v<br>
+            +-------------------------------------------------------------+<br>
+            |                Laravel 12 Backend Core                      |<br>
+            |  • RestaurantTable Spatial Model (X, Y, Rotation, Zone)     |<br>
+            |  • TableReservation Engine (VIP Approval, Deposit, Time)    |<br>
+            |  • Event: TableStateChangedBroadcast                        |<br>
+            +------------------------------+------------------------------+<br>
+                         |                 |<br>
+                         v                 v<br>
+            [Laravel Reverb Engine]    [MQTT Broker / Light Bridge]<br>
+            (WebSocket to Browser UI)  (Publishes to topic: rest/{id}/t/{num})<br>
+                         |                 |<br>
+                         v                 v<br>
+            Instant Canvas Re-render   [ESP32 Microcontroller on Table]<br>
+            (Glowing Neon Rings)                 |<br>
+                                                 v<br>
+                                       [WS2812B Addressable LED Strip]<br>
+                                       (Smooth Ambient Pulse / Breathing)
+        </div>
+
+        <div class="callout no-break">
+            <div class="callout-title">قاعدة الفصل بين الاشتراك والميزات (Feature Gating)</div>
+            هذه الميزة تُعد ميزة استثنائية عليا (<span class="ltr">Tier-1 Addon</span>). يتم التحكم بها عبر حقل <span class="ltr">features['floor_plan']</span> في نموذج المطعم، ويتم تفعيلها تلقائياً مع باقة <strong>الشاملة (Max)</strong> أو تفعيلها كاشتراك مخصص (<span class="ltr">Custom Addon</span>) للمطاعم الفاخرة من لوحة السوبر أدمن.
+        </div>
+    </div>
+
+    <!-- ==================== PAGE 2: HARDWARE & CIRCUIT DESIGN ==================== -->
+    <div class="page-break">
+        <h2><span class="section-num">3</span> تصميم العتاد والدوائر الإلكترونية (<span class="ltr">ESP32 & Circuit Specs</span>)</h2>
+        <p>
+            تم تصميم وحدة الطاولة لتكون منخفضة التكلفة، فائقة الاستقرار، وتعمل بجهد <span class="ltr">5V DC</span> آمن تماماً (عبر شاحن طاولة مخفي أو بطارية ليثيوم قابلة للشحن).
+        </p>
+
+        <table class="no-break">
+            <thead>
+                <tr>
+                    <th style="width: 25%;">المكوّن (<span class="ltr">Component</span>)</th>
+                    <th style="width: 35%;">المواصفات التقنية (<span class="ltr">Specs</span>)</th>
+                    <th style="width: 40%;">الوظيفة في طاولة المطعم</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>ESP32 NodeMCU / WROOM</strong></td>
+                    <td><span class="ltr">Dual-Core 240MHz, 2.4GHz Wi-Fi, 4MB Flash</span></td>
+                    <td>معالجة إشارات الشبكة والاشتراك بقناة الطاولة والتحكم بالليدات.</td>
+                </tr>
+                <tr>
+                    <td><strong>WS2812B / SK6812 NeoPixel Ring</strong></td>
+                    <td>حلقة قطرية <span class="ltr">16/24 LEDs</span> أو شريط معنون <span class="ltr">60 LEDs/m</span></td>
+                    <td>توليد الإضاءة المحيطية المتوهجة أسفل حافة الطاولة أو في المنتصف.</td>
+                </tr>
+                <tr>
+                    <td><strong>Logic Level Shifter (74AHCT125)</strong></td>
+                    <td>تحويل إشارة التحكم من <span class="ltr">3.3V</span> إلى <span class="ltr">5.0V</span></td>
+                    <td>ضمان استقرار إشارة الداتا لليدات وتفادي أي وميض عشوائي (Flicker).</td>
+                </tr>
+                <tr>
+                    <td><strong>مكثف حماية (Capacitor)</strong></td>
+                    <td><span class="ltr">1000uF / 6.3V - 16V Electrolytic</span></td>
+                    <td>تنعيم تيار التغذية وامتصاص صدمات التشغيل اللحظية لليدات.</td>
+                </tr>
+                <tr>
+                    <td><strong>مقاومة حماية خط الداتا</strong></td>
+                    <td><span class="ltr">330Ω - 470Ω Resistor</span></td>
+                    <td>حماية منفذ <span class="ltr">GPIO</span> في الـ ESP32 من الارتدادات.</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>مخطط التوصيل الكهربائي الصندوقي (<span class="ltr">Wiring Schematic</span>)</h3>
+        <div class="diagram-box no-break">
+            +5V Power Supply ----------------+-----------------+---> (5V VCC of WS2812B Strip)
+                                             |                 |
+                                      [1000uF Cap]             +---> (5V VIN of ESP32)
+                                             |
+            GND Power Supply ----------------+-----------------+---> (GND of WS2812B & ESP32)
+                                                               
+            ESP32 GPIO 16 -----[330Ω Resistor]---------------------> (DIN Data-In of WS2812B)
+        </div>
+
+        <h2><span class="section-num">4</span> مصفوفة حالات الطاولة والإضاءة المتناغمة</h2>
+        <table class="no-break">
+            <thead>
+                <tr>
+                    <th>حالة الطاولة (<span class="ltr">State</span>)</th>
+                    <th>كود اللون (<span class="ltr">HEX</span>)</th>
+                    <th>نمط الإضاءة (<span class="ltr">Animation</span>)</th>
+                    <th>دلالة الحالة للمطعم والزبون</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>فارغة وجاهزة (<span class="ltr">Available</span>)</strong></td>
+                    <td><span class="color-badge" style="background: #f8fafc; border: 1px solid #cbd5e1;"><span class="dot" style="background: #e2e8f0;"></span> #E2E8F0 دافئ خافت</span></td>
+                    <td>توهج هادئ جداً (<span class="ltr">Soft Low Glow 15%</span>)</td>
+                    <td>الطاولة نظيفة ومتاحة لاستقبال الزبائن الجدد.</td>
+                </tr>
+                <tr>
+                    <td><strong>حجز VIP قادم (<span class="ltr">Reserved</span>)</strong></td>
+                    <td><span class="color-badge" style="background: #fef3c7; border: 1px solid #f59e0b;"><span class="dot" style="background: #d4af37;"></span> #D4AF37 ذهبي ملكي</span></td>
+                    <td>نبض تنفسي بطيء (<span class="ltr">Breathe Pulse 1.5s</span>)</td>
+                    <td>الطاولة محجوزة؛ يراها ضيف النخبة فور دخوله ويشعر بالفخامة.</td>
+                </tr>
+                <tr>
+                    <td><strong>مشغولة / جلسة طعام (<span class="ltr">Active</span>)</strong></td>
+                    <td><span class="color-badge" style="background: #ecfdf5; border: 1px solid #10b981;"><span class="dot" style="background: #10b981;"></span> #10B981 زمردي أنيق</span></td>
+                    <td>إضاءة ثابتة دافئة (<span class="ltr">Steady Warm 40%</span>)</td>
+                    <td>الزبائن يتناولون طعامهم، إضاءة مريحة لا تزعج العين.</td>
+                </tr>
+                <tr>
+                    <td><strong>طلب نداء أو فاتورة (<span class="ltr">Alert</span>)</strong></td>
+                    <td><span class="color-badge" style="background: #ffe4e6; border: 1px solid #f43f5e;"><span class="dot" style="background: #f43f5e;"></span> #F43F5E ياقوتي متوهج</span></td>
+                    <td>نبض سريع لافت (<span class="ltr">Pulsing Flash 0.5s</span>)</td>
+                    <td>تنبيه النادل المسؤول في تلك المنطقة لتلبية طلب الزبون فوراً.</td>
+                </tr>
+                <tr>
+                    <td><strong>قيد التنظيف والتعقيم (<span class="ltr">Turnover</span>)</strong></td>
+                    <td><span class="color-badge" style="background: #ecfeff; border: 1px solid #06b6d4;"><span class="dot" style="background: #06b6d4;"></span> #06B6D4 أزرق سماوي</span></td>
+                    <td>دوران خفيف (<span class="ltr">Rotating Halo</span>)</td>
+                    <td>إشعار فريق التجهيز بأن الطاولة تحتاج تنظيف قبل جلوس زبون جديد.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ==================== PAGE 3: FIRMWARE SOURCE CODE ==================== -->
+    <div class="page-break">
+        <h2><span class="section-num">5</span> كود شريحة الـ <span class="ltr">ESP32 Firmware</span> (جاهز للتحميل المباشر)</h2>
+        <p>
+            كود احترافي بلغة <span class="ltr">C++ (Arduino/PlatformIO)</span> يشتمل على إعادة الاتصال التلقائي بالشبكة، واستهلاك قنوات <span class="ltr">MQTT</span>، وتنعيم انتقالات الألوان (<span class="ltr">Non-blocking Color Fade</span>):
+        </p>
+
+        <pre><span class="code-comment">/*
+ * Tedallal Smart Table IoT Firmware (ESP32 + FastLED)
+ * Features: Auto WiFi, MQTT Table Channel Subscription, Smooth Ambient Color Transitions
+ */</span>
+<span class="code-keyword">#include</span> <span class="code-string">&lt;WiFi.h&gt;</span>
+<span class="code-keyword">#include</span> <span class="code-string">&lt;PubSubClient.h&gt;</span>
+<span class="code-keyword">#include</span> <span class="code-string">&lt;FastLED.h&gt;</span>
+<span class="code-keyword">#include</span> <span class="code-string">&lt;ArduinoJson.h&gt;</span>
+
+<span class="code-keyword">#define</span> LED_PIN     16
+<span class="code-keyword">#define</span> NUM_LEDS    24
+<span class="code-keyword">#define</span> LED_TYPE    WS2812B
+<span class="code-keyword">#define</span> COLOR_ORDER GRB
+
+<span class="code-type">const char*</span> ssid        = <span class="code-string">"Tedallal_Restaurant_WiFi"</span>;
+<span class="code-type">const char*</span> password    = <span class="code-string">"Secure_Guest_Pass2026"</span>;
+<span class="code-type">const char*</span> mqtt_server = <span class="code-string">"mqtt.tedallal.com"</span>;
+<span class="code-type">const char*</span> table_topic = <span class="code-string">"tedallal/restaurants/1/tables/08/state"</span>;
+
+<span class="code-type">CRGB</span> leds[NUM_LEDS];
+<span class="code-type">WiFiClient</span> espClient;
+<span class="code-type">PubSubClient</span> client(espClient);
+
+<span class="code-type">CRGB</span> currentColor = CRGB::Black;
+<span class="code-type">CRGB</span> targetColor  = CRGB(212, 175, 55); <span class="code-comment">// Gold default</span>
+<span class="code-type">String</span> currentEffect = <span class="code-string">"breathe"</span>;
+
+<span class="code-type">void</span> <span class="code-func">callback</span>(<span class="code-type">char*</span> topic, <span class="code-type">byte*</span> payload, <span class="code-type">unsigned int</span> length) {
+    <span class="code-type">StaticJsonDocument&lt;256&gt;</span> doc;
+    <span class="code-func">deserializeJson</span>(doc, payload, length);
+    
+    <span class="code-type">const char*</span> status = doc[<span class="code-string">"status"</span>]; <span class="code-comment">// "available", "reserved", "active", "alert"</span>
+    <span class="code-type">const char*</span> hex    = doc[<span class="code-string">"color"</span>];  <span class="code-comment">// e.g. "#D4AF37"</span>
+    
+    <span class="code-keyword">if</span> (<span class="code-func">strcmp</span>(status, <span class="code-string">"reserved"</span>) == 0) {
+        targetColor = CRGB(212, 175, 55); currentEffect = <span class="code-string">"breathe"</span>;
+    } <span class="code-keyword">else if</span> (<span class="code-func">strcmp</span>(status, <span class="code-string">"active"</span>) == 0) {
+        targetColor = CRGB(16, 185, 129); currentEffect = <span class="code-string">"solid"</span>;
+    } <span class="code-keyword">else if</span> (<span class="code-func">strcmp</span>(status, <span class="code-string">"alert"</span>) == 0) {
+        targetColor = CRGB(244, 63, 94);  currentEffect = <span class="code-string">"pulse_fast"</span>;
+    } <span class="code-keyword">else</span> {
+        targetColor = CRGB(100, 116, 139); currentEffect = <span class="code-string">"dim"</span>;
+    }
+}
+
+<span class="code-type">void</span> <span class="code-func">setup</span>() {
+    <span class="code-func">FastLED.addLeds</span>&lt;LED_TYPE, LED_PIN, COLOR_ORDER&gt;(leds, NUM_LEDS);
+    <span class="code-func">FastLED.setBrightness</span>(80);
+    <span class="code-func">WiFi.begin</span>(ssid, password);
+    <span class="code-keyword">while</span> (<span class="code-func">WiFi.status</span>() != WL_CONNECTED) { <span class="code-func">delay</span>(500); }
+    client.<span class="code-func">setServer</span>(mqtt_server, 1883);
+    client.<span class="code-func">setCallback</span>(callback);
+}
+
+<span class="code-type">void</span> <span class="code-func">loop</span>() {
+    <span class="code-keyword">if</span> (!client.<span class="code-func">connected</span>()) {
+        <span class="code-keyword">if</span> (client.<span class="code-func">connect</span>(<span class="code-string">"ESP32_Table_08"</span>)) { client.<span class="code-func">subscribe</span>(table_topic); }
+    }
+    client.<span class="code-func">loop</span>();
+    
+    <span class="code-comment">// Smooth Luxury Breathing Effect</span>
+    <span class="code-keyword">if</span> (currentEffect == <span class="code-string">"breathe"</span>) {
+        <span class="code-type">float</span> breath = (<span class="code-func">exp</span>(<span class="code-func">sin</span>(<span class="code-func">millis</span>() / 2000.0 * PI)) - 0.36787944) * 108.0;
+        <span class="code-func">FastLED.setBrightness</span>((<span class="code-type">uint8_t</span>)breath);
+        <span class="code-func">fill_solid</span>(leds, NUM_LEDS, targetColor);
+    } <span class="code-keyword">else</span> {
+        <span class="code-func">FastLED.setBrightness</span>(70);
+        <span class="code-func">fill_solid</span>(leds, NUM_LEDS, targetColor);
+    }
+    <span class="code-func">FastLED.show</span>();
+    <span class="code-func">delay</span>(20);
+}</pre>
+    </div>
+
+    <!-- ==================== PAGE 4: SOFTWARE FOUNDATION & DATA SCHEMA ==================== -->
+    <div class="page-break">
+        <h2><span class="section-num">6</span> بنية البيانات البرمجية (<span class="ltr">Database Schema & Models</span>)</h2>
+        <p>
+            توسيع جدول الطاولات <span class="ltr">restaurant_tables</span> ليدعم التموضع الهندسي والأبعاد والمناطق ومعرّف جهاز الـ <span class="ltr">IoT</span>:
+        </p>
+
+        <div class="grid-2 no-break">
+            <div class="card card-dark">
+                <div class="card-title" style="color: #fbbf24;">📂 توسعة جدول: restaurant_tables</div>
+                <ul style="font-size: 8.5pt; padding-right: 18px; margin: 0; line-height: 1.8;">
+                    <li><span class="ltr">pos_x</span>: الإحداثي الأفقي على شبكة المخطط (<span class="ltr">integer / float</span>)</li>
+                    <li><span class="ltr">pos_y</span>: الإحداثي الرأسي على شبكة المخطط (<span class="ltr">integer / float</span>)</li>
+                    <li><span class="ltr">rotation</span>: زاوية الدوران بدرجات <span class="ltr">0-360°</span></li>
+                    <li><span class="ltr">shape</span>: شكل الطاولة (<span class="ltr">circle, rectangle, booth</span>)</li>
+                    <li><span class="ltr">capacity</span>: سعة المقاعد (<span class="ltr">2, 4, 6, 8, VIP-Lounge</span>)</li>
+                    <li><span class="ltr">zone</span>: المنطقة (<span class="ltr">main_hall, terrace, vip_lounge</span>)</li>
+                    <li><span class="ltr">iot_device_id</span>: المعرّف الفريد للـ <span class="ltr">ESP32 (MAC / Token)</span></li>
+                </ul>
+            </div>
+
+            <div class="card card-dark">
+                <div class="card-title" style="color: #38bdf8;">📂 جدول الحجوزات: table_reservations</div>
+                <ul style="font-size: 8.5pt; padding-right: 18px; margin: 0; line-height: 1.8;">
+                    <li><span class="ltr">restaurant_id</span>: معرّف المطعم</li>
+                    <li><span class="ltr">table_id</span>: الطاولة المحجوزة في المخطط</li>
+                    <li><span class="ltr">guest_name & guest_phone</span>: بيانات ضيف <span class="ltr">VIP</span></li>
+                    <li><span class="ltr">reservation_time</span>: موعد الحضور المتوقع</li>
+                    <li><span class="ltr">guests_count</span>: عدد الأفراد المرافقين</li>
+                    <li><span class="ltr">status</span>: حالة الحجز (<span class="ltr">pending, confirmed, seated, cancelled</span>)</li>
+                    <li><span class="ltr">deposit_amount</span>: عربون الحجز إن وُجد</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2><span class="section-num">7</span> واجهة مخطط الصالة التفاعلي (<span class="ltr">Vue 3 Floor Plan Engine</span>)</h2>
+        <p>
+            مكوّن <span class="ltr">Vue 3</span> فخم مستوحى من المخططات المعمارية الداكنة (<span class="ltr">Architectural CAD Blueprint</span>)، يدعم وضعين متكاملين:
+        </p>
+
+        <div class="grid-2 no-break">
+            <div class="card">
+                <div class="card-title">🖥️ وضع الإدارة والكاشير (<span class="ltr">Host & Admin</span>)</div>
+                <p style="font-size: 8.5pt; margin: 0;">
+                    • سحب وإفلات الطاولات (<span class="ltr">Drag & Drop</span>) وحفظ الإحداثيات آنياً.<br>
+                    • تغيير سريع لحالة الطاولة بنقرة واحدة (تحرير، إشغال، تعليق).<br>
+                    • عرض مؤقت الجلسة الحالية وإجمالي الفاتورة المفتوحة فوق كل طاولة.<br>
+                    • إمكانية ربط كود الـ <span class="ltr">ESP32</span> من نافذة تعديل الطاولة.
+                </p>
+            </div>
+            <div class="card">
+                <div class="card-title">📱 وضع حجز الـ VIP للزبائن (<span class="ltr">Public Flow</span>)</div>
+                <p style="font-size: 8.5pt; margin: 0;">
+                    • استعراض صالة المطعم بتصميم جذاب يحاكي الصالة الواقعية.<br>
+                    • تمييز الطاولات المحجوزة باللون الذهبي والمشغولة بالرمادي.<br>
+                    • النقر على طاولة متاحة لاختيار موعد الحضور وعدد الضيوف.<br>
+                    • تأكيد الحجز وإرسال إشعار فوري عبر الواتساب مع كود الحجز.
+                </p>
+            </div>
+        </div>
+
+        <h2><span class="section-num">8</span> خطة التفعيل والجدول الزمني</h2>
+        <table class="no-break">
+            <thead>
+                <tr>
+                    <th style="width: 20%;">المرحلة</th>
+                    <th style="width: 50%;">المهام التنفيذية</th>
+                    <th style="width: 30%;">المخرجات</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>المرحلة الأولى (الآن)</strong></td>
+                    <td>توسيع قاعدة البيانات بملف هجرة، إضافة قفل الميزة (<span class="ltr">Feature Gate</span>) في الباقات، وبناء مكوّن الصالة في لوحة الإدارة.</td>
+                    <td>محرر صالة شغال، قادر على حفظ إحداثيات ومناطق الطاولات.</td>
+                </tr>
+                <tr>
+                    <td><strong>المرحلة الثانية</strong></td>
+                    <td>ربط الحالات اللحظية عبر <span class="ltr">Laravel Reverb</span> وإظهار الطاولات النشطة والفواتير للكاشير والمضيف.</td>
+                    <td>مخطط حي يتغير لون طاولاته فور إرسال الطلبات.</td>
+                </tr>
+                <tr>
+                    <td><strong>المرحلة الثالثة</strong></td>
+                    <td>بناء صفحة حجز زبائن <span class="ltr">VIP</span> العامة وتوليد إشعارات الحجز المسبق.</td>
+                    <td>تجربة حجز بصرية متكاملة للهواتف وسطح المكتب.</td>
+                </tr>
+                <tr>
+                    <td><strong>المرحلة الرابعة</strong></td>
+                    <td>نشر جسر الـ <span class="ltr">MQTT</span> وتوريد وبرمجة وحدات الـ <span class="ltr">ESP32</span> لطاولات المطاعم.</td>
+                    <td>تناغم الإضاءة الفيزيائية المحيطية على أرض الواقع.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>

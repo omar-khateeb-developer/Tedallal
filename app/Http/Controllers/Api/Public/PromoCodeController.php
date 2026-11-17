@@ -49,9 +49,20 @@ class PromoCodeController extends ApiController
             })
             ->first();
 
-        // If it is a demo code generated during preview that was not persisted yet (e.g. DEMO-6GMLWZ),
-        // register and activate it automatically for this restaurant so testing works seamlessly!
-        if (!$promoCode && str_starts_with($cleanCode, 'DEMO-')) {
+        // حماية أمنية صارمة: منع استخدام أو تفعيل أي كود تجريبي (DEMO-) في الطلبات الحقيقية إلا بوضع الفحص للمدراء
+        if (str_starts_with($cleanCode, 'DEMO-')) {
+            $isAuthorizedAdminTesting = $isTestingMode && auth()->check() && (auth()->user()->isAdmin() || auth()->user()->isSuperAdmin());
+            if (! $isAuthorizedAdminTesting) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'عذراً، هذا الكوبون مخصص للعرض التجريبي فقط ولا يمنح حسماً على الطلبات الفعلية.',
+                    'reason_code' => 'demo_code_forbidden',
+                ], 400);
+            }
+        }
+
+        // If it is a demo code in authorized testing mode
+        if (!$promoCode && str_starts_with($cleanCode, 'DEMO-') && $isTestingMode) {
             $sourceDemo = PromoCode::withoutGlobalScopes()->where('code', $cleanCode)->first();
             $discountType = $sourceDemo ? $sourceDemo->discount_type : 'percentage';
             $discountValue = $sourceDemo ? $sourceDemo->discount_value : 15;
@@ -60,11 +71,12 @@ class PromoCodeController extends ApiController
             $promoCode = PromoCode::create([
                 'restaurant_id' => $restaurant->id,
                 'code' => $cleanCode,
+                'source' => 'demo_wheel',
                 'discount_type' => $discountType,
                 'discount_value' => $discountValue,
                 'min_order_value' => $minOrderValue,
                 'is_active' => true,
-                'starts_at' => now()->subHours(2), // Immediately active without 2-hour delay
+                'starts_at' => now()->subHours(2),
                 'expires_at' => now()->addDays(14),
                 'is_single_use' => true,
                 'times_used' => 0,

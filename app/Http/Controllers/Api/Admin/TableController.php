@@ -43,6 +43,15 @@ class TableController extends ApiController
             'name' => $validated['name'],
             'public_token' => $this->tokenGenerator->generatePublicToken(),
             'status' => $validated['status'] ?? 'active',
+            'pos_x' => $validated['pos_x'] ?? 50,
+            'pos_y' => $validated['pos_y'] ?? 50,
+            'shape' => $validated['shape'] ?? 'circle',
+            'rotation' => $validated['rotation'] ?? 0,
+            'capacity' => $validated['capacity'] ?? 4,
+            'zone' => $validated['zone'] ?? 'main',
+            'width' => $validated['width'] ?? 90,
+            'height' => $validated['height'] ?? 90,
+            'iot_device_id' => $validated['iot_device_id'] ?? null,
         ]);
 
         $this->qrCodeService->generateForTable($table);
@@ -50,6 +59,51 @@ class TableController extends ApiController
         \App\Services\ActivityLogger::log('create_table', "قام بإضافة طاولة جديدة: {$table->name}");
 
         return $this->success(new RestaurantTableResource($table), 201);
+    }
+
+    public function batchLayout(Request $request)
+    {
+        $restaurant = $this->restaurantContext->current();
+        $validated = $request->validate([
+            'tables' => ['required', 'array'],
+            'tables.*.id' => ['required', 'integer'],
+            'tables.*.pos_x' => ['required', 'numeric'],
+            'tables.*.pos_y' => ['required', 'numeric'],
+            'tables.*.shape' => ['sometimes', 'string', 'in:circle,rectangle,booth,vip'],
+            'tables.*.rotation' => ['sometimes', 'integer'],
+            'tables.*.capacity' => ['sometimes', 'integer', 'min:1', 'max:50'],
+            'tables.*.zone' => ['sometimes', 'string', 'max:64'],
+            'tables.*.width' => ['sometimes', 'numeric'],
+            'tables.*.height' => ['sometimes', 'numeric'],
+        ]);
+
+        $tableIds = collect($validated['tables'])->pluck('id');
+        $tables = RestaurantTable::where('restaurant_id', $restaurant->id)
+            ->whereIn('id', $tableIds)
+            ->get()
+            ->keyBy('id');
+
+        foreach ($validated['tables'] as $item) {
+            if ($table = $tables->get($item['id'])) {
+                $table->update(array_filter([
+                    'pos_x' => $item['pos_x'],
+                    'pos_y' => $item['pos_y'],
+                    'shape' => $item['shape'] ?? null,
+                    'rotation' => $item['rotation'] ?? null,
+                    'capacity' => $item['capacity'] ?? null,
+                    'zone' => $item['zone'] ?? null,
+                    'width' => $item['width'] ?? null,
+                    'height' => $item['height'] ?? null,
+                ], fn($val) => ! is_null($val)));
+            }
+        }
+
+        \App\Services\ActivityLogger::log('update_floor_layout', "قام بتحديث المخطط المكاني للصالة");
+
+        return $this->success([
+            'message' => 'تم حفظ المخطط المكاني بنجاح',
+            'tables_count' => count($validated['tables']),
+        ]);
     }
 
     public function update(UpdateTableRequest $request, RestaurantTable $table)
@@ -67,6 +121,10 @@ class TableController extends ApiController
     public function destroy(RestaurantTable $table)
     {
         $this->authorizeTable($table);
+
+        if ($table->tableSessions()->where('status', 'active')->exists()) {
+            return $this->error('لا يمكن حذف طاولة توجد عليها جلسة نشطة حالياً. يرجى إخلاء الطاولة أولاً.', 422);
+        }
 
         if ($table->orders()->exists()) {
             return $this->error('لا يمكن حذف طاولة لها طلبات.', 422);
@@ -106,6 +164,25 @@ class TableController extends ApiController
 
         return response($this->qrCodeService->getPngContents($table), 200, [
             'Content-Type' => 'image/png',
+        ]);
+    }
+
+    public function closeActiveSession(RestaurantTable $table)
+    {
+        $this->authorizeTable($table);
+
+        $session = $table->activeSession;
+        if (! $session) {
+            return $this->error('لا توجد جلسة نشطة حالياً لهذه الطاولة.', 404);
+        }
+
+        $session->close();
+
+        \App\Services\ActivityLogger::log('vacate_table', "قام بإنهاء الجلسة وإخلاء الطاولة: {$table->name}");
+
+        return $this->success([
+            'message' => "تم إنهاء الجلسة وإخلاء الطاولة ({$table->name}) بنجاح.",
+            'table' => new RestaurantTableResource($table->fresh()),
         ]);
     }
 

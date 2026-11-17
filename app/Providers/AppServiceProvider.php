@@ -39,6 +39,11 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // حماية سيبرانية صارمة: إغلاق وضع التطوير تماماً في بيئة الإنتاج لمنع تسريب أي بيانات تتبع
+        if ($this->app->environment('production')) {
+            config(['app.debug' => false]);
+        }
+
         Vite::prefetch(concurrency: 3);
 
         $this->configureRateLimiting();

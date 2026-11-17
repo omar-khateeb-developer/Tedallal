@@ -90,6 +90,26 @@ final class OrderStatusTransitionService
             }
         }
 
+        // إغلاق جلسة الطاولة تلقائياً عند تقديم وسداد آخر طلب نشط لمنع تداخل الجلسات مع زبائن لاحقين
+        if ($target === OrderStatus::Served && $order->table_session_id) {
+            $session = $order->tableSession;
+            if ($session && $session->isActive()) {
+                $hasOtherActiveOrders = $session->orders()
+                    ->where('id', '!=', $order->id)
+                    ->whereNotIn('status', [OrderStatus::Served, OrderStatus::Cancelled])
+                    ->exists();
+
+                if (! $hasOtherActiveOrders && ($order->paid_at || ($restaurant && $restaurant->isPrepaid()))) {
+                    $session->close();
+                    Log::info('TableSession closed automatically upon final order completion', [
+                        'session_id' => $session->id,
+                        'table_id' => $order->table_id,
+                        'order_id' => $order->id,
+                    ]);
+                }
+            }
+        }
+
         Log::info('Order status changed', [
             'order_id' => $order->id,
             'order_number' => $order->order_number,

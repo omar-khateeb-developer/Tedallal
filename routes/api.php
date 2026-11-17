@@ -29,6 +29,11 @@ Route::prefix('public')->middleware('throttle:public-api')->group(function () {
     Route::get('ai-consultant/status', [\App\Http\Controllers\Api\Public\AiConsultantController::class, 'status']);
     Route::post('ai-consultant/chat', [\App\Http\Controllers\Api\Public\AiConsultantController::class, 'chat'])->middleware('throttle:25,1');
 
+    // VIP Table Reservation APIs (Public Engine)
+    Route::get('restaurants/{slug}/booking-availability', [\App\Http\Controllers\Web\Public\TableBookingController::class, 'getAvailability']);
+    Route::post('restaurants/{slug}/reservations/hold', [\App\Http\Controllers\Web\Public\TableBookingController::class, 'requestHold'])->middleware('throttle:10,5');
+    Route::post('restaurants/{slug}/reservations/verify-otp', [\App\Http\Controllers\Web\Public\TableBookingController::class, 'verifyOtp'])->middleware('throttle:15,5');
+
     Route::middleware(ValidateTableSession::class)->group(function () {
         Route::get('cart', [CartController::class, 'index']);
         Route::post('cart/items', [CartController::class, 'store']);
@@ -88,10 +93,16 @@ Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
     Route::middleware('permission:manage_tables')->group(function () {
         Route::get('tables', [AdminTableController::class, 'index']);
         Route::post('tables', [AdminTableController::class, 'store']);
+        Route::post('tables/batch-layout', [AdminTableController::class, 'batchLayout']);
         Route::patch('tables/{table}', [AdminTableController::class, 'update']);
         Route::delete('tables/{table}', [AdminTableController::class, 'destroy']);
         Route::post('tables/{table}/regenerate-token', [AdminTableController::class, 'regenerateToken']);
+        Route::post('tables/{table}/close-session', [AdminTableController::class, 'closeActiveSession']);
         Route::get('tables/{table}/qr', [AdminTableController::class, 'qr']);
+
+        // VIP Table Reservations Management
+        Route::get('reservations', [\App\Http\Controllers\Api\Admin\ReservationController::class, 'index']);
+        Route::patch('reservations/{reservation}/status', [\App\Http\Controllers\Api\Admin\ReservationController::class, 'updateStatus']);
     });
 
     Route::middleware('permission:manage_menu')->group(function () {
