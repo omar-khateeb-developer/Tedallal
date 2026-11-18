@@ -79,6 +79,7 @@
         @inertiaHead
     </head>
     <body class="font-sans antialiased" style="font-family: 'Cairo', sans-serif;">
+        @include('partials.app-splash')
         @inertia
     </body>
 </html>

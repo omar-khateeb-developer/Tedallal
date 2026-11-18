@@ -21,6 +21,10 @@ createInertiaApp({
             .use(plugin)
             .use(ZiggyVue)
             .mount(el);
+
+        if (typeof window !== 'undefined' && (window as any).__dismissTedallalSplash) {
+            (window as any).__dismissTedallalSplash();
+        }
     },
     progress: {
         color: '#4B5563',
