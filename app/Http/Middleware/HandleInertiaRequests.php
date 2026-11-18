@@ -68,6 +68,7 @@ class HandleInertiaRequests extends Middleware
             'restaurantId' => $request->user()?->restaurant_id,
             'locale' => app()->getLocale(),
             'translations' => __('app'),
+            'vapidPublicKey' => config('webpush.vapid.public_key') ?: env('VAPID_PUBLIC_KEY', ''),
         ];
     }
 }

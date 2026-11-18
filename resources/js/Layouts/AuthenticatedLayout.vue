@@ -5,6 +5,8 @@ import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import NotificationToast from '@/Components/NotificationToast.vue';
+import PwaInstallButton from '@/Components/PwaInstallButton.vue';
+import PushNotificationBanner from '@/Components/PushNotificationBanner.vue';
 import { useTheme } from '@/composables/useTheme';
 import { Link, usePage } from '@inertiajs/vue3';
 
@@ -73,23 +75,25 @@ onMounted(() => {
                 <div v-if="restaurant?.navbar_image" class="absolute inset-0 bg-gradient-to-r from-slate-900/80 via-slate-800/40 to-slate-900/80 backdrop-blur-[2px]"></div>
                 
                 <!-- Primary Navigation Menu -->
-                <div class="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div class="flex h-20 sm:h-24 justify-between items-center gap-4">
-                        <div class="flex items-center gap-4 sm:gap-6 min-w-0">
+                <div class="relative z-10 mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
+                    <div class="flex h-16 sm:h-20 lg:h-24 justify-between items-center gap-2 sm:gap-4">
+                        <div class="flex items-center gap-2 sm:gap-4 min-w-0">
                             <!-- Logo & Restaurant Info -->
-                            <div class="flex shrink-0 items-center bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-3 py-1.5 sm:px-4 sm:py-2 rounded-2xl shadow-xs border border-white/50 dark:border-slate-700/80 transition-all hover:shadow-md min-w-0">
-                                <Link :href="route('dashboard')" class="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
-                                    <img v-if="restaurant?.logo && userRole !== 'super_admin'" :src="restaurant.logo" class="h-10 sm:h-14 w-auto max-w-[120px] sm:max-w-[180px] object-contain rounded-xl shadow-xs" alt="Restaurant Logo" />
-                                    <ApplicationLogo v-else variant="emblem" :animated="true" class="block h-10 w-10 sm:h-12 sm:w-12 shrink-0" />
+                            <div class="flex shrink-0 items-center bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-2xl shadow-xs border border-white/50 dark:border-slate-700/80 transition-all hover:shadow-md min-w-0">
+                                <Link :href="route('dashboard')" class="flex items-center gap-2 sm:gap-3.5 min-w-0">
+                                    <img v-if="restaurant?.logo && userRole !== 'super_admin'" :src="restaurant.logo" class="h-9 sm:h-12 w-auto max-w-[70px] sm:max-w-[110px] xl:max-w-[140px] object-contain rounded-xl shadow-xs shrink-0" alt="Restaurant Logo" />
+                                    <ApplicationLogo v-else variant="emblem" :animated="true" class="block h-8 w-8 sm:h-11 sm:w-11 shrink-0" />
                                     
                                     <!-- Restaurant Name & Operating Type Badge -->
-                                    <div v-if="restaurant && userRole !== 'super_admin'" class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2.5 min-w-0">
-                                        <span class="text-sm sm:text-lg font-extrabold bg-gradient-to-l from-amber-600 to-orange-500 dark:from-amber-400 dark:to-orange-400 bg-clip-text text-transparent drop-shadow-xs font-sans tracking-wide truncate max-w-[140px] sm:max-w-none">
+                                    <div v-if="restaurant && userRole !== 'super_admin'" class="flex items-center gap-2 min-w-0">
+                                        <span class="text-xs sm:text-base xl:text-lg font-extrabold bg-gradient-to-l from-amber-600 to-orange-500 dark:from-amber-400 dark:to-orange-400 bg-clip-text text-transparent drop-shadow-xs font-sans tracking-wide truncate max-w-[105px] sm:max-w-[160px] md:max-w-[200px] xl:max-w-xs">
                                             {{ restaurant.name }}
                                         </span>
+                                        
+                                        <!-- Badges: Visible ONLY on wide desktop (xl: 1280px+) to avoid any header collision on tablets/laptops/mobile -->
                                         <span
                                             v-if="restaurant.type === 'prepaid'"
-                                            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-xl text-xs font-bold bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 shadow-2xs whitespace-nowrap self-start sm:self-auto"
+                                            class="hidden xl:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-xl text-xs font-bold bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 shadow-2xs whitespace-nowrap"
                                             title="نظام دفع مسبق ونوافذ استلام ذاتية"
                                         >
                                             <span class="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse"></span>
@@ -98,7 +102,7 @@ onMounted(() => {
                                         </span>
                                         <span
                                             v-else
-                                            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-xl text-xs font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 shadow-2xs whitespace-nowrap self-start sm:self-auto"
+                                            class="hidden xl:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-xl text-xs font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 shadow-2xs whitespace-nowrap"
                                             title="نظام خدمة طاولات ودفع لاحق"
                                         >
                                             <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
@@ -106,10 +110,10 @@ onMounted(() => {
                                             <bdi class="text-[10px] font-mono opacity-85">(Postpaid)</bdi>
                                         </span>
 
-                                        <!-- Plan Badge -->
+                                        <!-- Plan Badge: Visible ONLY on 2xl screens (1536px+) -->
                                         <span
                                             v-if="restaurant.plan_label"
-                                            class="hidden md:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-xl text-xs font-bold border shadow-2xs whitespace-nowrap self-start sm:self-auto"
+                                            class="hidden 2xl:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-xl text-xs font-bold border shadow-2xs whitespace-nowrap"
                                             :class="{
                                                 'bg-slate-500/10 border-slate-500/30 text-slate-700 dark:text-slate-300': restaurant.plan === 'basic',
                                                 'bg-amber-500/15 border-amber-500/30 text-amber-700 dark:text-amber-300': restaurant.plan === 'pro',
@@ -128,7 +132,7 @@ onMounted(() => {
 
                                     <!-- Super Admin Branding if no restaurant -->
                                     <div v-else-if="userRole === 'super_admin'" class="flex items-center gap-2">
-                                        <span class="text-base sm:text-lg font-extrabold bg-gradient-to-l from-purple-600 to-indigo-500 dark:from-purple-400 dark:to-indigo-300 bg-clip-text text-transparent drop-shadow-xs font-sans tracking-wide">
+                                        <span class="text-sm sm:text-lg font-extrabold bg-gradient-to-l from-purple-600 to-indigo-500 dark:from-purple-400 dark:to-indigo-300 bg-clip-text text-transparent drop-shadow-xs font-sans tracking-wide">
                                             منصة تدلّل
                                         </span>
                                         <span class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-xl text-xs font-bold bg-purple-500/15 border border-purple-500/30 text-purple-700 dark:text-purple-300 shadow-2xs whitespace-nowrap">
@@ -139,8 +143,8 @@ onMounted(() => {
                                 </Link>
                             </div>
 
-                            <!-- Desktop Quick Nav Links -->
-                            <div class="hidden md:flex items-center gap-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-2xl shadow-xs border border-white/50 dark:border-slate-700/80">
+                            <!-- Desktop Quick Nav Links: Visible ONLY on xl:flex (1280px+) -->
+                            <div class="hidden xl:flex items-center gap-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-2xl shadow-xs border border-white/50 dark:border-slate-700/80 shrink-0">
                                 <Link
                                     :href="route('dashboard')"
                                     class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200"
@@ -216,12 +220,15 @@ onMounted(() => {
                             </div>
                         </div>
 
-                        <!-- Left Section in RTL (Theme Toggle + User Dropdown) -->
-                        <div class="hidden sm:flex sm:items-center gap-3">
+                        <!-- Left Controls (Unified Responsive Actions in RTL) -->
+                        <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+                            <!-- PWA Install Button (Compact on sm+, full in drawer) -->
+                            <PwaInstallButton variant="compact" class="hidden sm:inline-flex" />
+
                             <!-- Theme Toggle Button -->
                             <button
                                 type="button"
-                                class="flex h-10 items-center gap-1.5 rounded-2xl px-3 text-xs font-bold transition-all duration-200 border active:scale-95 shadow-2xs select-none bg-white/90 border-slate-200 text-slate-700 hover:bg-slate-100 dark:bg-slate-800/90 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:border-amber-500/40"
+                                class="flex h-9 sm:h-10 items-center justify-center gap-1.5 rounded-xl sm:rounded-2xl px-2.5 sm:px-3 text-xs font-bold transition-all duration-200 border active:scale-95 shadow-2xs select-none bg-white/90 border-slate-200 text-slate-700 hover:bg-slate-100 dark:bg-slate-800/90 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:border-amber-500/40 shrink-0"
                                 :title="isDark ? 'التبديل إلى الألوان الفاتحة' : 'التبديل إلى الألوان الداكنة الفاخرة'"
                                 @click="toggleTheme"
                             >
@@ -229,31 +236,31 @@ onMounted(() => {
                                     <svg class="h-4 w-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                                     </svg>
-                                    <span class="text-[11px] text-amber-300 font-bold hidden md:inline">فاتح</span>
+                                    <span class="text-[11px] text-amber-300 font-bold hidden 2xl:inline">فاتح</span>
                                 </span>
                                 <span v-else class="flex items-center gap-1.5">
                                     <svg class="h-4 w-4 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                                     </svg>
-                                    <span class="text-[11px] text-slate-700 font-bold hidden md:inline">داكن</span>
+                                    <span class="text-[11px] text-slate-700 font-bold hidden 2xl:inline">داكن</span>
                                 </span>
                             </button>
 
-                            <!-- User Profile & Role Dropdown -->
-                            <div class="flex items-center bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-2xl shadow-xs border border-white/50 dark:border-slate-700/80 transition-all hover:shadow-md">
+                            <!-- User Profile & Role Dropdown (Visible on sm+) -->
+                            <div class="hidden sm:flex items-center bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-2xl shadow-xs border border-white/50 dark:border-slate-700/80 transition-all hover:shadow-md shrink-0">
                                 <Dropdown align="right" width="64">
                                     <template #trigger>
                                         <button
                                             id="user-menu-button"
                                             type="button"
-                                            class="inline-flex items-center gap-2 rounded-xl border border-transparent bg-transparent px-2 py-1 text-sm font-semibold leading-4 text-slate-700 transition duration-150 ease-in-out hover:text-slate-900 focus:outline-none dark:text-gray-300 dark:hover:text-white"
+                                            class="inline-flex items-center gap-1.5 sm:gap-2 rounded-xl border border-transparent bg-transparent px-1 sm:px-2 py-1 text-sm font-semibold leading-4 text-slate-700 transition duration-150 ease-in-out hover:text-slate-900 focus:outline-none dark:text-gray-300 dark:hover:text-white"
                                         >
-                                            <div class="flex items-center gap-2">
-                                                <span class="font-bold text-slate-800 dark:text-slate-100 max-w-[150px] lg:max-w-[220px] xl:max-w-xs truncate">{{ user?.name }}</span>
-                                                <!-- Role Badge -->
+                                            <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                                                <span class="font-bold text-slate-800 dark:text-slate-100 max-w-[90px] sm:max-w-[120px] lg:max-w-[160px] xl:max-w-[200px] truncate">{{ user?.name }}</span>
+                                                <!-- Role Badge: hidden on small tablet, shown on lg+ -->
                                                 <span
                                                     v-if="roleLabel"
-                                                    class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-xs font-bold shadow-2xs whitespace-nowrap"
+                                                    class="hidden lg:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-xs font-bold shadow-2xs whitespace-nowrap"
                                                     :class="userRoleBadgeClass"
                                                 >
                                                     <span class="h-1.5 w-1.5 rounded-full" :class="userRoleDotClass"></span>
@@ -262,7 +269,7 @@ onMounted(() => {
                                             </div>
 
                                             <svg
-                                                class="-me-0.5 ms-1 h-4 w-4 opacity-70"
+                                                class="-me-0.5 ms-1 h-4 w-4 opacity-70 shrink-0"
                                                 xmlns="http://www.w3.org/2000/svg"
                                                 viewBox="0 0 20 20"
                                                 fill="currentColor"
@@ -333,33 +340,16 @@ onMounted(() => {
                                     </template>
                                 </Dropdown>
                             </div>
-                        </div>
 
-                        <!-- Mobile Theme Toggle & Hamburger -->
-                        <div class="-me-2 flex items-center gap-2 sm:hidden">
+                            <!-- Mobile & Tablet Hamburger Toggle (Shown on xl:hidden, i.e. < 1280px) -->
                             <button
-                                type="button"
-                                class="flex h-9 w-9 items-center justify-center rounded-xl border active:scale-95 transition-all bg-white/90 border-slate-200 text-slate-700 hover:bg-slate-100 dark:bg-slate-800/90 dark:border-slate-700 dark:text-slate-200"
-                                :title="isDark ? 'التبديل إلى الألوان الفاتحة' : 'التبديل إلى الألوان الداكنة'"
-                                @click="toggleTheme"
-                            >
-                                <svg v-if="isDark" class="h-4 w-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                                </svg>
-                                <svg v-else class="h-4 w-4 text-slate-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                                </svg>
-                            </button>
-
-                            <button
-                                @click="
-                                    showingNavigationDropdown =
-                                        !showingNavigationDropdown
-                                "
-                                class="inline-flex items-center justify-center rounded-xl p-2 text-gray-500 transition duration-150 ease-in-out hover:bg-gray-100 hover:text-gray-700 focus:outline-none dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+                                @click="showingNavigationDropdown = !showingNavigationDropdown"
+                                class="xl:hidden inline-flex items-center justify-center rounded-xl sm:rounded-2xl h-9 w-9 sm:h-10 sm:w-10 text-slate-600 dark:text-slate-300 bg-white/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 transition duration-150 ease-in-out hover:bg-slate-100 dark:hover:bg-slate-700 focus:outline-none shadow-2xs shrink-0"
+                                :aria-expanded="showingNavigationDropdown"
+                                title="القائمة الرئيسية والتنقل"
                             >
                                 <svg
-                                    class="h-6 w-6"
+                                    class="h-5 w-5 sm:h-6 sm:w-6"
                                     stroke="currentColor"
                                     fill="none"
                                     viewBox="0 0 24 24"
@@ -367,8 +357,7 @@ onMounted(() => {
                                     <path
                                         :class="{
                                             hidden: showingNavigationDropdown,
-                                            'inline-flex':
-                                                !showingNavigationDropdown,
+                                            'inline-flex': !showingNavigationDropdown,
                                         }"
                                         stroke-linecap="round"
                                         stroke-linejoin="round"
@@ -378,8 +367,7 @@ onMounted(() => {
                                     <path
                                         :class="{
                                             hidden: !showingNavigationDropdown,
-                                            'inline-flex':
-                                                showingNavigationDropdown,
+                                            'inline-flex': showingNavigationDropdown,
                                         }"
                                         stroke-linecap="round"
                                         stroke-linejoin="round"
@@ -392,23 +380,28 @@ onMounted(() => {
                     </div>
                 </div>
 
-                <!-- Responsive Mobile Navigation Menu -->
+                <!-- Responsive Mobile & Tablet Navigation Menu (xl:hidden) -->
                 <div
                     :class="{
                         block: showingNavigationDropdown,
                         hidden: !showingNavigationDropdown,
                     }"
-                    class="sm:hidden relative z-20 bg-white/95 dark:bg-[#0a0f1d] shadow-2xl border-t border-gray-100 dark:border-slate-800 transition-colors"
+                    class="xl:hidden relative z-20 bg-white/95 dark:bg-[#0a0f1d] shadow-2xl border-t border-gray-100 dark:border-slate-800 transition-colors"
                     dir="rtl"
                 >
                     <!-- Restaurant Card in Mobile Menu -->
                     <div v-if="restaurant" class="p-4 border-b border-gray-100 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-900/50">
                         <div class="flex items-center justify-between gap-3">
                             <div class="flex items-center gap-2.5 min-w-0">
-                                <img v-if="restaurant.logo" :src="restaurant.logo" class="h-9 w-9 rounded-xl object-contain bg-white dark:bg-slate-800 p-0.5 border border-slate-200 dark:border-slate-700" alt="Restaurant Logo" />
-                                <span class="font-extrabold text-sm text-slate-800 dark:text-slate-100 truncate">
-                                    {{ restaurant.name }}
-                                </span>
+                                <img v-if="restaurant.logo" :src="restaurant.logo" class="h-9 w-9 rounded-xl object-contain bg-white dark:bg-slate-800 p-0.5 border border-slate-200 dark:border-slate-700 shrink-0" alt="Restaurant Logo" />
+                                <div class="flex flex-col min-w-0">
+                                    <span class="font-extrabold text-sm text-slate-800 dark:text-slate-100 truncate">
+                                        {{ restaurant.name }}
+                                    </span>
+                                    <span v-if="restaurant.plan_label" class="text-[10px] text-amber-600 dark:text-amber-400 font-bold">
+                                        باقة {{ restaurant.plan_label }}
+                                    </span>
+                                </div>
                             </div>
                             <!-- Mobile Restaurant Type Badge -->
                             <span
@@ -430,8 +423,11 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <!-- Navigation Links in Mobile -->
+                    <!-- Navigation Links in Mobile & Tablet Drawer -->
                     <div class="space-y-1 pb-3 pt-2">
+                        <div class="px-4 py-1.5">
+                            <PwaInstallButton variant="full" />
+                        </div>
                         <ResponsiveNavLink
                             :href="route('dashboard')"
                             :active="route().current('dashboard') || route().current('admin.dashboard') || route().current('super_admin.dashboard')"
@@ -471,10 +467,38 @@ onMounted(() => {
                             >
                                 شاشة المطبخ <bdi class="text-[10px] font-mono opacity-85">(KDS)</bdi>
                             </ResponsiveNavLink>
+                            <ResponsiveNavLink
+                                v-if="user?.role === 'admin' || user?.role === 'supervisor'"
+                                :href="route('admin.floor_plan')"
+                                :active="route().current('admin.floor_plan')"
+                            >
+                                مخطط الصالة 🗺️
+                            </ResponsiveNavLink>
+                            <ResponsiveNavLink
+                                v-if="user?.role === 'admin' || user?.role === 'supervisor'"
+                                :href="route('admin.tables')"
+                                :active="route().current('admin.tables')"
+                            >
+                                الطاولات (QR)
+                            </ResponsiveNavLink>
+                            <ResponsiveNavLink
+                                v-if="user?.role === 'admin' || user?.role === 'supervisor'"
+                                :href="route('admin.reports')"
+                                :active="route().current('admin.reports')"
+                            >
+                                سجل المبيعات والتقارير 📊
+                            </ResponsiveNavLink>
+                            <ResponsiveNavLink
+                                v-if="user?.role === 'admin'"
+                                :href="route('admin.settings')"
+                                :active="route().current('admin.settings')"
+                            >
+                                إعدادات المطعم
+                            </ResponsiveNavLink>
                         </template>
                     </div>
 
-                    <!-- Responsive Settings Options -->
+                    <!-- Responsive Settings & Profile Options -->
                     <div class="border-t border-gray-200 pb-4 pt-4 dark:border-gray-800">
                         <div class="px-4">
                             <div class="flex items-center justify-between gap-2">
@@ -522,6 +546,9 @@ onMounted(() => {
 
             <!-- Page Content -->
             <main>
+                <div class="mx-auto max-w-7xl px-4 pt-4 sm:px-6 lg:px-8">
+                    <PushNotificationBanner />
+                </div>
                 <Transition name="page" mode="out-in" appear>
                     <div :key="$page.url">
                         <slot />

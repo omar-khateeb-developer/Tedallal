@@ -5,6 +5,7 @@ import { translations, type Locale } from '@/locales/landing';
 import { useTheme } from '@/composables/useTheme';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import AiBusinessConsultant from '@/Components/AiBusinessConsultant.vue';
+import PwaInstallButton from '@/Components/PwaInstallButton.vue';
 
 interface Props {
     canLogin?: boolean;
@@ -711,6 +712,9 @@ onUnmounted(() => {
                             <span>{{ currentLocale === 'ar' ? 'جرّب الآن' : 'Get Started' }}</span>
                             <span class="text-stone-950">✦</span>
                         </button>
+
+                        <!-- PWA Install Button -->
+                        <PwaInstallButton variant="compact" />
 
                         <!-- Login Link -->
                         <Link

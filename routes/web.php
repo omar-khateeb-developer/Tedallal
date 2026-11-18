@@ -148,5 +148,13 @@ Route::get('/presentation', function () {
     return response()->file(public_path('presentation.html'));
 })->name('presentation');
 
+// Background Web Push Notifications APIs
+Route::middleware(['auth'])->prefix('api/push')->group(function () {
+    Route::post('/subscribe', [\App\Http\Controllers\Api\PushSubscriptionController::class, 'subscribe'])->name('push.subscribe');
+    Route::post('/unsubscribe', [\App\Http\Controllers\Api\PushSubscriptionController::class, 'unsubscribe'])->name('push.unsubscribe');
+    Route::post('/test', [\App\Http\Controllers\Api\PushSubscriptionController::class, 'test'])->name('push.test');
+});
+Route::get('/api/push/public-key', [\App\Http\Controllers\Api\PushSubscriptionController::class, 'publicKey'])->name('push.key');
+
 require __DIR__.'/auth.php';
 

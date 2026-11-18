@@ -139,6 +139,33 @@ final class OrderCreationService
                 ]);
             }
 
+            // Dispatch Background Web Push Notification to restaurant staff
+            try {
+                $staffUsers = \App\Models\User::where('restaurant_id', $order->restaurant_id)
+                    ->whereHas('pushSubscriptions')
+                    ->get();
+
+                if ($staffUsers->isNotEmpty()) {
+                    $tableNumber = $order->table ? ($order->table->name ?? "طاولة {$order->table->number}") : 'طلب خارجي';
+                    $formattedTotal = number_format($order->total_amount, 0) . ' ' . ($order->restaurant->currency ?? 'ل.س');
+
+                    \Illuminate\Support\Facades\Notification::send($staffUsers, new \App\Notifications\TedallalPushNotification(
+                        title: "🔔 طلب جديد #{$order->order_number} ({$tableNumber})",
+                        body: "قيمة الطلب: {$formattedTotal} • {$order->items->count()} عناصر",
+                        url: '/admin/orders',
+                        orderId: $order->id,
+                        tableId: $order->table_id,
+                        data: [
+                            'type' => 'new_order',
+                            'order_number' => $order->order_number,
+                            'total' => $order->total_amount,
+                        ]
+                    ));
+                }
+            } catch (\Throwable $pushErr) {
+                \Illuminate\Support\Facades\Log::warning('Push notification failed on order creation: ' . $pushErr->getMessage());
+            }
+
             return $order;
         });
     }
