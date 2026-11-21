@@ -22,11 +22,11 @@ final class OrderStatusTransitionService
             ]);
         }
 
-        // تقييد صلاحيات المحاسب (الكاشير): الكاشير يستلم المبلغ فقط لنقل الطلب إلى نوافذ المطبخ ولا يملك صلاحية تغيير أي حالة أخرى
+        // تقييد صلاحيات المحاسب (الكاشير): الكاشير يستلم المبلغ لنقل الطلب للمطبخ (Accepted)، ويسلّم الطلبات الجاهزة للزبائن (Served)
         if ($actor->isCashier() && ! $actor->isAdmin()) {
-            if ($target !== OrderStatus::Accepted) {
+            if (! in_array($target, [OrderStatus::Accepted, OrderStatus::Served], true)) {
                 throw ValidationException::withMessages([
-                    'status' => ['لا يملك المحاسب صلاحية تغيير حالة الطلب، دوره يقتصر على تأكيد استلام المبلغ ليظهر الطلب إلى نوافذ المطبخ.'],
+                    'status' => ['دور المحاسب يقتصر على تأكيد استلام المبلغ وتسليم الطلبات الجاهزة للزبائن.'],
                 ]);
             }
         }

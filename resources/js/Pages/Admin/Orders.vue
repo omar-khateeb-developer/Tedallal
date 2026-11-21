@@ -389,12 +389,22 @@ useRestaurantOrders(restaurantId.value, {
                                 👨‍🍳 قيد التحضير {{ order.pickup_window ? `(نافذة ${order.pickup_window})` : '' }}
                             </span>
 
-                            <span
-                                v-else-if="order.status === 'ready'"
-                                class="rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 px-3 py-1.5 text-xs font-bold flex items-center gap-1"
-                            >
-                                🔔 جاهز للاستلام {{ order.pickup_window ? `(نافذة ${order.pickup_window})` : '' }}
-                            </span>
+                            <div v-else-if="order.status === 'ready'" class="flex items-center gap-1.5 flex-wrap">
+                                <span
+                                    class="rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 px-2.5 py-1.5 text-xs font-bold flex items-center gap-1"
+                                >
+                                    🔔 جاهز {{ order.pickup_window ? `(نافذة ${order.pickup_window})` : '' }}
+                                </span>
+                                <button
+                                    @click="updateStatus(order, 'served')"
+                                    type="button"
+                                    class="rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 text-xs font-black shadow-xs active:scale-95 transition-all flex items-center gap-1 cursor-pointer select-none"
+                                    title="تأكيد تسليم الطلب للزبون"
+                                >
+                                    <span>✓</span>
+                                    <span>تسليم للزبون</span>
+                                </button>
+                            </div>
 
                             <span
                                 v-else-if="order.status === 'served'"

@@ -27,21 +27,38 @@ const baileysLogger = pino({ level: 'silent' });
 
 const sessions = new Map();
 
-function getSessionDir(restaurantId) {
-    const dir = path.join(__dirname, 'storage', 'sessions', `restaurant_${restaurantId}`);
+/**
+ * Normalize session identifier: either 'platform' (for Super Admin / Platform Owner) or numeric restaurant ID
+ */
+function normalizeSessionId(id) {
+    if (!id) return 'platform';
+    const str = String(id).trim().toLowerCase();
+    if (str === 'platform' || str === 'super_admin' || str === 'superadmin' || str === '0') {
+        return 'platform';
+    }
+    const num = parseInt(str, 10);
+    return isNaN(num) ? str : num;
+}
+
+function getSessionDir(sessionId) {
+    const sId = normalizeSessionId(sessionId);
+    const folderName = (sId === 'platform') ? 'platform' : `restaurant_${sId}`;
+    const dir = path.join(__dirname, 'storage', 'sessions', folderName);
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
     }
     return dir;
 }
 
-function cleanSessionDir(restaurantId) {
-    const dir = path.join(__dirname, 'storage', 'sessions', `restaurant_${restaurantId}`);
+function cleanSessionDir(sessionId) {
+    const sId = normalizeSessionId(sessionId);
+    const folderName = (sId === 'platform') ? 'platform' : `restaurant_${sId}`;
+    const dir = path.join(__dirname, 'storage', 'sessions', folderName);
     if (fs.existsSync(dir)) {
         try {
             fs.rmSync(dir, { recursive: true, force: true });
         } catch (err) {
-            logger.error({ err, restaurantId }, 'Failed to remove session directory');
+            logger.error({ err, sessionId: sId }, 'Failed to remove session directory');
         }
     }
 }
@@ -67,35 +84,39 @@ async function notifyLaravel(payload) {
     }
 }
 
-async function startSession(restaurantId) {
-    const rId = parseInt(restaurantId, 10);
-    const existing = sessions.get(rId);
+async function startSession(sessionId) {
+    const sId = normalizeSessionId(sessionId);
+    const existing = sessions.get(sId);
 
     if (existing?.sock && existing.status === 'connected') {
         return existing;
     }
 
-    const sessionDir = getSessionDir(rId);
+    const sessionDir = getSessionDir(sId);
     const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
     const { version } = await fetchLatestBaileysVersion().catch(() => ({ version: [2, 3000, 1015901307] }));
 
     const sessionData = {
-        id: rId,
+        id: sId,
         sock: null,
         status: 'connecting',
         qr: null,
         phone: null,
         connectedAt: null,
         reconnectAttempts: 0,
+        keepAliveTimer: null,
     };
-    sessions.set(rId, sessionData);
+    sessions.set(sId, sessionData);
+
+    const isPlatform = (sId === 'platform');
+    const browserTitle = isPlatform ? 'Tedallal Executive' : 'Tedallal Restaurant';
 
     const sock = makeWASocket({
         version,
         auth: state,
         logger: baileysLogger,
         printQRInTerminal: false,
-        browser: ['Tedallal Platform', 'Chrome', '124.0.0'],
+        browser: [browserTitle, 'Chrome', '124.0.0'],
         syncFullHistory: false,
         markOnlineOnConnect: true,
         connectTimeoutMs: 60000,
@@ -114,9 +135,9 @@ async function startSession(restaurantId) {
                 const qrDataUrl = await qrcode.toDataURL(qr, { margin: 2, scale: 7 });
                 sessionData.qr = qrDataUrl;
                 sessionData.status = 'scan_qr';
-                logger.info({ restaurantId: rId }, 'New QR generated for restaurant');
+                logger.info({ sessionId: sId }, `New QR generated for ${isPlatform ? 'Platform Owner' : 'restaurant'}`);
             } catch (qrErr) {
-                logger.error({ err: qrErr, restaurantId: rId }, 'Failed to generate QR data URL');
+                logger.error({ err: qrErr, sessionId: sId }, 'Failed to generate QR data URL');
             }
         }
 
@@ -130,11 +151,27 @@ async function startSession(restaurantId) {
             const phone = userJid.split(':')[0].split('@')[0];
             sessionData.phone = phone;
 
-            logger.info({ restaurantId: rId, phone }, 'Restaurant WhatsApp session connected successfully');
+            logger.info({ sessionId: sId, phone }, `${isPlatform ? 'Platform Owner' : 'Restaurant'} WhatsApp session connected successfully`);
+
+            // Start periodic keep-alive heartbeat every 10 minutes to prevent idle logout
+            if (sessionData.keepAliveTimer) {
+                clearInterval(sessionData.keepAliveTimer);
+            }
+            sessionData.keepAliveTimer = setInterval(async () => {
+                if (sessionData.status === 'connected' && sessionData.sock) {
+                    try {
+                        await sessionData.sock.sendPresenceUpdate('available');
+                        logger.debug({ sessionId: sId }, 'Dispatched keep-alive presence heartbeat');
+                    } catch (e) {
+                        logger.debug({ sessionId: sId }, 'Heartbeat presence ping warning');
+                    }
+                }
+            }, 10 * 60 * 1000);
 
             await notifyLaravel({
                 event: 'session.connected',
-                restaurant_id: rId,
+                session_id: isPlatform ? 'platform' : String(sId),
+                restaurant_id: isPlatform ? null : sId,
                 phone,
                 connected_at: sessionData.connectedAt,
             });
@@ -144,18 +181,24 @@ async function startSession(restaurantId) {
             const statusCode = lastDisconnect?.error?.output?.statusCode;
             const isLoggedOut = statusCode === DisconnectReason.loggedOut;
 
-            logger.warn({ restaurantId: rId, statusCode, isLoggedOut }, 'Connection closed');
+            logger.warn({ sessionId: sId, statusCode, isLoggedOut }, 'Connection closed');
+
+            if (sessionData.keepAliveTimer) {
+                clearInterval(sessionData.keepAliveTimer);
+                sessionData.keepAliveTimer = null;
+            }
 
             if (isLoggedOut) {
                 sessionData.status = 'disconnected';
                 sessionData.qr = null;
                 sessionData.phone = null;
                 sessionData.sock = null;
-                cleanSessionDir(rId);
+                cleanSessionDir(sId);
 
                 await notifyLaravel({
                     event: 'session.disconnected',
-                    restaurant_id: rId,
+                    session_id: isPlatform ? 'platform' : String(sId),
+                    restaurant_id: isPlatform ? null : sId,
                 });
             } else {
                 sessionData.status = 'connecting';
@@ -163,15 +206,15 @@ async function startSession(restaurantId) {
                 const delayMs = Math.min(1000 * Math.pow(2, sessionData.reconnectAttempts), 30000);
 
                 setTimeout(() => {
-                    startSession(rId).catch((reconnectErr) => {
-                        logger.error({ err: reconnectErr, restaurantId: rId }, 'Auto-reconnect failed');
+                    startSession(sId).catch((reconnectErr) => {
+                        logger.error({ err: reconnectErr, sessionId: sId }, 'Auto-reconnect failed');
                     });
                 }, delayMs);
             }
         }
     });
 
-    // Inbound messages handler (Auto-responder & Webhook)
+    // Inbound messages handler (Auto-responder, AI Business Consultant & Webhook)
     sock.ev.on('messages.upsert', async (m) => {
         if (m.type !== 'notify') return;
 
@@ -188,29 +231,34 @@ async function startSession(restaurantId) {
             if (!text.trim()) continue;
 
             const cleanPhone = senderJid.split('@')[0];
-            logger.info({ restaurantId: rId, from: cleanPhone, text: text.substring(0, 40) }, 'Inbound customer message');
+            const senderName = msg.pushName || null;
+            logger.info({ sessionId: sId, from: cleanPhone, senderName, text: text.substring(0, 40) }, `Inbound message to ${isPlatform ? 'Platform Owner' : 'restaurant'}`);
 
             // Forward to Laravel webhook
             const hookRes = await notifyLaravel({
-                event: 'message.received',
-                restaurant_id: rId,
+                event: isPlatform ? 'platform_message.received' : 'message.received',
+                session_id: isPlatform ? 'platform' : String(sId),
+                restaurant_id: isPlatform ? null : sId,
                 from: cleanPhone,
+                sender_name: senderName,
                 text,
                 timestamp: msg.messageTimestamp,
             });
 
-            // If Laravel requested an immediate auto-reply
+            // If Laravel returned an auto-reply (e.g. from AI Consultant or Restaurant Auto-reply)
             if (hookRes && hookRes.auto_reply_text) {
                 try {
                     await sock.presenceSubscribe(senderJid);
                     await sock.sendPresenceUpdate('composing', senderJid);
-                    await new Promise((r) => setTimeout(r, 1200));
+                    // Realistic typing delay (1.5s - 2.5s)
+                    const typingDelay = Math.floor(Math.random() * 1000) + 1500;
+                    await new Promise((r) => setTimeout(r, typingDelay));
                     await sock.sendPresenceUpdate('paused', senderJid);
 
                     await sock.sendMessage(senderJid, { text: hookRes.auto_reply_text });
-                    logger.info({ restaurantId: rId, to: cleanPhone }, 'Auto-reply dispatched to customer');
+                    logger.info({ sessionId: sId, to: cleanPhone }, 'Auto-reply dispatched successfully');
                 } catch (replyErr) {
-                    logger.warn({ err: replyErr.message, restaurantId: rId }, 'Failed to dispatch auto-reply');
+                    logger.warn({ err: replyErr.message, sessionId: sId }, 'Failed to dispatch auto-reply');
                 }
             }
         }
@@ -226,10 +274,17 @@ async function resumePersistedSessions() {
 
     const entries = fs.readdirSync(baseDir, { withFileTypes: true });
     for (const entry of entries) {
-        if (entry.isDirectory() && entry.name.startsWith('restaurant_')) {
+        if (!entry.isDirectory()) continue;
+
+        if (entry.name === 'platform') {
+            logger.info('Found saved Platform Owner WhatsApp session, resuming...');
+            startSession('platform').catch((err) => {
+                logger.warn({ err: err.message }, 'Failed to resume Platform session');
+            });
+        } else if (entry.name.startsWith('restaurant_')) {
             const rId = parseInt(entry.name.replace('restaurant_', ''), 10);
             if (!isNaN(rId)) {
-                logger.info({ restaurantId: rId }, 'Found saved session, resuming...');
+                logger.info({ restaurantId: rId }, 'Found saved restaurant session, resuming...');
                 startSession(rId).catch((err) => {
                     logger.warn({ err: err.message, restaurantId: rId }, 'Failed to resume saved session');
                 });
@@ -266,16 +321,16 @@ app.get('/health', (req, res) => {
     });
 });
 
-// Get session status / QR
+// Get session status / QR (Supports numeric ID or 'platform')
 app.get('/api/session/:id/status', async (req, res) => {
-    const rId = parseInt(req.params.id, 10);
-    let session = sessions.get(rId);
+    const sId = normalizeSessionId(req.params.id);
+    let session = sessions.get(sId);
 
     // If session directory exists on disk but not in memory, start it
     if (!session) {
-        const sessionDir = path.join(__dirname, 'storage', 'sessions', `restaurant_${rId}`);
+        const sessionDir = getSessionDir(sId);
         if (fs.existsSync(sessionDir)) {
-            session = await startSession(rId);
+            session = await startSession(sId);
         }
     }
 
@@ -300,9 +355,9 @@ app.get('/api/session/:id/status', async (req, res) => {
 
 // Start or request pairing QR code
 app.post('/api/session/:id/start', async (req, res) => {
-    const rId = parseInt(req.params.id, 10);
+    const sId = normalizeSessionId(req.params.id);
     try {
-        const session = await startSession(rId);
+        const session = await startSession(sId);
         res.json({
             success: true,
             status: session.status,
@@ -311,30 +366,37 @@ app.post('/api/session/:id/start', async (req, res) => {
             connected_at: session.connectedAt,
         });
     } catch (err) {
-        logger.error({ err, restaurantId: rId }, 'Failed to start session');
+        logger.error({ err, sessionId: sId }, 'Failed to start session');
         res.status(500).json({ success: false, message: err.message });
     }
 });
 
 // Disconnect / logout session
 app.post('/api/session/:id/logout', async (req, res) => {
-    const rId = parseInt(req.params.id, 10);
-    const session = sessions.get(rId);
+    const sId = normalizeSessionId(req.params.id);
+    const session = sessions.get(sId);
+
+    if (session?.keepAliveTimer) {
+        clearInterval(session.keepAliveTimer);
+        session.keepAliveTimer = null;
+    }
 
     if (session?.sock) {
         try {
             await session.sock.logout();
         } catch (err) {
-            logger.warn({ err: err.message, restaurantId: rId }, 'Sock logout error, proceeding to clean files');
+            logger.warn({ err: err.message, sessionId: sId }, 'Sock logout error, proceeding to clean files');
         }
     }
 
-    cleanSessionDir(rId);
-    sessions.delete(rId);
+    cleanSessionDir(sId);
+    sessions.delete(sId);
 
+    const isPlatform = (sId === 'platform');
     await notifyLaravel({
         event: 'session.disconnected',
-        restaurant_id: rId,
+        session_id: isPlatform ? 'platform' : String(sId),
+        restaurant_id: isPlatform ? null : sId,
     });
 
     res.json({
@@ -343,17 +405,17 @@ app.post('/api/session/:id/logout', async (req, res) => {
     });
 });
 
-// Send message to customer
+// Send message to customer or prospective restaurant owner
 app.post('/api/messages/send', async (req, res) => {
-    const { restaurant_id, phone, text, simulate_typing } = req.body;
+    const { restaurant_id, session_id, phone, text, simulate_typing } = req.body;
 
-    const rId = parseInt(restaurant_id, 10);
-    const session = sessions.get(rId);
+    const sId = normalizeSessionId(session_id || restaurant_id);
+    const session = sessions.get(sId);
 
     if (!session?.sock || session.status !== 'connected') {
         return res.status(400).json({
             success: false,
-            message: 'WhatsApp session for this restaurant is not connected',
+            message: `WhatsApp session (${sId}) is not connected`,
         });
     }
 
@@ -380,7 +442,7 @@ app.post('/api/messages/send', async (req, res) => {
 
         const sent = await session.sock.sendMessage(jid, { text });
 
-        logger.info({ restaurantId: rId, to: digits, msgId: sent?.key?.id }, 'Message sent successfully');
+        logger.info({ sessionId: sId, to: digits, msgId: sent?.key?.id }, 'Message sent successfully');
 
         res.json({
             success: true,
@@ -388,7 +450,7 @@ app.post('/api/messages/send', async (req, res) => {
             to: digits,
         });
     } catch (err) {
-        logger.error({ err: err.message, restaurantId: rId, to: digits }, 'Failed to send message');
+        logger.error({ err: err.message, sessionId: sId, to: digits }, 'Failed to send message');
         res.status(500).json({
             success: false,
             message: err.message || 'Failed to send WhatsApp message',
@@ -402,4 +464,3 @@ app.listen(PORT, HOST, () => {
         logger.error({ err }, 'Error during session persistence recovery');
     });
 });
-

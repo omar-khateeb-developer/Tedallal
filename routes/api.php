@@ -143,5 +143,12 @@ Route::prefix('super-admin')->middleware(['auth:sanctum', EnsureUserHasRole::cla
     Route::get('leads', [\App\Http\Controllers\Api\SuperAdmin\ConsultationLeadController::class, 'index']);
     Route::patch('leads/{lead}', [\App\Http\Controllers\Api\SuperAdmin\ConsultationLeadController::class, 'update']);
     Route::delete('leads/{lead}', [\App\Http\Controllers\Api\SuperAdmin\ConsultationLeadController::class, 'destroy']);
+
+    // واتساب إدارة المنصة والمساعد التنفيذي الذكي (Platform Owner WhatsApp Gateway)
+    Route::get('platform-whatsapp/status', [\App\Http\Controllers\Api\SuperAdmin\PlatformWhatsAppController::class, 'status']);
+    Route::post('platform-whatsapp/connect', [\App\Http\Controllers\Api\SuperAdmin\PlatformWhatsAppController::class, 'connect']);
+    Route::post('platform-whatsapp/disconnect', [\App\Http\Controllers\Api\SuperAdmin\PlatformWhatsAppController::class, 'disconnect']);
+    Route::post('platform-whatsapp/settings', [\App\Http\Controllers\Api\SuperAdmin\PlatformWhatsAppController::class, 'updateSettings']);
+    Route::post('platform-whatsapp/send-test', [\App\Http\Controllers\Api\SuperAdmin\PlatformWhatsAppController::class, 'sendTest']);
 });
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3';
-import { ref, onMounted, nextTick, computed } from 'vue';
+import { ref, onMounted, onUnmounted, nextTick, computed } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import axios from 'axios';
 
@@ -325,13 +325,121 @@ const fetchLeadsStats = async () => {
     }
 };
 
+// ==========================================
+// 📲 واتساب إدارة المنصة والمساعد التنفيذي الذكي
+// ==========================================
+const platformWaStatus = ref<'disconnected' | 'connecting' | 'scan_qr' | 'connected'>('disconnected');
+const platformWaQr = ref<string | null>(null);
+const platformWaPhone = ref<string | null>(null);
+const platformWaConnectedAt = ref<string | null>(null);
+const platformWaAiEnabled = ref(true);
+const platformWaLoading = ref(false);
+const platformTestPhone = ref('');
+const platformTestLoading = ref(false);
+let platformWaPollTimer: any = null;
+
+const fetchPlatformWaStatus = async () => {
+    try {
+        const { data } = await axios.get('/api/super-admin/platform-whatsapp/status');
+        if (data.success) {
+            platformWaStatus.value = data.data.status;
+            platformWaQr.value = data.data.qr_code;
+            platformWaPhone.value = data.data.phone;
+            platformWaConnectedAt.value = data.data.connected_at;
+            platformWaAiEnabled.value = data.data.ai_enabled;
+
+            if (platformWaStatus.value === 'scan_qr' || platformWaStatus.value === 'connecting') {
+                if (!platformWaPollTimer) {
+                    platformWaPollTimer = setInterval(fetchPlatformWaStatus, 3000);
+                }
+            } else if (platformWaPollTimer) {
+                clearInterval(platformWaPollTimer);
+                platformWaPollTimer = null;
+            }
+        }
+    } catch (e) {
+        console.error('Failed to fetch platform WhatsApp status', e);
+    }
+};
+
+const connectPlatformWa = async () => {
+    platformWaLoading.value = true;
+    try {
+        const { data } = await axios.post('/api/super-admin/platform-whatsapp/connect');
+        if (data.success) {
+            platformWaStatus.value = data.data.status;
+            platformWaQr.value = data.data.qr_code;
+            fetchPlatformWaStatus();
+        }
+    } catch (e: any) {
+        alert(e.response?.data?.message || 'تعذر بدء جلسة واتساب إدارة المنصة');
+    } finally {
+        platformWaLoading.value = false;
+    }
+};
+
+const disconnectPlatformWa = async () => {
+    if (!confirm('هل أنت متأكد من فصل رقم واتساب إدارة المنصة؟ لن يعمل المساعد الذكي حتى تعيد ربط الرقم.')) return;
+    platformWaLoading.value = true;
+    try {
+        await axios.post('/api/super-admin/platform-whatsapp/disconnect');
+        platformWaStatus.value = 'disconnected';
+        platformWaQr.value = null;
+        platformWaPhone.value = null;
+        if (platformWaPollTimer) {
+            clearInterval(platformWaPollTimer);
+            platformWaPollTimer = null;
+        }
+    } catch (e: any) {
+        alert(e.response?.data?.message || 'تعذر فصل الجلسة');
+    } finally {
+        platformWaLoading.value = false;
+    }
+};
+
+const togglePlatformAi = async () => {
+    const nextVal = !platformWaAiEnabled.value;
+    try {
+        await axios.post('/api/super-admin/platform-whatsapp/settings', {
+            ai_enabled: nextVal,
+        });
+        platformWaAiEnabled.value = nextVal;
+    } catch (e) {
+        alert('تعذر تحديث إعدادات المساعد الذكي');
+    }
+};
+
+const sendPlatformTestMsg = async () => {
+    if (!platformTestPhone.value.trim()) return;
+    platformTestLoading.value = true;
+    try {
+        const { data } = await axios.post('/api/super-admin/platform-whatsapp/send-test', {
+            phone: platformTestPhone.value.trim(),
+        });
+        alert(data.data?.message || 'تم إرسال الرسالة بنجاح!');
+        platformTestPhone.value = '';
+    } catch (e: any) {
+        alert(e.response?.data?.message || 'تعذر إرسال الرسالة التجريبية');
+    } finally {
+        platformTestLoading.value = false;
+    }
+};
+
 onMounted(() => {
     fetchStats();
     fetchRestaurants();
     fetchPromoTestingStatus();
     fetchLeadsStats();
+    fetchPlatformWaStatus();
     if (canToggleMaintenance.value) {
         fetchMaintenanceStatus();
+    }
+});
+
+onUnmounted(() => {
+    if (platformWaPollTimer) {
+        clearInterval(platformWaPollTimer);
+        platformWaPollTimer = null;
     }
 });
 </script>
@@ -579,6 +687,153 @@ onMounted(() => {
                     </div>
                 </div>
                 <!-- ===== نهاية لوحة وضع التجريب وفحص الكوبونات ===== -->
+
+                <!-- ===== لوحة واتساب إدارة المنصة والمساعد التنفيذي الذكي (B2B Sales & Leads) ===== -->
+                <div class="bg-white dark:bg-[#0a0f1d] overflow-hidden shadow-sm sm:rounded-2xl border border-stone-200 dark:border-slate-800">
+                    <div class="p-6" dir="rtl">
+                        <div class="flex items-center justify-between flex-wrap gap-4 border-b border-stone-100 dark:border-slate-800 pb-5">
+                            <div class="flex items-center gap-4">
+                                <div
+                                    class="p-3.5 rounded-2xl"
+                                    :class="platformWaStatus === 'connected' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300' : 'bg-stone-100 text-stone-600 dark:bg-slate-800 dark:text-slate-400'"
+                                >
+                                    <span class="text-2xl">📲</span>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-gray-900 dark:text-white text-base flex items-center gap-2">
+                                        <span>واتساب إدارة المنصة والمساعد التنفيذي الذكي</span>
+                                        <span class="text-xs font-normal text-stone-500">| Platform WhatsApp & AI Sales Assistant</span>
+                                    </h3>
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <span
+                                            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold"
+                                            :class="platformWaStatus === 'connected'
+                                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                                                : platformWaStatus === 'scan_qr'
+                                                ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 animate-pulse'
+                                                : 'bg-stone-100 text-stone-600 dark:bg-slate-800 dark:text-slate-400'"
+                                        >
+                                            <span
+                                                class="inline-block w-2 h-2 rounded-full"
+                                                :class="platformWaStatus === 'connected' ? 'bg-emerald-500 animate-pulse' : (platformWaStatus === 'scan_qr' ? 'bg-amber-500' : 'bg-stone-400')"
+                                            ></span>
+                                            <span v-if="platformWaStatus === 'connected'">متصل بنجاح برقم المنصة الرسمي (+{{ platformWaPhone }}) 🟢</span>
+                                            <span v-else-if="platformWaStatus === 'scan_qr'">بانتظار مسح رمز الاستجابة السريعة (QR) من هاتفك 🟡</span>
+                                            <span v-else>غير مرتبط حالياً ⚪</span>
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-stone-500 dark:text-slate-400 mt-1">
+                                        هذا الخط مخصص لصاحب المنصة للتواصل المباشر مع أصحاب المطاعم والعملاء المحتملين مع ميزة الرد الآلي الذكي.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <button
+                                    v-if="platformWaStatus !== 'connected'"
+                                    @click="connectPlatformWa"
+                                    :disabled="platformWaLoading"
+                                    class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm bg-emerald-600 hover:bg-emerald-700 text-white transition-all shadow-sm focus:ring-2 focus:ring-offset-2 disabled:opacity-50 cursor-pointer"
+                                >
+                                    <span v-if="platformWaLoading">جارٍ التوليد...</span>
+                                    <span v-else>📲 ربط رقم هاتف المنصة (QR Code)</span>
+                                </button>
+                                <button
+                                    v-else
+                                    @click="disconnectPlatformWa"
+                                    :disabled="platformWaLoading"
+                                    class="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-200 dark:border-rose-800 transition cursor-pointer"
+                                >
+                                    <span>فصل الجلسة</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Scan QR State -->
+                        <div v-if="platformWaStatus === 'scan_qr'" class="mt-6 text-center py-4 bg-stone-50 dark:bg-slate-900/40 rounded-2xl border border-stone-200 dark:border-slate-800">
+                            <p class="text-sm font-bold text-stone-800 dark:text-white mb-3">
+                                امسح رمز الاستجابة السريعة (QR) من تطبيق واتساب في هاتفك الجديد المخصص للمنصة
+                            </p>
+                            <div v-if="platformWaQr" class="inline-block p-3.5 bg-white rounded-2xl shadow-md border border-stone-200">
+                                <img :src="platformWaQr" alt="Platform WhatsApp QR Code" class="w-56 h-56 mx-auto object-contain" />
+                            </div>
+                            <div class="mt-4 max-w-sm mx-auto text-xs text-stone-600 dark:text-slate-400 space-y-1 text-right bg-white dark:bg-slate-800 p-4 rounded-xl border border-stone-100 dark:border-slate-700">
+                                <div class="font-bold text-stone-900 dark:text-white mb-1">خطوات الربط لمرة واحدة:</div>
+                                <div>1. افتح تطبيق واتساب على هاتفك المخصص للمنصة.</div>
+                                <div>2. اضغط على خيارات (الثلاث نقاط) ⬅️ <strong>«الأجهزة المرتبطة»</strong>.</div>
+                                <div>3. اضغط <strong>«ربط جهاز»</strong> ووجّه الكاميرا نحو الباركود أعلاه.</div>
+                            </div>
+                        </div>
+
+                        <!-- Connected State Controls -->
+                        <div v-else-if="platformWaStatus === 'connected'" class="mt-6 space-y-4">
+                            <!-- AI Toggle & Settings -->
+                            <div class="p-4 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/40 flex items-center justify-between flex-wrap gap-3">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-2xl">🤖</span>
+                                    <div>
+                                        <div class="text-sm font-black text-emerald-900 dark:text-emerald-200">
+                                            المساعد التنفيذي الذكي لصاحب المنصة (Google Gemini)
+                                        </div>
+                                        <div class="text-xs text-emerald-700 dark:text-emerald-400 mt-0.5">
+                                            يرد تلقائياً وبلباقة على استفسارات أصحاب المطاعم، يشرح الميزات والأسعار ونموذج 0% عمولة، ويحفظ بياناتهم فوراً في CRM.
+                                        </div>
+                                    </div>
+                                </div>
+                                <button
+                                    @click="togglePlatformAi"
+                                    type="button"
+                                    class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
+                                    :class="platformWaAiEnabled
+                                        ? 'bg-emerald-600 text-white hover:bg-emerald-500'
+                                        : 'bg-stone-200 dark:bg-slate-700 text-stone-700 dark:text-stone-300 hover:bg-stone-300'"
+                                >
+                                    <span>{{ platformWaAiEnabled ? 'المساعد الذكي: مفعّل (ON) 🟢' : 'المساعد الذكي: متوقف (OFF) ⚪' }}</span>
+                                </button>
+                            </div>
+
+                            <!-- Test Message & Leads Quick Access -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="p-4 rounded-2xl bg-stone-50 dark:bg-slate-900/40 border border-stone-200 dark:border-slate-800 flex flex-col justify-between">
+                                    <div>
+                                        <div class="text-xs font-bold text-stone-800 dark:text-white mb-2">تجربة إرسال رسالة من رقم المنصة:</div>
+                                        <div class="flex items-center gap-2">
+                                            <input
+                                                v-model="platformTestPhone"
+                                                type="text"
+                                                placeholder="رقم الهاتف (مثال: 0933123456)"
+                                                class="flex-1 rounded-xl text-xs border border-stone-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-stone-800 dark:text-white"
+                                            />
+                                            <button
+                                                @click="sendPlatformTestMsg"
+                                                :disabled="platformTestLoading || !platformTestPhone.trim()"
+                                                type="button"
+                                                class="px-3 py-2 rounded-xl text-xs font-bold bg-stone-900 hover:bg-stone-800 text-white dark:bg-slate-700 dark:hover:bg-slate-600 transition disabled:opacity-50 cursor-pointer"
+                                            >
+                                                {{ platformTestLoading ? 'جارٍ الإرسال...' : 'إرسال فحص' }}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="p-4 rounded-2xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/40 flex items-center justify-between">
+                                    <div>
+                                        <div class="text-xs font-bold text-amber-900 dark:text-amber-200">سجل أصحاب المطاعم والعملاء المحتملين:</div>
+                                        <div class="text-xs text-amber-700 dark:text-amber-400 mt-1">كل من يراسل واتساب المنصة يُسجل فوراً في CRM للمتابعة.</div>
+                                    </div>
+                                    <Link
+                                        href="/super-admin/leads"
+                                        class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-500 text-white transition shadow-xs"
+                                    >
+                                        <span>عرض العملاء</span>
+                                        <span>↗</span>
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- ===== نهاية لوحة واتساب إدارة المنصة ===== -->
 
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900" dir="rtl">
