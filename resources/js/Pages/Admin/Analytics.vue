@@ -232,7 +232,7 @@ const categoryChartOptions = {
                     ميزة التقارير والتحليلات الذكية تتيح لك مراقبة مبيعاتك، أرباحك، وأداء الأصناف مع توصيات لتحسين الإيرادات. للترقية يرجى التواصل مع إدارة تدلّل.
                 </p>
                 <a
-                    href="https://wa.me/963934578117?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%20%D8%A3%D8%B3%D8%AA%D8%A7%D8%B0%20%D8%B9%D9%85%D8%B1%D8%8C%20%D8%A3%D8%B1%D8%BA%D8%A8%20%D8%A8%D8%AA%D8%B1%D9%82%D9%8A%D8%A9%20%D8%A8%D8%A7%D9%82%D8%A9%20%D9%85%D8%B7%D8%B9%D9%85%D9%8A%20%D9%84%D8%AA%D9%81%D8%B9%D9%8A%D9%84%20%D9%85%D9%8A%D8%B2%D8%A9%20%D8%A7%D9%84%D8%AA%D8%AD%D9%84%D9%8A%D9%84%D8%A7%D8%AA%20%D8%A7%D9%84%D8%B0%D9%83%D9%8A%D8%A9"
+                    href="https://wa.me/963947064593?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%20%D8%A3%D8%B3%D8%AA%D8%A7%D8%B0%20%D8%B9%D9%85%D8%B1%D8%8C%20%D8%A3%D8%B1%D8%BA%D8%A8%20%D8%A8%D8%AA%D8%B1%D9%82%D9%8A%D8%A9%20%D8%A8%D8%A7%D9%82%D8%A9%20%D9%85%D8%B7%D8%B9%D9%85%D9%8A%20%D9%84%D8%AA%D9%81%D8%B9%D9%8A%D9%84%20%D9%85%D9%8A%D8%B2%D8%A9%20%D8%A7%D9%84%D8%AA%D8%AD%D9%84%D9%8A%D9%84%D8%A7%D8%AA%20%D8%A7%D9%84%D8%B0%D9%83%D9%8A%D8%A9"
                     target="_blank"
                     class="inline-flex items-center gap-2 bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-emerald-700 transition shadow-lg shadow-emerald-600/20"
                 >
@@ -504,7 +504,7 @@ const categoryChartOptions = {
                         هذه الميزة إضافية، يرجى التواصل مع إدارة منصة تدلّل لتفعيلها لحساب مطعمك.
                     </p>
                     <a
-                        href="https://wa.me/963934578117?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%20%D8%A3%D8%B3%D8%AA%D8%A7%D8%B0%20%D8%B9%D9%85%D8%B1%D8%8C%20%D8%A3%D8%B1%D8%BA%D8%A8%20%D8%A8%D8%AA%D9%81%D8%B9%D9%8A%D9%84%20%D9%85%D9%8A%D8%B2%D8%A9%20%D9%87%D9%86%D8%AF%D8%B3%D8%A9%20%D8%A7%D9%84%D9%85%D9%86%D9%8A%D9%88%20%D9%88%D8%B0%D9%83%D8%A7%D8%A1%20%D8%A7%D9%84%D8%A3%D8%B9%D9%85%D8%A7%D9%84%20%D9%84%D9%85%D8%B7%D8%B9%D9%85%D9%8A"
+                        href="https://wa.me/963947064593?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%20%D8%A3%D8%B3%D8%AA%D8%A7%D8%B0%20%D8%B9%D9%85%D8%B1%D8%8C%20%D8%A3%D8%B1%D8%BA%D8%A8%20%D8%A8%D8%AA%D9%81%D8%B9%D9%8A%D9%84%20%D9%85%D9%8A%D8%B2%D8%A9%20%D9%87%D9%86%D8%AF%D8%B3%D8%A9%20%D8%A7%D9%84%D9%85%D9%86%D9%8A%D9%88%20%D9%88%D8%B0%D9%83%D8%A7%D8%A1%20%D8%A7%D9%84%D8%A3%D8%B9%D9%85%D8%A7%D9%84%20%D9%84%D9%85%D8%B7%D8%B9%D9%85%D9%8A"
                         target="_blank"
                         class="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:from-blue-700 hover:to-indigo-700 transition shadow-lg shadow-blue-600/20 cursor-pointer"
                     >

@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api\SuperAdmin;
 
 use App\Http\Controllers\Api\ApiController;
 use App\Models\ConsultationLead;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class ConsultationLeadController extends ApiController
 {
@@ -37,9 +39,15 @@ class ConsultationLeadController extends ApiController
             'closed_lost' => ConsultationLead::where('status', 'closed_lost')->count(),
         ];
 
+        $items = collect($leads->items())->map(function ($lead) {
+            $arr = $lead->toArray();
+            $arr['ai_paused'] = Cache::has("platform_wa_paused_{$lead->phone}");
+            return $arr;
+        });
+
         return response()->json([
             'success' => true,
-            'data' => $leads->items(),
+            'data' => $items,
             'meta' => [
                 'current_page' => $leads->currentPage(),
                 'last_page' => $leads->lastPage(),
@@ -58,7 +66,32 @@ class ConsultationLeadController extends ApiController
 
         $lead->update($validated);
 
-        return $this->success($lead->fresh());
+        $res = $lead->fresh()->toArray();
+        $res['ai_paused'] = Cache::has("platform_wa_paused_{$lead->phone}");
+
+        return $this->success($res);
+    }
+
+    /**
+     * تفعيل أو إيقاف المساعد الذكي لمحادثة هذا العميل (Human Takeover Toggle)
+     */
+    public function toggleAi(ConsultationLead $lead): JsonResponse
+    {
+        $key = "platform_wa_paused_{$lead->phone}";
+        if (Cache::has($key)) {
+            Cache::forget($key);
+            $paused = false;
+        } else {
+            Cache::put($key, true, now()->addHours(24));
+            $paused = true;
+        }
+
+        return $this->success([
+            'ai_paused' => $paused,
+            'message' => $paused
+                ? 'تم إيقاف المساعد الذكي لهذا العميل مؤقتاً لتتمكن من التحدث معه بحرية.'
+                : 'تمت إعادة تفويض المساعد الذكي للرد على هذا العميل تلقائياً.',
+        ]);
     }
 
     public function destroy(ConsultationLead $lead)

@@ -17,6 +17,8 @@ interface Lead {
     notes: string | null;
     status: 'new' | 'contacted' | 'qualified' | 'closed_won' | 'closed_lost';
     created_at: string;
+    ai_paused?: boolean;
+    togglingAi?: boolean;
 }
 
 const leads = ref<Lead[]>([]);
@@ -92,6 +94,18 @@ const deleteLead = async (lead: Lead) => {
         fetchLeads();
     } catch (e) {
         alert('فشل حذف السجل');
+    }
+};
+
+const toggleLeadAi = async (lead: Lead) => {
+    lead.togglingAi = true;
+    try {
+        const { data } = await axios.post(`/api/super-admin/leads/${lead.id}/toggle-ai`);
+        lead.ai_paused = data.data.ai_paused;
+    } catch (e) {
+        alert('تعذر تحديث حالة المساعد الذكي');
+    } finally {
+        lead.togglingAi = false;
     }
 };
 
@@ -284,27 +298,45 @@ onMounted(fetchLeads);
                                         </div>
                                     </td>
 
-                                    <!-- Quick Contact -->
+                                    <!-- Quick Contact & AI Takeover Control -->
                                     <td class="p-4">
-                                        <div class="flex items-center gap-2">
-                                            <!-- WhatsApp Button -->
-                                            <a
-                                                :href="getWhatsAppUrl(lead)"
-                                                target="_blank"
-                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs transition"
-                                                title="مراسلة العميل عبر واتساب مباشرة برك رسالة جاهزة"
+                                        <div class="flex flex-col gap-1.5">
+                                            <div class="flex items-center gap-2">
+                                                <!-- WhatsApp Button -->
+                                                <a
+                                                    :href="getWhatsAppUrl(lead)"
+                                                    target="_blank"
+                                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs transition"
+                                                    title="مراسلة العميل عبر واتساب مباشرة"
+                                                >
+                                                    <span>💬 واتساب</span>
+                                                </a>
+                                                <!-- Phone Link -->
+                                                <a
+                                                    :href="`tel:${lead.phone}`"
+                                                    class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 transition"
+                                                    dir="ltr"
+                                                >
+                                                    <span>📞</span>
+                                                    <span>{{ lead.phone }}</span>
+                                                </a>
+                                            </div>
+
+                                            <!-- Human Takeover / AI Auto-Reply Badge & Switcher -->
+                                            <button
+                                                type="button"
+                                                @click="toggleLeadAi(lead)"
+                                                :disabled="lead.togglingAi"
+                                                class="inline-flex items-center justify-between gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold transition shadow-2xs w-fit cursor-pointer"
+                                                :class="lead.ai_paused
+                                                    ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-800 hover:bg-amber-200'
+                                                    : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100'"
+                                                :title="lead.ai_paused ? 'المساعد الذكي صامت لهذه المحادثة لتتحدث بشرياً. انقر لإعادة تفعيله.' : 'المساعد الذكي يرد تلقائياً. انقر لإيقافه مؤقتاً لتتحدث بشرياً.'"
                                             >
-                                                <span>💬 واتساب</span>
-                                            </a>
-                                            <!-- Phone Link -->
-                                            <a
-                                                :href="`tel:${lead.phone}`"
-                                                class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 transition"
-                                                dir="ltr"
-                                            >
-                                                <span>📞</span>
-                                                <span>{{ lead.phone }}</span>
-                                            </a>
+                                                <span v-if="lead.togglingAi" class="animate-spin text-[10px]">⏳</span>
+                                                <span v-else>{{ lead.ai_paused ? '⏸️ محادثة بشرية (صامت)' : '🤖 المساعد نشط (تلقائي)' }}</span>
+                                                <span class="text-[9px] opacity-70 underline">{{ lead.ai_paused ? 'تشغيل' : 'إيقاف' }}</span>
+                                            </button>
                                         </div>
                                     </td>
 

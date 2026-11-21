@@ -692,7 +692,7 @@ onUnmounted(() => {
                         <!-- Upgrade Action -->
                         <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
                             <a
-                                href="https://wa.me/963987077445?text=أرغب%20في%20ترقية%20مطعمي%20لتفعيل%20ميزة%20مخطط%20الصالة%20التفاعلي%20وربط%20الـ%20IoT"
+                                href="https://wa.me/963947064593?text=أرغب%20في%20ترقية%20مطعمي%20لتفعيل%20ميزة%20مخطط%20الصالة%20التفاعلي%20وربط%20الـ%20IoT"
                                 target="_blank"
                                 class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-stone-950 font-black text-sm shadow-xl shadow-amber-500/20 active:scale-95 transition-all duration-200"
                             >

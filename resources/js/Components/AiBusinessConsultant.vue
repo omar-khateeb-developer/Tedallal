@@ -204,7 +204,7 @@ async function sendMessage(textToSend?: string) {
                 {
                     label: 'تحدث مع فريق المبيعات عبر واتساب ✆',
                     action: 'open_whatsapp',
-                    url: 'https://wa.me/963934578117',
+                    url: 'https://wa.me/963947064593',
                 },
                 {
                     label: props.locale === 'ar' ? 'استكشف الملف التَعريفي لمُلَّاك المطاعِم ↗' : 'Explore Pitch Deck ↗',

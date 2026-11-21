@@ -124,7 +124,7 @@ const deleteOffer = async (id: number) => {
                     نظام العروض والكوبونات يتيح لك إنشاء أكواد خصم ذكية وتنشيط المبيعات وبناء ولاء الزبائن. للترقية والاستفادة من الميزة يرجى التواصل مع إدارة تدلّل.
                 </p>
                 <a
-                    href="https://wa.me/963934578117?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%20%D8%A3%D8%B3%D8%AA%D8%A7%D8%B0%20%D8%B9%D9%85%D8%B1%D8%8C%20%D8%A3%D8%B1%D8%BA%D8%A8%20%D8%A8%D8%AA%D8%B1%D9%82%D9%8A%D8%A9%20%D8%A8%D8%A7%D9%82%D8%A9%20%D9%85%D8%B7%D8%B9%D9%85%D9%8A%20%D9%84%D8%AA%D9%81%D8%B9%D9%8A%D9%84%20%D9%85%D9%8A%D8%B2%D8%A9%20%D8%A7%D9%84%D9%83%D9%88%D8%A8%D9%88%D9%86%D8%A7%D8%AA"
+                    href="https://wa.me/963947064593?text=%D9%85%D8%B1%D8%AD%D8%A8%D8%A7%20%D8%A3%D8%B3%D8%AA%D8%A7%D8%B0%20%D8%B9%D9%85%D8%B1%D8%8C%20%D8%A3%D8%B1%D8%BA%D8%A8%20%D8%A8%D8%AA%D8%B1%D9%82%D9%8A%D8%A9%20%D8%A8%D8%A7%D9%82%D8%A9%20%D9%85%D8%B7%D8%B9%D9%85%D9%8A%20%D9%84%D8%AA%D9%81%D8%B9%D9%8A%D9%84%20%D9%85%D9%8A%D8%B2%D8%A9%20%D8%A7%D9%84%D9%83%D9%88%D8%A8%D9%88%D9%86%D8%A7%D8%AA"
                     target="_blank"
                     class="inline-flex items-center gap-2 bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-emerald-700 transition shadow-lg shadow-emerald-600/20"
                 >

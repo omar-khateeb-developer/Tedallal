@@ -31,6 +31,7 @@ echo "🔄 [5/5] إعادة تحميل PHP-FPM والعمال بسلاسة وب�
 sudo systemctl reload php8.4-fpm
 php artisan queue:restart
 sudo supervisorctl restart tedallal-queue tedallal-reverb
+sudo systemctl restart tedallal-whatsapp 2>/dev/null || true
 
 echo "✅ تم اكتمال النشر فائق السرعة بنجاح وبدون توقف!"
 

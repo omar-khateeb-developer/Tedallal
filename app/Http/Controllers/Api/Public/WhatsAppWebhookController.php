@@ -52,6 +52,56 @@ class WhatsAppWebhookController extends Controller
                 return response()->json(['success' => true]);
             }
 
+            // =========================================================================
+            // أ) صاحب المنصة رد بنفسه من هاتفه على العميل (التدخل البشري التلقائي Human Takeover)
+            // =========================================================================
+            if ($event === 'platform_message.sent_by_owner') {
+                $to = (string) $request->input('to');
+                $ownerText = trim((string) $request->input('text'));
+
+                if (! empty($to)) {
+                    // إيقاف الرد الآلي مؤقتاً لهذا الرقم لمدة 12 ساعة ليتمكن صاحب المنصة من التحدث معه بحرية
+                    Cache::put("platform_wa_paused_{$to}", true, now()->addHours(12));
+
+                    try {
+                        $lead = ConsultationLead::where('phone', $to)->first();
+                        if ($lead) {
+                            $lead->status = 'contacted';
+                            if (! empty($ownerText)) {
+                                $lead->notes = ($lead->notes ? $lead->notes . "\n---\n" : '') . "[صاحب المنصة " . now()->format('Y-m-d H:i') . "]: {$ownerText}";
+                            }
+                            $lead->save();
+                        }
+                    } catch (\Throwable $leadErr) {
+                        Log::warning('Failed to update ConsultationLead on owner reply: ' . $leadErr->getMessage());
+                    }
+                }
+
+                return response()->json(['success' => true]);
+            }
+
+            // =========================================================================
+            // ب) صاحب المنصة أعاد تفويض المساعد الذكي لمحادثة العميل
+            // =========================================================================
+            if ($event === 'platform_message.owner_resumed_ai') {
+                $to = (string) $request->input('to');
+                if (! empty($to)) {
+                    Cache::forget("platform_wa_paused_{$to}");
+                    try {
+                        $lead = ConsultationLead::where('phone', $to)->first();
+                        if ($lead) {
+                            $lead->notes = ($lead->notes ? $lead->notes . "\n---\n" : '') . "[إشعار " . now()->format('Y-m-d H:i') . "]: تمت إعادة تفعيل المساعد الذكي تلقائياً.";
+                            $lead->save();
+                        }
+                    } catch (\Throwable $e) {}
+                }
+
+                return response()->json(['success' => true]);
+            }
+
+            // =========================================================================
+            // ج) رسالة واردة من زبون / صاحب مطعم إلى واتساب المنصة
+            // =========================================================================
             if ($event === 'platform_message.received') {
                 $text = trim((string) $request->input('text'));
                 $from = (string) $request->input('from');
@@ -76,6 +126,31 @@ class WhatsAppWebhookController extends Controller
                     }
                 } catch (\Throwable $leadErr) {
                     Log::warning('Failed to auto-save ConsultationLead from WhatsApp: ' . $leadErr->getMessage());
+                }
+
+                // الكشف إذا كانت المحادثة مستلمة بشرياً من قبل صاحب المنصة
+                if (Cache::has("platform_wa_paused_{$from}")) {
+                    // إذا طلب العميل صراحة إعادة التحدث مع الذكاء الاصطناعي
+                    if (preg_match('/^(#تفعيل|#ذكاء|#تشغيل|\/resume|\/ai)$/i', $text)) {
+                        Cache::forget("platform_wa_paused_{$from}");
+                    } else {
+                        Log::info("Platform WhatsApp auto-reply skipped for {$from}: Human takeover is active.");
+                        return response()->json([
+                            'success' => true,
+                            'human_takeover' => true,
+                        ]);
+                    }
+                }
+
+                // الكشف الذكي عما إذا كان الزبون يطلب التحدث مع شخص / صاحب المنصة بشرياً
+                if (preg_match('/(بدي|اريد|أريد|ممكن|حابب).*(اتكلم|احكي|اتواصل|أحكي|أكلم|أحدث).*(انسان|إنسان|شخص|بشري|صاحب|مسؤول|ادارة|إدارة|مدير)/u', $text)) {
+                    Cache::put("platform_wa_paused_{$from}", true, now()->addHours(12));
+                    $handoverReply = "تم إشعار إدارة منصة «تدلّل» وصاحب المنصة فوراً 🔔\n\nوسيقوم الأستاذ بمتابعة محادثتك شخصياً عبر هذا الشات في أقرب وقت. أهلاً بك دائماً ✨";
+
+                    return response()->json([
+                        'success' => true,
+                        'auto_reply_text' => $handoverReply,
+                    ]);
                 }
 
                 // فحص تفعيل المساعد التنفيذي الذكي لصاحب المنصة

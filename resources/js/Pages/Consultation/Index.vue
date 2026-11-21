@@ -281,7 +281,7 @@ const directWhatsappUrl = computed(() => {
     const text = encodeURIComponent(
         `مرحباً أستاذ عمر، قمت بتعبئة استمارة متطلبات مطعم (${form.value.restaurant_name}) عبر موقع تدلّل، وأود مناقشة الخطة التشغيلية وتفعيل النسخة التجريبية.`
     );
-    return `https://wa.me/963934578117?text=${text}`;
+    return `https://wa.me/963947064593?text=${text}`;
 });
 </script>
 

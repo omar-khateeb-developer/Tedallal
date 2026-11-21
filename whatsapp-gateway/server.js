@@ -219,7 +219,7 @@ async function startSession(sessionId) {
         if (m.type !== 'notify') return;
 
         for (const msg of m.messages) {
-            if (!msg.message || msg.key.fromMe) continue;
+            if (!msg.message) continue;
 
             const senderJid = msg.key.remoteJid;
             if (!senderJid || senderJid.endsWith('@g.us') || senderJid === 'status@broadcast') continue;
@@ -231,6 +231,26 @@ async function startSession(sessionId) {
             if (!text.trim()) continue;
 
             const cleanPhone = senderJid.split('@')[0];
+
+            // If message was sent by the Platform Owner from their own phone (Human Agent Takeover)
+            if (msg.key.fromMe) {
+                if (isPlatform) {
+                    const trimmedText = text.trim();
+                    const isResumeCommand = /^(#تفعيل|#ذكاء|#تشغيل|\/resume|\/ai)$/i.test(trimmedText);
+
+                    logger.info({ sessionId: sId, to: cleanPhone, isResumeCommand, text: trimmedText.substring(0, 35) }, 'Platform Owner sent message from device (Human Takeover Event)');
+
+                    notifyLaravel({
+                        event: isResumeCommand ? 'platform_message.owner_resumed_ai' : 'platform_message.sent_by_owner',
+                        session_id: 'platform',
+                        to: cleanPhone,
+                        text: trimmedText,
+                        timestamp: msg.messageTimestamp,
+                    }).catch(() => {});
+                }
+                continue;
+            }
+
             const senderName = msg.pushName || null;
             logger.info({ sessionId: sId, from: cleanPhone, senderName, text: text.substring(0, 40) }, `Inbound message to ${isPlatform ? 'Platform Owner' : 'restaurant'}`);
 
