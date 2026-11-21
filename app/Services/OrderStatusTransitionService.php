@@ -74,6 +74,21 @@ final class OrderStatusTransitionService
 
         $order->update($updateData);
 
+        if ($order->table) {
+            if ($target === OrderStatus::Served) {
+                $order->table->update([
+                    'operational_stage' => 'served',
+                    'stage_updated_at' => now(),
+                ]);
+            } elseif ($target === OrderStatus::Preparing || $target === OrderStatus::Accepted) {
+                $order->table->update([
+                    'operational_stage' => 'preparing',
+                    'stage_updated_at' => now(),
+                    'session_started_at' => $order->table->session_started_at ?? now(),
+                ]);
+            }
+        }
+
         // استرجاع الكوبون التالف/أحادي الاستخدام تلقائياً عند إلغاء الطلب
         if ($target === OrderStatus::Cancelled && $order->promo_code_id) {
             $promo = \App\Models\PromoCode::find($order->promo_code_id);

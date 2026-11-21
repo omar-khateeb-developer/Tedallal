@@ -130,6 +130,14 @@ final class OrderCreationService
 
             $order->load(['items', 'table']);
 
+            if ($table) {
+                $table->update([
+                    'operational_stage' => 'preparing',
+                    'stage_updated_at' => now(),
+                    'session_started_at' => $table->session_started_at ?? now(),
+                ]);
+            }
+
             try {
                 OrderCreated::dispatch($order);
             } catch (\Throwable $e) {

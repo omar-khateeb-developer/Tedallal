@@ -67,10 +67,37 @@ class DashboardController extends Controller
             ->whereIn('status', ['confirmed', 'seated'])
             ->get(['id', 'uuid', 'table_id', 'guest_name', 'time_slot', 'guests_count', 'status']);
 
+        $todayWaitlist = \App\Models\WaitlistEntry::with(['assignedTable'])
+            ->where('restaurant_id', $restaurant->id)
+            ->whereDate('created_at', now()->toDateString())
+            ->orderByRaw("CASE WHEN status = 'waiting' THEN 1 WHEN status = 'notified' THEN 2 ELSE 3 END")
+            ->orderBy('queue_number')
+            ->get()
+            ->map(fn($e) => [
+                'id' => $e->id,
+                'uuid' => $e->uuid,
+                'guest_name' => $e->guest_name,
+                'guest_phone' => $e->guest_phone,
+                'party_size' => $e->party_size,
+                'seating_preference' => $e->seating_preference,
+                'status' => $e->status,
+                'queue_number' => $e->queue_number,
+                'estimated_wait_minutes' => $e->estimated_wait_minutes,
+                'waiting_minutes' => max(0, (int) $e->created_at->diffInMinutes(now())),
+                'notified_at' => $e->notified_at?->toIso8601String(),
+                'assigned_table' => $e->assignedTable ? [
+                    'id' => $e->assignedTable->id,
+                    'name' => $e->assignedTable->name,
+                ] : null,
+                'notes' => $e->notes,
+                'tracking_url' => $e->getTrackingUrl(),
+            ]);
+
         return Inertia::render('Admin/FloorPlan', [
             'tables' => \App\Http\Resources\RestaurantTableResource::collection($tables)->resolve(),
             'zones' => $allZones,
             'todayReservations' => $todayReservations,
+            'todayWaitlist' => $todayWaitlist,
             'restaurant' => $restaurant,
             'isFeatureLocked' => ! $restaurant->hasFloorPlanFeature(),
         ]);

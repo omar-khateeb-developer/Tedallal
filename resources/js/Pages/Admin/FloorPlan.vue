@@ -2,7 +2,7 @@
 import AdminNav from '@/Components/Admin/AdminNav.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import axios from 'axios';
 
 interface TableItem {
@@ -21,7 +21,40 @@ interface TableItem {
     width: number;
     height: number;
     iot_device_id?: string | null;
+    operational_stage?: 'available' | 'seated' | 'preparing' | 'served' | 'bill_requested' | 'cleaning';
+    stage_updated_at?: string;
+    session_started_at?: string;
+    bill_requested_at?: string;
+    current_guest_name?: string;
+    turn_minutes?: number;
+    stage_minutes?: number;
+    bill_wait_minutes?: number;
     active_session?: any;
+    active_order?: {
+        id: number;
+        order_number: string;
+        status: string;
+        total: number;
+        items_count: number;
+        created_at?: string;
+    } | null;
+}
+
+interface WaitlistItem {
+    id: number;
+    uuid: string;
+    guest_name: string;
+    guest_phone: string;
+    party_size: number;
+    seating_preference: string;
+    status: 'waiting' | 'notified' | 'seated' | 'cancelled' | 'no_show';
+    queue_number: number;
+    estimated_wait_minutes: number;
+    waiting_minutes: number;
+    notified_at?: string;
+    assigned_table?: { id: number; name: string } | null;
+    notes?: string;
+    tracking_url?: string;
 }
 
 interface ReservationItem {
@@ -43,8 +76,9 @@ interface ReservationItem {
 const props = defineProps<{
     tables: TableItem[];
     zones: string[];
-    restaurant: { id: number; name: string; slug: string; currency?: string; features?: any };
+    restaurant: { id: number; name: string; slug: string; currency?: string; features?: any; whatsapp_status?: string };
     todayReservations?: ReservationItem[];
+    todayWaitlist?: WaitlistItem[];
     isFeatureLocked: boolean;
 }>();
 
@@ -59,9 +93,14 @@ const tables = ref<TableItem[]>(props.tables.map(t => ({
     zone: t.zone || 'main',
     width: Number(t.width) || (t.shape === 'vip' ? 140 : (t.shape === 'rectangle' ? 130 : 90)),
     height: Number(t.height) || (t.shape === 'rectangle' ? 80 : 90),
+    operational_stage: t.operational_stage || (t.active_session ? 'seated' : 'available'),
+    turn_minutes: Number(t.turn_minutes) || 0,
+    stage_minutes: Number(t.stage_minutes) || 0,
+    bill_wait_minutes: t.bill_wait_minutes ?? null,
 })));
 
 const reservations = ref<ReservationItem[]>(props.todayReservations || []);
+const waitlist = ref<WaitlistItem[]>(props.todayWaitlist || []);
 const activeZone = ref<string>('all');
 const selectedTable = ref<TableItem | null>(null);
 const activeTableId = ref<number | null>(null);
@@ -72,8 +111,28 @@ const isSaving = ref(false);
 const saveSuccess = ref(false);
 const isAddModalOpen = ref(false);
 const isReservationsDrawerOpen = ref(false);
+const isWaitlistDrawerOpen = ref(false);
+const isAddWaitlistModalOpen = ref(false);
+const isSeatModalOpen = ref(false);
+const seatTargetEntry = ref<WaitlistItem | null>(null);
+const selectedTableIdForSeating = ref<number | null>(null);
+const isSubmittingWaitlist = ref(false);
 const isCopiedLink = ref(false);
+const isCopiedWaitlistLink = ref(false);
 const showArchitecturalElements = ref(true);
+
+const newWaitlistForm = ref({
+    guest_name: '',
+    guest_phone: '',
+    party_size: 2,
+    seating_preference: 'any',
+    estimated_wait_minutes: 15,
+    notes: '',
+});
+
+const activeWaitingCount = computed(() => {
+    return waitlist.value.filter(e => e.status === 'waiting' || e.status === 'notified').length;
+});
 
 const isDragging = ref(false);
 const draggedTableId = ref<number | null>(null);
@@ -368,6 +427,206 @@ async function deleteSelectedTable() {
         alert(e.response?.data?.message || 'لا يمكن حذف طاولة لها طلبات أو جلسات مسجلة');
     }
 }
+
+// ================= TOAST POS TABLE STAGES & TURN TIME =================
+const stageLabels: Record<string, string> = {
+    available: 'شاغرة',
+    seated: 'تم الجلوس',
+    preparing: 'تحضير بالمطبخ',
+    served: 'تم التقديم',
+    bill_requested: 'طلب الحساب',
+    cleaning: 'بانتظار التنظيف',
+};
+
+function getTableStageLabel(table: TableItem): string {
+    if (table.operational_stage && stageLabels[table.operational_stage]) {
+        return stageLabels[table.operational_stage];
+    }
+    if (table.active_session) return 'جلسة نشطة';
+    if (getTableReservation(table.id)) return 'محجوزة اليوم';
+    return 'شاغرة';
+}
+
+function getTableRingClass(table: TableItem): string {
+    if (table.operational_stage === 'bill_requested') {
+        return 'bg-slate-900/95 ring-4 ring-purple-500 shadow-[0_0_35px_rgba(168,85,247,0.85)] border-2 border-purple-400 animate-pulse';
+    }
+    if (table.operational_stage === 'preparing') {
+        return 'bg-slate-900/95 ring-4 ring-amber-500 shadow-[0_0_35px_rgba(245,158,11,0.7)] border-2 border-amber-400';
+    }
+    if (table.operational_stage === 'served') {
+        return 'bg-slate-900/95 ring-4 ring-sky-500 shadow-[0_0_35px_rgba(14,165,233,0.7)] border-2 border-sky-400';
+    }
+    if (table.operational_stage === 'seated') {
+        return 'bg-slate-900/95 ring-4 ring-emerald-500 shadow-[0_0_35px_rgba(16,185,129,0.7)] border-2 border-emerald-400';
+    }
+    if (table.operational_stage === 'cleaning') {
+        return 'bg-slate-900/90 ring-2 ring-stone-400 border-2 border-dashed border-stone-400 shadow-[0_0_20px_rgba(168,162,158,0.4)] text-stone-300';
+    }
+    if (getTableReservation(table.id)) {
+        return 'bg-slate-900/90 ring-4 ring-amber-500 shadow-[0_0_35px_rgba(245,158,11,0.65)] border-2 border-amber-400';
+    }
+    if (table.zone === 'vip') {
+        return 'bg-slate-900/90 ring-2 ring-amber-500/60 shadow-[0_0_20px_rgba(245,158,11,0.3)] border border-amber-500/50';
+    }
+    return 'bg-[#0f172a] ring-2 ring-slate-700/80 hover:ring-slate-500 border border-slate-700/60';
+}
+
+function getTableBadgeClass(table: TableItem): string {
+    if (table.operational_stage === 'bill_requested') {
+        return 'bg-purple-950/95 text-purple-200 border border-purple-400 shadow-purple-900/60 animate-pulse';
+    }
+    if (table.operational_stage === 'preparing') {
+        return 'bg-amber-950/95 text-amber-300 border border-amber-400 shadow-amber-900/50';
+    }
+    if (table.operational_stage === 'served') {
+        return 'bg-sky-950/95 text-sky-300 border border-sky-400 shadow-sky-900/50';
+    }
+    if (table.operational_stage === 'seated') {
+        return 'bg-emerald-950/95 text-emerald-300 border border-emerald-500 shadow-emerald-900/50';
+    }
+    if (table.operational_stage === 'cleaning') {
+        return 'bg-stone-900/95 text-stone-300 border border-stone-500 shadow-stone-900/50';
+    }
+    if (getTableReservation(table.id)) {
+        return 'bg-amber-950/95 text-amber-300 border border-amber-500 shadow-amber-900/40';
+    }
+    return 'bg-slate-900/90 text-slate-300 border border-slate-700';
+}
+
+async function setTableStage(table: TableItem, newStage: string) {
+    try {
+        const { data } = await axios.patch(`/api/admin/tables/${table.id}/stage`, { stage: newStage });
+        const updated = data.data.table;
+        const target = tables.value.find(t => t.id === table.id);
+        if (target) {
+            Object.assign(target, updated);
+        }
+        if (selectedTable.value && selectedTable.value.id === table.id) {
+            Object.assign(selectedTable.value, updated);
+        }
+        saveSuccess.value = true;
+        setTimeout(() => { saveSuccess.value = false; }, 3000);
+    } catch (e: any) {
+        alert(e.response?.data?.message || 'تعذر تحديث مرحلة الطاولة');
+    }
+}
+
+// ================= SMART DIGITAL WAITLIST ACTIONS =================
+async function refreshWaitlist() {
+    try {
+        const { data } = await axios.get('/api/admin/waitlist');
+        waitlist.value = data.data.entries;
+    } catch (e) {
+        console.error('Waitlist fetch error:', e);
+    }
+}
+
+async function addWaitlistEntry() {
+    if (!newWaitlistForm.value.guest_name.trim() || !newWaitlistForm.value.guest_phone.trim()) return;
+    isSubmittingWaitlist.value = true;
+    try {
+        const { data } = await axios.post('/api/admin/waitlist', newWaitlistForm.value);
+        waitlist.value.unshift(data.data.entry);
+        await refreshWaitlist();
+        isAddWaitlistModalOpen.value = false;
+        newWaitlistForm.value = {
+            guest_name: '',
+            guest_phone: '',
+            party_size: 2,
+            seating_preference: 'any',
+            estimated_wait_minutes: 15,
+            notes: '',
+        };
+        saveSuccess.value = true;
+        setTimeout(() => { saveSuccess.value = false; }, 3000);
+    } catch (e: any) {
+        alert(e.response?.data?.message || 'تعذر إضافة الزبون للانتظار');
+    } finally {
+        isSubmittingWaitlist.value = false;
+    }
+}
+
+async function notifyWaitlistGuest(entry: WaitlistItem) {
+    try {
+        await axios.patch(`/api/admin/waitlist/${entry.id}/notify`);
+        entry.status = 'notified';
+        entry.notified_at = new Date().toISOString();
+        saveSuccess.value = true;
+        setTimeout(() => { saveSuccess.value = false; }, 3000);
+    } catch (e: any) {
+        alert(e.response?.data?.message || 'تعذر إرسال إشعار الواتساب للزبون');
+    }
+}
+
+function openSeatModal(entry: WaitlistItem) {
+    seatTargetEntry.value = entry;
+    const available = tables.value.find(t => (t.operational_stage === 'available' || !t.active_session) && t.capacity >= entry.party_size);
+    selectedTableIdForSeating.value = available ? available.id : (tables.value[0]?.id || null);
+    isSeatModalOpen.value = true;
+}
+
+async function confirmSeating() {
+    if (!seatTargetEntry.value || !selectedTableIdForSeating.value) return;
+    try {
+        const { data } = await axios.patch(`/api/admin/waitlist/${seatTargetEntry.value.id}/seat`, {
+            table_id: selectedTableIdForSeating.value,
+        });
+        seatTargetEntry.value.status = 'seated';
+        const updatedTable = data.data.table;
+        const target = tables.value.find(t => t.id === selectedTableIdForSeating.value);
+        if (target) {
+            Object.assign(target, updatedTable);
+        }
+        isSeatModalOpen.value = false;
+        seatTargetEntry.value = null;
+        await refreshWaitlist();
+        saveSuccess.value = true;
+        setTimeout(() => { saveSuccess.value = false; }, 3000);
+    } catch (e: any) {
+        alert(e.response?.data?.message || 'تعذر إجلاس الزبون على الطاولة');
+    }
+}
+
+async function cancelWaitlistEntry(entry: WaitlistItem) {
+    if (!confirm(`هل أنت متأكد من إلغاء دور ${entry.guest_name}؟`)) return;
+    try {
+        await axios.patch(`/api/admin/waitlist/${entry.id}/status`, { status: 'cancelled' });
+        entry.status = 'cancelled';
+        await refreshWaitlist();
+    } catch (e: any) {
+        alert(e.response?.data?.message || 'تعذر إلغاء الدور');
+    }
+}
+
+function copyWaitlistJoinLink() {
+    const url = `${window.location.origin}/r/${props.restaurant.slug}/waitlist`;
+    navigator.clipboard.writeText(url).then(() => {
+        isCopiedWaitlistLink.value = true;
+        setTimeout(() => { isCopiedWaitlistLink.value = false; }, 3000);
+    });
+}
+
+// Live Ticker for Table Turn Times
+let turnTicker: any = null;
+onMounted(() => {
+    turnTicker = setInterval(() => {
+        tables.value.forEach(t => {
+            if (t.session_started_at) {
+                const start = new Date(t.session_started_at).getTime();
+                t.turn_minutes = Math.max(0, Math.floor((Date.now() - start) / 60000));
+            }
+            if (t.bill_requested_at) {
+                const billStart = new Date(t.bill_requested_at).getTime();
+                t.bill_wait_minutes = Math.max(0, Math.floor((Date.now() - billStart) / 60000));
+            }
+        });
+    }, 30000);
+});
+
+onUnmounted(() => {
+    if (turnTicker) clearInterval(turnTicker);
+});
 </script>
 
 <template>
@@ -493,24 +752,49 @@ async function deleteSelectedTable() {
                             </div>
                         </div>
 
-                        <!-- Status Indicators Legend matching reference image -->
-                        <div class="hidden lg:flex items-center gap-4 text-xs font-semibold">
-                            <span class="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
-                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-500/20 animate-pulse"></span>
-                                <span>جلسة نشطة (Active)</span>
+                        <!-- Status Indicators Legend (Toast POS Operational Stages) -->
+                        <div class="hidden xl:flex items-center gap-3 text-[11px] font-semibold">
+                            <span class="inline-flex items-center gap-1 text-slate-400">
+                                <span class="w-2 h-2 rounded-full bg-slate-500"></span>
+                                <span>شاغرة</span>
                             </span>
-                            <span class="inline-flex items-center gap-1.5 text-amber-500">
-                                <span class="w-2.5 h-2.5 rounded-full bg-amber-500 ring-4 ring-amber-500/20"></span>
-                                <span>حجز VIP مؤكد (Reserved)</span>
+                            <span class="inline-flex items-center gap-1 text-emerald-400">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                <span>جلوس</span>
                             </span>
-                            <span class="inline-flex items-center gap-1.5 text-slate-400">
-                                <span class="w-2.5 h-2.5 rounded-full bg-slate-500 ring-4 ring-slate-500/20"></span>
-                                <span>طاولة شاغرة (Available)</span>
+                            <span class="inline-flex items-center gap-1 text-amber-400">
+                                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                                <span>تحضير بالمطبخ</span>
+                            </span>
+                            <span class="inline-flex items-center gap-1 text-sky-400">
+                                <span class="w-2 h-2 rounded-full bg-sky-500"></span>
+                                <span>تم التقديم</span>
+                            </span>
+                            <span class="inline-flex items-center gap-1 text-purple-400">
+                                <span class="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></span>
+                                <span>طلب الحساب</span>
+                            </span>
+                            <span class="inline-flex items-center gap-1 text-stone-400">
+                                <span class="w-2 h-2 rounded-full bg-stone-500"></span>
+                                <span>تنظيف</span>
                             </span>
                         </div>
 
                         <!-- Right Actions -->
                         <div class="flex items-center gap-2">
+                            <!-- Digital Waitlist Button (WhatsApp Powered) -->
+                            <button
+                                type="button"
+                                @click="isWaitlistDrawerOpen = true"
+                                class="relative inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600/15 to-indigo-600/15 border border-blue-500/40 text-blue-700 dark:text-blue-300 text-xs sm:text-sm font-black transition-all hover:bg-blue-500/25 cursor-pointer shadow-xs"
+                            >
+                                <span>📋</span>
+                                <span>طابور الانتظار</span>
+                                <span v-if="activeWaitingCount > 0" class="w-5 h-5 rounded-full bg-blue-500 text-white text-[10px] flex items-center justify-center font-bold font-mono animate-pulse">
+                                    {{ activeWaitingCount }}
+                                </span>
+                            </button>
+
                             <!-- Toggle Architecture Elements -->
                             <button
                                 type="button"
@@ -742,34 +1026,39 @@ async function deleteSelectedTable() {
                                     class="w-full h-full flex flex-col items-center justify-center text-center p-2 transition-all duration-300 relative shadow-2xl"
                                     :class="[
                                         table.shape === 'circle' ? 'rounded-full' : (table.shape === 'vip' ? 'rounded-3xl' : 'rounded-2xl'),
-                                        table.active_session
-                                            ? 'bg-slate-900/90 ring-4 ring-emerald-500 shadow-[0_0_35px_rgba(16,185,129,0.7)] border-2 border-emerald-400'
-                                            : (getTableReservation(table.id)
-                                                ? 'bg-slate-900/90 ring-4 ring-amber-500 shadow-[0_0_35px_rgba(245,158,11,0.65)] border-2 border-amber-400'
-                                                : (table.zone === 'vip'
-                                                    ? 'bg-slate-900/90 ring-2 ring-amber-500/60 shadow-[0_0_20px_rgba(245,158,11,0.3)] border border-amber-500/50'
-                                                    : 'bg-[#0f172a] ring-2 ring-slate-700/80 hover:ring-slate-500 border border-slate-700/60'))
+                                        getTableRingClass(table)
                                     ]"
                                 >
-                                    <!-- Neon Breathing Pulse for Active Session -->
+                                    <!-- Neon Breathing Pulse for Active Session or Urgent Stages -->
                                     <div
-                                        v-if="table.active_session"
-                                        class="absolute inset-0 rounded-full animate-ping opacity-25 bg-emerald-400 pointer-events-none"
+                                        v-if="table.operational_stage === 'bill_requested'"
+                                        class="absolute inset-0 rounded-full animate-ping opacity-30 bg-purple-400 pointer-events-none"
+                                    ></div>
+                                    <div
+                                        v-else-if="table.active_session || table.operational_stage === 'seated'"
+                                        class="absolute inset-0 rounded-full animate-ping opacity-20 bg-emerald-400 pointer-events-none"
                                     ></div>
 
-                                    <!-- Table Label Badge (Floating Tooltip matching reference image) -->
+                                    <!-- Table Label Badge (Toast POS Stage & Timer Tooltip) -->
                                     <div
-                                        class="absolute -top-7 whitespace-nowrap px-2.5 py-0.5 rounded-md text-[10px] font-black flex items-center gap-1 shadow-xl pointer-events-none transition-all z-30"
+                                        class="absolute -top-7 whitespace-nowrap px-2.5 py-0.5 rounded-md text-[10px] font-black flex items-center gap-1.5 shadow-xl pointer-events-none transition-all z-30"
                                         :style="{ transform: `rotate(${-(table.rotation || 0)}deg)` }"
-                                        :class="table.active_session
-                                            ? 'bg-emerald-950/95 text-emerald-300 border border-emerald-500 shadow-emerald-900/40'
-                                            : (getTableReservation(table.id)
-                                                ? 'bg-amber-950/95 text-amber-300 border border-amber-500 shadow-amber-900/40'
-                                                : 'bg-slate-900/90 text-slate-300 border border-slate-700')"
+                                        :class="getTableBadgeClass(table)"
                                     >
                                         <span>{{ table.name }}</span>
-                                        <span class="opacity-80">
-                                            • {{ table.active_session ? 'Active' : (getTableReservation(table.id) ? 'Reserved' : 'Available') }}
+                                        <span class="opacity-80">• {{ getTableStageLabel(table) }}</span>
+                                        <span
+                                            v-if="table.turn_minutes && table.turn_minutes > 0"
+                                            class="font-mono bg-black/40 px-1 py-0.2 rounded"
+                                            :class="table.turn_minutes > 75 ? 'text-rose-300 font-bold animate-pulse' : (table.turn_minutes > 45 ? 'text-amber-300' : 'text-emerald-300')"
+                                        >
+                                            ⏱️ {{ table.turn_minutes }}m
+                                        </span>
+                                        <span
+                                            v-if="table.operational_stage === 'bill_requested' && table.bill_wait_minutes !== null"
+                                            class="font-mono bg-rose-950 text-rose-200 px-1 py-0.2 rounded font-bold animate-pulse"
+                                        >
+                                            🧾 {{ table.bill_wait_minutes }}د
                                         </span>
                                     </div>
 
@@ -778,10 +1067,19 @@ async function deleteSelectedTable() {
                                         {{ table.name.replace(/[^0-9]/g, '') ? '#' + table.name.replace(/[^0-9]/g, '') : table.name }}
                                     </span>
 
-                                    <!-- Seat Capacity -->
-                                    <span class="text-[9px] text-slate-400 font-mono mt-0.5">
-                                        {{ table.capacity }} Seats
-                                    </span>
+                                    <!-- Seat Capacity & Turn Time Inner Indicator -->
+                                    <div class="flex items-center gap-1 mt-0.5">
+                                        <span class="text-[9px] text-slate-400 font-mono">
+                                            {{ table.capacity }}S
+                                        </span>
+                                        <span
+                                            v-if="table.turn_minutes && table.turn_minutes > 0"
+                                            class="text-[9px] font-mono px-1 rounded bg-black/50"
+                                            :class="table.turn_minutes > 75 ? 'text-rose-400 font-black' : (table.turn_minutes > 45 ? 'text-amber-400' : 'text-emerald-400')"
+                                        >
+                                            {{ table.turn_minutes }}m
+                                        </span>
+                                    </div>
 
                                     <!-- IoT Connected ESP32 Cyan Dot -->
                                     <span
@@ -815,47 +1113,70 @@ async function deleteSelectedTable() {
                                     <div>
                                         <h4 class="font-bold text-sm text-white flex items-center gap-2">
                                             <span>{{ activeTable.name }}</span>
-                                            <span class="text-[10px] px-2 py-0.5 rounded-full font-mono" :class="activeTable.active_session ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : (getTableReservation(activeTable.id) ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' : 'bg-slate-800 text-slate-400')">
-                                                {{ activeTable.active_session ? 'جلسة نشطة' : (getTableReservation(activeTable.id) ? 'محجوزة اليوم' : 'شاغرة') }}
+                                            <span class="text-[10px] px-2 py-0.5 rounded-full font-mono" :class="getTableBadgeClass(activeTable)">
+                                                {{ getTableStageLabel(activeTable) }}
+                                            </span>
+                                            <span v-if="activeTable.turn_minutes && activeTable.turn_minutes > 0" class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800" :class="activeTable.turn_minutes > 75 ? 'text-rose-400 font-bold' : (activeTable.turn_minutes > 45 ? 'text-amber-400' : 'text-emerald-400')">
+                                                ⏱️ {{ activeTable.turn_minutes }} دقيقة
                                             </span>
                                         </h4>
-                                        <p class="text-[11px] text-slate-400 mt-0.5">
-                                            {{ getZoneLabel(activeTable.zone) }} • {{ activeTable.capacity }} مقاعد
+                                        <p class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-2">
+                                            <span>{{ getZoneLabel(activeTable.zone) }} • {{ activeTable.capacity }} مقاعد</span>
+                                            <span v-if="activeTable.current_guest_name" class="text-amber-300 font-bold">• الضيف: {{ activeTable.current_guest_name }}</span>
                                         </p>
                                     </div>
                                 </div>
 
-                                <!-- Session or Reservation Summary -->
-                                <div v-if="activeTable.active_session" class="text-xs bg-emerald-950/60 border border-emerald-800/60 px-3 py-1.5 rounded-xl text-emerald-300">
-                                    <span>فاتورة: </span>
-                                    <span class="font-mono font-bold">{{ activeTable.active_session.total_amount || 0 }} ل.س</span>
+                                <!-- Session or Reservation or Order Summary -->
+                                <div v-if="activeTable.active_order" class="text-xs bg-slate-950/80 border border-slate-800 px-3 py-1.5 rounded-xl text-slate-200 flex items-center gap-2">
+                                    <span class="text-amber-400 font-bold font-mono">#{{ activeTable.active_order.order_number }}</span>
+                                    <span>{{ activeTable.active_order.items_count }} أصناف</span>
+                                    <span class="font-mono font-black text-emerald-400">{{ activeTable.active_order.total }} {{ restaurant.currency || 'ل.س' }}</span>
+                                </div>
+                                <div v-else-if="activeTable.active_session" class="text-xs bg-emerald-950/60 border border-emerald-800/60 px-3 py-1.5 rounded-xl text-emerald-300">
+                                    <span>جلسة نشطة</span>
                                 </div>
                                 <div v-else-if="getTableReservation(activeTable.id)" class="text-xs bg-amber-950/60 border border-amber-800/60 px-3 py-1.5 rounded-xl text-amber-300">
                                     <span>حجز: {{ getTableReservation(activeTable.id)?.guest_name }} ({{ getTableReservation(activeTable.id)?.time_slot }})</span>
                                 </div>
 
+                                <!-- Toast POS 1-Click Stage Switcher -->
+                                <div class="flex items-center gap-1 bg-slate-950/90 p-1 rounded-xl border border-slate-800 text-[11px]">
+                                    <button
+                                        v-for="stg in [
+                                            { key: 'available', label: 'شاغرة', icon: '🟢' },
+                                            { key: 'seated', label: 'جلوس', icon: '🪑' },
+                                            { key: 'preparing', label: 'تحضير', icon: '🍳' },
+                                            { key: 'served', label: 'تقديم', icon: '🍽️' },
+                                            { key: 'bill_requested', label: 'حساب', icon: '🧾' },
+                                            { key: 'cleaning', label: 'تنظيف', icon: '🧹' },
+                                        ]"
+                                        :key="stg.key"
+                                        type="button"
+                                        @click="setTableStage(activeTable, stg.key)"
+                                        class="px-2 py-1 rounded-lg font-bold transition flex items-center gap-1 cursor-pointer"
+                                        :class="activeTable.operational_stage === stg.key ? 'bg-amber-500 text-slate-950 shadow-xs' : 'text-slate-400 hover:text-white hover:bg-slate-800'"
+                                        :title="stg.label"
+                                    >
+                                        <span>{{ stg.icon }}</span>
+                                        <span class="hidden md:inline">{{ stg.label }}</span>
+                                    </button>
+                                </div>
+
                                 <!-- Actions -->
                                 <div class="flex items-center gap-2 ms-auto">
                                     <button
-                                        v-if="activeTable.active_session"
-                                        type="button"
-                                        @click="closeSessionForTable(activeTable)"
-                                        class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-xs"
-                                    >
-                                        🧹 إنهاء الجلسة
-                                    </button>
-                                    <button
                                         type="button"
                                         @click="openTableDrawer(activeTable)"
-                                        class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 text-xs font-bold transition shadow-xs flex items-center gap-1"
+                                        class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition shadow-xs flex items-center gap-1 cursor-pointer"
                                     >
                                         <span>⚙️</span>
-                                        <span>إعدادات الطاولة</span>
+                                        <span>إعدادات</span>
                                     </button>
                                     <button
                                         type="button"
                                         @click="activeTableId = null"
-                                        class="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                                        class="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
                                         title="إغلاق"
                                     >
                                         ✕
@@ -932,6 +1253,31 @@ async function deleteSelectedTable() {
                                         <option value="terrace">التراس الخارجي</option>
                                         <option value="family">القسم العائلي</option>
                                     </select>
+                                </div>
+                            </div>
+
+                            <!-- Table Operational Stage (Toast POS Stages) -->
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">المرحلة التشغيلية للطاولة</label>
+                                <div class="grid grid-cols-3 gap-1.5">
+                                    <button
+                                        v-for="stg in [
+                                            { key: 'available', label: 'شاغرة', icon: '🟢' },
+                                            { key: 'seated', label: 'جلوس', icon: '🪑' },
+                                            { key: 'preparing', label: 'تحضير', icon: '🍳' },
+                                            { key: 'served', label: 'تقديم', icon: '🍽️' },
+                                            { key: 'bill_requested', label: 'حساب', icon: '🧾' },
+                                            { key: 'cleaning', label: 'تنظيف', icon: '🧹' },
+                                        ]"
+                                        :key="stg.key"
+                                        type="button"
+                                        @click="setTableStage(selectedTable, stg.key)"
+                                        class="py-2 px-1 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center justify-center gap-1"
+                                        :class="selectedTable.operational_stage === stg.key ? 'bg-amber-500 text-stone-950 border-amber-400 font-black shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-400'"
+                                    >
+                                        <span>{{ stg.icon }}</span>
+                                        <span>{{ stg.label }}</span>
+                                    </button>
                                 </div>
                             </div>
 
@@ -1128,6 +1474,337 @@ async function deleteSelectedTable() {
                             <span>🔗</span>
                             <span>{{ isCopiedLink ? 'تم نسخ الرابط بنجاح!' : 'نسخ رابط حجز VIP للعملاء' }}</span>
                         </button>
+                    </div>
+                </div>
+
+                <!-- ================= SMART DIGITAL WAITLIST DRAWER ================= -->
+                <div
+                    v-if="isWaitlistDrawerOpen"
+                    class="fixed inset-y-0 right-0 z-50 w-full sm:w-[480px] bg-white dark:bg-slate-900 shadow-2xl border-l border-slate-200 dark:border-slate-800 p-6 flex flex-col justify-between overflow-y-auto animate-slideLeft"
+                    dir="rtl"
+                >
+                    <div class="space-y-5">
+                        <!-- Drawer Header -->
+                        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-10 h-10 rounded-2xl bg-blue-500/20 border border-blue-500/40 text-blue-400 flex items-center justify-center text-xl shadow-xs">
+                                    📋
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <h3 class="text-lg font-black text-slate-900 dark:text-white">طابور الانتظار الذكي</h3>
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                                            {{ activeWaitingCount }} بالانتظار
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400">إشعارات الواتساب الفورية ومتابعة الأدوار</p>
+                                </div>
+                            </div>
+                            <button
+                                @click="isWaitlistDrawerOpen = false"
+                                class="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <!-- Top Action Controls -->
+                        <div class="grid grid-cols-2 gap-2">
+                            <button
+                                type="button"
+                                @click="isAddWaitlistModalOpen = true"
+                                class="py-2.5 px-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-xs shadow-md shadow-blue-600/20 flex items-center justify-center gap-1.5 transition cursor-pointer"
+                            >
+                                <span>➕</span>
+                                <span>إضافة زبون (Walk-in)</span>
+                            </button>
+                            <button
+                                type="button"
+                                @click="copyWaitlistJoinLink"
+                                class="py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs border border-slate-200 dark:border-slate-700 flex items-center justify-center gap-1.5 transition cursor-pointer"
+                            >
+                                <span>🔗</span>
+                                <span>{{ isCopiedWaitlistLink ? 'تم نسخ الرابط!' : 'رابط QR للمدخل' }}</span>
+                            </button>
+                        </div>
+
+                        <!-- Queue List -->
+                        <div v-if="waitlist.length" class="space-y-3">
+                            <div
+                                v-for="entry in waitlist"
+                                :key="entry.id"
+                                class="p-4 rounded-2xl border transition-all"
+                                :class="[
+                                    entry.status === 'notified'
+                                        ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-700 shadow-sm'
+                                        : (entry.status === 'seated'
+                                            ? 'bg-slate-50 dark:bg-slate-800/30 border-slate-200 dark:border-slate-800 opacity-60'
+                                            : 'bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/80 shadow-xs')
+                                ]"
+                            >
+                                <div class="flex items-start justify-between gap-2 mb-2">
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-black text-sm text-slate-900 dark:text-white">{{ entry.guest_name }}</span>
+                                            <span class="px-2 py-0.5 rounded-md text-[10px] font-mono font-black bg-blue-500/20 text-blue-600 dark:text-blue-300">
+                                                #{{ entry.queue_number }}
+                                            </span>
+                                        </div>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-2">
+                                            <span>👥 {{ entry.party_size }} أفراد</span>
+                                            <span>•</span>
+                                            <span dir="ltr" class="font-mono">{{ entry.guest_phone }}</span>
+                                        </p>
+                                    </div>
+
+                                    <!-- Status Pill -->
+                                    <div class="text-end">
+                                        <span
+                                            class="inline-block px-2.5 py-1 rounded-full text-[10px] font-bold font-mono"
+                                            :class="[
+                                                entry.status === 'notified'
+                                                    ? 'bg-emerald-500 text-slate-950 font-black animate-pulse'
+                                                    : (entry.status === 'seated'
+                                                        ? 'bg-slate-700 text-slate-300'
+                                                        : 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/40')
+                                            ]"
+                                        >
+                                            {{ entry.status === 'notified' ? '🔔 تم إشعار الجاهزية' : (entry.status === 'seated' ? '✓ تم الجلوس' : '⏱️ بانتظار دور') }}
+                                        </span>
+                                        <span class="block text-[10px] text-slate-400 font-mono mt-0.5">
+                                            ينتظر منذ {{ entry.waiting_minutes }}د
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div v-if="entry.notes" class="text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/60 p-2 rounded-xl mb-3 border border-slate-100 dark:border-slate-800 italic">
+                                    "{{ entry.notes }}"
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div v-if="entry.status === 'waiting' || entry.status === 'notified'" class="flex items-center gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+                                    <button
+                                        type="button"
+                                        @click="notifyWaitlistGuest(entry)"
+                                        class="flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer"
+                                        :class="entry.status === 'notified'
+                                            ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
+                                            : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs'"
+                                    >
+                                        <span>🔔</span>
+                                        <span>{{ entry.status === 'notified' ? 'إعادة الإشعار' : 'إشعار بالجاهزية' }}</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        @click="openSeatModal(entry)"
+                                        class="flex-1 py-2 px-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 text-xs font-black transition flex items-center justify-center gap-1 shadow-xs cursor-pointer"
+                                    >
+                                        <span>🪑</span>
+                                        <span>تسكين على طاولة</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        @click="cancelWaitlistEntry(entry)"
+                                        class="p-2 rounded-xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer"
+                                        title="إلغاء الدور"
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Empty State -->
+                        <div v-else class="text-center py-12 px-4 bg-slate-50 dark:bg-slate-800/30 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
+                            <span class="text-4xl">🌟</span>
+                            <h4 class="font-bold text-slate-800 dark:text-slate-200 text-sm mt-3">لا يوجد زبائن في الانتظار حالياً</h4>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-xs mx-auto leading-relaxed">
+                                عندما تمتلئ الصالة، يمكنك إضافة الزوار الوافدين بنقرة زر أو مشاركة رمز الـ QR مع الاستقبال.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Footer Link Copy -->
+                    <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
+                        <button
+                            type="button"
+                            @click="copyWaitlistJoinLink"
+                            class="w-full py-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs transition flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                            <span>📲</span>
+                            <span>{{ isCopiedWaitlistLink ? 'تم نسخ الرابط بنجاح!' : 'نسخ رابط تسجيل الانتظار الذاتي' }}</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ================= ADD WALK-IN GUEST MODAL ================= -->
+                <div
+                    v-if="isAddWaitlistModalOpen"
+                    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn"
+                    dir="rtl"
+                >
+                    <div class="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                            <h3 class="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                                <span>➕</span>
+                                <span>إضافة زبون إلى قائمة الانتظار</span>
+                            </h3>
+                            <button @click="isAddWaitlistModalOpen = false" class="text-slate-400 hover:text-slate-600 cursor-pointer">✕</button>
+                        </div>
+
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">اسم الزبون *</label>
+                                <input
+                                    v-model="newWaitlistForm.guest_name"
+                                    type="text"
+                                    placeholder="مثال: المهندس وسيم"
+                                    class="w-full px-3.5 py-2.5 rounded-xl text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-hidden"
+                                />
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">رقم الواتساب (لإرسال إشعار الطاولة) *</label>
+                                <input
+                                    v-model="newWaitlistForm.guest_phone"
+                                    type="tel"
+                                    placeholder="09xxxxxxxx"
+                                    dir="ltr"
+                                    class="w-full px-3.5 py-2.5 rounded-xl text-sm text-right border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-hidden"
+                                />
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">عدد الأفراد</label>
+                                    <input
+                                        v-model.number="newWaitlistForm.party_size"
+                                        type="number"
+                                        min="1"
+                                        max="30"
+                                        class="w-full px-3.5 py-2.5 rounded-xl text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-hidden"
+                                    />
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">الوقت التقديري (دقيقة)</label>
+                                    <input
+                                        v-model.number="newWaitlistForm.estimated_wait_minutes"
+                                        type="number"
+                                        min="1"
+                                        max="120"
+                                        class="w-full px-3.5 py-2.5 rounded-xl text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-hidden"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">تفضيل الجلسة</label>
+                                <select
+                                    v-model="newWaitlistForm.seating_preference"
+                                    class="w-full px-3.5 py-2.5 rounded-xl text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-hidden"
+                                >
+                                    <option value="any">أي طاولة متاحة أولاً</option>
+                                    <option value="indoor">صالة داخلية</option>
+                                    <option value="terrace">تراس خارجي</option>
+                                    <option value="family">قسم عائلي</option>
+                                    <option value="vip">جناح VIP</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">ملاحظات إضافية</label>
+                                <input
+                                    v-model="newWaitlistForm.notes"
+                                    type="text"
+                                    placeholder="كرسي أطفال، طاولة هادئة..."
+                                    class="w-full px-3.5 py-2 rounded-xl text-xs border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-hidden"
+                                />
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                            <button
+                                type="button"
+                                :disabled="isSubmittingWaitlist"
+                                @click="addWaitlistEntry"
+                                class="flex-1 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-sm shadow-md transition cursor-pointer disabled:opacity-50"
+                            >
+                                {{ isSubmittingWaitlist ? 'جاري التسجيل...' : 'تسجيل وإرسال إشعار الواتساب' }}
+                            </button>
+                            <button
+                                type="button"
+                                @click="isAddWaitlistModalOpen = false"
+                                class="px-5 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-sm cursor-pointer"
+                            >
+                                إلغاء
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================= SEAT GUEST MODAL ================= -->
+                <div
+                    v-if="isSeatModalOpen && seatTargetEntry"
+                    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn"
+                    dir="rtl"
+                >
+                    <div class="w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                            <h3 class="text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                                <span>🪑</span>
+                                <span>تسكين الزبون على طاولة</span>
+                            </h3>
+                            <button @click="isSeatModalOpen = false" class="text-slate-400 hover:text-slate-600 cursor-pointer">✕</button>
+                        </div>
+
+                        <div class="p-3 bg-blue-50 dark:bg-blue-950/40 rounded-xl border border-blue-200 dark:border-blue-800/60 text-xs text-blue-900 dark:text-blue-200">
+                            الزبون: <span class="font-black">{{ seatTargetEntry.guest_name }}</span> ({{ seatTargetEntry.party_size }} أفراد)
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">اختر الطاولة لتسكين الزبون عليها:</label>
+                            <div class="max-h-56 overflow-y-auto space-y-1.5 pr-1">
+                                <label
+                                    v-for="tbl in tables"
+                                    :key="tbl.id"
+                                    class="flex items-center justify-between p-3 rounded-xl border cursor-pointer transition"
+                                    :class="selectedTableIdForSeating === tbl.id
+                                        ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-500 ring-2 ring-amber-500/30'
+                                        : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 hover:border-slate-400'"
+                                >
+                                    <div class="flex items-center gap-2.5">
+                                        <input
+                                            type="radio"
+                                            :value="tbl.id"
+                                            v-model="selectedTableIdForSeating"
+                                            class="text-amber-500 focus:ring-amber-500"
+                                        />
+                                        <span class="font-bold text-sm text-slate-900 dark:text-white">{{ tbl.name }}</span>
+                                        <span class="text-xs text-slate-400">({{ tbl.capacity }} مقاعد - {{ getZoneLabel(tbl.zone) }})</span>
+                                    </div>
+                                    <span class="text-[10px] px-2 py-0.5 rounded-full font-mono" :class="tbl.operational_stage === 'available' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-700 text-slate-300'">
+                                        {{ getTableStageLabel(tbl) }}
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                            <button
+                                type="button"
+                                @click="confirmSeating"
+                                class="flex-1 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-sm shadow-md transition cursor-pointer"
+                            >
+                                تأكيد التسكين والجلوس
+                            </button>
+                            <button
+                                type="button"
+                                @click="isSeatModalOpen = false"
+                                class="px-5 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-sm cursor-pointer"
+                            >
+                                إلغاء
+                            </button>
+                        </div>
                     </div>
                 </div>
 

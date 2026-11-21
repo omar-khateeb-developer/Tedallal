@@ -15,6 +15,27 @@ class RestaurantTableResource extends JsonResource
             app(\App\Services\QrCodeService::class)->generateForTable($this->resource);
         }
 
+        $activeSession = $this->relationLoaded('activeSession') ? $this->activeSession : $this->activeSession;
+        $latestOrder = null;
+        if ($activeSession) {
+            $order = $activeSession->orders()->latest('id')->first();
+            if ($order) {
+                $latestOrder = [
+                    'id' => $order->id,
+                    'order_number' => $order->order_number,
+                    'status' => $order->status->value,
+                    'total' => (float) $order->total,
+                    'items_count' => $order->items()->count(),
+                    'created_at' => $order->created_at?->toIso8601String(),
+                ];
+            }
+        }
+
+        $stage = $this->operational_stage ?: 'available';
+        if ($stage === 'available' && $activeSession) {
+            $stage = 'seated';
+        }
+
         return [
             'id' => $this->id,
             'name' => $this->name,
@@ -29,6 +50,20 @@ class RestaurantTableResource extends JsonResource
             'width' => (float) ($this->width ?? 90),
             'height' => (float) ($this->height ?? 90),
             'iot_device_id' => $this->iot_device_id,
+            'operational_stage' => $stage,
+            'stage_updated_at' => $this->stage_updated_at?->toIso8601String(),
+            'session_started_at' => $this->session_started_at?->toIso8601String(),
+            'bill_requested_at' => $this->bill_requested_at?->toIso8601String(),
+            'current_guest_name' => $this->current_guest_name,
+            'turn_minutes' => $this->getTurnMinutes(),
+            'stage_minutes' => $this->getStageMinutes(),
+            'bill_wait_minutes' => $this->getBillWaitMinutes(),
+            'active_session' => $activeSession ? [
+                'id' => $activeSession->id,
+                'session_token' => $activeSession->session_token,
+                'started_at' => $activeSession->started_at?->toIso8601String(),
+            ] : null,
+            'active_order' => $latestOrder,
             'public_url' => $this->publicUrl(),
             'qr_url' => "/storage/{$qrPath}",
             'restaurant' => new RestaurantResource($this->whenLoaded('restaurant')),

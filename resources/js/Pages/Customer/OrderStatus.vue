@@ -34,6 +34,21 @@ const order = ref<{
     items: Array<{ item_name_snapshot: string; quantity: number; subtotal: string; note?: string }>;
 } | null>(props.initialOrder || null);
 
+const isBillRequested = ref(false);
+const isRequestingBill = ref(false);
+
+async function requestBill() {
+    isRequestingBill.value = true;
+    try {
+        await axios.post(`/api/public/tables/${props.publicToken}/request-bill`);
+        isBillRequested.value = true;
+    } catch (e) {
+        alert('تعذر إرسال طلب الحساب حالياً، يرجى إعلام الكاشير مباشرة.');
+    } finally {
+        isRequestingBill.value = false;
+    }
+}
+
 let pollTimer: ReturnType<typeof setInterval> | null = null;
 
 const shortOrderNumber = computed(() => {
@@ -359,6 +374,23 @@ const currentStepIndex = computed(() => {
                 <div class="mt-4 flex justify-between rounded-2xl bg-stone-50 dark:bg-slate-900 p-4 font-bold border border-stone-100 dark:border-slate-800">
                     <span class="text-stone-600 dark:text-slate-300">المبلغ الإجمالي</span>
                     <span class="text-amber-600 dark:text-amber-400 text-lg">{{ formatPrice(order.total) }}</span>
+                </div>
+
+                <!-- زر طلب الحساب / الفاتورة من الكاشير -->
+                <div v-if="order.service_type === 'dine_in' || !order.service_type" class="mt-3">
+                    <button
+                        v-if="!isBillRequested"
+                        type="button"
+                        :disabled="isRequestingBill"
+                        @click="requestBill"
+                        class="w-full flex items-center justify-center gap-2 rounded-2xl bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/40 dark:hover:bg-purple-900/50 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-700/60 py-3 text-sm font-black shadow-xs transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                    >
+                        <span class="text-base">🧾</span>
+                        <span>{{ isRequestingBill ? 'جاري إرسال الطلب...' : 'طلب الحساب / الفاتورة من الكاشير' }}</span>
+                    </button>
+                    <div v-else class="p-3.5 rounded-2xl bg-purple-900/40 border border-purple-500/60 text-center text-xs font-bold text-purple-200 animate-pulse">
+                        ✓ تم إرسال طلب الفاتورة للكاشير، المحاسب قادم إليك الآن!
+                    </div>
                 </div>
 
                 <!-- زر مشاركة الفاتورة عبر واتساب -->

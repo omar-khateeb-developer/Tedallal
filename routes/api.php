@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\Admin\PromoCodeController as AdminPromoCodeControll
 
 Route::prefix('public')->middleware('throttle:public-api')->group(function () {
     Route::get('tables/{token}', [TableController::class, 'show']);
+    Route::post('tables/{token}/request-bill', [TableController::class, 'requestBill']);
     Route::post('sessions', [SessionController::class, 'store'])->middleware('throttle:public-sessions');
     Route::get('sessions/{sessionToken}', [SessionController::class, 'show']);
     Route::get('menu', [MenuController::class, 'index']);
@@ -33,6 +34,11 @@ Route::prefix('public')->middleware('throttle:public-api')->group(function () {
     Route::get('restaurants/{slug}/booking-availability', [\App\Http\Controllers\Web\Public\TableBookingController::class, 'getAvailability']);
     Route::post('restaurants/{slug}/reservations/hold', [\App\Http\Controllers\Web\Public\TableBookingController::class, 'requestHold'])->middleware('throttle:10,5');
     Route::post('restaurants/{slug}/reservations/verify-otp', [\App\Http\Controllers\Web\Public\TableBookingController::class, 'verifyOtp'])->middleware('throttle:15,5');
+
+    // Smart Digital Waitlist APIs (Public Engine)
+    Route::get('waitlist/{uuid}/status', [\App\Http\Controllers\Web\Public\WaitlistController::class, 'liveStatus']);
+    Route::post('waitlist/{uuid}/cancel', [\App\Http\Controllers\Web\Public\WaitlistController::class, 'cancel']);
+    Route::post('restaurants/{slug}/waitlist/join', [\App\Http\Controllers\Web\Public\WaitlistController::class, 'storePublic'])->middleware('throttle:10,5');
 
     Route::middleware(ValidateTableSession::class)->group(function () {
         Route::get('cart', [CartController::class, 'index']);
@@ -98,11 +104,19 @@ Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
         Route::delete('tables/{table}', [AdminTableController::class, 'destroy']);
         Route::post('tables/{table}/regenerate-token', [AdminTableController::class, 'regenerateToken']);
         Route::post('tables/{table}/close-session', [AdminTableController::class, 'closeActiveSession']);
+        Route::patch('tables/{table}/stage', [AdminTableController::class, 'updateStage']);
         Route::get('tables/{table}/qr', [AdminTableController::class, 'qr']);
 
         // VIP Table Reservations Management
         Route::get('reservations', [\App\Http\Controllers\Api\Admin\ReservationController::class, 'index']);
         Route::patch('reservations/{reservation}/status', [\App\Http\Controllers\Api\Admin\ReservationController::class, 'updateStatus']);
+
+        // Smart Digital Waitlist Management (WhatsApp Powered)
+        Route::get('waitlist', [\App\Http\Controllers\Api\Admin\WaitlistController::class, 'index']);
+        Route::post('waitlist', [\App\Http\Controllers\Api\Admin\WaitlistController::class, 'store']);
+        Route::patch('waitlist/{entry}/notify', [\App\Http\Controllers\Api\Admin\WaitlistController::class, 'notifyGuest']);
+        Route::patch('waitlist/{entry}/seat', [\App\Http\Controllers\Api\Admin\WaitlistController::class, 'seatGuest']);
+        Route::patch('waitlist/{entry}/status', [\App\Http\Controllers\Api\Admin\WaitlistController::class, 'updateStatus']);
     });
 
     Route::middleware('permission:manage_menu')->group(function () {

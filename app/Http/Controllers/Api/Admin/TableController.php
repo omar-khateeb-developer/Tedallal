@@ -172,16 +172,70 @@ class TableController extends ApiController
         $this->authorizeTable($table);
 
         $session = $table->activeSession;
-        if (! $session) {
-            return $this->error('لا توجد جلسة نشطة حالياً لهذه الطاولة.', 404);
+        if ($session) {
+            $session->close();
         }
 
-        $session->close();
+        $table->update([
+            'operational_stage' => 'cleaning',
+            'stage_updated_at' => now(),
+            'bill_requested_at' => null,
+            'current_guest_name' => null,
+        ]);
 
-        \App\Services\ActivityLogger::log('vacate_table', "قام بإنهاء الجلسة وإخلاء الطاولة: {$table->name}");
+        \App\Services\ActivityLogger::log('vacate_table', "قام بإنهاء الجلسة وإخلاء الطاولة ونقلها لمرحلة التنظيف: {$table->name}");
 
         return $this->success([
-            'message' => "تم إنهاء الجلسة وإخلاء الطاولة ({$table->name}) بنجاح.",
+            'message' => "تم إخلاء الطاولة ({$table->name}) ونقلها لمرحلة التنظيف.",
+            'table' => new RestaurantTableResource($table->fresh()),
+        ]);
+    }
+
+    public function updateStage(Request $request, RestaurantTable $table)
+    {
+        $this->authorizeTable($table);
+
+        $validated = $request->validate([
+            'stage' => ['required', 'string', 'in:available,seated,preparing,served,bill_requested,cleaning'],
+            'guest_name' => ['nullable', 'string', 'max:128'],
+        ]);
+
+        $stage = $validated['stage'];
+        $updates = [
+            'operational_stage' => $stage,
+            'stage_updated_at' => now(),
+        ];
+
+        if ($stage === 'seated') {
+            if (! $table->session_started_at) {
+                $updates['session_started_at'] = now();
+            }
+            if (isset($validated['guest_name'])) {
+                $updates['current_guest_name'] = $validated['guest_name'];
+            }
+        } elseif ($stage === 'bill_requested') {
+            $updates['bill_requested_at'] = now();
+        } elseif ($stage === 'available') {
+            $updates['session_started_at'] = null;
+            $updates['bill_requested_at'] = null;
+            $updates['current_guest_name'] = null;
+            if ($table->activeSession) {
+                $table->activeSession->close();
+            }
+        } elseif ($stage === 'cleaning') {
+            $updates['bill_requested_at'] = null;
+            $updates['current_guest_name'] = null;
+            if ($table->activeSession) {
+                $table->activeSession->close();
+            }
+        }
+
+        $table->update($updates);
+
+        \App\Services\ActivityLogger::log('update_table_stage', "قام بتغيير مرحلة الطاولة {$table->name} إلى {$stage}");
+
+        return $this->success([
+            'message' => 'تم تحديث مرحلة الطاولة بنجاح',
             'table' => new RestaurantTableResource($table->fresh()),
         ]);
     }

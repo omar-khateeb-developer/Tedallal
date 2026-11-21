@@ -30,6 +30,11 @@ class RestaurantTable extends Model
         'width',
         'height',
         'iot_device_id',
+        'operational_stage',
+        'stage_updated_at',
+        'session_started_at',
+        'bill_requested_at',
+        'current_guest_name',
     ];
 
     protected function casts(): array
@@ -42,6 +47,9 @@ class RestaurantTable extends Model
             'capacity' => 'integer',
             'width' => 'float',
             'height' => 'float',
+            'stage_updated_at' => 'datetime',
+            'session_started_at' => 'datetime',
+            'bill_requested_at' => 'datetime',
         ];
     }
 
@@ -70,6 +78,38 @@ class RestaurantTable extends Model
     public function reservations(): HasMany
     {
         return $this->hasMany(TableReservation::class, 'table_id');
+    }
+
+    public function waitlistEntries(): HasMany
+    {
+        return $this->hasMany(WaitlistEntry::class, 'assigned_table_id');
+    }
+
+    public function getTurnMinutes(): int
+    {
+        if (! $this->session_started_at) {
+            return 0;
+        }
+
+        return max(0, (int) $this->session_started_at->diffInMinutes(now()));
+    }
+
+    public function getStageMinutes(): int
+    {
+        if (! $this->stage_updated_at) {
+            return 0;
+        }
+
+        return max(0, (int) $this->stage_updated_at->diffInMinutes(now()));
+    }
+
+    public function getBillWaitMinutes(): ?int
+    {
+        if (! $this->bill_requested_at) {
+            return null;
+        }
+
+        return max(0, (int) $this->bill_requested_at->diffInMinutes(now()));
     }
 
     public function isActive(): bool

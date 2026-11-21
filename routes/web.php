@@ -42,6 +42,10 @@ Route::get('/r/{slug}/vip-booking', [\App\Http\Controllers\Web\Public\TableBooki
 Route::get('/r/{slug}/booking/{uuid}', [\App\Http\Controllers\Web\Public\TableBookingController::class, 'showTicket'])->name('public.booking.ticket');
 Route::get('/book/{slug}', fn(string $slug) => redirect()->route('public.booking.show', ['slug' => $slug]));
 
+// Smart Digital Waitlist Live Tracker (طابور الانتظار الذكي المباشر)
+Route::get('/w/{uuid}', [\App\Http\Controllers\Web\Public\WaitlistController::class, 'show'])->name('waitlist.show');
+Route::get('/r/{slug}/waitlist', [\App\Http\Controllers\Web\Public\WaitlistController::class, 'joinPage'])->name('waitlist.join');
+
 // Lucky Wheel routes (Marketing Gamification)
 Route::get('/wheel-demo', fn(\Illuminate\Http\Request $request) => redirect()->route('wheel.show', array_merge(['token' => 'demo'], $request->query())))->name('wheel.demo');
 Route::get('/wheel/{token}', [\App\Http\Controllers\Web\WheelController::class, 'show'])->name('wheel.show');
