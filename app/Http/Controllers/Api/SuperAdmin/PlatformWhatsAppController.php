@@ -60,6 +60,7 @@ class PlatformWhatsAppController extends ApiController
             'phone' => $phone,
             'connected_at' => $connectedAt,
             'ai_enabled' => Setting::get('platform_whatsapp_ai_enabled', '1') === '1',
+            'custom_instructions' => (string) Setting::get('platform_ai_custom_instructions', ''),
         ]);
     }
 
@@ -125,14 +126,22 @@ class PlatformWhatsAppController extends ApiController
     public function updateSettings(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'ai_enabled' => ['required', 'boolean'],
+            'ai_enabled' => ['sometimes', 'boolean'],
+            'custom_instructions' => ['sometimes', 'nullable', 'string', 'max:10000'],
         ]);
 
-        Setting::set('platform_whatsapp_ai_enabled', $validated['ai_enabled'] ? '1' : '0');
+        if (array_key_exists('ai_enabled', $validated)) {
+            Setting::set('platform_whatsapp_ai_enabled', $validated['ai_enabled'] ? '1' : '0');
+        }
+
+        if (array_key_exists('custom_instructions', $validated)) {
+            Setting::set('platform_ai_custom_instructions', (string) $validated['custom_instructions']);
+        }
 
         return $this->success([
-            'ai_enabled' => (bool) $validated['ai_enabled'],
-            'message' => 'تم تحديث إعدادات المساعد الذكي لواتساب المنصة بنجاح.',
+            'ai_enabled' => Setting::get('platform_whatsapp_ai_enabled', '1') === '1',
+            'custom_instructions' => (string) Setting::get('platform_ai_custom_instructions', ''),
+            'message' => 'تم حفظ وتحديث إعدادات وتلقين المساعد الذكي بنجاح.',
         ]);
     }
 

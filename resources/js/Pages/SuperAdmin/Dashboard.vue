@@ -333,6 +333,9 @@ const platformWaQr = ref<string | null>(null);
 const platformWaPhone = ref<string | null>(null);
 const platformWaConnectedAt = ref<string | null>(null);
 const platformWaAiEnabled = ref(true);
+const platformAiCustomInstructions = ref('');
+const savingAiInstructions = ref(false);
+const aiInstructionsSavedSuccess = ref(false);
 const platformWaLoading = ref(false);
 const platformTestPhone = ref('');
 const platformTestLoading = ref(false);
@@ -347,6 +350,9 @@ const fetchPlatformWaStatus = async () => {
             platformWaPhone.value = data.data.phone;
             platformWaConnectedAt.value = data.data.connected_at;
             platformWaAiEnabled.value = data.data.ai_enabled;
+            if (data.data.custom_instructions !== undefined && !savingAiInstructions.value) {
+                platformAiCustomInstructions.value = data.data.custom_instructions;
+            }
 
             if (platformWaStatus.value === 'scan_qr' || platformWaStatus.value === 'connecting') {
                 if (!platformWaPollTimer) {
@@ -406,6 +412,33 @@ const togglePlatformAi = async () => {
         platformWaAiEnabled.value = nextVal;
     } catch (e) {
         alert('تعذر تحديث إعدادات المساعد الذكي');
+    }
+};
+
+const saveAiInstructions = async () => {
+    savingAiInstructions.value = true;
+    try {
+        const { data } = await axios.post('/api/super-admin/platform-whatsapp/settings', {
+            custom_instructions: platformAiCustomInstructions.value,
+        });
+        if (data.success) {
+            aiInstructionsSavedSuccess.value = true;
+            setTimeout(() => {
+                aiInstructionsSavedSuccess.value = false;
+            }, 3500);
+        }
+    } catch (e: any) {
+        alert(e.response?.data?.message || 'تعذر حفظ توجيهات المساعد الذكي');
+    } finally {
+        savingAiInstructions.value = false;
+    }
+};
+
+const insertInstructionTemplate = (snippet: string) => {
+    if (!platformAiCustomInstructions.value.trim()) {
+        platformAiCustomInstructions.value = snippet;
+    } else {
+        platformAiCustomInstructions.value += '\n' + snippet;
     }
 };
 
@@ -790,6 +823,79 @@ onUnmounted(() => {
                                 >
                                     <span>{{ platformWaAiEnabled ? 'المساعد الذكي: مفعّل (ON) 🟢' : 'المساعد الذكي: متوقف (OFF) ⚪' }}</span>
                                 </button>
+                            </div>
+
+                            <!-- Custom AI Knowledge & Training (تلقين وتوجيه عقل المساعد الذكي) -->
+                            <div class="p-5 rounded-2xl bg-gradient-to-br from-indigo-50/70 via-purple-50/40 to-white dark:from-indigo-950/20 dark:via-purple-950/10 dark:to-slate-900 border border-indigo-200/80 dark:border-indigo-800/40 shadow-xs space-y-3">
+                                <div class="flex items-start justify-between flex-wrap gap-2">
+                                    <div class="flex items-center gap-2.5">
+                                        <span class="text-2xl">🧠</span>
+                                        <div>
+                                            <h4 class="text-sm font-black text-indigo-950 dark:text-indigo-200 flex items-center gap-2">
+                                                <span>تلقين وتوجيه المساعد الذكي المخصص (Custom AI Knowledge & Training)</span>
+                                                <span class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 font-bold">يُحقن فورياً في Gemini</span>
+                                            </h4>
+                                            <p class="text-xs text-indigo-800/80 dark:text-indigo-300/80 mt-0.5">
+                                                اكتب هنا أسعار باقاتك، عروضك الحالية، شروط التعاقد، أو أسلوب الرد الذي ترغب أن يلتزم به المساعد عند إجابته على أصحاب المطاعم عبر الواتساب.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div v-if="aiInstructionsSavedSuccess" class="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/80 px-3 py-1 rounded-lg border border-emerald-300 dark:border-emerald-800 flex items-center gap-1 animate-pulse">
+                                        <span>✓</span>
+                                        <span>تم الحفظ وتحديث عقل المساعد بنجاح!</span>
+                                    </div>
+                                </div>
+
+                                <!-- Quick Preset Chips -->
+                                <div class="flex items-center gap-1.5 flex-wrap pt-1">
+                                    <span class="text-[11px] font-bold text-gray-500 dark:text-gray-400">إدراج نموذج سريع:</span>
+                                    <button
+                                        type="button"
+                                        @click="insertInstructionTemplate('- باقة الأساسي (Basic): 50$ شهرياً (منيو QR + شاشات مطبخ + كاشير).\n- باقة المحترفين (Pro): 100$ شهرياً (تشمل الويتر الذكي، عجلة الحظ، وبوابة الواتساب الذكية).\n- باقة المؤسسات (Enterprise): مخصصة للسلاسل الكبيرة بحسب عدد الفروع.')"
+                                        class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-300 hover:border-indigo-400 hover:text-indigo-600 transition cursor-pointer"
+                                    >
+                                        + أسعار الباقات
+                                    </button>
+                                    <button
+                                        type="button"
+                                        @click="insertInstructionTemplate('- لدينا حالياً عرض خاص لأول 10 مطاعم تسجل هذا الشهر: تركيب وتدريب ميداني مجاني بالكامل مع إعفاء من رسوم الإعداد.')"
+                                        class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-300 hover:border-indigo-400 hover:text-indigo-600 transition cursor-pointer"
+                                    >
+                                        + عرض ترويجي
+                                    </button>
+                                    <button
+                                        type="button"
+                                        @click="insertInstructionTemplate('- اطلب دائماً من صاحب المطعم معرفة اسم مطعمه الحالي والمدينة لمساعدته بدقة.\n- ركّز دائماً على أن المنصة تلغي عمولة تطبيقات التوصيل (0% عمولة) وتحفظ أرباح المبيعات كاملة لصاحب المطعم.')"
+                                        class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-300 hover:border-indigo-400 hover:text-indigo-600 transition cursor-pointer"
+                                    >
+                                        + أسلوب الرد وقواعد التركيز
+                                    </button>
+                                </div>
+
+                                <!-- Textarea -->
+                                <textarea
+                                    v-model="platformAiCustomInstructions"
+                                    rows="4"
+                                    placeholder="اكتب هنا أي تعليمات مخصصة، أسعار محددة، عروض جديدة، أو تفاصيل ترغب بتلقينها للمساعد الذكي..."
+                                    class="w-full text-xs font-normal leading-relaxed rounded-xl border border-indigo-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-white p-3 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition shadow-inner"
+                                ></textarea>
+
+                                <!-- Save Action Bar -->
+                                <div class="flex items-center justify-between flex-wrap gap-2 pt-1">
+                                    <span class="text-[11px] text-gray-500 dark:text-gray-400">
+                                        💡 أي تعديل تكتبه هنا يتم أخذه بعين الاعتبار في نفس اللحظة بكل ردود الواتساب والموقع دون الحاجة لإعادة تشغيل.
+                                    </span>
+                                    <button
+                                        type="button"
+                                        @click="saveAiInstructions"
+                                        :disabled="savingAiInstructions"
+                                        class="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/20 transition cursor-pointer disabled:opacity-50"
+                                    >
+                                        <span v-if="savingAiInstructions" class="animate-spin text-sm">⏳</span>
+                                        <span v-else>💾</span>
+                                        <span>{{ savingAiInstructions ? 'جارٍ الحفظ وتحديث العقل...' : 'حفظ وتحديث عقل المساعد فوراً' }}</span>
+                                    </button>
+                                </div>
                             </div>
 
                             <!-- Test Message & Leads Quick Access -->

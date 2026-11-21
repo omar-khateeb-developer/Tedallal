@@ -75,6 +75,11 @@ class AiConsultantService
 - إذا سأل العميل عن تكلفة الاشتراك المحددة بدقة، اذكر أن الباقات مصممة بحسب حجم المطعم وعدد الطاولات بأسعار تشجيعية، وانصحه بطلب استشارة مجانية أو التواصل المباشر لمعرفة الباقة المناسبة لمطعمه فوراً.
 PROMPT;
 
+        $customInstructions = trim((string) \App\Models\Setting::get('platform_ai_custom_instructions', ''));
+        if (! empty($customInstructions)) {
+            $systemPrompt .= "\n\n5. توجيهات ومعلومات خاصة ومباشرة من صاحب المنصة (لها أولوية قصوى وتحديث فوري):\n" . $customInstructions;
+        }
+
         $contents = [];
         foreach ($history as $msg) {
             if (!empty($msg['role']) && !empty($msg['content'])) {
