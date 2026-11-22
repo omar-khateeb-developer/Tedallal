@@ -19,6 +19,7 @@ class AiConsultantService
         // 0. الجدار الأمني السيبراني الاستباقي الصارم (Pre-LLM Zero-Trust Security Shield)
         $securityViolation = $this->checkSecurityViolation($userMessage);
         if ($securityViolation !== null) {
+            $securityViolation['reply'] = self::sanitizeText($securityViolation['reply']);
             return $securityViolation;
         }
 
@@ -29,6 +30,7 @@ class AiConsultantService
             try {
                 $response = $this->callGeminiApi($apiKey, $model, $userMessage, $history);
                 if (!empty($response['reply'])) {
+                    $response['reply'] = self::sanitizeText($response['reply']);
                     return $response;
                 }
             } catch (\Throwable $e) {
@@ -37,7 +39,9 @@ class AiConsultantService
         }
 
         // المحرك الاستشاري المحلي الذكي (يعمل بدون مفتاح API أو عند انقطاع الاتصال)
-        return $this->localExpertFallback($userMessage);
+        $fallback = $this->localExpertFallback($userMessage);
+        $fallback['reply'] = self::sanitizeText($fallback['reply']);
+        return $fallback;
     }
 
     /**
@@ -189,6 +193,12 @@ class AiConsultantService
 - تحدث بلغة عربية احترافية، ودودة، وواثقة (مزيج بين الفصحى البسيطة واللهجة البيضاء المهذبة).
 - قاعدة الإيجاز الصارمة: اجعل كل رد قصيراً ومباشراً (بحد أقصى 3 إلى 5 أسطر في الرسالة الواحدة). تجنب الفقرات الطويلة تماماً؛ مستخدمو واتساب يفضلون الردود السريعة ولتجنب ظهور زر "قراءة المزيد".
 - قاعدة سلامة المحاذاة (RTL): تجنب وضع كلمات أجنبية بين أقواس وسط النص العربي (تجنب وضع أقواس حول المصطلحات الإنجليزية)، لمنع تشوه وانكسار الأسطر في واتساب.
+- قاعدة سلامة الروابط لواتساب (Clean Bare URLs):
+  * يُمنع منعاً باتاً استخدام روابط ماركداون [نص](url) أو [url](url) نهائياً.
+  * يُمنع وضع أي رابط بين أقواس من أي نوع: لا هلالية (url) ولا معقوفة [url].
+  * ضع الرابط مجرداً ونظيفاً بمفرده دائماً على سطر مستقل مسبوقاً بسطر جديد وبعده سطر جديد:
+https://tedallal.tech/demo
+  * لا تلصق بالرابط أي علامة ترقيم (مثل ؟ أو ! أو .) إطلاقاً حتى لا تتلف قابلية النقر في واتساب.
 - ركّز دائماً على الفائدة التجارية والنتيجة لصاحب المطعم (زيادة الأرباح، منع السرقة، راحة البال) وليس على الشرح التقني المعقد.
 - استخدم النقاط القصيرة والإيموجي باعتدال لتسهيل القراءة.
 - إذا خاطبك العميل بالإنجليزية، أجب بالإنجليزية الراقية والموجزة مع الالتزام التام بنفس القواعد (Professional Executive English).
@@ -233,7 +243,7 @@ class AiConsultantService
 - في كل رد، اختم بسؤال تشخيصي قصير أو دعوة لاتخاذ إجراء (Call to Action) تدفع المحادثة للأمام، مثل:
   - "ما هو التحدي الأكبر في مطعمك حالياً: زيادة المبيعات أم ضبط الكاشير والمطبخ؟"
   - "كم طاولة أو فرعاً تدير حالياً لنرشح لك الباقة الأنسب؟"
-  - "هل تحب تجربة المحاكي التفاعلي الحي في 60 ثانية عبر الرابط (https://tedallal.tech/demo)؟"
+  - "هل تحب تجربة المحاكي التفاعلي الحي في 60 ثانية؟ إليك الرابط المباشر:\nhttps://tedallal.tech/demo"
 - إذا أبدى العميل اهتماماً، اطلب منه بلطف: (اسم المطعم + المدينة + رقم للتواصل) ليقوم فريق الإدارة بالتنسيق المباشر معه فوراً.
 
 # محظورات قطعية (Strict Constraints)
@@ -298,7 +308,7 @@ PROMPT;
         }
 
         return [
-            'reply' => trim($text),
+            'reply' => self::sanitizeText(trim($text)),
             'suggested_actions' => $this->generateSuggestedActions($userMessage),
         ];
     }
@@ -425,5 +435,40 @@ PROMPT;
                 'url' => 'https://wa.me/963947064593?text=' . urlencode('مرحباً، اطلعت على منظومة تدلّل وأرغب في تنسيق تدشين المنظومة لمطعمي.'),
             ],
         ];
+    }
+
+    /**
+     * تنظيف نصوص ورسائل واتساب من تشوهات روابط الماركداون والأقواس وعلامات الترقيم الملتصقة.
+     */
+    public static function sanitizeText(string $text): string
+    {
+        // 1. إصلاح روابط ماركداون الكاملة [label](url)
+        $text = preg_replace_callback('/\[([^\]]+)\]\((https?:\/\/[^\s\)\"]+)\)\]?/u', function ($matches) {
+            $label = trim($matches[1]);
+            $url = trim($matches[2], " \t\n\r\0\x0B)]");
+
+            if (str_starts_with($label, 'http') || $label === $url) {
+                return "\n" . $url . "\n";
+            }
+
+            return $label . ":\n" . $url . "\n";
+        }, $text);
+
+        // 2. إصلاح الروابط المشوهة التي تفتقد القوس الأولي مثل: https://url](https://url)]
+        $text = preg_replace('/(https?:\/\/[^\s\]\)\"]+)\]\((https?:\/\/[^\s\)\"]+)\)\]?/u', "\n$1\n", $text);
+
+        // 3. إزالة الأقواس المحيطة بالروابط: (https://...) أو [https://...]
+        $text = preg_replace('/[\(\[](https?:\/\/[^\s\)\]]+)[\)\]]/u', "\n$1\n", $text);
+
+        // 4. إزالة أي أقواس متبقية ملتصقة بنهاية الرابط
+        $text = preg_replace('/(https?:\/\/[^\s]+)[\]\)]+/u', '$1', $text);
+
+        // 5. فصل علامات الترقيم (؟ أو ! أو . أو ،) إذا التصقت بنهاية الرابط
+        $text = preg_replace('/(https?:\/\/[^\s]+)([؟!\.\,،؛:])(\s|$)/u', '$1 $2$3', $text);
+
+        // 6. تنظيم الفراغات والأسطر الزائدة
+        $text = preg_replace("/\n{3,}/u", "\n\n", $text);
+
+        return trim($text);
     }
 }

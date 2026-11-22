@@ -205,6 +205,7 @@ class WhatsAppWebhookController extends Controller
                         $replyText = $result['reply'] ?? null;
 
                         if ($replyText) {
+                            $replyText = AiConsultantService::sanitizeText($replyText);
                             $history[] = ['role' => 'user', 'content' => $text];
                             $history[] = ['role' => 'model', 'content' => $replyText];
                             if (count($history) > 10) {
