@@ -402,10 +402,161 @@ final class CustomerCrmService
         $menuUrl = "{$baseUrl}/m/{$restaurant->slug}?coupon={$promo->code}";
 
         return "⏳ تنبيه ينتهي قريباً! عزيزي {$customer->name} ✨\n\n"
-            . "نود تذكيرك بأن خصمك الرائع ({$discountLabel}) من مطعم «{$restaurant->name}» سينتهي غداً بتاريخ: {$expiresText}!\n\n"
+            . "نود تذكيرك بأن خصمك الرائع ({$discountLabel}) من مطعم «{$restaurantName}» سينتهي غداً بتاريخ: {$expiresText}!\n\n"
             . "🎟️ كود الخصم الخاص بك: {$promo->code}\n"
             . "📲 اطلب واستفد من الخصم فوراً من الرابط:\n{$menuUrl}\n\n"
             . "يسعدنا جداً حضورك أو طلبك اليوم قبل انتهاء الصلاحية 🎉";
+    }
+
+    /**
+     * Classify customer into a smart CRM segment based on RFM principles.
+     *
+     * @return array{segment: string, segment_label: string, segment_tagline: string, days_since_last_visit: int}
+     */
+    public function classifySegment(RestaurantCustomer $customer): array
+    {
+        $lastVisit = $customer->last_visit_at ?? $customer->created_at;
+        $daysSince = $lastVisit ? (int) $lastVisit->diffInDays(now()) : 999;
+        $visits = (int) $customer->visits_count;
+
+        if ($visits >= 5) {
+            $segment = 'vip';
+            $label = 'عميل مميز VIP 🌟';
+            $tagline = "زبون دائم (+{$visits} زيارات)";
+        } elseif ($daysSince >= 20 && $visits >= 1) {
+            $segment = 'at_risk';
+            $label = 'في خطر الانقطاع ⏳';
+            $tagline = "لم يزر المطعم منذ {$daysSince} يوماً";
+        } elseif ($visits <= 1) {
+            $segment = 'new_lead';
+            $label = 'عميل جديد 🎁';
+            $tagline = "زيارة واحدة (فرصة للتحويل لزبون دائم)";
+        } else {
+            $segment = 'regular';
+            $label = 'عميل متكرر 🔁';
+            $tagline = "{$visits} زيارات مسجلة";
+        }
+
+        return [
+            'segment' => $segment,
+            'segment_label' => $label,
+            'segment_tagline' => $tagline,
+            'days_since_last_visit' => $daysSince,
+        ];
+    }
+
+    /**
+     * Create an exclusive retention promo code for a customer.
+     */
+    public function createRetentionPromo(
+        Restaurant $restaurant,
+        RestaurantCustomer $customer,
+        string $campaignType,
+        string $discountType = 'percentage',
+        float $discountValue = 15,
+        int $validDays = 7
+    ): PromoCode {
+        $prefix = match ($campaignType) {
+            'win_back' => 'BACK-',
+            'vip_reward' => 'VIP-',
+            'welcome_lead' => 'HI-',
+            default => 'GIFT-',
+        };
+
+        do {
+            $code = $prefix . strtoupper(Str::random(5));
+        } while (PromoCode::withoutGlobalScopes()->where('restaurant_id', $restaurant->id)->where('code', $code)->exists());
+
+        return PromoCode::withoutGlobalScopes()->create([
+            'restaurant_id' => $restaurant->id,
+            'customer_id' => $customer->id,
+            'code' => $code,
+            'source' => 'crm_retention',
+            'discount_type' => $discountType,
+            'discount_value' => $discountValue,
+            'min_order_value' => 0,
+            'is_active' => true,
+            'starts_at' => now()->subMinute(),
+            'expires_at' => now()->addDays(max(1, $validDays)),
+            'is_single_use' => true,
+            'times_used' => 0,
+        ]);
+    }
+
+    /**
+     * Build WhatsApp payload for customer retention campaign.
+     *
+     * @return array{message: string, whatsapp_url: string}
+     */
+    public function buildCampaignPayload(
+        Restaurant $restaurant,
+        RestaurantCustomer $customer,
+        string $campaignType,
+        ?PromoCode $promo = null,
+        ?string $customMessage = null
+    ): array {
+        $baseUrl = rtrim((string) config('app.url', 'https://tedallal.tech'), '/');
+        $cleanName = $customer->name;
+        $restaurantName = $restaurant->name;
+
+        if ($campaignType === 'custom' && ! empty($customMessage)) {
+            $message = trim($customMessage);
+            if ($promo) {
+                $discountLabel = $this->formatPromoLabel($promo, $restaurant);
+                $menuUrl = "{$baseUrl}/m/{$restaurant->slug}?coupon={$promo->code}";
+                $expiresText = $promo->expires_at ? $promo->expires_at->format('Y-m-d') : 'قريباً';
+                $message .= "\n\n🎯 هديتك الخاصة: {$discountLabel}\n"
+                    . "🎟️ كود الخصم: {$promo->code}\n"
+                    . "📅 صالح لغاية: {$expiresText}\n"
+                    . "📲 للطلب وتطبيق الخصم فوراً:\n{$menuUrl}";
+            }
+        } elseif ($campaignType === 'vip_reward') {
+            $message = "🌟 أهلاً وسهلاً بعميلنا المميز {$cleanName}! ✨\n\n"
+                . "تقديراً لولائك الدائم وتكرار زياراتك لمطعم «{$restaurantName}»، يسعدنا إهداؤك هذه الهدية الخاصة:\n";
+            if ($promo) {
+                $discountLabel = $this->formatPromoLabel($promo, $restaurant);
+                $menuUrl = "{$baseUrl}/m/{$restaurant->slug}?coupon={$promo->code}";
+                $expiresText = $promo->expires_at ? $promo->expires_at->format('Y-m-d') : 'قريباً';
+                $message .= "🎯 الهدية: {$discountLabel}\n"
+                    . "🎟️ كود الخصم الحصري: {$promo->code}\n"
+                    . "📅 صالح لغاية: {$expiresText}\n"
+                    . "📲 للطلب وتطبيق الخصم مباشرة في المنيو:\n{$menuUrl}\n\n";
+            }
+            $message .= "يسعدنا ويشرفنا دائماً وجودك بيننا، ونتطلع لاستقبالك في أقرب وقت! 👑";
+        } elseif ($campaignType === 'win_back') {
+            $message = "🌸 اشتقنالك يا {$cleanName} في مطعمنا «{$restaurantName}»! 👋\n\n"
+                . "مر وقت منذ آخر زيارة شرّفتنا بها، وحبينا نهديك كود خصم خاص لتنورنا مجدداً وندللك على ذوقك:\n";
+            if ($promo) {
+                $discountLabel = $this->formatPromoLabel($promo, $restaurant);
+                $menuUrl = "{$baseUrl}/m/{$restaurant->slug}?coupon={$promo->code}";
+                $expiresText = $promo->expires_at ? $promo->expires_at->format('Y-m-d') : 'قريباً';
+                $message .= "🎯 كود العودة: {$discountLabel}\n"
+                    . "🎟️ الكود: {$promo->code}\n"
+                    . "📅 صالح لغاية: {$expiresText}\n"
+                    . "📲 للطلب المباشر أو زيارتنا:\n{$menuUrl}\n\n";
+            }
+            $message .= "طاولتك بانتظارك وأشهى الأطباق جاهزة لعيونك! نتشرف بزيارتك دائماً ✨";
+        } else { // welcome_lead / default
+            $message = "🎉 أهلاً بك يا {$cleanName} في عائلة «{$restaurantName}»! ✨\n\n"
+                . "سعدنا جداً بزيارتك الأولى لنا، وحبينا نشكرك ونهديك كود خصم لزيارتك القادمة:\n";
+            if ($promo) {
+                $discountLabel = $this->formatPromoLabel($promo, $restaurant);
+                $menuUrl = "{$baseUrl}/m/{$restaurant->slug}?coupon={$promo->code}";
+                $expiresText = $promo->expires_at ? $promo->expires_at->format('Y-m-d') : 'قريباً';
+                $message .= "🎯 الهدية: {$discountLabel}\n"
+                    . "🎟️ كود الخصم: {$promo->code}\n"
+                    . "📅 صالح لغاية: {$expiresText}\n"
+                    . "📲 رابط المنيو وتطبيق الخصم:\n{$menuUrl}\n\n";
+            }
+            $message .= "نتطلع لرؤيتك مجدداً وخدمتك بأعلى معايير الضيافة! 🍽️";
+        }
+
+        $url = 'https://wa.me/' . $this->toWhatsAppDigits($customer->phone) . '?text=' . rawurlencode($message);
+
+        return [
+            'message' => $message,
+            'whatsapp_url' => $url,
+        ];
     }
 }
 

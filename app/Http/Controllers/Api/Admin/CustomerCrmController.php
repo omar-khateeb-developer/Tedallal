@@ -8,6 +8,7 @@ use App\Models\PromoCode;
 use App\Models\RestaurantCustomer;
 use App\Services\CustomerCrmService;
 use App\Services\RestaurantContext;
+use App\Services\WhatsAppGatewayService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -16,6 +17,7 @@ class CustomerCrmController extends ApiController
     public function __construct(
         private readonly RestaurantContext $restaurantContext,
         private readonly CustomerCrmService $crmService,
+        private readonly WhatsAppGatewayService $gatewayService,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -46,6 +48,9 @@ class CustomerCrmController extends ApiController
         $activeCouponsCount = 0;
         $needsReminderCount = 0;
         $loyaltyEligibleCount = 0;
+        $vipCustomersCount = 0;
+        $atRiskCustomersCount = 0;
+        $newLeadsCustomersCount = 0;
 
         $mapped = $allCustomers->map(function (RestaurantCustomer $customer) use (
             $restaurant,
@@ -53,8 +58,21 @@ class CustomerCrmController extends ApiController
             $targetVisits,
             &$activeCouponsCount,
             &$needsReminderCount,
-            &$loyaltyEligibleCount
+            &$loyaltyEligibleCount,
+            &$vipCustomersCount,
+            &$atRiskCustomersCount,
+            &$newLeadsCustomersCount
         ) {
+            $segmentData = $this->crmService->classifySegment($customer);
+
+            if ($segmentData['segment'] === 'vip') {
+                $vipCustomersCount++;
+            } elseif ($segmentData['segment'] === 'at_risk') {
+                $atRiskCustomersCount++;
+            } elseif ($segmentData['segment'] === 'new_lead') {
+                $newLeadsCustomersCount++;
+            }
+
             $codes = $customer->promoCodes->map(function (PromoCode $promo) use ($restaurant, $customer, &$activeCouponsCount, &$needsReminderCount) {
                 $isUsed = ($promo->is_single_use && $promo->times_used > 0);
                 $isExpired = $promo->expires_at && $promo->expires_at->isPast();
@@ -121,6 +139,10 @@ class CustomerCrmController extends ApiController
                 'visits_count' => $visits,
                 'notes' => $customer->notes,
                 'last_visit_at' => $customer->last_visit_at?->format('Y-m-d h:i A') ?? $customer->created_at?->format('Y-m-d h:i A'),
+                'segment' => $segmentData['segment'],
+                'segment_label' => $segmentData['segment_label'],
+                'segment_tagline' => $segmentData['segment_tagline'],
+                'days_since_last_visit' => $segmentData['days_since_last_visit'],
                 'has_usable_promo' => $hasUsablePromo,
                 'needs_reminder' => $hasUnremindedPromo,
                 'has_active_loyalty_promo' => $hasActiveLoyaltyPromo,
@@ -134,6 +156,15 @@ class CustomerCrmController extends ApiController
         $search = trim((string) $request->query('search', ''));
 
         $filtered = $mapped->filter(function ($row) use ($filter, $search) {
+            if ($filter === 'vip' && $row['segment'] !== 'vip') {
+                return false;
+            }
+            if ($filter === 'at_risk' && $row['segment'] !== 'at_risk') {
+                return false;
+            }
+            if ($filter === 'new_leads' && $row['segment'] !== 'new_lead') {
+                return false;
+            }
             if ($filter === 'needs_reminder' && ! $row['needs_reminder']) {
                 return false;
             }
@@ -173,6 +204,9 @@ class CustomerCrmController extends ApiController
                 'active_coupons' => $activeCouponsCount,
                 'needs_reminder' => $needsReminderCount,
                 'loyalty_eligible' => $loyaltyEligibleCount,
+                'vip_customers' => $vipCustomersCount,
+                'at_risk_customers' => $atRiskCustomersCount,
+                'new_leads_customers' => $newLeadsCustomersCount,
             ],
             'crm_settings' => [
                 'wheel_require_whatsapp' => $restaurant->shouldRequireWheelWhatsapp(),
@@ -347,6 +381,97 @@ class CustomerCrmController extends ApiController
             'wheel_require_whatsapp' => $restaurant->shouldRequireWheelWhatsapp(),
             'wheel_reveal_code_after_save' => $restaurant->shouldRevealWheelCodeAfterSave(),
             'loyalty' => $restaurant->fresh()->loyaltyConfig(),
+        ]);
+    }
+
+    /**
+     * Launch a 1-click WhatsApp retention campaign for a customer (Win-back, VIP reward, or Welcome lead).
+     */
+    public function sendCampaign(Request $request, int $customerId): JsonResponse
+    {
+        $restaurant = $this->restaurantContext->current();
+
+        if (! $restaurant->hasWhatsappRemindersFeature()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'ميزة حملات الواتساب غير مفعلة لهذا المطعم.',
+            ], 403);
+        }
+
+        $customer = RestaurantCustomer::withoutGlobalScopes()
+            ->where('restaurant_id', $restaurant->id)
+            ->findOrFail($customerId);
+
+        $validated = $request->validate([
+            'campaign_type' => ['required', 'string', 'in:win_back,vip_reward,welcome_lead,custom'],
+            'custom_message' => ['nullable', 'string', 'max:1500'],
+            'create_voucher' => ['required', 'boolean'],
+            'discount_type' => ['nullable', 'string', 'in:percentage,fixed'],
+            'discount_value' => ['nullable', 'numeric', 'min:1'],
+            'valid_days' => ['nullable', 'integer', 'min:1', 'max:90'],
+            'send_direct' => ['required', 'boolean'],
+        ]);
+
+        $promo = null;
+        if (! empty($validated['create_voucher'])) {
+            $promo = $this->crmService->createRetentionPromo(
+                $restaurant,
+                $customer,
+                $validated['campaign_type'],
+                $validated['discount_type'] ?? 'percentage',
+                (float) ($validated['discount_value'] ?? 15),
+                (int) ($validated['valid_days'] ?? 7)
+            );
+        }
+
+        $payload = $this->crmService->buildCampaignPayload(
+            $restaurant,
+            $customer,
+            $validated['campaign_type'],
+            $promo,
+            $validated['custom_message'] ?? null
+        );
+
+        $sentDirectly = false;
+        $errorMsg = null;
+
+        if (! empty($validated['send_direct']) && $restaurant->isWhatsappConnected()) {
+            $sendRes = $this->gatewayService->sendMessage($restaurant, $customer->phone, $payload['message'], true);
+            if (! empty($sendRes['success'])) {
+                $sentDirectly = true;
+            } else {
+                $errorMsg = $sendRes['message'] ?? null;
+            }
+        }
+
+        // Add history trace in customer notes
+        $campaignLabels = [
+            'win_back' => 'استعادة عميل منقطع',
+            'vip_reward' => 'تكريم عميل VIP',
+            'welcome_lead' => 'ترحيب بعميل جديد',
+            'custom' => 'حملة مخصصة',
+        ];
+        $label = $campaignLabels[$validated['campaign_type']] ?? 'حملة تواصل';
+        $todayStr = now()->format('Y-m-d');
+        $trace = "📢 [حملة {$label} بتاريخ {$todayStr}]";
+        $currentNotes = $customer->notes ? trim($customer->notes) : '';
+        if (! str_contains($currentNotes, $trace)) {
+            $customer->update([
+                'notes' => $currentNotes ? "{$currentNotes}\n{$trace}" : $trace,
+            ]);
+        }
+
+        return $this->success([
+            'sent_directly' => $sentDirectly,
+            'error_message' => $errorMsg,
+            'whatsapp_url' => $payload['whatsapp_url'],
+            'whatsapp_message' => $payload['message'],
+            'promo_code' => $promo ? [
+                'id' => $promo->id,
+                'code' => $promo->code,
+                'discount_label' => $this->crmService->formatPromoLabel($promo, $restaurant),
+                'expires_at' => $promo->expires_at?->format('Y-m-d'),
+            ] : null,
         ]);
     }
 }

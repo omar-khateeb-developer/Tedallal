@@ -29,6 +29,10 @@ interface CustomerRow {
     visits_count: number;
     notes: string | null;
     last_visit_at: string | null;
+    segment: 'vip' | 'at_risk' | 'new_lead' | 'regular';
+    segment_label: string;
+    segment_tagline: string;
+    days_since_last_visit: number;
     has_usable_promo: boolean;
     needs_reminder: boolean;
     has_active_loyalty_promo: boolean;
@@ -53,10 +57,109 @@ const stats = ref({
     active_coupons: 0,
     needs_reminder: 0,
     loyalty_eligible: 0,
+    vip_customers: 0,
+    at_risk_customers: 0,
+    new_leads_customers: 0,
 });
 
-const activeFilter = ref<'all' | 'needs_reminder' | 'has_active' | 'returning' | 'loyalty'>('all');
+const activeFilter = ref<'all' | 'vip' | 'at_risk' | 'new_leads' | 'needs_reminder' | 'has_active' | 'returning' | 'loyalty'>('all');
 const searchQuery = ref('');
+
+// Retention Campaign States
+const showCampaignModal = ref(false);
+const campaignCustomer = ref<CustomerRow | null>(null);
+const campaignForm = ref({
+    campaign_type: 'win_back' as 'win_back' | 'vip_reward' | 'welcome_lead' | 'custom',
+    custom_message: '',
+    create_voucher: true,
+    discount_type: 'percentage' as 'percentage' | 'fixed',
+    discount_value: 15,
+    valid_days: 7,
+    send_direct: false,
+});
+const sendingCampaign = ref(false);
+const campaignError = ref<string | null>(null);
+const campaignSuccessToast = ref<string | null>(null);
+
+function openCampaignModal(customer: CustomerRow) {
+    campaignCustomer.value = customer;
+    campaignError.value = null;
+
+    let defaultType: 'win_back' | 'vip_reward' | 'welcome_lead' | 'custom' = 'win_back';
+    let defaultValue = 15;
+    if (customer.segment === 'vip') {
+        defaultType = 'vip_reward';
+        defaultValue = 20;
+    } else if (customer.segment === 'at_risk') {
+        defaultType = 'win_back';
+        defaultValue = 15;
+    } else if (customer.segment === 'new_lead') {
+        defaultType = 'welcome_lead';
+        defaultValue = 10;
+    }
+
+    campaignForm.value = {
+        campaign_type: defaultType,
+        custom_message: '',
+        create_voucher: true,
+        discount_type: 'percentage',
+        discount_value: defaultValue,
+        valid_days: 7,
+        send_direct: waStatus.value === 'connected',
+    };
+    showCampaignModal.value = true;
+}
+
+const previewCampaignMessage = computed(() => {
+    if (!campaignCustomer.value) return '';
+    const name = campaignCustomer.value.name;
+    const discountVal = campaignForm.value.create_voucher
+        ? (campaignForm.value.discount_type === 'percentage'
+            ? `خصم %${campaignForm.value.discount_value}`
+            : `خصم ${campaignForm.value.discount_value} ${currency.value}`)
+        : '';
+    const validDays = campaignForm.value.valid_days;
+
+    if (campaignForm.value.campaign_type === 'custom') {
+        return campaignForm.value.custom_message || 'أدخل نص رسالتك المخصصة هنا...';
+    }
+
+    if (campaignForm.value.campaign_type === 'vip_reward') {
+        return `🌟 أهلاً وسهلاً بعميلنا المميز ${name}! ✨\n\nتقديراً لولائك الدائم وتكرار زياراتك لمطعمنا، يسعدنا إهداؤك هذه الهدية الخاصة:\n${campaignForm.value.create_voucher ? `🎯 الهدية: ${discountVal}\n🎟️ كود الخصم الحصري: VIP-XXXXX\n📅 صالح لمدة ${validDays} أيام\n📲 للطلب وتطبيق الخصم مباشرة في المنيو\n\n` : ''}يسعدنا ويشرفنا دائماً وجودك بيننا، ونتطلع لاستقبالك في أقرب وقت! 👑`;
+    }
+
+    if (campaignForm.value.campaign_type === 'win_back') {
+        return `🌸 اشتقنالك يا ${name} في مطعمنا! 👋\n\nمر وقت منذ آخر زيارة شرّفتنا بها، وحبينا نهديك كود خصم خاص لتنورنا مجدداً وندللك على ذوقك:\n${campaignForm.value.create_voucher ? `🎯 كود العودة: ${discountVal}\n🎟️ الكود: BACK-XXXXX\n📅 صالح لمدة ${validDays} أيام\n📲 للطلب المباشر أو زيارتنا\n\n` : ''}طاولتك بانتظارك وأشهى الأطباق جاهزة لعيونك! نتشرف بزيارتك دائماً ✨`;
+    }
+
+    return `🎉 أهلاً بك يا ${name} في عائلتنا! ✨\n\nسعدنا جداً بزيارتك الأولى لنا، وحبينا نشكرك ونهديك كود خصم لزيارتك القادمة:\n${campaignForm.value.create_voucher ? `🎯 الهدية: ${discountVal}\n🎟️ كود الخصم: HI-XXXXX\n📅 صالح لمدة ${validDays} أيام\n📲 رابط المنيو وتطبيق الخصم\n\n` : ''}نتطلع لرؤيتك مجدداً وخدمتك بأعلى معايير الضيافة! 🍽️`;
+});
+
+async function launchCampaign(sendDirect: boolean) {
+    if (!campaignCustomer.value) return;
+    sendingCampaign.value = true;
+    campaignError.value = null;
+    campaignForm.value.send_direct = sendDirect;
+
+    try {
+        const res = await axios.post(`/api/admin/customers/${campaignCustomer.value.id}/send-campaign`, campaignForm.value);
+        const data = res.data.data;
+        showCampaignModal.value = false;
+
+        if (data.sent_directly) {
+            campaignSuccessToast.value = `تم إرسال الحملة فوراً في الخلفية بنجاح إلى ${campaignCustomer.value.name} 📲`;
+            setTimeout(() => { campaignSuccessToast.value = null; }, 4500);
+        } else if (data.whatsapp_url) {
+            window.open(data.whatsapp_url, '_blank', 'noopener,noreferrer');
+        }
+
+        await fetchCustomers();
+    } catch (e: any) {
+        campaignError.value = e.response?.data?.message || 'تعذر إطلاق الحملة.';
+    } finally {
+        sendingCampaign.value = false;
+    }
+}
 
 // Settings panel
 const showSettings = ref(false);
@@ -293,6 +396,7 @@ async function fetchCustomers() {
 
 function handleGlobalKeydown(e: KeyboardEvent) {
     if (e.key === 'Escape') {
+        if (showCampaignModal.value) showCampaignModal.value = false;
         if (showWhatsappModal.value) showWhatsappModal.value = false;
         if (showAddModal.value) showAddModal.value = false;
         if (editingNotesCustomer.value) editingNotesCustomer.value = null;
@@ -458,23 +562,66 @@ function statusBadge(promo: PromoItem) {
 
             <template v-else>
                 <!-- KPI Stats Grid -->
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div class="bg-white dark:bg-[#0f172a] rounded-2xl p-4 border border-slate-100 dark:border-slate-800 shadow-xs">
-                        <div class="text-xs font-semibold text-slate-500 dark:text-slate-400">إجمالي عملاء مطعمك</div>
-                        <div class="text-2xl font-black text-slate-900 dark:text-white mt-1">{{ stats.total_customers }}</div>
-                    </div>
-                    <div class="bg-white dark:bg-[#0f172a] rounded-2xl p-4 border border-emerald-100 dark:border-emerald-900/40 shadow-xs">
-                        <div class="text-xs font-semibold text-emerald-700 dark:text-emerald-400">بانتظار تذكير واتساب</div>
-                        <div class="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">{{ stats.needs_reminder }}</div>
-                    </div>
-                    <div class="bg-white dark:bg-[#0f172a] rounded-2xl p-4 border border-amber-100 dark:border-amber-900/40 shadow-xs">
-                        <div class="text-xs font-semibold text-amber-700 dark:text-amber-400">عملاء عائدون (+2 زيارة)</div>
-                        <div class="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">{{ stats.returning_customers }}</div>
-                    </div>
-                    <div class="bg-white dark:bg-[#0f172a] rounded-2xl p-4 border border-purple-100 dark:border-purple-900/40 shadow-xs">
-                        <div class="text-xs font-semibold text-purple-700 dark:text-purple-400">مؤهلون لجائزة الولاء 🏆</div>
-                        <div class="text-2xl font-black text-purple-600 dark:text-purple-400 mt-1">{{ stats.loyalty_eligible }}</div>
-                    </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                    <button
+                        @click="setFilter('all')"
+                        type="button"
+                        class="text-right bg-white dark:bg-[#0f172a] rounded-2xl p-3.5 border transition cursor-pointer shadow-xs hover:border-slate-300 dark:hover:border-slate-700"
+                        :class="activeFilter === 'all' ? 'border-slate-900 dark:border-amber-500 ring-2 ring-slate-900/10 dark:ring-amber-500/20' : 'border-slate-100 dark:border-slate-800'"
+                    >
+                        <div class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">إجمالي العملاء</div>
+                        <div class="text-xl font-black text-slate-900 dark:text-white mt-0.5">{{ stats.total_customers }}</div>
+                    </button>
+
+                    <button
+                        @click="setFilter('vip')"
+                        type="button"
+                        class="text-right bg-white dark:bg-[#0f172a] rounded-2xl p-3.5 border transition cursor-pointer shadow-xs hover:border-amber-300 dark:hover:border-amber-700"
+                        :class="activeFilter === 'vip' ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-amber-100 dark:border-amber-900/40'"
+                    >
+                        <div class="text-[11px] font-bold text-amber-700 dark:text-amber-400">👑 كبار العملاء VIP</div>
+                        <div class="text-xl font-black text-amber-600 dark:text-amber-400 mt-0.5">{{ stats.vip_customers }}</div>
+                    </button>
+
+                    <button
+                        @click="setFilter('at_risk')"
+                        type="button"
+                        class="text-right bg-white dark:bg-[#0f172a] rounded-2xl p-3.5 border transition cursor-pointer shadow-xs hover:border-rose-300 dark:hover:border-rose-700"
+                        :class="activeFilter === 'at_risk' ? 'border-rose-500 ring-2 ring-rose-500/20' : 'border-rose-100 dark:border-rose-900/40'"
+                    >
+                        <div class="text-[11px] font-bold text-rose-700 dark:text-rose-400">⏳ في خطر الانقطاع</div>
+                        <div class="text-xl font-black text-rose-600 dark:text-rose-400 mt-0.5">{{ stats.at_risk_customers }}</div>
+                    </button>
+
+                    <button
+                        @click="setFilter('new_leads')"
+                        type="button"
+                        class="text-right bg-white dark:bg-[#0f172a] rounded-2xl p-3.5 border transition cursor-pointer shadow-xs hover:border-sky-300 dark:hover:border-sky-700"
+                        :class="activeFilter === 'new_leads' ? 'border-sky-500 ring-2 ring-sky-500/20' : 'border-sky-100 dark:border-sky-900/40'"
+                    >
+                        <div class="text-[11px] font-bold text-sky-700 dark:text-sky-400">🎁 عملاء جدد (زيارة 1)</div>
+                        <div class="text-xl font-black text-sky-600 dark:text-sky-400 mt-0.5">{{ stats.new_leads_customers }}</div>
+                    </button>
+
+                    <button
+                        @click="setFilter('needs_reminder')"
+                        type="button"
+                        class="text-right bg-white dark:bg-[#0f172a] rounded-2xl p-3.5 border transition cursor-pointer shadow-xs hover:border-emerald-300 dark:hover:border-emerald-700"
+                        :class="activeFilter === 'needs_reminder' ? 'border-emerald-500 ring-2 ring-emerald-500/20' : 'border-emerald-100 dark:border-emerald-900/40'"
+                    >
+                        <div class="text-[11px] font-bold text-emerald-700 dark:text-emerald-400">💬 بانتظار تذكير</div>
+                        <div class="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5">{{ stats.needs_reminder }}</div>
+                    </button>
+
+                    <button
+                        @click="setFilter('loyalty')"
+                        type="button"
+                        class="text-right bg-white dark:bg-[#0f172a] rounded-2xl p-3.5 border transition cursor-pointer shadow-xs hover:border-purple-300 dark:hover:border-purple-700"
+                        :class="activeFilter === 'loyalty' ? 'border-purple-500 ring-2 ring-purple-500/20' : 'border-purple-100 dark:border-purple-900/40'"
+                    >
+                        <div class="text-[11px] font-bold text-purple-700 dark:text-purple-400">🏆 مستحقو الولاء</div>
+                        <div class="text-xl font-black text-purple-600 dark:text-purple-400 mt-0.5">{{ stats.loyalty_eligible }}</div>
+                    </button>
                 </div>
 
                 <!-- Action Bar & Settings Toggle -->
@@ -670,10 +817,13 @@ function statusBadge(promo: PromoItem) {
                         <button
                             v-for="tab in [
                                 { id: 'all', label: 'كل العملاء' },
+                                { id: 'vip', label: '👑 كبار العملاء VIP' },
+                                { id: 'at_risk', label: '⏳ في خطر الانقطاع' },
+                                { id: 'new_leads', label: '🎁 عملاء جدد' },
                                 { id: 'needs_reminder', label: '💬 بانتظار التذكير' },
-                                { id: 'has_active', label: '🎟️ لديهم كوبون فعّال' },
-                                { id: 'returning', label: '🌟 عملاء عائدون (+2)' },
-                                { id: 'loyalty', label: '🏆 مستحقو الجائزة الكبرى' },
+                                { id: 'has_active', label: '🎟️ لديهم كود فعّال' },
+                                { id: 'returning', label: '🔁 عائدون (+2)' },
+                                { id: 'loyalty', label: '🏆 مستحقو الجائزة' },
                             ]"
                             :key="tab.id"
                             @click="setFilter(tab.id as any)"
@@ -711,11 +861,37 @@ function statusBadge(promo: PromoItem) {
                                     <span class="font-mono text-xs font-bold px-2.5 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300" dir="ltr">
                                         {{ customer.phone }}
                                     </span>
+
+                                    <!-- Smart Segment Badge -->
                                     <span
-                                        class="text-xs font-bold px-2.5 py-0.5 rounded-full border"
-                                        :class="customer.visits_count >= 2
-                                            ? 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-700/60'
-                                            : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'"
+                                        v-if="customer.segment === 'vip'"
+                                        class="text-xs font-black px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-xs"
+                                        title="أكثر من 5 زيارات مسجلة"
+                                    >
+                                        👑 عميل VIP
+                                    </span>
+                                    <span
+                                        v-else-if="customer.segment === 'at_risk'"
+                                        class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 border border-rose-300 dark:bg-rose-950/70 dark:text-rose-300 dark:border-rose-700"
+                                        :title="`لم يزر المطعم منذ ${customer.days_since_last_visit} يوماً`"
+                                    >
+                                        ⏳ في خطر الانقطاع (منذ {{ customer.days_since_last_visit }} يوماً)
+                                    </span>
+                                    <span
+                                        v-else-if="customer.segment === 'new_lead'"
+                                        class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-300 dark:bg-sky-950/70 dark:text-sky-300 dark:border-sky-700"
+                                    >
+                                        🎁 عميل جديد
+                                    </span>
+                                    <span
+                                        v-else
+                                        class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950/70 dark:text-emerald-300 dark:border-emerald-700"
+                                    >
+                                        🔁 زبون متكرر
+                                    </span>
+
+                                    <span
+                                        class="text-xs font-bold px-2.5 py-0.5 rounded-full border bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700"
                                     >
                                         زيارات: {{ customer.visits_count }}
                                     </span>
@@ -737,6 +913,15 @@ function statusBadge(promo: PromoItem) {
                             </div>
 
                             <div class="flex items-center gap-2">
+                                <button
+                                    @click="openCampaignModal(customer)"
+                                    type="button"
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-xs transition cursor-pointer"
+                                    title="إرسال رسالة تواصل أو كود خصم خاص عبر الواتساب"
+                                >
+                                    <span>🚀</span>
+                                    <span>حملة واتساب</span>
+                                </button>
                                 <button
                                     @click="openEditCustomer(customer)"
                                     type="button"
@@ -889,6 +1074,239 @@ function statusBadge(promo: PromoItem) {
                 <span>{{ directReminderSuccessToast }}</span>
             </div>
         </transition>
+
+        <!-- Floating Toast for Campaign Success -->
+        <transition enter-active-class="transition duration-300 ease-out" enter-from-class="transform translate-y-4 opacity-0" enter-to-class="transform translate-y-0 opacity-100" leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0">
+            <div v-if="campaignSuccessToast" class="fixed bottom-6 left-6 z-50 p-4 rounded-2xl bg-emerald-700 text-white text-xs font-black shadow-2xl flex items-center gap-2 border border-emerald-500">
+                <span>✓</span>
+                <span>{{ campaignSuccessToast }}</span>
+            </div>
+        </transition>
+
+        <!-- WhatsApp Retention Campaign Modal -->
+        <div
+            v-if="showCampaignModal && campaignCustomer"
+            class="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
+            dir="rtl"
+            @click.self="showCampaignModal = false"
+        >
+            <div
+                class="bg-white dark:bg-[#0f172a] rounded-3xl max-w-xl w-full border border-slate-200 dark:border-slate-700 shadow-2xl flex flex-col max-h-[90vh] overflow-hidden my-auto"
+                @click.stop
+            >
+                <!-- Header -->
+                <div class="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-[#0f172a] z-10 shrink-0">
+                    <div class="flex items-center gap-2.5">
+                        <span class="text-2xl">🚀</span>
+                        <div>
+                            <h3 class="text-lg font-black text-slate-900 dark:text-white">إطلاق حملة واتساب للعميل</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">
+                                العميل: <span class="font-bold text-slate-800 dark:text-slate-200">{{ campaignCustomer.name }}</span> ({{ campaignCustomer.phone }})
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        @click="showCampaignModal = false"
+                        type="button"
+                        class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white flex items-center justify-center font-bold text-base transition cursor-pointer"
+                        title="إغلاق (Esc)"
+                    >
+                        ✕
+                    </button>
+                </div>
+
+                <!-- Body -->
+                <div class="p-5 sm:p-6 space-y-5 overflow-y-auto flex-1">
+                    <!-- Segment Banner -->
+                    <div class="p-3.5 rounded-2xl border flex items-center justify-between gap-3 bg-slate-50 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800">
+                        <div class="text-xs space-y-0.5">
+                            <div class="font-bold text-slate-800 dark:text-slate-200">تصنيف العميل في النظام:</div>
+                            <div class="text-slate-500 dark:text-slate-400">{{ campaignCustomer.segment_tagline }}</div>
+                        </div>
+                        <span class="text-xs font-black px-3 py-1 rounded-full shadow-xs"
+                            :class="campaignCustomer.segment === 'vip' ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white' : (campaignCustomer.segment === 'at_risk' ? 'bg-rose-100 text-rose-800 dark:bg-rose-950/70 dark:text-rose-300' : (campaignCustomer.segment === 'new_lead' ? 'bg-sky-100 text-sky-800 dark:bg-sky-950/70 dark:text-sky-300' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'))">
+                            {{ campaignCustomer.segment_label }}
+                        </span>
+                    </div>
+
+                    <!-- Campaign Type Selector -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">نوع الحملة المقترحة:</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button
+                                type="button"
+                                @click="campaignForm.campaign_type = 'win_back'"
+                                class="p-3 rounded-xl border text-right transition cursor-pointer"
+                                :class="campaignForm.campaign_type === 'win_back'
+                                    ? 'border-rose-500 bg-rose-50/70 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200 font-black ring-2 ring-rose-500/20'
+                                    : 'border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60'"
+                            >
+                                <div class="text-xs">⏳ استعادة عميل منقطع</div>
+                                <div class="text-[10px] text-slate-500 dark:text-slate-400 font-normal mt-0.5">دعوة للعودة مع كود خاص</div>
+                            </button>
+
+                            <button
+                                type="button"
+                                @click="campaignForm.campaign_type = 'vip_reward'"
+                                class="p-3 rounded-xl border text-right transition cursor-pointer"
+                                :class="campaignForm.campaign_type === 'vip_reward'
+                                    ? 'border-amber-500 bg-amber-50/70 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 font-black ring-2 ring-amber-500/20'
+                                    : 'border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60'"
+                            >
+                                <div class="text-xs">👑 تكريم عميل VIP</div>
+                                <div class="text-[10px] text-slate-500 dark:text-slate-400 font-normal mt-0.5">شكر على الولاء وهدية حصرية</div>
+                            </button>
+
+                            <button
+                                type="button"
+                                @click="campaignForm.campaign_type = 'welcome_lead'"
+                                class="p-3 rounded-xl border text-right transition cursor-pointer"
+                                :class="campaignForm.campaign_type === 'welcome_lead'
+                                    ? 'border-sky-500 bg-sky-50/70 dark:bg-sky-950/40 text-sky-900 dark:text-sky-200 font-black ring-2 ring-sky-500/20'
+                                    : 'border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60'"
+                            >
+                                <div class="text-xs">🎁 ترحيب بالزيارة الثانية</div>
+                                <div class="text-[10px] text-slate-500 dark:text-slate-400 font-normal mt-0.5">تحفيز العميل على تكرار الزيارة</div>
+                            </button>
+
+                            <button
+                                type="button"
+                                @click="campaignForm.campaign_type = 'custom'"
+                                class="p-3 rounded-xl border text-right transition cursor-pointer"
+                                :class="campaignForm.campaign_type === 'custom'
+                                    ? 'border-purple-500 bg-purple-50/70 dark:bg-purple-950/40 text-purple-900 dark:text-purple-200 font-black ring-2 ring-purple-500/20'
+                                    : 'border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60'"
+                            >
+                                <div class="text-xs">✍️ رسالة مخصصة</div>
+                                <div class="text-[10px] text-slate-500 dark:text-slate-400 font-normal mt-0.5">كتابة نص حر بالكامل</div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Custom Message Input (if custom) -->
+                    <div v-if="campaignForm.campaign_type === 'custom'">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">نص الرسالة المخصصة:</label>
+                        <textarea
+                            v-model="campaignForm.custom_message"
+                            rows="3"
+                            placeholder="اكتب رسالتك للعميل هنا..."
+                            class="w-full rounded-xl text-xs border-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                        ></textarea>
+                    </div>
+
+                    <!-- Promo Code Generation Switch & Inputs -->
+                    <div class="p-4 rounded-2xl border border-amber-200/80 dark:border-amber-700/40 bg-amber-50/40 dark:bg-amber-950/15 space-y-3">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input
+                                v-model="campaignForm.create_voucher"
+                                type="checkbox"
+                                class="rounded text-amber-600 focus:ring-amber-500"
+                            />
+                            <div>
+                                <span class="text-xs font-black text-amber-950 dark:text-amber-200">
+                                    🎟️ توليد كود خصم حصري للعميل وتضمينه بالرسالة تلقائياً
+                                </span>
+                                <p class="text-[11px] text-amber-800/80 dark:text-amber-300/70">
+                                    يُصدر النظام كوداً مخصصاً لمرة واحدة مربوطاً بالعميل ويطبقه في المنيو بضغطة زر.
+                                </p>
+                            </div>
+                        </label>
+
+                        <div v-if="campaignForm.create_voucher" class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">نوع الخصم:</label>
+                                <select
+                                    v-model="campaignForm.discount_type"
+                                    class="w-full rounded-xl text-xs border-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                                >
+                                    <option value="percentage">نسبة مئوية (%)</option>
+                                    <option value="fixed">مبلغ نقدي ثابت ({{ currency }})</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                    {{ campaignForm.discount_type === 'percentage' ? 'قيمة الخصم (%):' : `المبلغ (${currency}):` }}
+                                </label>
+                                <input
+                                    v-model.number="campaignForm.discount_value"
+                                    type="number"
+                                    min="1"
+                                    :max="campaignForm.discount_type === 'percentage' ? 100 : undefined"
+                                    class="w-full rounded-xl text-xs border-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                                />
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">صلاحية الكود:</label>
+                                <select
+                                    v-model.number="campaignForm.valid_days"
+                                    class="w-full rounded-xl text-xs border-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                                >
+                                    <option :value="3">3 أيام (عاجل)</option>
+                                    <option :value="7">7 أيام (أسبوع)</option>
+                                    <option :value="14">14 يوماً (أسبوعين)</option>
+                                    <option :value="30">30 يوماً (شهر)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Live Message Preview Box -->
+                    <div class="space-y-1.5">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                            معاينة الرسالة كما ستصل للعميل على واتساب:
+                        </label>
+                        <div class="p-4 rounded-2xl bg-emerald-50/60 dark:bg-[#062016] border border-emerald-200 dark:border-emerald-800/60 text-xs text-slate-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed font-sans shadow-inner">
+                            {{ previewCampaignMessage }}
+                        </div>
+                    </div>
+
+                    <div v-if="campaignError" class="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-xs font-bold">
+                        ⚠️ {{ campaignError }}
+                    </div>
+                </div>
+
+                <!-- Footer Actions -->
+                <div class="p-4 sm:p-5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 backdrop-blur-xs flex flex-wrap items-center justify-between gap-3 shrink-0">
+                    <button
+                        @click="showCampaignModal = false"
+                        type="button"
+                        class="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer"
+                    >
+                        إلغاء
+                    </button>
+
+                    <div class="flex items-center gap-2">
+                        <!-- Direct Background Dispatch -->
+                        <button
+                            v-if="waStatus === 'connected'"
+                            @click="launchCampaign(true)"
+                            :disabled="sendingCampaign"
+                            type="button"
+                            class="px-4 py-2.5 rounded-xl text-xs font-black bg-emerald-600 hover:bg-emerald-500 text-white shadow-md transition disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+                        >
+                            <span>📲</span>
+                            <span>{{ sendingCampaign ? 'جارٍ الإرسال...' : 'إرسال فوري بالخلفية' }}</span>
+                        </button>
+
+                        <!-- Open in WhatsApp -->
+                        <button
+                            @click="launchCampaign(false)"
+                            :disabled="sendingCampaign"
+                            type="button"
+                            class="px-4 py-2.5 rounded-xl text-xs font-black transition shadow-md disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+                            :class="waStatus === 'connected'
+                                ? 'bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 text-slate-800 dark:text-slate-200'
+                                : 'bg-emerald-600 hover:bg-emerald-500 text-white'"
+                        >
+                            <span>💬</span>
+                            <span>{{ waStatus === 'connected' ? 'فتح بواتساب' : (sendingCampaign ? 'جارٍ التجهيز...' : 'إرسال عبر تطبيق واتساب') }}</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- WhatsApp Gateway Modal -->
         <div

@@ -64,6 +64,7 @@ Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
         Route::get('dashboard/stats', [AdminDashboardController::class, 'stats']);
         Route::get('restaurant', [RestaurantController::class, 'show']);
         Route::patch('restaurant', [RestaurantController::class, 'update']);
+        Route::post('restaurant/reset-test-data', [RestaurantController::class, 'resetTestData']);
         Route::get('users', [UserController::class, 'index']);
         Route::post('users', [UserController::class, 'store']);
         Route::patch('users/{user}', [UserController::class, 'update']);
@@ -82,6 +83,7 @@ Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
         Route::patch('customers/{customerId}', [\App\Http\Controllers\Api\Admin\CustomerCrmController::class, 'update']);
         Route::delete('customers/{customerId}', [\App\Http\Controllers\Api\Admin\CustomerCrmController::class, 'destroy']);
         Route::post('customers/{customerId}/mark-reminded', [\App\Http\Controllers\Api\Admin\CustomerCrmController::class, 'markReminded']);
+        Route::post('customers/{customerId}/send-campaign', [\App\Http\Controllers\Api\Admin\CustomerCrmController::class, 'sendCampaign']);
         Route::post('crm-settings', [\App\Http\Controllers\Api\Admin\CustomerCrmController::class, 'updateSettings']);
         Route::get('whatsapp/status', [\App\Http\Controllers\Api\Admin\WhatsAppController::class, 'status']);
         Route::post('whatsapp/connect', [\App\Http\Controllers\Api\Admin\WhatsAppController::class, 'connect']);

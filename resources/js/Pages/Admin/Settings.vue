@@ -29,6 +29,41 @@ const form = ref({
 const saving = ref(false);
 const message = ref('');
 
+// Clean Slate / Launchpad Reset States
+const showResetModal = ref(false);
+const resetForm = ref({
+    password: '',
+    confirmation: '',
+});
+const resetting = ref(false);
+const resetError = ref<string | null>(null);
+const resetSuccessMessage = ref<string | null>(null);
+
+async function submitResetTestData() {
+    if (resetForm.value.confirmation !== 'تصفير بيانات التجارب') {
+        resetError.value = 'يرجى كتابة عبارة التأكيد بدقة: «تصفير بيانات التجارب»';
+        return;
+    }
+    if (!resetForm.value.password) {
+        resetError.value = 'يرجى إدخال كلمة مرور حسابك لتأكيد العملية';
+        return;
+    }
+
+    resetting.value = true;
+    resetError.value = null;
+
+    try {
+        const res = await axios.post('/api/admin/restaurant/reset-test-data', resetForm.value);
+        resetSuccessMessage.value = res.data.data?.message || 'تم تصفير بيانات التجارب بنجاح ✓';
+        showResetModal.value = false;
+        resetForm.value = { password: '', confirmation: '' };
+    } catch (e: any) {
+        resetError.value = e.response?.data?.message || 'تعذر التصفير. يرجى التحقق من كلمة المرور.';
+    } finally {
+        resetting.value = false;
+    }
+}
+
 async function load() {
     const { data } = await axios.get('/api/admin/restaurant');
     restaurant.value = data.data;
@@ -264,6 +299,138 @@ onMounted(load);
                     {{ saving ? 'جاري الحفظ...' : 'حفظ الإعدادات' }}
                 </button>
             </form>
+
+            <!-- Pilot Venue Launchpad / Clean Slate -->
+            <div class="mt-8 rounded-2xl border border-rose-200 dark:border-rose-900/60 bg-rose-50/40 dark:bg-rose-950/20 p-5 space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">🚀</span>
+                        <div>
+                            <h4 class="font-black text-sm text-rose-900 dark:text-rose-200">منطقة الإطلاق الرسمي وتصفير بيانات التجارب (Pilot Venue Launchpad)</h4>
+                            <p class="text-xs text-rose-800/80 dark:text-rose-300/80 mt-0.5">
+                                هل انتهيت من تدريب طاقمك والتجارب الميدانية وجاهز للافتتاح الفعلي؟ يمكنك تصفير الطلبات التجريبية والجلسات لتبدأ سجلات الكاشير والمبيعات من الصفر.
+                            </p>
+                        </div>
+                    </div>
+
+                    <button
+                        @click="showResetModal = true"
+                        type="button"
+                        class="px-4 py-2.5 rounded-xl text-xs font-black bg-rose-600 hover:bg-rose-700 text-white shadow-md transition cursor-pointer flex items-center gap-2"
+                    >
+                        <span>🧹</span>
+                        <span>تصفير طلبات التجارب للبدء من الصفر</span>
+                    </button>
+                </div>
+
+                <div v-if="resetSuccessMessage" class="p-3.5 rounded-xl bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 text-xs font-bold border border-emerald-300 dark:border-emerald-700">
+                    ✓ {{ resetSuccessMessage }}
+                </div>
+            </div>
+
+            <!-- Safe Reset Confirmation Modal -->
+            <div
+                v-if="showResetModal"
+                class="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+                dir="rtl"
+                @click.self="showResetModal = false"
+            >
+                <div class="bg-white dark:bg-[#0f172a] rounded-3xl max-w-lg w-full p-6 border border-rose-200 dark:border-rose-800/60 shadow-2xl space-y-5" @click.stop>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2.5 text-rose-600 dark:text-rose-400">
+                            <span class="text-2xl">⚠️</span>
+                            <h3 class="text-lg font-black text-slate-900 dark:text-white">تأكيد تصفير بيانات التجارب</h3>
+                        </div>
+                        <button
+                            @click="showResetModal = false"
+                            type="button"
+                            class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white flex items-center justify-center font-bold text-sm cursor-pointer"
+                        >
+                            ✕
+                        </button>
+                    </div>
+
+                    <!-- Safety Summary of What Stays and What Wipes -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div class="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/40 text-rose-900 dark:text-rose-200 space-y-1">
+                            <div class="font-bold flex items-center gap-1.5">
+                                <span>🗑️</span>
+                                <span>ما سيتم حذفه وتصفيره:</span>
+                            </div>
+                            <ul class="list-disc list-inside space-y-0.5 text-[11px] text-rose-800 dark:text-rose-300">
+                                <li>جميع الطلبات السابقة</li>
+                                <li>سجلات وتاريخ الحالات</li>
+                                <li>جلسات الطاولات النشطة</li>
+                                <li>رموز وتدويرات العجلة</li>
+                                <li>قوائم الانتظار التجريبية</li>
+                            </ul>
+                        </div>
+
+                        <div class="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/40 text-emerald-900 dark:text-emerald-200 space-y-1">
+                            <div class="font-bold flex items-center gap-1.5">
+                                <span>🛡️</span>
+                                <span>ما سيبقى محفوظاً بأمان 100%:</span>
+                            </div>
+                            <ul class="list-disc list-inside space-y-0.5 text-[11px] text-emerald-800 dark:text-emerald-300">
+                                <li>قائمة الطعام والأصناف</li>
+                                <li>التصنيفات والأسعار</li>
+                                <li>الطاولات ورموز QR</li>
+                                <li>حسابات الموظفين والصلاحيات</li>
+                                <li>إعدادات المطعم والولاء</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Inputs -->
+                    <div class="space-y-3 pt-1">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                اكتب العبارة التالية للتأكيد: <span class="font-mono text-rose-600 font-black">تصفير بيانات التجارب</span>
+                            </label>
+                            <input
+                                v-model="resetForm.confirmation"
+                                type="text"
+                                placeholder="تصفير بيانات التجارب"
+                                class="w-full rounded-xl text-xs border-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                            />
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                كلمة مرور حسابك لتأكيد الهوية:
+                            </label>
+                            <input
+                                v-model="resetForm.password"
+                                type="password"
+                                placeholder="••••••••"
+                                class="w-full rounded-xl text-xs border-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                            />
+                        </div>
+
+                        <div v-if="resetError" class="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 text-xs font-bold">
+                            ⚠️ {{ resetError }}
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-2 pt-2">
+                        <button
+                            @click="showResetModal = false"
+                            type="button"
+                            class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 cursor-pointer"
+                        >
+                            إلغاء
+                        </button>
+                        <button
+                            @click="submitResetTestData"
+                            :disabled="resetting || resetForm.confirmation !== 'تصفير بيانات التجارب' || !resetForm.password"
+                            type="button"
+                            class="px-5 py-2 rounded-xl text-xs font-black bg-rose-600 text-white hover:bg-rose-700 disabled:opacity-50 cursor-pointer shadow-md"
+                        >
+                            {{ resetting ? 'جاري التصفير...' : 'تأكيد التصفير النهائي' }}
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </AuthenticatedLayout>
 </template>

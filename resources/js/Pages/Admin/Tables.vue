@@ -133,9 +133,9 @@ onMounted(() => {
                 <a
                     :href="route('admin.tables.print')"
                     target="_blank"
-                    class="rounded-xl bg-stone-800 dark:bg-slate-800 border border-stone-700 dark:border-slate-700 px-4 py-2 text-sm font-medium text-white hover:bg-stone-700 dark:hover:bg-slate-700 transition-colors flex items-center gap-1.5"
+                    class="rounded-xl bg-stone-800 dark:bg-slate-800 border border-stone-700 dark:border-slate-700 px-4 py-2 text-sm font-bold text-white hover:bg-stone-700 dark:hover:bg-slate-700 transition-colors flex items-center gap-1.5"
                 >
-                    طباعة كل QR
+                    🖨️ طباعة بطاقات الطاولات (QR Cards)
                 </a>
             </div>
 
@@ -161,6 +161,7 @@ onMounted(() => {
                         />
                     </div>
                     <div class="flex flex-wrap justify-center gap-2 text-sm">
+                        <a :href="route('admin.tables.print', { table_id: table.id })" target="_blank" class="rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/40 px-3 py-1 font-bold border border-amber-200 dark:border-amber-800 transition-colors" title="طباعة بطاقة هذه الطاولة">🖨️ طباعة</a>
                         <button class="rounded-lg bg-stone-100 dark:bg-slate-800 text-stone-700 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-slate-700 px-3 py-1 transition-colors" @click="startEdit(table)">تعديل</button>
                         <button class="rounded-lg bg-stone-100 dark:bg-slate-800 text-stone-700 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-slate-700 px-3 py-1 transition-colors" @click="toggleStatus(table)">
                             {{ table.status === 'active' ? 'تعطيل' : 'تفعيل' }}
