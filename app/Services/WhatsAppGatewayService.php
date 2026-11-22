@@ -176,6 +176,46 @@ class WhatsAppGatewayService
     }
 
     /**
+     * Send an administrative / alert WhatsApp message from the Platform Owner's official session.
+     *
+     * @return array{success: bool, message_id?: string, message?: string}
+     */
+    public function sendPlatformMessage(string $phone, string $message, bool $simulateTyping = true): array
+    {
+        try {
+            $response = Http::timeout($this->timeout)
+                ->withHeaders(['X-Gateway-Secret' => $this->secret])
+                ->post("{$this->baseUrl}/api/messages/send", [
+                    'session_id' => 'platform',
+                    'phone' => $phone,
+                    'text' => $message,
+                    'simulate_typing' => $simulateTyping,
+                ]);
+
+            if ($response->successful()) {
+                return [
+                    'success' => true,
+                    'message_id' => $response->json('message_id'),
+                ];
+            }
+
+            $errMsg = $response->json('message') ?? 'تعذر إرسال رسالة منصة تدلّل عبر الواتساب';
+            Log::warning("Platform WhatsApp send failed to {$phone}: {$errMsg}");
+
+            return [
+                'success' => false,
+                'message' => $errMsg,
+            ];
+        } catch (\Throwable $e) {
+            Log::error("Exception in Platform WhatsApp send to {$phone}: {$e->getMessage()}");
+            return [
+                'success' => false,
+                'message' => 'خطأ في الاتصال ببوابة الواتساب للمنصة.',
+            ];
+        }
+    }
+
+    /**
      * Synchronize local restaurant record with gateway session state.
      */
     private function syncLocalState(Restaurant $restaurant, array $data): void

@@ -147,6 +147,21 @@ class WhatsAppWebhookController extends Controller
                     Cache::put("platform_wa_paused_{$from}", true, now()->addHours(12));
                     $handoverReply = "تم إشعار إدارة منصة «تدلّل» وصاحب المنصة فوراً 🔔\n\nوسيقوم الأستاذ بمتابعة محادثتك شخصياً عبر هذا الشات في أقرب وقت. أهلاً بك دائماً ✨";
 
+                    // إرسال تنبيه واتساب فوري لصاحب المنصة على رقمه الخاص
+                    try {
+                        $ownerPhone = Setting::get('platform_owner_phone', '963934578117');
+                        $cleanFrom = preg_replace('/[^0-9]/', '', (string) $from);
+                        $alertMsg = "🔔 *طلب محادثة مباشرة مع الإدارة في منصة تَدلّل!* 👤\n\n"
+                            . "📞 *رقم العميل:* {$from}\n"
+                            . "💬 *رسالة العميل:* \"{$text}\"\n\n"
+                            . "🔗 *رابط محادثته فوراً:*\n"
+                            . "https://wa.me/{$cleanFrom}";
+
+                        app(\App\Services\WhatsAppGatewayService::class)->sendPlatformMessage($ownerPhone, $alertMsg, false);
+                    } catch (\Throwable $alertErr) {
+                        Log::warning('Failed to send owner alert for human handover: ' . $alertErr->getMessage());
+                    }
+
                     return response()->json([
                         'success' => true,
                         'auto_reply_text' => $handoverReply,

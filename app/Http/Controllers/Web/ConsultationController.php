@@ -68,13 +68,38 @@ class ConsultationController extends Controller
         $lead = ConsultationLead::create($validated);
 
         // Send notification email to Omar
+        $ownerEmail = \App\Models\Setting::get('platform_owner_email', 'omar.khateeb.dev@gmail.com');
         try {
-            Mail::to('omar.khateeb.dev@gmail.com')->send(new PreSaleConsultationSubmitted($lead));
+            Mail::to($ownerEmail)->send(new PreSaleConsultationSubmitted($lead));
         } catch (\Throwable $e) {
             Log::error('Failed to send PreSale consultation notification email: ' . $e->getMessage(), [
                 'lead_id' => $lead->id,
                 'exception' => $e,
             ]);
+        }
+
+        // Send instant WhatsApp notification to Omar's personal phone
+        try {
+            $ownerPhone = \App\Models\Setting::get('platform_owner_phone', '963934578117');
+            $featuresList = is_array($lead->desired_features) ? implode('، ', $lead->desired_features) : (string)$lead->desired_features;
+            $cleanCustomerPhone = preg_replace('/[^0-9]/', '', (string)$lead->phone);
+
+            $waAlert = "👑 *طلب تدشين وشراكة تشغيلية جديد لمنظومة تَدلّل!* 🔥\n\n"
+                . "🏢 *المطعم:* {$lead->restaurant_name}\n"
+                . "👤 *المسؤول:* {$lead->name}\n"
+                . "📍 *المدينة:* " . ($lead->city ?: 'غير محدد') . "\n"
+                . "📞 *رقم العميل:* {$lead->phone}\n"
+                . "🍽️ *طبيعة الخدمة:* {$lead->service_type}\n"
+                . "💳 *المحاسبة:* {$lead->payment_model}\n"
+                . "🍳 *المطبخ:* {$lead->kitchen_setup}\n"
+                . "✨ *الميزات:* {$featuresList}\n\n"
+                . "💬 *مراسلة العميل بالواتساب فوراً:*\n"
+                . "https://wa.me/{$cleanCustomerPhone}\n\n"
+                . "⚡ تم إرسال البطاقة الكاملة إلى بريدك الإلكتروني.";
+
+            app(\App\Services\WhatsAppGatewayService::class)->sendPlatformMessage($ownerPhone, $waAlert, false);
+        } catch (\Throwable $waErr) {
+            Log::warning('Failed to send WhatsApp alert to owner for consultation lead: ' . $waErr->getMessage());
         }
 
         // Generate tailored strategic blueprint
