@@ -74,6 +74,37 @@ const copyToClipboard = (text: string) => {
     alert('تم نسخ البيانات للحافظة بنجاح! 📋');
 };
 
+// Smart Prospect Pitch Card state (بطاقة الاتصال الذكية)
+const selectedLeadForPitch = ref<Lead | null>(null);
+const pitchCardData = ref<any>(null);
+const loadingPitchCard = ref(false);
+const pitchCardError = ref('');
+
+const openPitchCardModal = async (lead: Lead) => {
+    selectedLeadForPitch.value = lead;
+    pitchCardData.value = null;
+    pitchCardError.value = '';
+    loadingPitchCard.value = true;
+    try {
+        const { data } = await axios.get(`/api/super-admin/leads/${lead.id}/pitch-card`);
+        if (data.success) {
+            pitchCardData.value = data.data;
+        } else {
+            pitchCardError.value = 'تعذر تجهيز بطاقة الاتصال.';
+        }
+    } catch (e: any) {
+        pitchCardError.value = e.response?.data?.message || 'تعذر تحميل بطاقة الاتصال الذكية.';
+    } finally {
+        loadingPitchCard.value = false;
+    }
+};
+
+const closePitchCardModal = () => {
+    selectedLeadForPitch.value = null;
+    pitchCardData.value = null;
+    pitchCardError.value = '';
+};
+
 const stats = ref({
     total: 0,
     new: 0,
@@ -469,6 +500,17 @@ onMounted(fetchLeads);
                                     <!-- Actions -->
                                     <td class="p-4 text-center">
                                         <div class="flex items-center justify-center gap-2">
+                                            <!-- Smart Prospect Pitch Card Button -->
+                                            <button
+                                                type="button"
+                                                @click="openPitchCardModal(lead)"
+                                                class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition shadow-2xs"
+                                                title="بطاقة الاتصال الذكية: ماذا أقول لهذا العميل؟"
+                                            >
+                                                <span>💡</span>
+                                                <span>بطاقة الاتصال</span>
+                                            </button>
+
                                             <!-- 1-Click Provisioning Button -->
                                             <button
                                                 v-if="lead.status !== 'closed_won'"
@@ -616,6 +658,229 @@ onMounted(fetchLeads);
                                     </button>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Smart Prospect Pitch Card Modal (بطاقة الاتصال الذكية) -->
+                <div
+                    v-if="selectedLeadForPitch"
+                    class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+                >
+                    <div class="bg-white dark:bg-[#0f172a] rounded-3xl max-w-2xl w-full border border-stone-200 dark:border-slate-800 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 my-8">
+                        <!-- Header -->
+                        <div class="bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 p-6 text-white text-right relative">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <span class="p-2.5 rounded-2xl bg-white/10 text-2xl">💡</span>
+                                    <div>
+                                        <h3 class="text-lg font-black flex items-center gap-2">
+                                            <span>بطاقة الاتصال الذكية</span>
+                                            <span class="text-[11px] font-mono px-2 py-0.5 rounded-full bg-white/20">Pitch Card</span>
+                                        </h3>
+                                        <p class="text-xs text-amber-100 mt-0.5">
+                                            دليلك التنفيذي السريع: ماذا تقول لهذا العميل بالتحديد لإغلاق الصفقة؟
+                                        </p>
+                                    </div>
+                                </div>
+                                <button
+                                    @click="closePitchCardModal"
+                                    class="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white text-sm"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Body -->
+                        <div class="p-6 space-y-5 text-right max-h-[75vh] overflow-y-auto">
+                            <!-- Loading State -->
+                            <div v-if="loadingPitchCard" class="text-center py-12">
+                                <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-amber-500 border-t-transparent"></div>
+                                <p class="text-xs text-gray-500 mt-2">جاري توليد خطة الاتصال وفق الأركان الذهبية...</p>
+                            </div>
+
+                            <!-- Error State -->
+                            <div v-else-if="pitchCardError" class="p-4 bg-red-50 text-red-700 rounded-2xl text-xs font-bold">
+                                {{ pitchCardError }}
+                            </div>
+
+                            <!-- Content -->
+                            <div v-else-if="pitchCardData" class="space-y-5">
+                                <!-- Prospect Mini Card -->
+                                <div class="bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/60 rounded-2xl p-4 text-xs flex flex-wrap items-center justify-between gap-3">
+                                    <div>
+                                        <p class="font-bold text-gray-900 dark:text-white text-sm">{{ pitchCardData.lead_summary.restaurant_name }}</p>
+                                        <p class="text-gray-500 dark:text-gray-400 mt-0.5">
+                                            👤 {{ pitchCardData.lead_summary.name }} · 📍 {{ pitchCardData.lead_summary.city }} · 🍽️ {{ pitchCardData.lead_summary.service_type }} ({{ pitchCardData.lead_summary.tables }} طاولة)
+                                        </p>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <a
+                                            :href="`https://wa.me/${cleanPhoneForWhatsApp(pitchCardData.lead_summary.phone)}?text=${encodeURIComponent(pitchCardData.opening_script)}`"
+                                            target="_blank"
+                                            class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-2xs"
+                                        >
+                                            💬 إرسال الافتتاحية واتساب
+                                        </a>
+                                        <a
+                                            :href="`tel:${pitchCardData.lead_summary.phone}`"
+                                            class="px-3 py-1.5 rounded-xl bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-200 font-bold text-xs"
+                                        >
+                                            📞 اتصال
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <!-- 1. Opening Hook -->
+                                <div class="bg-white dark:bg-slate-900/60 border border-gray-200 dark:border-slate-800 rounded-2xl p-4 shadow-2xs">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h4 class="text-xs font-black text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+                                            <span>🎯</span>
+                                            <span>الخطوة 1: افتتاحية المكالمة المقترحة (Opening Hook)</span>
+                                        </h4>
+                                        <button
+                                            type="button"
+                                            @click="copyToClipboard(pitchCardData.opening_script)"
+                                            class="text-[11px] font-bold text-gray-500 hover:text-amber-600"
+                                        >
+                                            📋 نسخ
+                                        </button>
+                                    </div>
+                                    <p class="text-xs text-gray-700 dark:text-gray-300 leading-relaxed bg-gray-50 dark:bg-slate-950/40 p-3 rounded-xl border border-gray-100 dark:border-slate-800">
+                                        {{ pitchCardData.opening_script }}
+                                    </p>
+                                </div>
+
+                                <!-- 2. Diagnostic Question -->
+                                <div class="bg-white dark:bg-slate-900/60 border border-gray-200 dark:border-slate-800 rounded-2xl p-4 shadow-2xs">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h4 class="text-xs font-black text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
+                                            <span>🩺</span>
+                                            <span>الخطوة 2: سؤال التشخيص الحاسم (لا تسرد الميزات!)</span>
+                                        </h4>
+                                        <button
+                                            type="button"
+                                            @click="copyToClipboard(pitchCardData.diagnostic_script)"
+                                            class="text-[11px] font-bold text-gray-500 hover:text-blue-600"
+                                        >
+                                            📋 نسخ
+                                        </button>
+                                    </div>
+                                    <p class="text-xs text-gray-700 dark:text-gray-300 leading-relaxed bg-blue-50/40 dark:bg-blue-950/20 p-3 rounded-xl border border-blue-100 dark:border-blue-900/40">
+                                        {{ pitchCardData.diagnostic_script }}
+                                    </p>
+                                </div>
+
+                                <!-- 3. Recommended Golden Pillar -->
+                                <div class="bg-gradient-to-br from-amber-50/50 to-orange-50/30 dark:from-slate-900 dark:to-slate-950 border border-amber-200 dark:border-amber-800/60 rounded-2xl p-5 shadow-2xs">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="text-xs font-black text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+                                            <span>👑</span>
+                                            <span>الركن الذهبي المرشح بقوة لهذا المطعم:</span>
+                                        </span>
+                                        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-amber-600 text-white">
+                                            {{ pitchCardData.primary_pillar.badge }}
+                                        </span>
+                                    </div>
+                                    <p class="text-sm font-black text-gray-900 dark:text-white mb-1">
+                                        {{ pitchCardData.primary_pillar.name }}
+                                    </p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                                        {{ pitchCardData.primary_pillar.why }}
+                                    </p>
+                                    <div class="bg-white/80 dark:bg-slate-900/80 p-3 rounded-xl border border-amber-100 dark:border-slate-800 space-y-1.5 mb-3">
+                                        <p class="text-xs font-bold text-stone-800 dark:text-stone-200">النقاط التي تذكرها له:</p>
+                                        <ul class="text-xs text-gray-600 dark:text-gray-300 space-y-1 list-disc list-inside pr-1">
+                                            <li v-for="(pt, pIdx) in pitchCardData.primary_pillar.talking_points" :key="pIdx">
+                                                {{ pt }}
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div class="text-[11px] text-amber-800 dark:text-amber-300 font-bold">
+                                        💼 الباقة المقترحة له: {{ pitchCardData.recommended_plan }}
+                                    </div>
+                                </div>
+
+                                <!-- 4. The 60-Second Demo Closing Weapon -->
+                                <div class="bg-purple-50/60 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800/60 rounded-2xl p-4 shadow-2xs">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h4 class="text-xs font-black text-purple-700 dark:text-purple-400 flex items-center gap-1.5">
+                                            <span>⚡</span>
+                                            <span>الخطوة 3: سلاح الإثبات الفوري في 60 ثانية (The Demo Weapon)</span>
+                                        </h4>
+                                        <button
+                                            type="button"
+                                            @click="copyToClipboard(pitchCardData.demo_pitch_script)"
+                                            class="text-[11px] font-bold text-gray-500 hover:text-purple-600"
+                                        >
+                                            📋 نسخ النص
+                                        </button>
+                                    </div>
+                                    <p class="text-xs text-gray-700 dark:text-gray-300 leading-relaxed bg-white/70 dark:bg-slate-900/60 p-3 rounded-xl border border-purple-100 dark:border-purple-900/40 mb-2">
+                                        {{ pitchCardData.demo_pitch_script }}
+                                    </p>
+                                    <div class="flex items-center gap-2">
+                                        <a
+                                            :href="pitchCardData.demo_url"
+                                            target="_blank"
+                                            class="text-xs font-bold text-purple-700 dark:text-purple-300 underline"
+                                        >
+                                            🔗 رابط المحاكي التفاعلي (tedallal.tech/demo)
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <!-- 5. Objection Handlers -->
+                                <div class="bg-white dark:bg-slate-900/60 border border-gray-200 dark:border-slate-800 rounded-2xl p-4 shadow-2xs space-y-3">
+                                    <h4 class="text-xs font-black text-gray-900 dark:text-white flex items-center gap-1.5">
+                                        <span>🛡️</span>
+                                        <span>التعامل مع الاعتراضات الشائعة (Objection Handlers)</span>
+                                    </h4>
+                                    <div
+                                        v-for="(obj, oIdx) in pitchCardData.objection_handlers"
+                                        :key="oIdx"
+                                        class="bg-gray-50 dark:bg-slate-950/40 p-3 rounded-xl border border-gray-100 dark:border-slate-800 text-xs space-y-1"
+                                    >
+                                        <p class="font-bold text-red-700 dark:text-red-400">إذا قال: {{ obj.objection }}</p>
+                                        <p class="text-gray-700 dark:text-gray-300 leading-relaxed">
+                                            <strong class="text-emerald-700 dark:text-emerald-400">ردك الحاسم:</strong> {{ obj.response }}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Pilot Offer Box -->
+                                <div class="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 rounded-2xl p-3 text-xs text-emerald-900 dark:text-emerald-200 flex items-center justify-between">
+                                    <span>🎁 <strong>عرض الإغلاق:</strong> {{ pitchCardData.pilot_offer }}</span>
+                                    <button
+                                        type="button"
+                                        @click="copyToClipboard(`🎁 مرحباً أستاذ ${pitchCardData.lead_summary.name}، يسعدنا في منصة تَدلّل أن نقدم لمطعم «${pitchCardData.lead_summary.restaurant_name}» فترة تدشين وتشغيل اختباري مدعومة بالكامل 7 أيام داخل صالتكم ومطبخكم مجاناً لتتأكدوا من النتائج عملياً قبل تثبيت الاشتراك!`)"
+                                        class="text-[11px] font-bold text-emerald-700 hover:underline"
+                                    >
+                                        نسخ عرض التجربة
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="bg-gray-50 dark:bg-slate-900/80 p-4 border-t border-gray-200 dark:border-slate-800 flex items-center justify-between">
+                            <button
+                                type="button"
+                                @click="closePitchCardModal"
+                                class="px-4 py-2 rounded-xl border border-gray-300 dark:border-slate-700 text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-100"
+                            >
+                                إغلاق
+                            </button>
+                            <button
+                                v-if="pitchCardData"
+                                type="button"
+                                @click="copyToClipboard(`🏢 مطعم: ${pitchCardData.lead_summary.restaurant_name}\n👤 المالك: ${pitchCardData.lead_summary.name}\n\n🎯 الافتتاحية:\n${pitchCardData.opening_script}\n\n🩺 سؤال التشخيص:\n${pitchCardData.diagnostic_script}\n\n👑 الركن الذهبي: ${pitchCardData.primary_pillar.name}\n⚡ المحاكي: ${pitchCardData.demo_url}`)"
+                                class="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-xs flex items-center gap-1.5"
+                            >
+                                <span>📋</span>
+                                <span>نسخ كامل بطاقة المكالمة</span>
+                            </button>
                         </div>
                     </div>
                 </div>
