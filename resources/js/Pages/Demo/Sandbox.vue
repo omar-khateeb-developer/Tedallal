@@ -232,9 +232,9 @@ onUnmounted(() => {
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <span class="hidden md:inline-flex items-center gap-1 text-xs text-stone-300">
+                    <span class="hidden md:inline-flex items-center gap-1.5 text-xs text-stone-300" dir="rtl">
                         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                        0% عمولة • لا أجهزة مخصصة • طباعة حرارية فورية
+                        بدون أي عمولة • بدون أجهزة خاصة • طباعة حرارية فورية
                     </span>
                     <Link
                         href="/consultation"
@@ -491,8 +491,8 @@ onUnmounted(() => {
                                 <p class="text-[11px] text-stone-400 font-sans">فاتورة طاولة {{ latestPrintedReceipt.tableNumber }} • طباعة مباشرة للصندوق والمطبخ</p>
                             </div>
                         </div>
-                        <div class="px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold font-sans">
-                            0% عمولة • وفرت {{ formatCurrency(Math.round(latestPrintedReceipt.total * 0.20)) }}
+                        <div class="px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-bold font-sans" dir="rtl">
+                            بدون أي عمولة • وفرت {{ formatCurrency(Math.round(latestPrintedReceipt.total * 0.20)) }}
                         </div>
                     </div>
 

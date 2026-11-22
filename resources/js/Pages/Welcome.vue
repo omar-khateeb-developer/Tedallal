@@ -1015,7 +1015,7 @@ onUnmounted(() => {
                                 </h3>
                             </div>
                             <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                                0% عمولة
+                                {{ currentLocale === 'ar' ? 'بدون أي عمولة' : 'Zero Commission' }}
                             </span>
                         </div>
 
