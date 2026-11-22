@@ -156,10 +156,20 @@ class WhatsAppWebhookController extends Controller
                     }
                 }
 
-                // الكشف الذكي عما إذا كان الزبون يطلب التحدث مع شخص / صاحب المنصة بشرياً
-                if (preg_match('/(بدي|اريد|أريد|ممكن|حابب).*(اتكلم|احكي|اتواصل|أحكي|أكلم|أحدث).*(انسان|إنسان|شخص|بشري|صاحب|مسؤول|ادارة|إدارة|مدير)/u', $text)) {
+                // الكشف الذكي عما إذا كان الزبون يطلب التحدث مع شخص / صاحب المنصة بشرياً (بالعربية أو الإنجليزية)
+                $wantsHuman = preg_match('/(بدي|اريد|أريد|ممكن|حابب).*(اتكلم|احكي|اتواصل|أحكي|أكلم|أحدث).*(انسان|إنسان|شخص|بشري|صاحب|مسؤول|ادارة|إدارة|مدير)/u', $text)
+                    || preg_match('/(want|need|like|can i)\s+to\s+(talk|speak|contact|reach).*(human|person|agent|representative|manager|owner|team|support)/i', $text);
+
+                if ($wantsHuman) {
                     Cache::put("platform_wa_paused_{$from}", true, now()->addHours(12));
-                    $handoverReply = "تم إشعار إدارة منصة «تدلّل» وصاحب المنصة فوراً 🔔\n\nوسيقوم الأستاذ بمتابعة محادثتك شخصياً عبر هذا الشات في أقرب وقت. أهلاً بك دائماً ✨";
+
+                    $hasArabic = (bool) preg_match('/[\x{0600}-\x{06FF}]/u', $text);
+                    $hasEnglish = (bool) preg_match('/[a-zA-Z]/', $text);
+                    $isEng = $hasEnglish && (! $hasArabic || (preg_match_all('/[a-zA-Z]/', $text) > preg_match_all('/[\x{0600}-\x{06FF}]/u', $text)));
+
+                    $handoverReply = $isEng
+                        ? "Tedallal's executive management has been notified 🔔\n\nA representative will review your message and follow up with you directly in this chat shortly. Welcome to Tedallal! ✨"
+                        : "تم إشعار إدارة منصة «تدلّل» وصاحب المنصة فوراً 🔔\n\nوسيقوم الأستاذ بمتابعة محادثتك شخصياً عبر هذا الشات في أقرب وقت. أهلاً بك دائماً ✨";
 
                     // إرسال تنبيه واتساب فوري لصاحب المنصة على رقمه الخاص
                     try {
