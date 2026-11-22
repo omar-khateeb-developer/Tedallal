@@ -33,6 +33,10 @@ Route::get('/consultation', [ConsultationController::class, 'index'])->name('con
 Route::post('/consultation', [ConsultationController::class, 'store'])->name('consultation.store');
 Route::redirect('/assessment', '/consultation');
 
+// 60-Second Interactive Live Sandbox Demo (المطعم التجريبي التفاعلي الحي في 60 ثانية)
+Route::get('/demo', [\App\Http\Controllers\Web\DemoController::class, 'index'])->name('demo.sandbox');
+Route::redirect('/sandbox', '/demo');
+
 Route::get('/t/{token}', [CustomerController::class, 'table'])->name('customer.menu');
 Route::get('/t/{token}/cart', [CustomerController::class, 'cart'])->name('customer.cart');
 Route::get('/t/{token}/orders/{orderNumber}', [CustomerController::class, 'order'])->name('customer.order');

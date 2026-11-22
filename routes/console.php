@@ -51,3 +51,8 @@ Artisan::command('tables:generate-qr {--force : Force re-generate all QR codes e
     ->dailyAt('13:00')
     ->withoutOverlapping();
 
+\Illuminate\Support\Facades\Schedule::command('tedallal:send-daily-digest')
+    ->dailyAt('00:30')
+    ->withoutOverlapping();
+
+

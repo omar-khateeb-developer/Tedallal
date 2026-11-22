@@ -6,6 +6,7 @@ import { useTheme } from '@/composables/useTheme';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import AiBusinessConsultant from '@/Components/AiBusinessConsultant.vue';
 import PwaInstallButton from '@/Components/PwaInstallButton.vue';
+import RoiCalculator from '@/Components/RoiCalculator.vue';
 
 interface Props {
     canLogin?: boolean;
@@ -1704,6 +1705,13 @@ onUnmounted(() => {
                     </div>
                 </div>
             </div>
+        </section>
+
+        <!-- ========================================================================= -->
+        <!-- 6.5. INTERACTIVE ROI & SAVINGS CALCULATOR -->
+        <!-- ========================================================================= -->
+        <section class="py-12 sm:py-16 px-4 sm:px-6 lg:px-8 relative z-10">
+            <RoiCalculator />
         </section>
 
         <!-- ========================================================================= -->

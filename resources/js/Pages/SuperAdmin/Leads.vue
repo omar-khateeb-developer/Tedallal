@@ -29,6 +29,51 @@ const editingNotesId = ref<number | null>(null);
 const currentNotes = ref('');
 const savingNotes = ref(false);
 
+const selectedLeadForProvision = ref<Lead | null>(null);
+const provisioning = ref(false);
+const provisionResult = ref<any | null>(null);
+const provisionError = ref<string | null>(null);
+
+const openProvisionModal = (lead: Lead) => {
+    selectedLeadForProvision.value = lead;
+    provisionResult.value = null;
+    provisionError.value = null;
+};
+
+const closeProvisionModal = () => {
+    selectedLeadForProvision.value = null;
+    provisionResult.value = null;
+    provisionError.value = null;
+};
+
+const confirmProvision = async () => {
+    if (!selectedLeadForProvision.value) return;
+    provisioning.value = true;
+    provisionError.value = null;
+    try {
+        const { data } = await axios.post(`/api/super-admin/leads/${selectedLeadForProvision.value.id}/provision`);
+        if (data.success) {
+            provisionResult.value = data.data;
+            const idx = leads.value.findIndex(l => l.id === selectedLeadForProvision.value?.id);
+            if (idx !== -1) {
+                leads.value[idx].status = 'closed_won';
+            }
+            fetchLeads();
+        } else {
+            provisionError.value = data.message || 'حدث خطأ أثناء تدشين المنشأة.';
+        }
+    } catch (e: any) {
+        provisionError.value = e.response?.data?.message || 'تعذر تدشين المطعم، يرجى المحاولة لاحقاً.';
+    } finally {
+        provisioning.value = false;
+    }
+};
+
+const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    alert('تم نسخ البيانات للحافظة بنجاح! 📋');
+};
+
 const stats = ref({
     total: 0,
     new: 0,
@@ -423,20 +468,155 @@ onMounted(fetchLeads);
 
                                     <!-- Actions -->
                                     <td class="p-4 text-center">
-                                        <button
-                                            type="button"
-                                            @click="deleteLead(lead)"
-                                            class="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition"
-                                            title="حذف الاستشارة"
-                                        >
-                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                            </svg>
-                                        </button>
+                                        <div class="flex items-center justify-center gap-2">
+                                            <!-- 1-Click Provisioning Button -->
+                                            <button
+                                                v-if="lead.status !== 'closed_won'"
+                                                type="button"
+                                                @click="openProvisionModal(lead)"
+                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-xs transition hover:scale-105 active:scale-95"
+                                                title="تدشين حساب المطعم والمالك فوراً وإرسال البيانات بالواتساب"
+                                            >
+                                                <span>🚀</span>
+                                                <span>تدشين المطعم</span>
+                                            </button>
+                                            <span
+                                                v-else
+                                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300"
+                                            >
+                                                <span>✓</span> تم التدشين
+                                            </span>
+
+                                            <!-- Delete Button -->
+                                            <button
+                                                type="button"
+                                                @click="deleteLead(lead)"
+                                                class="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition"
+                                                title="حذف الاستشارة"
+                                            >
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+
+                <!-- 1-Click Provisioning Modal -->
+                <div
+                    v-if="selectedLeadForProvision"
+                    class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
+                >
+                    <div class="bg-white dark:bg-[#0f172a] rounded-3xl max-w-lg w-full border border-stone-200 dark:border-slate-800 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                        <!-- Modal Header -->
+                        <div class="bg-gradient-to-r from-amber-600 to-amber-700 p-6 text-white text-center relative">
+                            <span class="inline-block p-2.5 rounded-2xl bg-white/10 text-2xl mb-2">🚀</span>
+                            <h3 class="text-lg font-black">تدشين مساحة المطعم الفورية</h3>
+                            <p class="text-xs text-amber-100 mt-1">توليد الحساب، المنيو الافتراضي، وإرسال البيانات للواتساب بنقرة واحدة</p>
+                            <button
+                                @click="closeProvisionModal"
+                                class="absolute top-4 left-4 p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <!-- Modal Body -->
+                        <div class="p-6">
+                            <!-- If not yet provisioned -->
+                            <div v-if="!provisionResult">
+                                <div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 rounded-2xl p-4 mb-5 text-xs text-amber-900 dark:text-amber-200 space-y-2">
+                                    <p><strong>🏢 اسم المطعم:</strong> {{ selectedLeadForProvision.restaurant_name }}</p>
+                                    <p><strong>👤 المسؤول / المالك:</strong> {{ selectedLeadForProvision.name }}</p>
+                                    <p><strong>📞 هاتف التواصل:</strong> <span dir="ltr">{{ selectedLeadForProvision.phone }}</span></p>
+                                    <p><strong>📍 المدينة:</strong> {{ selectedLeadForProvision.city || 'دمشق' }}</p>
+                                </div>
+
+                                <div class="text-xs text-gray-600 dark:text-gray-300 space-y-2 mb-6">
+                                    <p class="font-bold text-gray-900 dark:text-white">ما سيحدث فور التأكيد:</p>
+                                    <ul class="list-disc list-inside space-y-1 pr-2 text-stone-600 dark:text-slate-400">
+                                        <li>إنشاء سجل مطعم متكامل بباقة <strong class="text-amber-600">Pro الاحترافية</strong> بصلاحية 30 يوماً.</li>
+                                        <li>توليد 5 طاولات افتراضية مجهزة برموز QR الرقمية للطلبات.</li>
+                                        <li>إنشاء قائمة منيو أولية بأصناف حقيقية قابلة للتعديل فوراً.</li>
+                                        <li>توليد حساب مدير المطعم بكلمة مرور مؤقتة وتعيين صلاحية Admin.</li>
+                                        <li><strong>إرسال رسالة ترحيب وبيانات الدخول للواتساب تلقائياً</strong> إلى هاتف المالك!</li>
+                                    </ul>
+                                </div>
+
+                                <div v-if="provisionError" class="p-3 bg-red-50 text-red-700 rounded-xl text-xs font-bold mb-4">
+                                    {{ provisionError }}
+                                </div>
+
+                                <div class="flex items-center justify-end gap-2.5">
+                                    <button
+                                        type="button"
+                                        @click="closeProvisionModal"
+                                        :disabled="provisioning"
+                                        class="px-4 py-2.5 rounded-xl border border-gray-300 dark:border-slate-700 text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-100"
+                                    >
+                                        إلغاء
+                                    </button>
+                                    <button
+                                        type="button"
+                                        @click="confirmProvision"
+                                        :disabled="provisioning"
+                                        class="px-6 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-black shadow-md flex items-center gap-2"
+                                    >
+                                        <span v-if="provisioning" class="inline-block animate-spin h-3.5 w-3.5 border-2 border-white border-t-transparent rounded-full"></span>
+                                        <span>{{ provisioning ? 'جاري التدشين وإرسال البيانات...' : 'تأكيد التدشين وتوليد الحساب' }}</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Success Result Screen -->
+                            <div v-else class="text-center space-y-4">
+                                <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center text-2xl mx-auto">
+                                    ✓
+                                </div>
+                                <h4 class="text-base font-black text-gray-900 dark:text-white">تم تدشين المطعم بنجاح تام! 🎉</h4>
+                                <p class="text-xs text-gray-500">تم تجهيز الحساب والمنيو وإرسال رسالة الترحيب إلى واتساب المالك.</p>
+
+                                <div class="bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-4 text-xs text-right space-y-2 font-mono">
+                                    <div>
+                                        <span class="text-gray-500 font-sans">رابط لوحة الإدارة:</span>
+                                        <p class="font-bold text-amber-600 select-all" dir="ltr">{{ provisionResult.credentials.login_url }}</p>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-500 font-sans">اسم المستخدم (البريد):</span>
+                                        <p class="font-bold text-gray-800 dark:text-gray-200 select-all" dir="ltr">{{ provisionResult.credentials.email }}</p>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-500 font-sans">كلمة المرور المؤقتة:</span>
+                                        <p class="font-bold text-emerald-600 select-all" dir="ltr">{{ provisionResult.credentials.password }}</p>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-500 font-sans">رابط منيو الزبائن الذكي:</span>
+                                        <p class="font-bold text-blue-600 select-all" dir="ltr">{{ provisionResult.restaurant.menu_url }}</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-center gap-2 pt-2">
+                                    <button
+                                        type="button"
+                                        @click="copyToClipboard(`🏢 مطعم: ${provisionResult.restaurant.name}\n🔗 لوحة التحكم: ${provisionResult.credentials.login_url}\n👤 اسم المستخدم: ${provisionResult.credentials.email}\n🔑 كلمة المرور: ${provisionResult.credentials.password}\n📱 المنيو الذكي: ${provisionResult.restaurant.menu_url}`)"
+                                        class="px-4 py-2 rounded-xl bg-gray-100 dark:bg-slate-800 text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-200"
+                                    >
+                                        📋 نسخ البيانات
+                                    </button>
+                                    <button
+                                        type="button"
+                                        @click="closeProvisionModal"
+                                        class="px-5 py-2 rounded-xl bg-amber-600 text-white text-xs font-bold hover:bg-amber-700"
+                                    >
+                                        تم الانتهاء
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

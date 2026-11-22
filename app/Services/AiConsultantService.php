@@ -195,6 +195,11 @@ PROMPT;
     {
         return [
             [
+                'label' => 'المطعم التفاعلي في 60 ثانية ⚡',
+                'action' => 'open_url',
+                'url' => 'https://tedallal.tech/demo',
+            ],
+            [
                 'label' => 'استمارة طلب التدشين والشراكة ✍️',
                 'action' => 'open_url',
                 'url' => 'https://tedallal.tech/consultation',

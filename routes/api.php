@@ -157,6 +157,7 @@ Route::prefix('super-admin')->middleware(['auth:sanctum', EnsureUserHasRole::cla
     Route::get('leads', [\App\Http\Controllers\Api\SuperAdmin\ConsultationLeadController::class, 'index']);
     Route::patch('leads/{lead}', [\App\Http\Controllers\Api\SuperAdmin\ConsultationLeadController::class, 'update']);
     Route::post('leads/{lead}/toggle-ai', [\App\Http\Controllers\Api\SuperAdmin\ConsultationLeadController::class, 'toggleAi']);
+    Route::post('leads/{lead}/provision', [\App\Http\Controllers\Api\SuperAdmin\ConsultationLeadController::class, 'provision']);
     Route::delete('leads/{lead}', [\App\Http\Controllers\Api\SuperAdmin\ConsultationLeadController::class, 'destroy']);
 
     // واتساب إدارة المنصة والمساعد التنفيذي الذكي (Platform Owner WhatsApp Gateway)
