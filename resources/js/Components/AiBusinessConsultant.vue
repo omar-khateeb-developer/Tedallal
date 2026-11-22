@@ -244,13 +244,21 @@ function handleStarterPrompt(prompt: string) {
 }
 
 function formatText(text: string): string {
-    // Basic Markdown support for bolding and bullet points
-    let formatted = text
+    if (!text) return '';
+    // 1. Sanitize raw HTML entities first to neutralize any Stored/Reflected XSS injection
+    const escaped = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+
+    // 2. Safely apply Markdown formatting on the sanitized text
+    return escaped
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/\n\n/g, '<br><br>')
         .replace(/\n- /g, '<br>• ')
         .replace(/\n\d+\. /g, '<br>• ');
-    return formatted;
 }
 </script>
 
