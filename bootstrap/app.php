@@ -52,6 +52,12 @@ return Application::configure(basePath: dirname(__DIR__))
                     'message' => 'العنصر المطلوب غير موجود أو غير متاح حالياً.',
                 ], 404);
             }
+
+            if ($request->header('X-Inertia')) {
+                return \Inertia\Inertia::render('Errors/404')->toResponse($request)->setStatusCode(404);
+            }
+
+            return response()->view('errors.404', [], 404);
         });
 
         $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e, Request $request) {
@@ -61,5 +67,11 @@ return Application::configure(basePath: dirname(__DIR__))
                     'message' => 'المورد المطلوب غير موجود أو انتهت صلاحيته.',
                 ], 404);
             }
+
+            if ($request->header('X-Inertia')) {
+                return \Inertia\Inertia::render('Errors/404')->toResponse($request)->setStatusCode(404);
+            }
+
+            return response()->view('errors.404', [], 404);
         });
     })->create();
