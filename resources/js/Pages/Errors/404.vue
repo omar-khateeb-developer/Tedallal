@@ -57,10 +57,6 @@ const currentUrl = ref('');
 onMounted(() => {
     if (typeof window !== 'undefined') {
         currentUrl.value = window.location.href;
-        const userLang = (navigator.language || '').toLowerCase();
-        if (userLang && !userLang.startsWith('ar')) {
-            currentLang.value = 'en';
-        }
     }
 });
 </script>
@@ -215,9 +211,9 @@ onMounted(() => {
             </div>
 
             <!-- WhatsApp Concierge Box -->
-            <div class="flex items-center justify-between gap-3 p-3.5 sm:p-4 rounded-2xl bg-emerald-500/[0.08] border border-emerald-500/25 text-start hover:bg-emerald-500/[0.12] transition-colors">
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3.5 sm:p-4 rounded-2xl bg-emerald-500/[0.08] border border-emerald-500/25 text-center sm:text-start hover:bg-emerald-500/[0.12] transition-colors">
                 <div>
-                    <h4 class="text-sm font-bold text-emerald-400 flex items-center gap-1.5 mb-0.5">
+                    <h4 class="text-sm font-bold text-emerald-400 flex items-center justify-center sm:justify-start gap-1.5 mb-0.5">
                         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2z"/>
                         </svg>
@@ -231,7 +227,7 @@ onMounted(() => {
                     :href="`https://wa.me/963947064593?text=${encodeURIComponent('مرحباً إدارة تدلّل، كنت أتصفح الرابط التالي وظهرت لي صفحة 404:\n' + currentUrl)}`"
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-500 text-emerald-950 font-extrabold text-xs whitespace-nowrap hover:bg-emerald-400 transition-transform hover:scale-105 shadow-md shadow-emerald-500/30"
+                    class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-2 rounded-xl bg-emerald-500 text-emerald-950 font-extrabold text-xs whitespace-nowrap hover:bg-emerald-400 transition-transform hover:scale-105 shadow-md shadow-emerald-500/30"
                 >
                     <span>{{ i18n[currentLang].whatsappBtn }}</span>
                     <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">

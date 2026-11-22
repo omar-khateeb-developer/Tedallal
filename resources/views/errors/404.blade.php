@@ -35,17 +35,26 @@
             --gold-glow: rgba(212, 175, 55, 0.38);
         }
 
+        html {
+            overflow-x: hidden;
+            max-width: 100%;
+        }
+
         body {
             min-height: 100vh;
             background: radial-gradient(ellipse at 50% -10%, #1a153b 0%, #0c091f 45%, #05040a 100%);
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             font-family: 'Tajawal', 'Inter', system-ui, -apple-system, sans-serif;
             color: #f8fafc;
             position: relative;
             overflow-x: hidden;
-            padding: 1.5rem 1rem;
+            padding: 5rem 1rem 2rem;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
         }
 
         /* Ambient Lighting & Nebulas */
@@ -55,6 +64,7 @@
             pointer-events: none;
             z-index: 0;
             overflow: hidden;
+            max-width: 100%;
         }
 
         .orb {
@@ -117,8 +127,10 @@
         .top-bar {
             position: fixed;
             top: 1.25rem;
-            left: 1.5rem;
-            right: 1.5rem;
+            left: 0;
+            right: 0;
+            width: 100%;
+            padding: 0 1.5rem;
             z-index: 50;
             display: flex;
             align-items: center;
@@ -126,6 +138,7 @@
             max-width: 1200px;
             margin: 0 auto;
             pointer-events: none;
+            box-sizing: border-box;
         }
 
         .brand-badge {
@@ -345,12 +358,58 @@
         }
 
         @media (max-width: 540px) {
+            body {
+                padding: 4.5rem 0.65rem 1.5rem;
+            }
             .actions-grid {
                 grid-template-columns: 1fr;
+                gap: 0.75rem;
             }
             .card-container {
-                padding: 2.25rem 1.4rem 2rem;
-                border-radius: 26px;
+                padding: 1.85rem 1rem 1.6rem;
+                border-radius: 22px;
+                max-width: 100%;
+            }
+            .top-bar {
+                top: 0.75rem;
+                padding: 0 0.85rem;
+            }
+            .brand-badge {
+                padding: 0.35rem 0.75rem;
+                font-size: 0.78rem;
+            }
+            .lang-btn {
+                padding: 0.35rem 0.75rem;
+                font-size: 0.78rem;
+            }
+            .crown-emblem {
+                width: 68px;
+                height: 68px;
+                margin-bottom: 0.85rem;
+            }
+            .num-404 {
+                font-size: clamp(4.2rem, 18vw, 6rem);
+            }
+            .headline {
+                font-size: 1.35rem;
+            }
+            .description {
+                font-size: 0.9rem;
+                margin-bottom: 1.5rem;
+            }
+            .concierge-box {
+                flex-direction: column;
+                align-items: stretch;
+                text-align: center;
+                gap: 0.75rem;
+            }
+            [dir="ltr"] .concierge-box {
+                text-align: center;
+            }
+            .btn-whatsapp {
+                justify-content: center;
+                width: 100%;
+                padding: 0.7rem 1rem;
             }
         }
 
@@ -743,17 +802,6 @@
                 waLink.href = `https://wa.me/963947064593?text=${encodeURIComponent('مرحباً إدارة تدلّل، كنت أتصفح الرابط التالي وظهرت لي صفحة 404:\n' + window.location.href)}`;
             }
         } catch (e) {}
-
-        // Auto detect browser language
-        (function detectLocale() {
-            try {
-                const userLang = (navigator.language || navigator.userLanguage || '').toLowerCase();
-                if (userLang && !userLang.startsWith('ar')) {
-                    currentLang = 'en';
-                    applyLanguage('en');
-                }
-            } catch (e) {}
-        })();
     </script>
 </body>
 </html>
