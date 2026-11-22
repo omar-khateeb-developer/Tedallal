@@ -411,7 +411,7 @@ def render_scene_5_base(frame_idx):
     btn_w = 680
     btn_x = (card_w - btn_w) // 2
     c_draw.rounded_rectangle([btn_x, cy, btn_x + btn_w, cy + 105], radius=52, fill=(37, 211, 102), outline=(255, 255, 255), width=2)
-    bidi_wa = ar("💬 تواصل عبر واتساب: 963934578117+")
+    bidi_wa = ar("💬 تواصل عبر واتساب: 0947064593")
     tw = c_draw.textbbox((0, 0), bidi_wa, font=FONT_BADGE)[2]
     c_draw.text(((card_w - tw) // 2, cy + 28), bidi_wa, font=FONT_BADGE, fill=(255, 255, 255))
     cy += 140
