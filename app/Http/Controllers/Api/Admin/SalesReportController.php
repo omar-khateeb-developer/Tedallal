@@ -163,6 +163,7 @@ class SalesReportController extends ApiController
                 'cancelled_orders'  => $cancelledCount,
                 'cancelled_lost'    => $cancelledLost,
             ], $this->computePromoDiscountBreakdown($validOrders)),
+            'analytics'         => $this->computeAnalytics($validOrders, $restaurant->id),
             'records'           => $daysBreakdown,
         ]);
     }
@@ -253,6 +254,7 @@ class SalesReportController extends ApiController
                 'cancelled_orders'  => $cancelledCount,
                 'cancelled_lost'    => $cancelledLost,
             ], $this->computePromoDiscountBreakdown($validOrders)),
+            'analytics'         => $this->computeAnalytics($validOrders, $restaurant->id),
             'records'           => $monthsBreakdown,
         ]);
     }
@@ -318,6 +320,7 @@ class SalesReportController extends ApiController
                 'cancelled_orders'  => $cancelledCount,
                 'cancelled_lost'    => $cancelledLost,
             ], $this->computePromoDiscountBreakdown($allOrders)),
+            'analytics'         => $this->computeAnalytics($allOrders, $restaurant->id),
             'records'           => $yearsBreakdown,
         ]);
     }
@@ -386,6 +389,7 @@ class SalesReportController extends ApiController
                 'cancelled_orders'  => $cancelledCount,
                 'cancelled_lost'    => $cancelledLost,
             ], $this->computePromoDiscountBreakdown($validOrders)),
+            'analytics'         => $this->computeAnalytics($validOrders, $restaurant->id),
             'records'           => [],
         ]);
     }
@@ -423,5 +427,207 @@ class SalesReportController extends ApiController
             'wheel_discounts' => $wheelDiscounts,
             'wheel_orders_count' => $wheelCount,
         ];
+    }
+
+    /**
+     * حساب التحليلات الذكية: ساعات الذروة، وأفضل 5 أطباق مبيعاً ومساهمة في الدخل.
+     *
+     * @param \Illuminate\Support\Collection $validOrders
+     * @param int $restaurantId
+     * @return array
+     */
+    private function computeAnalytics($validOrders, int $restaurantId): array
+    {
+        // 1. توزيع المبيعات بحسب ساعات اليوم (00:00 - 23:00)
+        $hourly = [];
+        for ($h = 0; $h < 24; $h++) {
+            $formattedHour = sprintf('%02d:00', $h);
+            $hourly[$h] = [
+                'hour' => $h,
+                'label' => $formattedHour,
+                'orders_count' => 0,
+                'net_sales' => '0.00',
+            ];
+        }
+
+        foreach ($validOrders as $order) {
+            $h = (int) $order->created_at->format('G');
+            $net = number_format((float) $order->total, 2, '.', '');
+            $hourly[$h]['orders_count']++;
+            $hourly[$h]['net_sales'] = MoneyCalculator::add($hourly[$h]['net_sales'], $net);
+        }
+
+        // تحديد ساعة الذروة (Peak Hour)
+        $peakHour = null;
+        $maxSales = -1.0;
+        foreach ($hourly as $hData) {
+            $salesFloat = (float) $hData['net_sales'];
+            if ($salesFloat > $maxSales && $hData['orders_count'] > 0) {
+                $maxSales = $salesFloat;
+                $peakHour = $hData;
+            }
+        }
+
+        // 2. أكثر 5 أطباق طلباً ومساهمة في الدخل (Top 5 Performing Dishes)
+        $orderIds = $validOrders->pluck('id')->filter()->all();
+        $topDishes = [];
+        if (!empty($orderIds)) {
+            $rows = DB::table('order_items')
+                ->whereIn('order_id', $orderIds)
+                ->select(
+                    'item_name_snapshot as name',
+                    DB::raw('SUM(quantity) as total_qty'),
+                    DB::raw('SUM(subtotal) as total_revenue')
+                )
+                ->groupBy('item_name_snapshot')
+                ->orderByDesc('total_revenue')
+                ->limit(5)
+                ->get();
+
+            $totalRevenueSum = (float) $validOrders->sum('total');
+
+            foreach ($rows as $r) {
+                $rev = (float) $r->total_revenue;
+                $sharePct = $totalRevenueSum > 0 ? round(($rev / $totalRevenueSum) * 100, 1) : 0;
+                $topDishes[] = [
+                    'name' => $r->name,
+                    'quantity' => (int) $r->total_qty,
+                    'revenue' => number_format($rev, 2, '.', ''),
+                    'share_percentage' => $sharePct,
+                ];
+            }
+        }
+
+        return [
+            'hourly' => array_values($hourly),
+            'peak_hour' => $peakHour,
+            'top_dishes' => $topDishes,
+        ];
+    }
+
+    /**
+     * تصدير الكشف المالي والمحاسبي إلى ملف CSV متوافق مع Excel باللغة العربية (UTF-8 BOM).
+     */
+    public function export(Request $request)
+    {
+        $restaurant = $this->restaurantContext->current();
+        $currency = $restaurant->currency ?? 'SYP';
+        $viewType = $request->query('view', 'daily');
+
+        // جلب بيانات التقرير الرسمية
+        $response = $this->index($request);
+        $reportData = $response->getData(true)['data'] ?? [];
+
+        $cleanSlug = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $restaurant->slug ?? 'restaurant');
+        $filename = "sales_report_{$cleanSlug}_{$viewType}_" . now()->format('Y-m-d') . ".csv";
+
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        $callback = function () use ($reportData, $restaurant, $currency, $viewType) {
+            $output = fopen('php://output', 'w');
+            // إضافة UTF-8 BOM لدعم مايكروسوفت إكسل العربي تلقائياً
+            fwrite($output, "\xEF\xBB\xBF");
+
+            // ترويسة المنشأة
+            fputcsv($output, [$restaurant->name ?? 'منظومة تدلّل', 'كشف حركات المبيعات والتقارير المالية المعتمدة']);
+            fputcsv($output, ['تاريخ استخراج التقرير', now()->toDateTimeString(), 'العملة', $currency]);
+            fputcsv($output, []); // سطر فارغ
+
+            $records = $reportData['records'] ?? [];
+            $summary = $reportData['summary'] ?? [];
+
+            if ($viewType === 'daily') {
+                fputcsv($output, [
+                    'رقم اليوم',
+                    'التاريخ',
+                    'اليوم',
+                    'عدد الطلبات',
+                    "إجمالي المبيعات ({$currency})",
+                    "الخصومات ({$currency})",
+                    "صافي المبيعات ({$currency})",
+                    "متوسط الفاتورة AOV ({$currency})",
+                ]);
+
+                foreach ($records as $r) {
+                    fputcsv($output, [
+                        $r['day_number'] ?? '',
+                        $r['date'] ?? '',
+                        $r['day_name'] ?? '',
+                        $r['orders_count'] ?? 0,
+                        $r['gross_sales'] ?? '0.00',
+                        $r['discounts'] ?? '0.00',
+                        $r['net_sales'] ?? '0.00',
+                        $r['aov'] ?? '0.00',
+                    ]);
+                }
+            } elseif ($viewType === 'monthly') {
+                fputcsv($output, [
+                    'رقم الشهر',
+                    'الشهر',
+                    'عدد الطلبات',
+                    "إجمالي المبيعات ({$currency})",
+                    "الخصومات ({$currency})",
+                    "صافي المبيعات ({$currency})",
+                    "متوسط الفاتورة AOV ({$currency})",
+                    'نسبة النمو الشهري %',
+                ]);
+
+                foreach ($records as $r) {
+                    fputcsv($output, [
+                        $r['month_number'] ?? '',
+                        $r['month_name'] ?? '',
+                        $r['orders_count'] ?? 0,
+                        $r['gross_sales'] ?? '0.00',
+                        $r['discounts'] ?? '0.00',
+                        $r['net_sales'] ?? '0.00',
+                        $r['aov'] ?? '0.00',
+                        isset($r['growth_percentage']) ? $r['growth_percentage'] . '%' : '-',
+                    ]);
+                }
+            } elseif ($viewType === 'yearly') {
+                fputcsv($output, [
+                    'السنة',
+                    'عدد الطلبات',
+                    "إجمالي المبيعات ({$currency})",
+                    "الخصومات ({$currency})",
+                    "صافي المبيعات ({$currency})",
+                    "متوسط الفاتورة AOV ({$currency})",
+                ]);
+
+                foreach ($records as $r) {
+                    fputcsv($output, [
+                        $r['year'] ?? '',
+                        $r['orders_count'] ?? 0,
+                        $r['gross_sales'] ?? '0.00',
+                        $r['discounts'] ?? '0.00',
+                        $r['net_sales'] ?? '0.00',
+                        $r['aov'] ?? '0.00',
+                    ]);
+                }
+            }
+
+            // سطر فارغ ثم الملخص المالي الرسمي
+            fputcsv($output, []);
+            fputcsv($output, ['--- ملخص الحسابات المالية المعتمدة ---']);
+            fputcsv($output, ['إجمالي المبيعات قبل الخصم', $summary['gross_sales'] ?? '0.00', $currency]);
+            fputcsv($output, ['إجمالي الخصومات المصروفة', $summary['total_discounts'] ?? '0.00', $currency]);
+            fputcsv($output, ['خصومات عجلة المكافآت', $summary['wheel_discounts'] ?? '0.00', $currency]);
+            fputcsv($output, ['خصومات برنامج الولاء', $summary['loyalty_discounts'] ?? '0.00', $currency]);
+            fputcsv($output, ['صافي الإيراد النهائي', $summary['net_sales'] ?? '0.00', $currency]);
+            fputcsv($output, ['إجمالي الطلبات المكتملة', $summary['total_orders'] ?? 0]);
+            fputcsv($output, ['طلبات الصالة (Dine-in)', $summary['dine_in_count'] ?? 0, ($summary['dine_in_revenue'] ?? '0.00') . " {$currency}"]);
+            fputcsv($output, ['طلبات السفري (Takeaway)', $summary['takeaway_count'] ?? 0, ($summary['takeaway_revenue'] ?? '0.00') . " {$currency}"]);
+            fputcsv($output, ['الطلبات الملغاة وفاقد المبيعات', $summary['cancelled_orders'] ?? 0, ($summary['cancelled_lost'] ?? '0.00') . " {$currency}"]);
+
+            fclose($output);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

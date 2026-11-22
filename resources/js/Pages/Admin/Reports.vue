@@ -181,6 +181,20 @@ const chartOptions = {
 function printReport() {
     window.print();
 }
+
+function exportReport() {
+    let url = `/api/admin/reports/sales/export?view=${activeView.value}`;
+    if (activeView.value === 'daily') {
+        url += `&year=${selectedYear.value}&month=${selectedMonth.value}`;
+    } else if (activeView.value === 'monthly') {
+        url += `&year=${selectedYear.value}`;
+    } else if (activeView.value === 'custom') {
+        url += `&from_date=${customFromDate.value}&to_date=${customToDate.value}`;
+    }
+    window.open(url, '_blank');
+}
+
+const showZReportModal = ref(false);
 </script>
 
 <template>
@@ -199,13 +213,29 @@ function printReport() {
                     </p>
                 </div>
 
-                <div class="flex items-center gap-2 print:hidden">
+                <div class="flex items-center gap-2 print:hidden flex-wrap">
+                    <button
+                        @click="showZReportModal = true"
+                        class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md transition-all active:scale-95"
+                    >
+                        <span>⚡</span>
+                        <span>كشف الوردية اللحظي (Z-Report)</span>
+                    </button>
+
+                    <button
+                        @click="exportReport"
+                        class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md transition-all active:scale-95"
+                    >
+                        <span>📥</span>
+                        <span>تصدير Excel / CSV</span>
+                    </button>
+
                     <button
                         @click="printReport"
-                        class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-amber-500 dark:hover:bg-amber-600 dark:text-slate-950 font-bold text-xs flex items-center gap-2 shadow-lg transition-all"
+                        class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white dark:bg-amber-500 dark:hover:bg-amber-600 dark:text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-md transition-all active:scale-95"
                     >
                         <span>🖨️</span>
-                        <span>طباعة الكشف المالي</span>
+                        <span>طباعة الكشف</span>
                     </button>
                 </div>
             </div>
@@ -453,6 +483,81 @@ function printReport() {
                     </div>
                 </div>
 
+                <!-- Smart Analytics: Peak Hours & Top Dishes (Hidden during print) -->
+                <div v-if="reportData?.analytics" class="grid grid-cols-1 lg:grid-cols-2 gap-6 print:hidden" dir="rtl">
+                    <!-- Peak Hours Card -->
+                    <div class="p-6 rounded-3xl bg-white dark:bg-[#0a0f1d] border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h4 class="font-black text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                                <span>⏰</span>
+                                <span>ساعات الذروة الذهبية (Peak Hours)</span>
+                            </h4>
+                            <span v-if="reportData.analytics.peak_hour" class="px-2.5 py-1 rounded-full text-[11px] font-black bg-amber-500/15 text-amber-500 border border-amber-500/30">
+                                الذروة: {{ reportData.analytics.peak_hour.label }}
+                            </span>
+                        </div>
+
+                        <p class="text-xs text-slate-500 dark:text-slate-400">
+                            توزيع الحركات البيانية لمساعدة الإدارة في تنظيم طاقم الخدمة وجاهزية المطبخ.
+                        </p>
+
+                        <!-- Top 4 Busy Hours Grid -->
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2">
+                            <div
+                                v-for="h in (reportData.analytics.hourly || []).filter(item => item.orders_count > 0).sort((a,b) => parseFloat(b.net_sales) - parseFloat(a.net_sales)).slice(0, 4)"
+                                :key="h.hour"
+                                class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 text-center"
+                            >
+                                <span class="text-xs font-black font-mono text-amber-600 dark:text-amber-400 block">{{ h.label }}</span>
+                                <span class="text-xs font-bold text-slate-800 dark:text-slate-200 mt-1 block">{{ formatNumber(h.net_sales) }} {{ reportData.currency }}</span>
+                                <span class="text-[10px] text-slate-400 block">{{ h.orders_count }} طلب</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Top 5 Revenue Dishes -->
+                    <div class="p-6 rounded-3xl bg-white dark:bg-[#0a0f1d] border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h4 class="font-black text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                                <span>🍽️</span>
+                                <span>الأطباق الأكثر مساهمة في الدخل</span>
+                            </h4>
+                            <span class="text-xs text-slate-400">أفضل 5 أطباق</span>
+                        </div>
+
+                        <div v-if="reportData.analytics.top_dishes?.length === 0" class="py-8 text-center text-xs text-slate-400 font-medium">
+                            لا توجد بيانات أصناف كافية للفترة المحددة.
+                        </div>
+
+                        <div v-else class="space-y-3 pt-1">
+                            <div
+                                v-for="(dish, dIdx) in reportData.analytics.top_dishes"
+                                :key="dIdx"
+                                class="space-y-1"
+                            >
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                        <span class="w-5 h-5 rounded-full bg-amber-500/15 text-amber-500 text-[10px] font-black flex items-center justify-center font-mono">
+                                            #{{ dIdx + 1 }}
+                                        </span>
+                                        <span>{{ dish.name }}</span>
+                                    </span>
+                                    <span class="font-mono font-bold text-slate-800 dark:text-slate-200">
+                                        {{ formatNumber(dish.revenue) }} {{ reportData.currency }}
+                                        <span class="text-[10px] text-slate-400 font-sans">({{ dish.quantity }} قطعة)</span>
+                                    </span>
+                                </div>
+                                <div class="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                                    <div
+                                        class="h-full bg-gradient-to-l from-amber-500 to-amber-600 rounded-full transition-all duration-500"
+                                        :style="{ width: `${Math.min(dish.share_percentage || 5, 100)}%` }"
+                                    ></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Detailed Accounting Ledger Table -->
                 <div class="rounded-3xl bg-white dark:bg-[#0a0f1d] border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden" dir="rtl">
                     <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
@@ -545,6 +650,101 @@ function printReport() {
                     </div>
                 </div>
 
+            </div>
+        </div>
+
+        <!-- Instant Z-Report Modal -->
+        <div
+            v-if="showZReportModal && reportData?.summary"
+            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm print:hidden"
+            dir="rtl"
+        >
+            <div class="relative w-full max-w-md bg-white dark:bg-[#0c1222] rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 overflow-hidden space-y-5 animate-in fade-in zoom-in-95 duration-200">
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+                    <div class="flex items-center gap-2.5">
+                        <span class="w-9 h-9 rounded-2xl bg-purple-500/15 text-purple-600 dark:text-purple-400 flex items-center justify-center text-lg">⚡</span>
+                        <div>
+                            <h3 class="font-black text-slate-900 dark:text-white text-base">كشف الوردية اللحظي (Z-Report)</h3>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400">مطابقة رصيد الصندوق وإغلاق الوردية المحاسبي</p>
+                        </div>
+                    </div>
+                    <button
+                        @click="showZReportModal = false"
+                        class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center text-sm font-bold transition-colors"
+                    >
+                        ✕
+                    </button>
+                </div>
+
+                <!-- Receipt Styled Paper (Thermal Style) -->
+                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/90 border border-dashed border-slate-300 dark:border-slate-700 font-mono text-xs space-y-3">
+                    <div class="text-center border-b border-dashed border-slate-300 dark:border-slate-700 pb-2">
+                        <p class="font-black font-sans text-sm text-slate-900 dark:text-white">{{ restaurant?.name || 'منظومة تدلّل' }}</p>
+                        <p class="text-[10px] text-slate-500 font-sans">كشف إغلاق الصندوق المالي المعتمد</p>
+                        <p class="text-[10px] text-slate-400 mt-1">{{ new Date().toLocaleString('ar-SA') }}</p>
+                    </div>
+
+                    <div class="space-y-1.5 text-slate-700 dark:text-slate-300">
+                        <div class="flex justify-between">
+                            <span class="font-sans">إجمالي المبيعات (Gross):</span>
+                            <span class="font-bold">{{ formatNumber(reportData.summary.gross_sales) }} {{ reportData.currency }}</span>
+                        </div>
+                        <div class="flex justify-between text-rose-500">
+                            <span class="font-sans">إجمالي الخصومات:</span>
+                            <span class="font-bold">-{{ formatNumber(reportData.summary.total_discounts) }} {{ reportData.currency }}</span>
+                        </div>
+                        <div v-if="parseFloat(reportData.summary.wheel_discounts || 0) > 0" class="flex justify-between text-[11px] text-amber-500 pr-3">
+                            <span class="font-sans">منها خصومات العجلة:</span>
+                            <span>-{{ formatNumber(reportData.summary.wheel_discounts) }} {{ reportData.currency }}</span>
+                        </div>
+                        <div v-if="parseFloat(reportData.summary.loyalty_discounts || 0) > 0" class="flex justify-between text-[11px] text-purple-400 pr-3">
+                            <span class="font-sans">منها جوائز الولاء:</span>
+                            <span>-{{ formatNumber(reportData.summary.loyalty_discounts) }} {{ reportData.currency }}</span>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 border-t-2 border-dashed border-slate-300 dark:border-slate-700 flex justify-between items-center text-sm font-black text-amber-600 dark:text-amber-400">
+                        <span class="font-sans">صافي الصندوق النهائي:</span>
+                        <span>{{ formatNumber(reportData.summary.net_sales) }} {{ reportData.currency }}</span>
+                    </div>
+
+                    <div class="pt-2 border-t border-dashed border-slate-300 dark:border-slate-700 space-y-1 text-[11px] text-slate-500 dark:text-slate-400">
+                        <div class="flex justify-between">
+                            <span class="font-sans">الفواتير المكتملة:</span>
+                            <span class="font-bold font-mono text-slate-800 dark:text-slate-200">{{ reportData.summary.total_orders }} طلب</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-sans">متوسط الفاتورة (AOV):</span>
+                            <span class="font-bold font-mono">{{ formatNumber(reportData.summary.aov) }} {{ reportData.currency }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-sans">طلبات الصالة / سفري:</span>
+                            <span class="font-mono">{{ reportData.summary.dine_in_count || 0 }} صالة • {{ reportData.summary.takeaway_count || 0 }} سفري</span>
+                        </div>
+                        <div class="flex justify-between text-rose-500">
+                            <span class="font-sans">الفاقد من الإلغاءات:</span>
+                            <span class="font-mono">{{ reportData.summary.cancelled_orders || 0 }} طلب ({{ formatNumber(reportData.summary.cancelled_lost) }} {{ reportData.currency }})</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Actions -->
+                <div class="flex items-center gap-3">
+                    <button
+                        @click="printReport"
+                        class="flex-1 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-black text-xs flex items-center justify-center gap-2 shadow-lg transition-transform active:scale-95"
+                    >
+                        <span>🖨️</span>
+                        <span>طباعة إيصال Z-Report حرارياً</span>
+                    </button>
+                    <button
+                        @click="showZReportModal = false"
+                        class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition-colors"
+                    >
+                        إغلاق
+                    </button>
+                </div>
             </div>
         </div>
     </AuthenticatedLayout>

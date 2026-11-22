@@ -73,6 +73,7 @@ Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
         Route::get('analytics/menu-engineering', [\App\Http\Controllers\Api\Admin\AnalyticsController::class, 'menuEngineering']);
         Route::get('insights', [\App\Http\Controllers\Api\Admin\InsightsController::class, 'index']);
         Route::get('reports/sales', [\App\Http\Controllers\Api\Admin\SalesReportController::class, 'index']);
+        Route::get('reports/sales/export', [\App\Http\Controllers\Api\Admin\SalesReportController::class, 'export']);
         Route::apiResource('promo-codes', AdminPromoCodeController::class)->parameters([
             'promo-codes' => 'promoCode',
         ]);
