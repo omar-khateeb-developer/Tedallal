@@ -111,6 +111,20 @@ class WhatsAppWebhookController extends Controller
                     return response()->json(['success' => true]);
                 }
 
+                // كشف ما إذا كان المرسل هو رقم هاتف صاحب المنصة الشخصي الفعلي
+                $ownerPhone = (string) Setting::get('platform_owner_phone', '963934578117');
+                $cleanFrom = preg_replace('/[^0-9]/', '', (string) $from);
+                $cleanOwner = preg_replace('/[^0-9]/', '', (string) $ownerPhone);
+
+                if (! empty($cleanOwner) && (str_ends_with($cleanFrom, substr($cleanOwner, -9)) || $cleanFrom === $cleanOwner)) {
+                    Cache::put("platform_wa_paused_{$from}", true, now()->addHours(24));
+                    Log::info("Platform WhatsApp message received from real verified owner {$from}. Auto-reply paused.");
+                    return response()->json([
+                        'success' => true,
+                        'owner_message' => true,
+                    ]);
+                }
+
                 // حفظ أو تحديث العميل المحتمل تلقائياً في CRM المنصة
                 try {
                     $lead = ConsultationLead::firstOrNew(['phone' => $from]);
