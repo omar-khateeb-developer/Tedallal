@@ -7,7 +7,7 @@ import ServiceCallModal from '@/Components/Customer/ServiceCallModal.vue';
 import CustomerLayout from '@/Layouts/CustomerLayout.vue';
 import { router } from '@inertiajs/vue3';
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
-import { normalizeVisualViewport } from '@/Composables/useVisualViewport';
+import { normalizeVisualViewport } from '@/composables/useVisualViewport';
 import axios from 'axios';
 
 interface MenuItem {

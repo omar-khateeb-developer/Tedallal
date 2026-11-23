@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import axios from 'axios';
-import { useVisualViewportModal } from '@/Composables/useVisualViewport';
+import { useVisualViewportModal } from '@/composables/useVisualViewport';
 
 const props = defineProps<{
     show: boolean;

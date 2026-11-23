@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onUnmounted } from 'vue';
-import { useVisualViewportModal } from '@/Composables/useVisualViewport';
+import { useVisualViewportModal } from '@/composables/useVisualViewport';
 
 export interface MenuItemOption {
     id: number;
