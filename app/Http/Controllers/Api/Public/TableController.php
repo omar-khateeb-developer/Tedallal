@@ -45,6 +45,10 @@ class TableController extends ApiController
             return $this->error('الطاولة غير موجودة.', 404);
         }
 
+        if (! $table->restaurant || ! $table->restaurant->isActive()) {
+            return $this->error('المطعم غير متاح للخدمة حالياً.', 403);
+        }
+
         // Anti-spam protection: check if a waiter call was sent in the last 45 seconds and is still pending
         $recentPending = TableServiceCall::where('table_id', $table->id)
             ->where('type', 'waiter_call')
@@ -116,6 +120,20 @@ class TableController extends ApiController
             return $this->error('الطاولة غير موجودة.', 404);
         }
 
+        if (! $table->restaurant || ! $table->restaurant->isActive()) {
+            return $this->error('المطعم غير متاح للخدمة حالياً.', 403);
+        }
+
+        // Anti-tamper check: Ensure table has active orders before requesting bill
+        $hasActiveOrders = $table->orders()
+            ->whereNull('paid_at')
+            ->whereNotIn('status', [\App\Enums\OrderStatus::Cancelled])
+            ->exists();
+
+        if (! $hasActiveOrders) {
+            return $this->error('لا توجد طلبات نشطة غير مسددة على هذه الطاولة لطلب الحساب.', 422);
+        }
+
         $paymentMethod = $request->input('payment_method', 'cash'); // cash, card, online
         $notes = $request->input('notes');
 
@@ -176,11 +194,16 @@ class TableController extends ApiController
     public function cancelServiceCall(Request $request, string $token): JsonResponse
     {
         $table = RestaurantTable::withoutGlobalScopes()
+            ->with('restaurant')
             ->whereToken($token)
             ->first();
 
         if (! $table || ! $table->isActive()) {
             return $this->error('الطاولة غير موجودة.', 404);
+        }
+
+        if (! $table->restaurant || ! $table->restaurant->isActive()) {
+            return $this->error('المطعم غير متاح للخدمة حالياً.', 403);
         }
 
         $type = $request->input('type'); // 'waiter_call' or 'bill_request' or null for all
@@ -208,11 +231,16 @@ class TableController extends ApiController
     public function getServiceStatus(string $token): JsonResponse
     {
         $table = RestaurantTable::withoutGlobalScopes()
+            ->with('restaurant')
             ->whereToken($token)
             ->first();
 
         if (! $table || ! $table->isActive()) {
             return $this->error('الطاولة غير موجودة.', 404);
+        }
+
+        if (! $table->restaurant || ! $table->restaurant->isActive()) {
+            return $this->error('المطعم غير متاح للخدمة حالياً.', 403);
         }
 
         $pendingCalls = TableServiceCall::where('table_id', $table->id)

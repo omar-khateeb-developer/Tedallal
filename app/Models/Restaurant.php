@@ -135,7 +135,7 @@ class Restaurant extends Model
 
     public function isActive(): bool
     {
-        return $this->status === RestaurantStatus::Active;
+        return $this->status === RestaurantStatus::Active && ! $this->isExpired();
     }
 
     public function isBasic(): bool

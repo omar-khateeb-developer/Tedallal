@@ -40,7 +40,13 @@ class CartController extends ApiController
         ]);
 
         $session = ValidateTableSession::sessionFrom($request);
-        $restaurantId = $session->table?->restaurant_id;
+        $restaurant = $session->table?->restaurant;
+
+        if (! $restaurant || ! $restaurant->isActive()) {
+            return $this->error('عذراً، هذا المطعم غير متاح للطلب حالياً.', 403);
+        }
+
+        $restaurantId = $restaurant->id;
 
         $menuItem = MenuItem::withoutGlobalScopes()
             ->where('restaurant_id', $restaurantId)

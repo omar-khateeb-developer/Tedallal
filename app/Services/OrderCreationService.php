@@ -40,6 +40,12 @@ final class OrderCreationService
             $table = $lockedSession->table()->lockForUpdate()->first();
             $restaurant = $table->restaurant;
 
+            if (! $restaurant || ! $restaurant->isActive()) {
+                throw ValidationException::withMessages([
+                    'restaurant' => ['عذراً، هذا المطعم غير متاح لاستقبال الطلبات حالياً.'],
+                ]);
+            }
+
             $lockedItems = $summary['items']->map(function ($cartItem) {
                 $menuItem = $cartItem->menuItem()->lockForUpdate()->first();
 

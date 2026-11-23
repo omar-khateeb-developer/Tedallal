@@ -11,6 +11,7 @@ echo "📦 [2/5] تثبيت حزم PHP الإنتاجية السريعة..."
 composer install --no-dev --prefer-dist --optimize-autoloader --no-progress --no-interaction
 
 echo "🎨 [2.5/5] بناء وتجميع ملفات الواجهات والأصول للإنتاج (Vite Build)..."
+export NODE_OPTIONS="--max-old-space-size=1024"
 npm run build
 
 echo "🗄️ [3/5] تشغيل المايجريشن وإعداد التخزين..."

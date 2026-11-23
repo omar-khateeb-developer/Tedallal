@@ -33,12 +33,16 @@ $user = Auth::user();
                     $request->session()->regenerateToken();
                 }
 
+                $msg = $user->restaurant->isExpired()
+                    ? 'عذراً، انتهت صلاحية اشتراك هذا المطعم. يرجى التواصل مع إدارة المنصة للتجديد.'
+                    : 'عذراً، هذا المطعم مُعطّل حالياً من قبل الإدارة.';
+
                 if ($request->wantsJson() || $request->is('api/*')) {
-                    return response()->json(['message' => 'عذراً، هذا المطعم مُعطّل حالياً من قبل الإدارة.'], 403);
+                    return response()->json(['message' => $msg], 403);
                 }
 
                 return redirect()->route('login')->withErrors([
-                    'email' => 'عذراً، هذا المطعم مُعطّل حالياً من قبل الإدارة.',
+                    'email' => $msg,
                 ]);
             }
         }

@@ -17,9 +17,13 @@ class WhatsAppWebhookController extends Controller
     public function handle(Request $request): JsonResponse
     {
         $incomingSecret = $request->header('X-Gateway-Secret');
-        $expectedSecret = (string) config('whatsapp.gateway_secret', 'tedallal_wa_gateway_2026_secure_key');
+        $expectedSecret = (string) config('whatsapp.gateway_secret');
 
-        if (! $incomingSecret || ! hash_equals($expectedSecret, $incomingSecret)) {
+        if (empty($expectedSecret) || empty($incomingSecret) || ! hash_equals($expectedSecret, $incomingSecret)) {
+            Log::warning('Unauthorized WhatsApp webhook attempt rejected', [
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
