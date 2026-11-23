@@ -95,6 +95,164 @@ const fetchRestaurants = async () => {
     }
 };
 
+// ==========================================
+// الفلترة والترتيب الذكي لقائمة المطاعم
+// ==========================================
+type RestaurantSortField = 'created_at' | 'name' | 'type' | 'plan' | 'days_remaining' | 'status' | 'phone';
+
+const searchQuery = ref('');
+const filterStatus = ref<'all' | 'active' | 'inactive'>('all');
+const filterType = ref<'all' | 'postpaid' | 'prepaid'>('all');
+const filterPlan = ref<'all' | 'basic' | 'pro' | 'max'>('all');
+const filterSubscription = ref<'all' | 'valid' | 'expiring_soon' | 'expired' | 'lifetime'>('all');
+const filterFeature = ref<string>('all');
+const sortBy = ref<RestaurantSortField>('created_at');
+const sortOrder = ref<'asc' | 'desc'>('desc');
+
+const toggleSort = (field: RestaurantSortField) => {
+    if (sortBy.value === field) {
+        sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+    } else {
+        sortBy.value = field;
+        if (field === 'name') {
+            sortOrder.value = 'asc';
+        } else if (field === 'days_remaining') {
+            sortOrder.value = 'asc'; // الأقرب انتهاءً أولاً
+        } else {
+            sortOrder.value = 'desc';
+        }
+    }
+};
+
+const resetFilters = () => {
+    searchQuery.value = '';
+    filterStatus.value = 'all';
+    filterType.value = 'all';
+    filterPlan.value = 'all';
+    filterSubscription.value = 'all';
+    filterFeature.value = 'all';
+    sortBy.value = 'created_at';
+    sortOrder.value = 'desc';
+};
+
+const hasActiveFilters = computed(() => {
+    return (
+        searchQuery.value.trim() !== '' ||
+        filterStatus.value !== 'all' ||
+        filterType.value !== 'all' ||
+        filterPlan.value !== 'all' ||
+        filterSubscription.value !== 'all' ||
+        filterFeature.value !== 'all' ||
+        sortBy.value !== 'created_at' ||
+        sortOrder.value !== 'desc'
+    );
+});
+
+const filterCounts = computed(() => {
+    const list = restaurants.value || [];
+    return {
+        all: list.length,
+        active: list.filter(r => r.status === 'active').length,
+        inactive: list.filter(r => r.status === 'inactive').length,
+        postpaid: list.filter(r => (r.type || 'postpaid') === 'postpaid').length,
+        prepaid: list.filter(r => r.type === 'prepaid').length,
+        expiredOrExpiring: list.filter(r => r.is_expired || (r.days_remaining !== null && r.days_remaining <= 7)).length,
+        planBasic: list.filter(r => (r.plan || 'basic') === 'basic').length,
+        planPro: list.filter(r => r.plan === 'pro').length,
+        planMax: list.filter(r => r.plan === 'max').length,
+    };
+});
+
+const planRankMap: Record<string, number> = {
+    'max': 3,
+    'pro': 2,
+    'basic': 1,
+};
+
+const filteredAndSortedRestaurants = computed(() => {
+    let result = [...(restaurants.value || [])];
+
+    // 1. فلترة بالبحث النصي
+    const q = searchQuery.value.trim().toLowerCase();
+    if (q) {
+        result = result.filter(r => {
+            const nameMatch = (r.name || '').toLowerCase().includes(q);
+            const phoneMatch = (r.phone || '').toLowerCase().includes(q);
+            const slugMatch = (r.slug || '').toLowerCase().includes(q);
+            const currencyMatch = (r.currency || '').toLowerCase().includes(q);
+            return nameMatch || phoneMatch || slugMatch || currencyMatch;
+        });
+    }
+
+    // 2. فلترة بحالة المطعم
+    if (filterStatus.value !== 'all') {
+        result = result.filter(r => r.status === filterStatus.value);
+    }
+
+    // 3. فلترة بنوع النظام
+    if (filterType.value !== 'all') {
+        result = result.filter(r => (r.type || 'postpaid') === filterType.value);
+    }
+
+    // 4. فلترة بالباقة
+    if (filterPlan.value !== 'all') {
+        result = result.filter(r => (r.plan || 'basic') === filterPlan.value);
+    }
+
+    // 5. فلترة بحالة الاشتراك والصلاحية
+    if (filterSubscription.value !== 'all') {
+        if (filterSubscription.value === 'expired') {
+            result = result.filter(r => !!r.is_expired);
+        } else if (filterSubscription.value === 'expiring_soon') {
+            result = result.filter(r => !r.is_expired && r.days_remaining !== null && r.days_remaining <= 7);
+        } else if (filterSubscription.value === 'valid') {
+            result = result.filter(r => !r.is_expired && (r.days_remaining === null || r.days_remaining > 7));
+        } else if (filterSubscription.value === 'lifetime') {
+            result = result.filter(r => !r.is_expired && r.days_remaining === null);
+        }
+    }
+
+    // 6. فلترة بالميزات الإضافية
+    if (filterFeature.value !== 'all') {
+        result = result.filter(r => {
+            const feats = r.effective_features || r.features || {};
+            return !!feats[filterFeature.value];
+        });
+    }
+
+    // 7. الترتيب الديناميكي حسب الحقل والاتجاه
+    result.sort((a, b) => {
+        let cmp = 0;
+        const field = sortBy.value;
+
+        if (field === 'name') {
+            cmp = (a.name || '').localeCompare(b.name || '', 'ar', { sensitivity: 'base' });
+        } else if (field === 'created_at') {
+            const dateA = a.created_at ? new Date(a.created_at).getTime() : (a.id || 0);
+            const dateB = b.created_at ? new Date(b.created_at).getTime() : (b.id || 0);
+            cmp = dateA - dateB;
+        } else if (field === 'type') {
+            cmp = (a.type || 'postpaid').localeCompare(b.type || 'postpaid');
+        } else if (field === 'plan') {
+            const rankA = planRankMap[a.plan || 'basic'] || 0;
+            const rankB = planRankMap[b.plan || 'basic'] || 0;
+            cmp = rankA - rankB;
+        } else if (field === 'days_remaining') {
+            const daysA = a.is_expired ? -1 : (a.days_remaining === null ? 999999 : Number(a.days_remaining));
+            const daysB = b.is_expired ? -1 : (b.days_remaining === null ? 999999 : Number(b.days_remaining));
+            cmp = daysA - daysB;
+        } else if (field === 'status') {
+            cmp = (a.status || '').localeCompare(b.status || '');
+        } else if (field === 'phone') {
+            cmp = (a.phone || '').localeCompare(b.phone || '');
+        }
+
+        return sortOrder.value === 'asc' ? cmp : -cmp;
+    });
+
+    return result;
+});
+
 const fetchStats = async () => {
     try {
         const response = await axios.get('/api/super-admin/dashboard/stats');
@@ -1505,23 +1663,317 @@ onUnmounted(() => {
                             </div>
                         </Transition>
 
+                        <!-- Filter & Sort Toolbar (الفلترة والترتيب الذكي) -->
+                        <div class="mb-5 bg-gradient-to-b from-gray-50/90 to-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-2xs space-y-3.5">
+                            <!-- الصف الأول: شريط البحث + معيار الترتيب + اتجاه الترتيب -->
+                            <div class="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+                                <!-- البحث الحي -->
+                                <div class="relative flex-1">
+                                    <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none text-gray-400">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                                        </svg>
+                                    </div>
+                                    <input
+                                        v-model="searchQuery"
+                                        type="text"
+                                        placeholder="ابحث باسم المطعم، رقم الهاتف، أو المعرف..."
+                                        class="w-full pr-10 pl-9 py-2 text-xs sm:text-sm rounded-xl border border-gray-300 bg-white placeholder:text-gray-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition shadow-2xs font-medium"
+                                    />
+                                    <button
+                                        v-if="searchQuery"
+                                        @click="searchQuery = ''"
+                                        type="button"
+                                        class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 hover:text-gray-600 transition"
+                                        title="تفريغ البحث"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <!-- أدوات الترتيب المباشر -->
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <div class="flex items-center gap-1.5 bg-white border border-gray-300 rounded-xl px-3 py-1.5 shadow-2xs">
+                                        <span class="text-xs font-bold text-gray-500 whitespace-nowrap">الترتيب حسب:</span>
+                                        <select
+                                            v-model="sortBy"
+                                            class="border-0 bg-transparent py-0 pr-1 pl-6 text-xs sm:text-sm font-bold text-gray-800 focus:ring-0 cursor-pointer"
+                                        >
+                                            <option value="created_at">تاريخ الإضافة (الأحدث)</option>
+                                            <option value="name">اسم المطعم (أبجدياً)</option>
+                                            <option value="type">نوع النظام (مسبق / لاحق)</option>
+                                            <option value="plan">الباقة (الأعلى باقة أولاً)</option>
+                                            <option value="days_remaining">مدة الصلاحية (الأقرب انتهاءً)</option>
+                                            <option value="status">الحالة (نشط / معطّل)</option>
+                                            <option value="phone">رقم الهاتف</option>
+                                        </select>
+                                    </div>
+
+                                    <button
+                                        @click="sortOrder = sortOrder === 'asc' ? 'desc' : 'asc'"
+                                        type="button"
+                                        class="px-3 py-2 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 transition flex items-center gap-1.5 shadow-2xs text-xs font-bold"
+                                        :title="sortOrder === 'asc' ? 'الترتيب تصاعدي (انقر للتبديل لتنازلي)' : 'الترتيب تنازلي (انقر للتبديل لتصاعدي)'"
+                                    >
+                                        <span class="text-amber-600 font-extrabold">{{ sortOrder === 'asc' ? '▲ تصاعدي' : '▼ تنازلي' }}</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- الصف الثاني: بطاقات الفلترة السريعة مع العدادات -->
+                            <div class="flex flex-wrap items-center gap-1.5 pt-1 border-t border-gray-200/70">
+                                <span class="text-xs font-bold text-gray-500 ml-1">فلترة سريعة:</span>
+
+                                <!-- الكل -->
+                                <button
+                                    type="button"
+                                    @click="filterStatus = 'all'; filterType = 'all'; filterSubscription = 'all'"
+                                    class="px-2.5 py-1 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                                    :class="filterStatus === 'all' && filterType === 'all' && filterSubscription === 'all'
+                                        ? 'bg-amber-600 text-white shadow-2xs'
+                                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'"
+                                >
+                                    <span>الكل</span>
+                                    <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
+                                        :class="filterStatus === 'all' && filterType === 'all' && filterSubscription === 'all' ? 'bg-amber-700 text-white' : 'bg-gray-200 text-gray-700'">
+                                        {{ filterCounts.all }}
+                                    </span>
+                                </button>
+
+                                <!-- نشط -->
+                                <button
+                                    type="button"
+                                    @click="filterStatus = (filterStatus === 'active' ? 'all' : 'active'); if (filterStatus === 'active') { sortBy = 'status'; sortOrder = 'asc'; }"
+                                    class="px-2.5 py-1 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                                    :class="filterStatus === 'active'
+                                        ? 'bg-emerald-600 text-white shadow-2xs'
+                                        : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80'"
+                                >
+                                    <span>🟢 نشط</span>
+                                    <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
+                                        :class="filterStatus === 'active' ? 'bg-emerald-700 text-white' : 'bg-emerald-200/80 text-emerald-900'">
+                                        {{ filterCounts.active }}
+                                    </span>
+                                </button>
+
+                                <!-- معطّل -->
+                                <button
+                                    type="button"
+                                    @click="filterStatus = (filterStatus === 'inactive' ? 'all' : 'inactive'); if (filterStatus === 'inactive') { sortBy = 'status'; sortOrder = 'desc'; }"
+                                    class="px-2.5 py-1 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                                    :class="filterStatus === 'inactive'
+                                        ? 'bg-rose-600 text-white shadow-2xs'
+                                        : 'bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200/80'"
+                                >
+                                    <span>🔴 معطّل</span>
+                                    <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
+                                        :class="filterStatus === 'inactive' ? 'bg-rose-700 text-white' : 'bg-rose-200/80 text-rose-900'">
+                                        {{ filterCounts.inactive }}
+                                    </span>
+                                </button>
+
+                                <!-- دفع لاحق -->
+                                <button
+                                    type="button"
+                                    @click="filterType = (filterType === 'postpaid' ? 'all' : 'postpaid'); if (filterType === 'postpaid') { sortBy = 'type'; sortOrder = 'desc'; }"
+                                    class="px-2.5 py-1 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                                    :class="filterType === 'postpaid'
+                                        ? 'bg-teal-600 text-white shadow-2xs'
+                                        : 'bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200/80'"
+                                >
+                                    <span>🍽️ دفع لاحق</span>
+                                    <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
+                                        :class="filterType === 'postpaid' ? 'bg-teal-700 text-white' : 'bg-teal-200/80 text-teal-900'">
+                                        {{ filterCounts.postpaid }}
+                                    </span>
+                                </button>
+
+                                <!-- دفع مسبق -->
+                                <button
+                                    type="button"
+                                    @click="filterType = (filterType === 'prepaid' ? 'all' : 'prepaid'); if (filterType === 'prepaid') { sortBy = 'type'; sortOrder = 'asc'; }"
+                                    class="px-2.5 py-1 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                                    :class="filterType === 'prepaid'
+                                        ? 'bg-amber-600 text-white shadow-2xs'
+                                        : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300'"
+                                >
+                                    <span>⚡ دفع مسبق</span>
+                                    <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
+                                        :class="filterType === 'prepaid' ? 'bg-amber-700 text-white' : 'bg-amber-200 text-amber-900'">
+                                        {{ filterCounts.prepaid }}
+                                    </span>
+                                </button>
+
+                                <!-- اشتراك يوشك على الانتهاء / منتهي -->
+                                <button
+                                    type="button"
+                                    @click="filterSubscription = (filterSubscription === 'expiring_soon' ? 'all' : 'expiring_soon'); if (filterSubscription === 'expiring_soon') { sortBy = 'days_remaining'; sortOrder = 'asc'; }"
+                                    class="px-2.5 py-1 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                                    :class="filterSubscription === 'expiring_soon'
+                                        ? 'bg-red-600 text-white shadow-2xs'
+                                        : 'bg-red-50 hover:bg-red-100 text-red-800 border border-red-200/80'"
+                                    title="فلترة وترتيب الاشتراكات الأكثر إلحاحاً أولاً"
+                                >
+                                    <span>⚠️ يوشك على الانتهاء</span>
+                                    <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
+                                        :class="filterSubscription === 'expiring_soon' ? 'bg-red-700 text-white' : 'bg-red-200/80 text-red-900'">
+                                        {{ filterCounts.expiredOrExpiring }}
+                                    </span>
+                                </button>
+                            </div>
+
+                            <!-- الصف الثالث: قوائم الفلترة المتقدمة + عداد النتائج وزر إعادة الضبط -->
+                            <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-gray-100">
+                                <div class="flex flex-wrap items-center gap-2 text-xs">
+                                    <!-- باقة المطعم -->
+                                    <div class="flex items-center gap-1">
+                                        <span class="text-gray-500 font-semibold">الباقة:</span>
+                                        <select
+                                            v-model="filterPlan"
+                                            @change="if (filterPlan !== 'all') { sortBy = 'plan'; sortOrder = 'desc'; }"
+                                            class="rounded-lg border-gray-300 bg-white py-1 pr-2 pl-6 text-xs font-bold text-gray-700 focus:border-amber-500 focus:ring-amber-500 cursor-pointer"
+                                        >
+                                            <option value="all">كل الباقات ({{ filterCounts.all }})</option>
+                                            <option value="basic">الأساسية Basic ({{ filterCounts.planBasic }})</option>
+                                            <option value="pro">المتقدمة Pro ({{ filterCounts.planPro }})</option>
+                                            <option value="max">الشاملة Max ({{ filterCounts.planMax }})</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- صلاحية الاشتراك -->
+                                    <div class="flex items-center gap-1">
+                                        <span class="text-gray-500 font-semibold">الصلاحية:</span>
+                                        <select
+                                            v-model="filterSubscription"
+                                            @change="if (filterSubscription === 'expired' || filterSubscription === 'expiring_soon') { sortBy = 'days_remaining'; sortOrder = 'asc'; }"
+                                            class="rounded-lg border-gray-300 bg-white py-1 pr-2 pl-6 text-xs font-bold text-gray-700 focus:border-amber-500 focus:ring-amber-500 cursor-pointer"
+                                        >
+                                            <option value="all">جميع الاشتراكات</option>
+                                            <option value="valid">ساري الصلاحية</option>
+                                            <option value="expiring_soon">يوشك على الانتهاء (≤ 7 أيام)</option>
+                                            <option value="expired">منتهي الصلاحية</option>
+                                            <option value="lifetime">مفتوح / دائم</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- الميزات المفعلة -->
+                                    <div class="flex items-center gap-1">
+                                        <span class="text-gray-500 font-semibold">الميزات:</span>
+                                        <select
+                                            v-model="filterFeature"
+                                            class="rounded-lg border-gray-300 bg-white py-1 pr-2 pl-6 text-xs font-bold text-gray-700 focus:border-amber-500 focus:ring-amber-500 cursor-pointer"
+                                        >
+                                            <option value="all">كل الميزات</option>
+                                            <option value="ai_waiter">🤖 الويتر الذكي (AI)</option>
+                                            <option value="analytics">📈 التحليلات الذكية</option>
+                                            <option value="offers">🎁 نظام العروض والكوبونات</option>
+                                            <option value="whatsapp_reminders">💬 تذكيرات الواتساب</option>
+                                            <option value="menu_engineering">📊 هندسة المنيو</option>
+                                            <option value="floor_plan">🗺️ مخطط الصالة</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- ملخص الإحصائيات وزر إعادة الضبط -->
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-bold px-2.5 py-1 rounded-xl bg-gray-100 text-gray-700 border border-gray-200">
+                                        عرض <span class="text-amber-600 font-extrabold">{{ filteredAndSortedRestaurants.length }}</span> من أصل {{ restaurants.length }} مطعم
+                                    </span>
+
+                                    <button
+                                        v-if="hasActiveFilters"
+                                        @click="resetFilters"
+                                        type="button"
+                                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition cursor-pointer"
+                                        title="إلغاء كافة الفلاتر والبحث واسترجاع القائمة الكاملة"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="size-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+                                        </svg>
+                                        <span>إعادة ضبط الفلاتر</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Restaurants Table -->
                         <div class="overflow-x-auto">
                             <table class="w-full text-right border-collapse whitespace-nowrap">
                                 <thead>
-                                <tr class="bg-gray-100">
-                                    <th class="p-3 border">الاسم</th>
-                                    <th class="p-3 border text-center">نوع النظام</th>
-                                    <th class="p-3 border text-center">الباقة الحالية</th>
-                                    <th class="p-3 border text-center">الاشتراك والصلاحية</th>
-                                    <th class="p-3 border">الحالة</th>
-                                    <th class="p-3 border">الميزات الإضافية</th>
-                                    <th class="p-3 border">الهاتف</th>
-                                    <th class="p-3 border text-center">إجراءات</th>
+                                <tr class="bg-gray-100 text-gray-700 select-none text-xs">
+                                    <th class="p-3 border cursor-pointer hover:bg-gray-200/80 transition" @click="toggleSort('name')" title="انقر لترتيب الاسم أبجدياً">
+                                        <div class="inline-flex items-center gap-1.5">
+                                            <span class="font-bold">الاسم</span>
+                                            <span class="text-[11px]" :class="sortBy === 'name' ? 'text-amber-600 font-black' : 'text-gray-400'">
+                                                {{ sortBy === 'name' ? (sortOrder === 'asc' ? '▲' : '▼') : '↕' }}
+                                            </span>
+                                        </div>
+                                    </th>
+                                    <th class="p-3 border text-center cursor-pointer hover:bg-gray-200/80 transition" @click="toggleSort('type')" title="انقر للترتيب بنوع النظام">
+                                        <div class="inline-flex items-center justify-center gap-1.5">
+                                            <span class="font-bold">نوع النظام</span>
+                                            <span class="text-[11px]" :class="sortBy === 'type' ? 'text-amber-600 font-black' : 'text-gray-400'">
+                                                {{ sortBy === 'type' ? (sortOrder === 'asc' ? '▲' : '▼') : '↕' }}
+                                            </span>
+                                        </div>
+                                    </th>
+                                    <th class="p-3 border text-center cursor-pointer hover:bg-gray-200/80 transition" @click="toggleSort('plan')" title="انقر للترتيب حسب الباقة">
+                                        <div class="inline-flex items-center justify-center gap-1.5">
+                                            <span class="font-bold">الباقة الحالية</span>
+                                            <span class="text-[11px]" :class="sortBy === 'plan' ? 'text-amber-600 font-black' : 'text-gray-400'">
+                                                {{ sortBy === 'plan' ? (sortOrder === 'asc' ? '▲' : '▼') : '↕' }}
+                                            </span>
+                                        </div>
+                                    </th>
+                                    <th class="p-3 border text-center cursor-pointer hover:bg-gray-200/80 transition" @click="toggleSort('days_remaining')" title="انقر للترتيب بمدة الصلاحية المتبقية">
+                                        <div class="inline-flex items-center justify-center gap-1.5">
+                                            <span class="font-bold">الاشتراك والصلاحية</span>
+                                            <span class="text-[11px]" :class="sortBy === 'days_remaining' ? 'text-amber-600 font-black' : 'text-gray-400'">
+                                                {{ sortBy === 'days_remaining' ? (sortOrder === 'asc' ? '▲' : '▼') : '↕' }}
+                                            </span>
+                                        </div>
+                                    </th>
+                                    <th class="p-3 border text-center cursor-pointer hover:bg-gray-200/80 transition" @click="toggleSort('status')" title="انقر للترتيب بحالة النشاط">
+                                        <div class="inline-flex items-center justify-center gap-1.5">
+                                            <span class="font-bold">الحالة</span>
+                                            <span class="text-[11px]" :class="sortBy === 'status' ? 'text-amber-600 font-black' : 'text-gray-400'">
+                                                {{ sortBy === 'status' ? (sortOrder === 'asc' ? '▲' : '▼') : '↕' }}
+                                            </span>
+                                        </div>
+                                    </th>
+                                    <th class="p-3 border font-bold">الميزات الإضافية</th>
+                                    <th class="p-3 border cursor-pointer hover:bg-gray-200/80 transition" @click="toggleSort('phone')" title="انقر للترتيب برقم الهاتف">
+                                        <div class="inline-flex items-center gap-1.5">
+                                            <span class="font-bold">الهاتف</span>
+                                            <span class="text-[11px]" :class="sortBy === 'phone' ? 'text-amber-600 font-black' : 'text-gray-400'">
+                                                {{ sortBy === 'phone' ? (sortOrder === 'asc' ? '▲' : '▼') : '↕' }}
+                                            </span>
+                                        </div>
+                                    </th>
+                                    <th class="p-3 border text-center font-bold">إجراءات</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="restaurant in restaurants" :key="restaurant.id">
+                                <!-- في حال عدم وجود نتائج بعد الفلترة والبحث -->
+                                <tr v-if="filteredAndSortedRestaurants.length === 0">
+                                    <td colspan="8" class="p-10 text-center bg-gray-50/60">
+                                        <div class="flex flex-col items-center justify-center gap-2.5">
+                                            <span class="text-3xl">🔍</span>
+                                            <p class="font-bold text-gray-800 text-sm">لا توجد مطاعم مطابقة لمعايير البحث والفلترة المحددة</p>
+                                            <p class="text-xs text-gray-500">جرب تعديل كلمات البحث أو إلغاء بعض الفلاتر لعرض المطاعم</p>
+                                            <button
+                                                @click="resetFilters"
+                                                type="button"
+                                                class="mt-2 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white transition shadow-2xs cursor-pointer"
+                                            >
+                                                إعادة ضبط الفلاتر وعرض الكل
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr v-for="restaurant in filteredAndSortedRestaurants" :key="restaurant.id">
                                     <td class="p-3 border font-semibold text-gray-900">{{ restaurant.name }}</td>
                                     <td class="p-3 border text-center">
                                         <div class="inline-flex items-center gap-2">

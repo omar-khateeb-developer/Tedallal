@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import AdminNav from '@/Components/Admin/AdminNav.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, router } from '@inertiajs/vue3';
-import { onMounted, ref } from 'vue';
+import { Head, router, Link } from '@inertiajs/vue3';
+import { onMounted, onUnmounted, ref } from 'vue';
 import axios from 'axios';
 
 const restaurant = ref<{
@@ -76,9 +76,154 @@ async function submitResetTestData() {
     }
 }
 
+// ==========================================
+// بوابة واتساب المطعم والأتمتة الذكية
+// ==========================================
+const waStatus = ref<'disconnected' | 'connecting' | 'scan_qr' | 'connected'>('disconnected');
+const waQrCode = ref<string | null>(null);
+const waPhone = ref<string | null>(null);
+const waConnectedAt = ref<string | null>(null);
+const waLoading = ref(false);
+const waFeatureLocked = ref(false);
+const waFeatureLockedMsg = ref('');
+const waAutoReplyEnabled = ref(false);
+const waAutoReplyMessage = ref('');
+const waExpiringRemindersEnabled = ref(true);
+const waSavingSettings = ref(false);
+const waSettingsNotice = ref<string | null>(null);
+
+const waTestPhone = ref('');
+const waSendingTest = ref(false);
+const waTestNotice = ref<string | null>(null);
+const waTestError = ref<string | null>(null);
+
+let waPollingTimer: ReturnType<typeof setInterval> | null = null;
+
+async function fetchWhatsappStatus() {
+    try {
+        const res = await axios.get('/api/admin/whatsapp/status');
+        const data = res.data.data;
+        waFeatureLocked.value = false;
+        waStatus.value = data.status || 'disconnected';
+        waQrCode.value = data.qr_code || null;
+        waPhone.value = data.phone || null;
+        waConnectedAt.value = data.connected_at || null;
+        waAutoReplyEnabled.value = Boolean(data.auto_reply_enabled);
+        waAutoReplyMessage.value = data.auto_reply_message || '';
+        waExpiringRemindersEnabled.value = data.expiring_reminders_enabled !== false;
+
+        if (waStatus.value === 'scan_qr' || waStatus.value === 'connecting') {
+            startWaPolling();
+        } else {
+            stopWaPolling();
+        }
+    } catch (e: any) {
+        if (e.response?.status === 403 && e.response?.data?.feature_locked) {
+            waFeatureLocked.value = true;
+            waFeatureLockedMsg.value = e.response.data.message || 'ميزة بوابة الواتساب متاحة للباقة الشاملة (Max).';
+        }
+    }
+}
+
+function startWaPolling() {
+    if (waPollingTimer) return;
+    waPollingTimer = setInterval(async () => {
+        try {
+            const res = await axios.get('/api/admin/whatsapp/status');
+            const data = res.data.data;
+            waStatus.value = data.status;
+            waQrCode.value = data.qr_code;
+            waPhone.value = data.phone;
+            waConnectedAt.value = data.connected_at;
+            if (data.status === 'connected') {
+                stopWaPolling();
+            }
+        } catch (_) {}
+    }, 3000);
+}
+
+function stopWaPolling() {
+    if (waPollingTimer) {
+        clearInterval(waPollingTimer);
+        waPollingTimer = null;
+    }
+}
+
+async function connectWhatsapp() {
+    waLoading.value = true;
+    try {
+        const res = await axios.post('/api/admin/whatsapp/connect');
+        const data = res.data.data;
+        waStatus.value = data.status;
+        waQrCode.value = data.qr_code;
+        waPhone.value = data.phone;
+        waConnectedAt.value = data.connected_at;
+        startWaPolling();
+    } catch (e: any) {
+        alert(e.response?.data?.message || 'تعذر بدء جلسة الواتساب');
+    } finally {
+        waLoading.value = false;
+    }
+}
+
+async function disconnectWhatsapp() {
+    if (!confirm('هل أنت متأكد من فصل رقم واتساب المطعم؟ لن يتم إرسال الرسائل والتذكيرات تلقائياً حتى تعيد ربطه.')) return;
+    waLoading.value = true;
+    try {
+        await axios.post('/api/admin/whatsapp/disconnect');
+        waStatus.value = 'disconnected';
+        waQrCode.value = null;
+        waPhone.value = null;
+        waConnectedAt.value = null;
+        stopWaPolling();
+    } catch (e: any) {
+        alert(e.response?.data?.message || 'تعذر فصل الجلسة');
+    } finally {
+        waLoading.value = false;
+    }
+}
+
+async function saveWhatsappSettings() {
+    waSavingSettings.value = true;
+    waSettingsNotice.value = null;
+    try {
+        await axios.post('/api/admin/whatsapp/settings', {
+            whatsapp_auto_reply_enabled: waAutoReplyEnabled.value,
+            whatsapp_auto_reply_message: waAutoReplyMessage.value,
+            whatsapp_expiring_reminders_enabled: waExpiringRemindersEnabled.value,
+        });
+        waSettingsNotice.value = 'تم حفظ إعدادات الأتمتة بنجاح ✓';
+        setTimeout(() => { waSettingsNotice.value = null; }, 3500);
+    } catch (e: any) {
+        alert(e.response?.data?.message || 'تعذر حفظ إعدادات الواتساب');
+    } finally {
+        waSavingSettings.value = false;
+    }
+}
+
+async function sendTestMessage() {
+    if (!waTestPhone.value) return;
+    waSendingTest.value = true;
+    waTestNotice.value = null;
+    waTestError.value = null;
+    try {
+        const res = await axios.post('/api/admin/whatsapp/send-test', {
+            phone: waTestPhone.value,
+        });
+        waTestNotice.value = res.data.message || 'تم إرسال الرسالة التجريبية بنجاح إلى هاتفك ✓';
+        setTimeout(() => { waTestNotice.value = null; }, 5000);
+    } catch (e: any) {
+        waTestError.value = e.response?.data?.message || 'تعذر إرسال الرسالة التجريبية. تحقق من الرقم وحالة الاتصال.';
+        setTimeout(() => { waTestError.value = null; }, 6000);
+    } finally {
+        waSendingTest.value = false;
+    }
+}
+
 async function load() {
     const { data } = await axios.get('/api/admin/restaurant');
     restaurant.value = data.data;
+    await fetchWhatsappStatus();
     form.value = {
         name: data.data.name,
         phone: data.data.phone ?? '',
@@ -217,6 +362,7 @@ async function handleFileUpload(event: Event, field: 'logo' | 'navbar_image') {
 }
 
 onMounted(load);
+onUnmounted(stopWaPolling);
 </script>
 
 <template>
@@ -321,6 +467,244 @@ onMounted(load);
                             </span>
                         </div>
                     </label>
+                </div>
+
+                <!-- بطاقة بوابة واتساب المطعم والأتمتة الذكية (WhatsApp Integration) -->
+                <div id="whatsapp" class="rounded-2xl border border-emerald-200 dark:border-emerald-800/60 bg-gradient-to-b from-emerald-50/50 via-white to-white dark:from-emerald-950/20 dark:via-[#0a0f1d] dark:to-[#0a0f1d] p-5 sm:p-6 space-y-5 transition-all shadow-2xs">
+                    <!-- رأس البطاقة -->
+                    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-emerald-100 dark:border-emerald-800/40 pb-4">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl p-2 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300">💬</span>
+                            <div>
+                                <h4 class="font-black text-sm text-stone-900 dark:text-white flex items-center gap-2">
+                                    <span>بوابة واتساب المطعم والأتمتة الذكية</span>
+                                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-300 font-bold border border-emerald-300 dark:border-emerald-700">WhatsApp Official Gateway</span>
+                                </h4>
+                                <p class="text-xs text-stone-600 dark:text-slate-400 mt-0.5 leading-relaxed">
+                                    اربط رقم واتساب مطعمك لإرسال كوبونات عجلة الحظ، وتذكيرات الزبائن بالخصومات تلقائياً من رقمك الرسمي.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- شارة الحالة الحالية -->
+                        <div>
+                            <span
+                                v-if="waStatus === 'connected'"
+                                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700"
+                            >
+                                <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                <span>متصل وجاهز</span>
+                            </span>
+                            <span
+                                v-else-if="waStatus === 'scan_qr' || waStatus === 'connecting'"
+                                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-700"
+                            >
+                                <span class="animate-spin text-xs">⏳</span>
+                                <span>بانتظار مسح الرمز</span>
+                            </span>
+                            <span
+                                v-else
+                                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-300 dark:border-rose-700"
+                            >
+                                <span class="h-2 w-2 rounded-full bg-rose-500"></span>
+                                <span>غير متصل</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- في حال كانت الميزة مقفلة في باقة المطعم -->
+                    <div v-if="waFeatureLocked" class="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-xs font-bold text-amber-800 dark:text-amber-300 flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-2">
+                            <span>🔒</span>
+                            <span>{{ waFeatureLockedMsg }}</span>
+                        </div>
+                        <a href="https://wa.me/963988029051" target="_blank" class="px-3 py-1.5 rounded-lg bg-amber-600 text-white font-bold hover:bg-amber-700 transition">
+                            ترقية الباقة الآن
+                        </a>
+                    </div>
+
+                    <div v-else class="space-y-4">
+                        <!-- الحالة 1: متصل -->
+                        <div v-if="waStatus === 'connected'" class="space-y-4">
+                            <div class="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60">
+                                <div>
+                                    <p class="text-xs font-bold text-emerald-900 dark:text-emerald-200">
+                                        رقم واتساب المطعم المرتبط حالياً:
+                                    </p>
+                                    <p class="text-base font-black text-emerald-700 dark:text-emerald-400 font-mono mt-0.5" dir="ltr">
+                                        {{ waPhone ? (waPhone.startsWith('+') ? waPhone : '+' + waPhone) : 'متصل' }}
+                                    </p>
+                                    <p v-if="waConnectedAt" class="text-[11px] text-stone-500 dark:text-slate-400 mt-1">
+                                        تاريخ الربط: {{ waConnectedAt }}
+                                    </p>
+                                </div>
+
+                                <button
+                                    @click="disconnectWhatsapp"
+                                    :disabled="waLoading"
+                                    type="button"
+                                    class="px-3.5 py-2 rounded-xl text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 transition cursor-pointer"
+                                >
+                                    {{ waLoading ? 'جارٍ الفصل...' : '🔌 فصل الجلسة' }}
+                                </button>
+                            </div>
+
+                            <!-- اختبار الإرسال السريع -->
+                            <div class="p-3.5 rounded-xl bg-white dark:bg-slate-900/60 border border-stone-200 dark:border-slate-800 space-y-2">
+                                <label class="block text-xs font-bold text-stone-700 dark:text-stone-300">
+                                    تجربة الإرسال (أدخل رقم هاتفك لتأكيد وصول الرسائل):
+                                </label>
+                                <div class="flex gap-2">
+                                    <input
+                                        v-model="waTestPhone"
+                                        type="tel"
+                                        dir="ltr"
+                                        placeholder="09XXXXXXXX"
+                                        class="w-full rounded-xl text-xs font-mono border-stone-300 dark:border-slate-700 bg-stone-50 dark:bg-slate-800 text-stone-900 dark:text-white"
+                                    />
+                                    <button
+                                        @click="sendTestMessage"
+                                        :disabled="waSendingTest || !waTestPhone"
+                                        type="button"
+                                        class="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shrink-0 transition disabled:opacity-50 cursor-pointer"
+                                    >
+                                        {{ waSendingTest ? 'جارٍ الإرسال...' : 'إرسال تجربة' }}
+                                    </button>
+                                </div>
+                                <div v-if="waTestNotice" class="text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                                    {{ waTestNotice }}
+                                </div>
+                                <div v-if="waTestError" class="text-xs font-bold text-rose-600 dark:text-rose-400">
+                                    {{ waTestError }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- الحالة 2: مسح رمز الـ QR -->
+                        <div v-else-if="waStatus === 'scan_qr'" class="text-center space-y-4 p-4 rounded-xl bg-white dark:bg-slate-900 border border-stone-200 dark:border-slate-800">
+                            <div class="text-xs font-bold text-amber-700 dark:text-amber-400 flex items-center justify-center gap-1.5">
+                                <span class="animate-spin">⏳</span>
+                                <span>امسح رمز الاستجابة السريعة (QR) من تطبيق واتساب في هاتفك</span>
+                            </div>
+
+                            <div v-if="waQrCode" class="inline-block p-3 rounded-2xl bg-white shadow-md border border-slate-200">
+                                <img :src="waQrCode" alt="WhatsApp QR Code" class="w-52 h-52 mx-auto object-contain" />
+                            </div>
+
+                            <div class="max-w-xs mx-auto space-y-1.5">
+                                <div class="flex items-center justify-between text-[11px] text-amber-600 dark:text-amber-400 font-bold px-1">
+                                    <span>صلاحية الباركود</span>
+                                    <span class="font-mono text-emerald-600 dark:text-emerald-400">نشط ومباشر 🟢</span>
+                                </div>
+                                <div class="h-1.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                                    <div class="h-full bg-gradient-to-r from-amber-500 to-emerald-500 rounded-full animate-pulse w-full"></div>
+                                </div>
+                                <p class="text-[10px] text-slate-400">يتجدد الرمز تلقائياً لحماية أمان حسابك</p>
+                            </div>
+
+                            <div class="text-xs text-stone-600 dark:text-slate-400 max-w-sm mx-auto leading-relaxed text-right space-y-1 bg-stone-50 dark:bg-slate-800/80 p-3.5 rounded-xl border border-stone-200 dark:border-slate-700">
+                                <div class="font-bold text-stone-900 dark:text-white mb-1.5">خطوات الربط في هاتفك:</div>
+                                <div>1. افتح تطبيق واتساب على هاتفك.</div>
+                                <div>2. الإعدادات ⚙️ أو القائمة ⋮ ➔ <strong>الأجهزة المرتبطة</strong>.</div>
+                                <div>3. اضغط <strong>«ربط جهاز»</strong> ووجّه الكاميرا نحو الرمز أعلاه.</div>
+                            </div>
+
+                            <div>
+                                <button
+                                    @click="connectWhatsapp"
+                                    :disabled="waLoading"
+                                    type="button"
+                                    class="px-4 py-2 rounded-xl text-xs font-bold bg-stone-100 dark:bg-slate-800 text-stone-700 dark:text-stone-300 hover:bg-stone-200 transition cursor-pointer"
+                                >
+                                    🔄 تحديث الرمز
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- الحالة 3: غير متصل -->
+                        <div v-else class="text-center space-y-3 py-4 p-4 rounded-xl bg-white dark:bg-slate-900 border border-stone-200 dark:border-slate-800">
+                            <div class="text-3xl">📱</div>
+                            <h4 class="text-sm font-black text-stone-900 dark:text-white">واتساب المطعم غير مرتبط حالياً</h4>
+                            <p class="text-xs text-stone-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
+                                اربط رقم هاتف المطعم عبر مسح الباركود لمرة واحدة فقط، لتبدأ كوبونات عجلة الحظ وتذكيرات الزبائن بالانطلاق تلقائياً في الخلفية من رقم مطعمك.
+                            </p>
+                            <button
+                                @click="connectWhatsapp"
+                                :disabled="waLoading"
+                                type="button"
+                                class="px-5 py-2.5 rounded-xl text-xs font-black bg-emerald-600 hover:bg-emerald-500 text-white shadow-md transition disabled:opacity-50 cursor-pointer"
+                            >
+                                {{ waLoading ? 'جارٍ توليد الرمز...' : '📲 ربط رقم واتساب المطعم (توليد رمز QR)' }}
+                            </button>
+                        </div>
+
+                        <!-- إعدادات الأتمتة والرسائل التلقائية -->
+                        <div class="p-4 rounded-xl bg-white dark:bg-slate-900/60 border border-stone-200 dark:border-slate-800 space-y-3.5">
+                            <h5 class="text-xs font-black text-stone-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                                <span>⚙️</span>
+                                <span>أتمتة الرسائل والتذكيرات</span>
+                            </h5>
+
+                            <!-- تنبيه انتهاء الكوبونات -->
+                            <label class="flex items-start gap-3 cursor-pointer select-none">
+                                <input
+                                    type="checkbox"
+                                    v-model="waExpiringRemindersEnabled"
+                                    class="mt-1 h-4 w-4 rounded border-stone-300 dark:border-slate-600 text-emerald-600 focus:ring-emerald-500"
+                                />
+                                <div>
+                                    <span class="block text-xs font-bold text-stone-800 dark:text-stone-200">
+                                        إرسال تذكير تلقائي للزبائن قبل انتهاء صلاحية الكوبون بـ 24 ساعة
+                                    </span>
+                                    <span class="block text-[11px] text-stone-500 dark:text-slate-400 mt-0.5">
+                                        يحفز الزبون على زيارة المطعم واستخدام كود الخصم قبل نفاد وقته تلقائياً دون أي تدخل يدوي منك.
+                                    </span>
+                                </div>
+                            </label>
+
+                            <!-- المجيب الآلي -->
+                            <label class="flex items-start gap-3 cursor-pointer select-none pt-2 border-t border-stone-100 dark:border-slate-800">
+                                <input
+                                    type="checkbox"
+                                    v-model="waAutoReplyEnabled"
+                                    class="mt-1 h-4 w-4 rounded border-stone-300 dark:border-slate-600 text-emerald-600 focus:ring-emerald-500"
+                                />
+                                <div>
+                                    <span class="block text-xs font-bold text-stone-800 dark:text-stone-200">
+                                        تفعيل الرد التلقائي على محادثات الزبائن (Auto-Reply)
+                                    </span>
+                                    <span class="block text-[11px] text-stone-500 dark:text-slate-400 mt-0.5">
+                                        إرسال رسالة ترحيبية فورية تلقائية عندما يراسل الزبون رقم المطعم عبر واتساب.
+                                    </span>
+                                </div>
+                            </label>
+
+                            <div v-if="waAutoReplyEnabled" class="pt-2">
+                                <label class="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1">نص رسالة الرد التلقائي:</label>
+                                <textarea
+                                    v-model="waAutoReplyMessage"
+                                    rows="2"
+                                    placeholder="أهلاً بك في مطعمنا! يمكنك تصفح المنيو وطلب وجبتك مباشرة عبر الرابط..."
+                                    class="w-full rounded-xl text-xs border-stone-300 dark:border-slate-700 bg-stone-50 dark:bg-slate-800 text-stone-900 dark:text-white"
+                                />
+                            </div>
+
+                            <div class="flex items-center justify-between pt-2">
+                                <span v-if="waSettingsNotice" class="text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                                    {{ waSettingsNotice }}
+                                </span>
+                                <span v-else></span>
+                                <button
+                                    @click="saveWhatsappSettings"
+                                    :disabled="waSavingSettings"
+                                    type="button"
+                                    class="px-4 py-2 rounded-xl text-xs font-bold bg-stone-800 hover:bg-stone-700 dark:bg-slate-800 dark:hover:bg-slate-700 text-white transition disabled:opacity-50 cursor-pointer"
+                                >
+                                    {{ waSavingSettings ? 'جارٍ الحفظ...' : '💾 حفظ إعدادات الأتمتة' }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- بطاقة جسر الربط المحاسبي الذكي (Accounting ERP Bridge) -->

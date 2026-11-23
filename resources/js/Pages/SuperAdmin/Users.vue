@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import axios from 'axios';
 
 interface RestaurantRow {
@@ -108,6 +108,119 @@ async function showLogs(user: UserRow) {
     }
 }
 
+// ==========================================
+// الفلترة والترتيب الذكي للمستخدمين
+// ==========================================
+type UserSortField = 'name' | 'email' | 'role' | 'status' | 'restaurant';
+
+const searchQuery = ref('');
+const filterRole = ref<'all' | 'super_admin' | 'admin' | 'staff'>('all');
+const filterStatus = ref<'all' | 'active' | 'inactive'>('all');
+const filterRestaurantId = ref<number | 'all'>('all');
+const sortBy = ref<UserSortField>('name');
+const sortOrder = ref<'asc' | 'desc'>('asc');
+
+function toggleSort(field: UserSortField) {
+    if (sortBy.value === field) {
+        sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+    } else {
+        sortBy.value = field;
+        sortOrder.value = 'asc';
+    }
+}
+
+function resetFilters() {
+    searchQuery.value = '';
+    filterRole.value = 'all';
+    filterStatus.value = 'all';
+    filterRestaurantId.value = 'all';
+    sortBy.value = 'name';
+    sortOrder.value = 'asc';
+}
+
+const hasActiveFilters = computed(() => {
+    return (
+        searchQuery.value.trim() !== '' ||
+        filterRole.value !== 'all' ||
+        filterStatus.value !== 'all' ||
+        filterRestaurantId.value !== 'all' ||
+        sortBy.value !== 'name' ||
+        sortOrder.value !== 'asc'
+    );
+});
+
+const filterCounts = computed(() => {
+    const list = users.value || [];
+    return {
+        all: list.length,
+        super_admin: list.filter(u => u.role === 'super_admin').length,
+        admin: list.filter(u => u.role === 'admin').length,
+        staff: list.filter(u => u.role === 'staff').length,
+        active: list.filter(u => (u.status || 'active') === 'active').length,
+        inactive: list.filter(u => u.status === 'inactive').length,
+    };
+});
+
+const roleRank: Record<string, number> = {
+    'super_admin': 3,
+    'admin': 2,
+    'staff': 1,
+};
+
+const filteredAndSortedUsers = computed(() => {
+    let result = [...(users.value || [])];
+
+    // فلترة بالبحث النصي
+    const q = searchQuery.value.trim().toLowerCase();
+    if (q) {
+        result = result.filter(u => {
+            const nameMatch = (u.name || '').toLowerCase().includes(q);
+            const emailMatch = (u.email || '').toLowerCase().includes(q);
+            const restMatch = (u.restaurant?.name || '').toLowerCase().includes(q);
+            return nameMatch || emailMatch || restMatch;
+        });
+    }
+
+    // فلترة بالدور / الصلاحية
+    if (filterRole.value !== 'all') {
+        result = result.filter(u => u.role === filterRole.value);
+    }
+
+    // فلترة بالحالة
+    if (filterStatus.value !== 'all') {
+        result = result.filter(u => (u.status || 'active') === filterStatus.value);
+    }
+
+    // فلترة بالمطعم
+    if (filterRestaurantId.value !== 'all') {
+        result = result.filter(u => u.restaurant_id === filterRestaurantId.value);
+    }
+
+    // الترتيب
+    result.sort((a, b) => {
+        let cmp = 0;
+        const field = sortBy.value;
+
+        if (field === 'name') {
+            cmp = (a.name || '').localeCompare(b.name || '', 'ar');
+        } else if (field === 'email') {
+            cmp = (a.email || '').localeCompare(b.email || '');
+        } else if (field === 'role') {
+            cmp = (roleRank[a.role] || 0) - (roleRank[b.role] || 0);
+        } else if (field === 'status') {
+            cmp = (a.status || 'active').localeCompare(b.status || 'active');
+        } else if (field === 'restaurant') {
+            const rA = a.restaurant?.name || '';
+            const rB = b.restaurant?.name || '';
+            cmp = rA.localeCompare(rB, 'ar');
+        }
+
+        return sortOrder.value === 'asc' ? cmp : -cmp;
+    });
+
+    return result;
+});
+
 onMounted(load);
 </script>
 
@@ -202,9 +315,130 @@ onMounted(load);
                 </button>
             </form>
 
+            <!-- User Filters & Sorting Toolbar -->
+            <div class="mb-4 bg-white dark:bg-[#0a0f1d] border border-stone-200 dark:border-slate-800 rounded-2xl p-4 shadow-xs space-y-3">
+                <div class="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center justify-between">
+                    <!-- البحث -->
+                    <div class="relative flex-1">
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-stone-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                        <input
+                            v-model="searchQuery"
+                            type="text"
+                            placeholder="ابحث بالاسم، البريد الإلكتروني، أو اسم المطعم..."
+                            class="w-full pr-9 pl-8 py-1.5 text-xs rounded-xl border border-stone-300 dark:border-slate-700 bg-stone-50 dark:bg-slate-900 text-stone-900 dark:text-white placeholder:text-stone-400 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition"
+                        />
+                        <button v-if="searchQuery" @click="searchQuery = ''" class="absolute inset-y-0 left-0 pl-2.5 flex items-center text-stone-400 hover:text-stone-600 dark:hover:text-stone-200">
+                            ✕
+                        </button>
+                    </div>
+
+                    <!-- الترتيب -->
+                    <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-1 text-xs">
+                            <span class="text-stone-500 dark:text-slate-400 font-semibold whitespace-nowrap">الترتيب:</span>
+                            <select
+                                v-model="sortBy"
+                                class="rounded-xl border border-stone-300 dark:border-slate-700 bg-stone-50 dark:bg-slate-900 text-stone-900 dark:text-white py-1 pr-2 pl-6 text-xs font-semibold focus:border-amber-500 focus:ring-amber-500"
+                            >
+                                <option value="name">الاسم أبجدياً</option>
+                                <option value="email">البريد الإلكتروني</option>
+                                <option value="role">الدور والصلاحية</option>
+                                <option value="status">الحالة</option>
+                                <option value="restaurant">المطعم التابع له</option>
+                            </select>
+                        </div>
+                        <button
+                            @click="sortOrder = sortOrder === 'asc' ? 'desc' : 'asc'"
+                            class="rounded-xl border border-stone-300 dark:border-slate-700 bg-stone-50 dark:bg-slate-900 text-stone-700 dark:text-stone-300 px-2.5 py-1 text-xs font-bold hover:bg-stone-100 dark:hover:bg-slate-800 transition"
+                            :title="sortOrder === 'asc' ? 'تصاعدي' : 'تنازلي'"
+                        >
+                            {{ sortOrder === 'asc' ? '▲ تصاعدي' : '▼ تنازلي' }}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- أزرار الفلترة السريعة والقوائم -->
+                <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-stone-100 dark:border-slate-800/80 text-xs">
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        <span class="text-stone-500 dark:text-slate-400 font-bold ml-1">الدور:</span>
+                        <button
+                            type="button"
+                            @click="filterRole = 'all'"
+                            class="px-2 py-0.5 rounded-lg font-bold transition"
+                            :class="filterRole === 'all' ? 'bg-amber-600 text-white' : 'bg-stone-100 dark:bg-slate-800 text-stone-700 dark:text-stone-300'"
+                        >
+                            الكل ({{ filterCounts.all }})
+                        </button>
+                        <button
+                            type="button"
+                            @click="filterRole = (filterRole === 'super_admin' ? 'all' : 'super_admin')"
+                            class="px-2 py-0.5 rounded-lg font-bold transition"
+                            :class="filterRole === 'super_admin' ? 'bg-purple-600 text-white' : 'bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60'"
+                        >
+                            مدير نظام ({{ filterCounts.super_admin }})
+                        </button>
+                        <button
+                            type="button"
+                            @click="filterRole = (filterRole === 'admin' ? 'all' : 'admin')"
+                            class="px-2 py-0.5 rounded-lg font-bold transition"
+                            :class="filterRole === 'admin' ? 'bg-amber-600 text-white' : 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60'"
+                        >
+                            مدير مطعم ({{ filterCounts.admin }})
+                        </button>
+                        <button
+                            type="button"
+                            @click="filterRole = (filterRole === 'staff' ? 'all' : 'staff')"
+                            class="px-2 py-0.5 rounded-lg font-bold transition"
+                            :class="filterRole === 'staff' ? 'bg-slate-700 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'"
+                        >
+                            موظف ({{ filterCounts.staff }})
+                        </button>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <!-- فلترة بالحالة -->
+                        <select
+                            v-model="filterStatus"
+                            class="rounded-lg border-stone-300 dark:border-slate-700 bg-stone-50 dark:bg-slate-900 text-stone-900 dark:text-white py-0.5 pr-2 pl-6 text-xs font-semibold focus:border-amber-500 focus:ring-amber-500"
+                        >
+                            <option value="all">كل الحالات</option>
+                            <option value="active">🟢 نشط فقط</option>
+                            <option value="inactive">🔴 معطّل فقط</option>
+                        </select>
+
+                        <!-- فلترة بالمطعم -->
+                        <select
+                            v-model="filterRestaurantId"
+                            class="rounded-lg border-stone-300 dark:border-slate-700 bg-stone-50 dark:bg-slate-900 text-stone-900 dark:text-white py-0.5 pr-2 pl-6 text-xs font-semibold focus:border-amber-500 focus:ring-amber-500"
+                        >
+                            <option value="all">كل المطاعم</option>
+                            <option v-for="r in restaurants" :key="r.id" :value="r.id">{{ r.name }}</option>
+                        </select>
+
+                        <!-- إعادة ضبط -->
+                        <button
+                            v-if="hasActiveFilters"
+                            @click="resetFilters"
+                            type="button"
+                            class="px-2 py-0.5 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/60 font-bold transition hover:bg-rose-100"
+                        >
+                            إعادة ضبط
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <div class="space-y-2.5">
+                <div v-if="filteredAndSortedUsers.length === 0" class="rounded-2xl bg-white dark:bg-[#0a0f1d] border border-stone-200 dark:border-slate-800 p-8 text-center text-stone-500 dark:text-slate-400">
+                    <p class="font-bold text-sm">لا يوجد مستخدمون مطابقون لمعايير البحث والفلترة</p>
+                    <button @click="resetFilters" class="mt-2 text-xs font-bold text-amber-600 hover:underline">إعادة ضبط الفلاتر وعرض الكل</button>
+                </div>
                 <div
-                    v-for="user in users"
+                    v-for="user in filteredAndSortedUsers"
                     :key="user.id"
                     class="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white dark:bg-[#0a0f1d] border border-stone-200 dark:border-slate-800/80 p-4 shadow-xs transition hover:border-amber-500/40"
                 >

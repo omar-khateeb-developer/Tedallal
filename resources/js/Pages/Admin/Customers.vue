@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AdminNav from '@/Components/Admin/AdminNav.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import axios from 'axios';
 
@@ -207,6 +207,11 @@ const waTestError = ref<string | null>(null);
 const directReminderPendingId = ref<number | null>(null);
 const directReminderSuccessToast = ref<string | null>(null);
 
+// حالات الربط السياقي الذكي لإرسال التذكيرات
+const pendingReminderCustomer = ref<CustomerRow | null>(null);
+const pendingReminderPromo = ref<PromoItem | null>(null);
+const waConnectSuccessCelebration = ref(false);
+
 let waPollingTimer: ReturnType<typeof setInterval> | null = null;
 
 async function fetchWhatsappStatus() {
@@ -241,6 +246,20 @@ function startWaPolling() {
             waConnectedAt.value = data.connected_at;
             if (data.status === 'connected') {
                 stopWaPolling();
+
+                // في حال كان المدير طلب إرسال تذكير للزبون قبل إتمام الربط
+                if (pendingReminderCustomer.value && pendingReminderPromo.value) {
+                    waConnectSuccessCelebration.value = true;
+                    const c = pendingReminderCustomer.value;
+                    const p = pendingReminderPromo.value;
+                    setTimeout(async () => {
+                        showWhatsappModal.value = false;
+                        waConnectSuccessCelebration.value = false;
+                        await sendDirectBackgroundReminder(c, p);
+                        pendingReminderCustomer.value = null;
+                        pendingReminderPromo.value = null;
+                    }, 1500);
+                }
             }
         } catch (_) {}
     }, 3000);
@@ -323,6 +342,17 @@ async function sendTestMessage() {
 }
 
 async function sendDirectBackgroundReminder(customer: CustomerRow, promo: PromoItem) {
+    // التحقق من ربط واتساب المطعم أولاً
+    if (waStatus.value !== 'connected') {
+        pendingReminderCustomer.value = customer;
+        pendingReminderPromo.value = promo;
+        showWhatsappModal.value = true;
+        if (waStatus.value === 'disconnected') {
+            connectWhatsapp();
+        }
+        return;
+    }
+
     directReminderPendingId.value = promo.id;
     try {
         const res = await axios.post(`/api/admin/customers/${customer.id}/send-direct-reminder`, {
@@ -343,6 +373,33 @@ async function sendDirectBackgroundReminder(customer: CustomerRow, promo: PromoI
         alert(e.response?.data?.message || 'تعذر إرسال التذكير.');
     } finally {
         directReminderPendingId.value = null;
+    }
+}
+
+async function forceManualWhatsAppReminder() {
+    if (!pendingReminderCustomer.value || !pendingReminderPromo.value) return;
+    const customer = pendingReminderCustomer.value;
+    const promo = pendingReminderPromo.value;
+    showWhatsappModal.value = false;
+
+    reminderPendingId.value = promo.id;
+    try {
+        const res = await axios.post(`/api/admin/customers/${customer.id}/mark-reminded`, {
+            promo_code_id: promo.id,
+        });
+        const url = res.data.data?.whatsapp_url || promo.whatsapp_url;
+        promo.reminded_at = res.data.data?.reminded_at || 'الآن';
+        promo.reminders_count = res.data.data?.reminders_count || (promo.reminders_count + 1);
+        customer.needs_reminder = customer.promo_codes.some(c => c.is_usable && !c.reminded_at);
+        if (url) {
+            window.open(url, '_blank', 'noopener,noreferrer');
+        }
+    } catch (e: any) {
+        alert(e.response?.data?.message || 'تعذر تجهيز تذكير الواتساب.');
+    } finally {
+        reminderPendingId.value = null;
+        pendingReminderCustomer.value = null;
+        pendingReminderPromo.value = null;
     }
 }
 
@@ -500,6 +557,17 @@ async function deleteCustomer(customer: CustomerRow) {
 }
 
 async function sendWhatsAppReminder(customer: CustomerRow, promo: PromoItem) {
+    // التحقق من ربط واتساب المطعم أولاً
+    if (waStatus.value !== 'connected') {
+        pendingReminderCustomer.value = customer;
+        pendingReminderPromo.value = promo;
+        showWhatsappModal.value = true;
+        if (waStatus.value === 'disconnected') {
+            connectWhatsapp();
+        }
+        return;
+    }
+
     reminderPendingId.value = promo.id;
     try {
         const res = await axios.post(`/api/admin/customers/${customer.id}/mark-reminded`, {
@@ -1329,13 +1397,40 @@ function statusBadge(promo: PromoItem) {
                         </div>
                     </div>
                     <button
-                        @click="showWhatsappModal = false"
+                        @click="showWhatsappModal = false; pendingReminderCustomer = null; pendingReminderPromo = null;"
                         type="button"
                         class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white flex items-center justify-center font-bold text-base transition cursor-pointer shadow-xs"
                         title="إغلاق النافذة (Esc)"
                     >
                         ✕
                     </button>
+                </div>
+
+                <!-- تنبيه الربط المسبق لإرسال التذكير (في حال حاول المدير التذكير قبل الربط) -->
+                <div v-if="pendingReminderCustomer" class="p-4 bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent border-b border-amber-200 dark:border-amber-800/80 text-xs font-bold text-amber-900 dark:text-amber-200 flex flex-wrap items-center justify-between gap-3 shrink-0">
+                    <div class="flex items-start gap-2.5">
+                        <span class="text-2xl">⚠️</span>
+                        <div>
+                            <p class="font-black text-sm text-amber-900 dark:text-amber-100">يجب ربط رقم واتساب المطعم أولاً لإرسال التذكير تلقائياً!</p>
+                            <p class="text-xs text-amber-800 dark:text-amber-300 font-normal mt-0.5 leading-relaxed">
+                                امسح رمز الاستجابة السريعة (QR) أدناه لمرة واحدة، وسيتم إرسال التذكير تلقائياً للزبون <span class="font-bold underline text-amber-950 dark:text-white">{{ pendingReminderCustomer.name }}</span> فور اكتمال الربط.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        <Link :href="route('admin.settings') + '#whatsapp'" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 hover:bg-amber-100 transition text-xs font-bold shadow-2xs">
+                            <span>⚙️ صفحة الإعدادات</span>
+                        </Link>
+                        <button @click="forceManualWhatsAppReminder" type="button" class="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white transition text-xs font-bold cursor-pointer shadow-2xs" title="تجاوز الربط والفتح في واتساب ويب الشخصي">
+                            فتح بواتساب ويب مؤقتاً
+                        </button>
+                    </div>
+                </div>
+
+                <!-- احتفال اكتمال الربط بنجاح والإرسال التلقائي المباشر -->
+                <div v-if="waConnectSuccessCelebration" class="p-3.5 bg-emerald-500 text-white text-xs font-black text-center flex items-center justify-center gap-2 animate-pulse shrink-0">
+                    <span>🎉</span>
+                    <span>تم ربط واتساب المطعم بنجاح! جارٍ إرسال التذكير للعميل الآن تلقائياً...</span>
                 </div>
 
                 <!-- Scrollable Content -->
@@ -1509,15 +1604,21 @@ function statusBadge(promo: PromoItem) {
                 </div>
 
                 <!-- Sticky Footer with Explicit Close & Save -->
-                <div class="p-4 sm:p-5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 backdrop-blur-xs flex items-center justify-between gap-3 shrink-0">
-                    <button
-                        @click="showWhatsappModal = false"
-                        type="button"
-                        class="px-4 sm:px-5 py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer flex items-center gap-1.5 shadow-xs"
-                    >
-                        <span>✕</span>
-                        <span>إغلاق النافذة</span>
-                    </button>
+                <div class="p-4 sm:p-5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-900/90 backdrop-blur-xs flex flex-wrap items-center justify-between gap-3 shrink-0">
+                    <div class="flex items-center gap-3">
+                        <button
+                            @click="showWhatsappModal = false; pendingReminderCustomer = null; pendingReminderPromo = null;"
+                            type="button"
+                            class="px-4 sm:px-5 py-2.5 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer flex items-center gap-1.5 shadow-xs"
+                        >
+                            <span>✕</span>
+                            <span>إغلاق النافذة</span>
+                        </button>
+                        <Link :href="route('admin.settings') + '#whatsapp'" class="text-xs font-bold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1">
+                            <span>⚙️ فتح في صفحة الإعدادات</span>
+                            <span>↗</span>
+                        </Link>
+                    </div>
 
                     <div class="flex items-center gap-3">
                         <span v-if="waSettingsNotice" class="text-xs font-bold text-emerald-600 dark:text-emerald-400">

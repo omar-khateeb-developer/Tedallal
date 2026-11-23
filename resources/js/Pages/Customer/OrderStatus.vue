@@ -434,9 +434,10 @@ const currentStepIndex = computed(() => {
                 <div class="mx-auto max-w-lg">
                     <Link
                         :href="`/t/${publicToken}`"
-                        class="flex w-full items-center justify-center gap-2 rounded-2xl bg-stone-900 dark:bg-amber-600 dark:hover:bg-amber-500 py-4 font-bold text-white shadow-lg transition active:scale-95"
+                        class="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:from-amber-700 hover:to-amber-500 py-3.5 px-4 font-bold text-white shadow-lg shadow-amber-500/25 transition active:scale-95"
                     >
-                        <span>العودة لقائمة الطعام</span>
+                        <span class="text-lg">🍽️</span>
+                        <span>طلب المزيد لطاولتك (العودة للمنيو)</span>
                         <svg class="h-5 w-5 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                     </Link>
                 </div>

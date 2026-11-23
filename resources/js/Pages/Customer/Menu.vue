@@ -110,6 +110,7 @@ const promoCode = ref('');
 const cartSubtotal = ref('0.00');
 const cartDrawerRef = ref<InstanceType<typeof CartDrawer> | null>(null);
 const errorMessage = ref('');
+const searchQuery = ref('');
 
 // خريطة لتتبع الأصناف المضافة في السلة وكمياتها لعرضها مباشرة على البطاقة
 const cartItemsByMenuItemId = ref<Record<number, { id: number; quantity: number; note: string | null }>>({});
@@ -137,8 +138,8 @@ function onDishImageError(event: Event) {
 }
 
 const visibleItems = computed<MenuItem[]>(() => {
+    let items: MenuItem[] = [];
     if (activeCategory.value === 'all') {
-        const items: MenuItem[] = [];
         const seenIds = new Set<number>();
         for (const cat of props.categories) {
             for (const item of (cat.active_items ?? [])) {
@@ -151,13 +152,25 @@ const visibleItems = computed<MenuItem[]>(() => {
                 }
             }
         }
-        return items;
+    } else {
+        const cat = props.categories.find((c) => c.id === activeCategory.value);
+        items = (cat?.active_items ?? []).map((item) => ({
+            ...item,
+            category_name: cat?.name,
+        }));
     }
-    const cat = props.categories.find((c) => c.id === activeCategory.value);
-    return (cat?.active_items ?? []).map((item) => ({
-        ...item,
-        category_name: cat?.name,
-    }));
+
+    if (searchQuery.value.trim()) {
+        const q = searchQuery.value.trim().toLowerCase();
+        items = items.filter((item) => {
+            const nameMatch = item.name.toLowerCase().includes(q);
+            const descMatch = item.description?.toLowerCase().includes(q) ?? false;
+            const catMatch = item.category_name?.toLowerCase().includes(q) ?? false;
+            return nameMatch || descMatch || catMatch;
+        });
+    }
+
+    return items;
 });
 
 async function refreshCartSummary() {
@@ -331,6 +344,27 @@ watch(cartOpen, (isOpen) => {
 watch(checkoutOpen, (isOpen) => {
     if (isOpen) normalizeVisualViewport();
 });
+
+async function handleDirectOrderSubmit(payload: { serviceType: string; customerNote: string; promoCode: string }) {
+    submitting.value = true;
+    errorMessage.value = '';
+    try {
+        const { data } = await axios.post('/api/public/orders', {
+            customer_note: payload.customerNote || null,
+            service_type: payload.serviceType,
+            promo_code: payload.promoCode || null,
+        });
+        cartOpen.value = false;
+        customerNote.value = '';
+        promoCode.value = '';
+        triggerHaptic('success');
+        router.visit(`/t/${props.table.public_token}/orders/${data.data.order_number}`);
+    } catch (e: any) {
+        errorMessage.value = e.response?.data?.message || 'تعذر إرسال الطلب. تحقق من السلة وحاول مرة أخرى.';
+    } finally {
+        submitting.value = false;
+    }
+}
 
 async function submitOrder() {
     submitting.value = true;
@@ -585,6 +619,35 @@ onMounted(() => {
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
             </button>
+        </div>
+
+        <!-- شريط البحث الفوري المباشر عن الأصناف -->
+        <div class="mb-3">
+            <div class="relative flex items-center">
+                <input
+                    v-model="searchQuery"
+                    type="search"
+                    dir="rtl"
+                    placeholder="ابحث عن وجبتك المفضلة، مشروب، أو حلوى..."
+                    class="w-full rounded-2xl border border-stone-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/90 text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-slate-500 text-xs sm:text-sm pr-10 pl-9 py-2.5 shadow-xs focus:border-amber-500 focus:ring-amber-500 transition-all backdrop-blur-md"
+                />
+                <span class="absolute right-3.5 text-stone-400 dark:text-slate-500 text-sm pointer-events-none">
+                    🔍
+                </span>
+                <button
+                    v-if="searchQuery"
+                    type="button"
+                    @click="searchQuery = ''"
+                    class="absolute left-3 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 text-xs font-bold p-1 rounded-full hover:bg-stone-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                    title="مسح البحث"
+                >
+                    ✕
+                </button>
+            </div>
+            <div v-if="searchQuery.trim()" class="mt-1.5 text-[11px] font-semibold text-amber-600 dark:text-amber-400 px-1 flex items-center justify-between">
+                <span>نتائج البحث عن: "{{ searchQuery }}"</span>
+                <span class="text-stone-400 dark:text-slate-500">({{ visibleItems.length }} صنف مطابق)</span>
+            </div>
         </div>
 
         <!-- تبويبات الأصناف - تثبت بسلاسة تحت الهيدر عند التمرير مع تأثير زجاجي فاخر -->
@@ -971,6 +1034,9 @@ onMounted(() => {
             ref="cartDrawerRef"
             v-model:open="cartOpen"
             :currency="restaurant.currency"
+            :is-prepaid="restaurant.type === 'prepaid' || (restaurant as any).restaurant_type === 'prepaid'"
+            :submitting="submitting"
+            @submit-order="handleDirectOrderSubmit"
             @updated="refreshCartSummary"
             @checkout="openCheckout"
         />

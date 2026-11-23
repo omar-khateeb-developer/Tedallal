@@ -25,6 +25,14 @@ const emit = defineEmits<{
 const quantity = ref(1);
 const note = ref('');
 
+const itemTotal = computed(() => {
+    if (!props.item?.price) return '0';
+    const cleanStr = String(props.item.price).replace(/,/g, '');
+    const num = parseFloat(cleanStr);
+    const total = isNaN(num) ? 0 : Math.round(num * quantity.value);
+    return total.toLocaleString();
+});
+
 watch(() => props.item, (newItem) => {
     quantity.value = 1;
     note.value = '';
@@ -114,11 +122,14 @@ function onImageError(event: Event) {
                     </button>
                     <button
                         type="button"
-                        class="flex-1 rounded-xl bg-amber-600 dark:bg-amber-500 hover:bg-amber-700 dark:hover:bg-amber-400 py-3 font-bold text-white shadow-md shadow-amber-200 dark:shadow-amber-950/50 active:scale-95 transition-all disabled:opacity-50"
+                        class="flex-1 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 py-3.5 font-bold text-white shadow-lg shadow-amber-500/20 active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                         :disabled="loading"
                         @click="emit('confirm', { quantity, note: note || null })"
                     >
-                        {{ loading ? 'جاري الإضافة...' : 'أضف للسلة' }}
+                        <span>{{ loading ? 'جاري الإضافة...' : 'أضف للسلة' }}</span>
+                        <span v-if="!loading" class="text-xs bg-black/20 px-2 py-0.5 rounded-full font-black">
+                            • {{ itemTotal }} {{ currency }}
+                        </span>
                     </button>
                 </div>
             </div>
