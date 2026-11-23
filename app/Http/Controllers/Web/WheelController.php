@@ -116,11 +116,13 @@ class WheelController extends Controller
                     . "⏳ يبدأ من: " . ($claimedVoucher['starts_at'] ?? 'الآن') . "\n"
                     . "📅 صالح لغاية تاريخ: " . ($claimedVoucher['expires_at'] ?? 'مفتوح') . "\n"
                     . "\n✨ نتطلع لخدمتكم دائماً!";
+                $restaurantTargetPhone = $restaurant->whatsapp_phone ?: $restaurant->phone;
+                $targetPhone = $restaurantTargetPhone ?: $wheelToken->customer->phone;
                 $claimedCustomer = [
                     'name' => $wheelToken->customer->name,
                     'phone' => $wheelToken->customer->phone,
                     'visits_count' => (int) $wheelToken->customer->visits_count,
-                    'whatsapp_url' => 'https://wa.me/' . $crmService->toWhatsAppDigits($wheelToken->customer->phone) . '?text=' . rawurlencode($waMessage),
+                    'whatsapp_url' => 'https://wa.me/' . $crmService->toWhatsAppDigits($targetPhone) . '?text=' . rawurlencode($waMessage),
                 ];
             }
         }
@@ -467,7 +469,7 @@ class WheelController extends Controller
             $autoSent = ! empty($sendRes['success']);
         }
 
-        $revealCode = $restaurant->shouldRevealWheelCodeAfterSave() || ! $restaurant->shouldRequireWheelWhatsapp();
+        $revealCode = $restaurant->shouldRevealWheelCodeAfterSave() || ! $restaurant->shouldRequireWheelWhatsapp() || ! $autoSent;
 
         return response()->json([
             'success' => true,

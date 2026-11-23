@@ -215,7 +215,9 @@ final class CustomerCrmService
 
             $discountLabel = $discountLabelOverride ?: $this->formatPromoLabel($promo, $restaurant);
             $waMessage = $this->buildWheelClaimMessage($restaurant, $customer, $promo, $discountLabel, $loyalty, $loyaltyVoucher);
-            $waUrl = 'https://wa.me/' . $this->toWhatsAppDigits($phone) . '?text=' . rawurlencode($waMessage);
+            $restaurantTargetPhone = $restaurant->whatsapp_phone ?: $restaurant->phone;
+            $targetPhone = $restaurantTargetPhone ?: $phone;
+            $waUrl = 'https://wa.me/' . $this->toWhatsAppDigits($targetPhone) . '?text=' . rawurlencode($waMessage);
 
             $remaining = $loyalty['enabled']
                 ? ($visits % $target === 0 ? $target : ($target - ($visits % $target)))

@@ -1062,13 +1062,13 @@ onUnmounted(() => {
                                     تم حفظ هديتك باسم «{{ customerName }}» في سجل المطعم بنجاح!
                                 </div>
                                 <p v-if="isAutoSent" class="text-xs font-bold text-emerald-200 leading-relaxed">
-                                    🎉 تم إرسال كود الخصم ورابط تفعيله في المنيو مباشرة إلى واتساب الخاص بك (09...) بنجاح! تفقد رسائلك الآن.
+                                    🎉 تم إرسال كود الخصم ورابط تفعيله في المنيو مباشرة من رقم واتساب المطعم إلى رقمك ({{ whatsappPhone }}) بنجاح! تفقد رسائلك الآن.
                                 </p>
                                 <p v-else class="text-[11px] text-emerald-100/80 leading-relaxed">
-                                    تم تجهيز كود الخصم الخاص بك في رسالة الواتساب. اضغط الزر أدناه لفتح واتساب وحفظ الرسالة لديك:
+                                    تم حفظ كود الخصم الخاص بك في سجل المطعم. يمكنك مراسلة واتساب المطعم لحفظ نسختك ومتابعة طلبك:
                                 </p>
                                 <div v-if="isAutoSent" class="w-full py-2.5 px-4 rounded-xl bg-emerald-800/80 border border-emerald-400/40 text-emerald-100 text-xs font-bold flex items-center justify-center gap-2">
-                                    <span>✓ تم الإرسال التلقائي للواتساب بنجاح</span>
+                                    <span>✓ تم الإرسال من رقم واتساب المطعم بنجاح</span>
                                 </div>
                                 <a
                                     v-else-if="claimedWhatsappUrl"
@@ -1077,7 +1077,7 @@ onUnmounted(() => {
                                     rel="noopener noreferrer"
                                     class="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black transition shadow-md flex items-center justify-center gap-2"
                                 >
-                                    <span>📲 فتح الواتساب لاستلام وحفظ الكود</span>
+                                    <span>📲 فتح واتساب المطعم لحفظ الكود</span>
                                 </a>
                             </div>
 
