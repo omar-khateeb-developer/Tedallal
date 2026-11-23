@@ -39,7 +39,22 @@ interface Order {
     items?: OrderItem[];
 }
 
+interface ServiceCallItem {
+    id: number;
+    table_id: number;
+    table_name?: string;
+    table?: { id: number; name: string };
+    type: 'waiter_call' | 'bill_request';
+    status: string;
+    payment_method?: string | null;
+    reason?: string | null;
+    notes?: string | null;
+    created_at?: string;
+}
+
 const orders = ref<Order[]>([]);
+const serviceCalls = ref<ServiceCallItem[]>([]);
+const attendingCallIds = ref<Set<number>>(new Set());
 const searchQuery = ref('');
 const page = usePage();
 const restaurantId = computed(() => page.props.restaurantId as number | undefined);
@@ -76,6 +91,29 @@ function playSound() {
 async function loadOrders() {
     const { data } = await axios.get('/api/admin/orders');
     orders.value = data.data?.data ?? data.data ?? [];
+}
+
+async function loadServiceCalls() {
+    try {
+        const { data } = await axios.get('/api/admin/service-calls');
+        serviceCalls.value = data.data ?? [];
+    } catch (_) {}
+}
+
+async function attendCall(call: ServiceCallItem) {
+    if (attendingCallIds.value.has(call.id)) return;
+    attendingCallIds.value.add(call.id);
+
+    try {
+        await axios.post(`/api/admin/service-calls/${call.id}/attend`);
+        serviceCalls.value = serviceCalls.value.filter(c => c.id !== call.id);
+        const tableName = call.table?.name || call.table_name || 'الطاولة';
+        showToast('تمت التلبية', `تمت تلبية نداء ${tableName} بنجاح ✓`, 'success');
+    } catch (e: any) {
+        showToast('خطأ', e.response?.data?.message || 'تعذر تسجيل التلبية', 'error');
+    } finally {
+        attendingCallIds.value.delete(call.id);
+    }
 }
 
 const { isSupported: isWakeLockSupported, isActive: isWakeLockActive, toggleLock: toggleWakeLock } = useWakeLock();
@@ -198,7 +236,10 @@ async function updateStatus(order: Order, status: string, pickupWindow?: number 
 
 
 useRestaurantOrders(restaurantId.value, {
-    onInitialLoad: loadOrders,
+    onInitialLoad: () => {
+        loadOrders();
+        loadServiceCalls();
+    },
     onOrderCreated: (newOrder) => {
         // Prepend to array
         const exists = orders.value.find(o => o.id === newOrder.id);
@@ -221,6 +262,22 @@ useRestaurantOrders(restaurantId.value, {
         if (updatedOrder.status === 'ready' && prevStatus !== 'ready' && isAutoPrintActive.value) {
             triggerAutoPrint(updatedOrder.id);
         }
+    },
+    onServiceCalled: ({ service_call }) => {
+        const exists = serviceCalls.value.some(c => c.id === service_call.id);
+        if (!exists) {
+            serviceCalls.value.unshift(service_call as ServiceCallItem);
+        }
+        soundAlerts.playWaiterCallAlert(service_call.type === 'bill_request' ? 'bill' : 'waiter');
+        const tableName = service_call.table_name ? `طاولة ${service_call.table_name}` : 'طاولة';
+        showToast(
+            service_call.type === 'bill_request' ? '🧾 طلب حساب' : '🛎️ استدعاء نادل',
+            `${tableName}: ${service_call.reason || (service_call.payment_method === 'card' ? 'بطاقة/مدى' : 'نقداً') || 'طلب خدمة'}`,
+            'info'
+        );
+    },
+    onServiceAttended: ({ service_call_id }) => {
+        serviceCalls.value = serviceCalls.value.filter(c => c.id !== service_call_id);
     }
 });
 </script>
@@ -320,6 +377,56 @@ useRestaurantOrders(restaurantId.value, {
                         <span>🔊</span>
                         <span>صوت الكاشير</span>
                     </button>
+                </div>
+
+                <!-- نداءات الخدمة الصامتة وطلبات الحساب الحية للطاولات -->
+                <div v-if="serviceCalls.length > 0" class="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-purple-500/10 border-2 border-amber-500/60 shadow-lg shadow-amber-500/10">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="flex h-3 w-3 rounded-full bg-amber-500 animate-ping"></span>
+                            <h3 class="text-sm font-black text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                                <span>🛎️ نداءات خدمة وطلبات حساب نشطة</span>
+                                <span class="bg-amber-500 text-stone-950 px-2 py-0.5 rounded-full text-xs font-black">{{ serviceCalls.length }}</span>
+                            </h3>
+                        </div>
+                        <span class="text-[11px] text-stone-500 dark:text-stone-400">تحديث لحظي مباشر من هواتف الزبائن</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        <div
+                            v-for="call in serviceCalls"
+                            :key="call.id"
+                            class="p-3.5 rounded-xl border transition-all flex items-center justify-between gap-3 shadow-xs"
+                            :class="call.type === 'bill_request'
+                                ? 'bg-purple-950/40 border-purple-500/50 text-purple-200'
+                                : 'bg-amber-950/40 border-amber-500/50 text-amber-200'"
+                        >
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <span class="text-2xl shrink-0">{{ call.type === 'bill_request' ? '🧾' : '🛎️' }}</span>
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-black text-sm text-white">{{ call.table?.name || call.table_name || 'طاولة' }}</span>
+                                        <span class="text-[10px] px-1.5 py-0.2 rounded font-bold" :class="call.type === 'bill_request' ? 'bg-purple-500/30 text-purple-300' : 'bg-amber-500/30 text-amber-300'">
+                                            {{ call.type === 'bill_request' ? 'طلب حساب' : 'استدعاء نادل' }}
+                                        </span>
+                                    </div>
+                                    <p class="text-xs truncate text-stone-300 mt-0.5">
+                                        {{ call.reason || (call.payment_method === 'card' ? '💳 بطاقة / مدى' : (call.payment_method === 'cash' ? '💵 نقداً' : '')) || call.notes || 'طلب خدمة' }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <button
+                                type="button"
+                                :disabled="attendingCallIds.has(call.id)"
+                                @click="attendCall(call)"
+                                class="shrink-0 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1 disabled:opacity-50"
+                            >
+                                <span v-if="!attendingCallIds.has(call.id)">تمت التلبية ✓</span>
+                                <span v-else class="animate-pulse">⏳...</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <div v-if="filteredOrders.length === 0" class="rounded-2xl bg-white dark:bg-[#0a0f1d] p-8 text-center text-gray-500 dark:text-gray-400 shadow-xs border border-dashed border-gray-300 dark:border-slate-800">

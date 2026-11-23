@@ -4,6 +4,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import axios from 'axios';
+import { soundAlerts } from '@/utils/soundAlerts';
 
 interface TableItem {
     id: number;
@@ -29,6 +30,8 @@ interface TableItem {
     turn_minutes?: number;
     stage_minutes?: number;
     bill_wait_minutes?: number;
+    has_waiter_call?: boolean;
+    service_call?: any;
     active_session?: any;
     active_order?: {
         id: number;
@@ -448,6 +451,9 @@ function getTableStageLabel(table: TableItem): string {
 }
 
 function getTableRingClass(table: TableItem): string {
+    if (table.has_waiter_call) {
+        return 'bg-slate-900/95 ring-4 ring-amber-400 shadow-[0_0_35px_rgba(251,191,36,0.9)] border-2 border-amber-300 animate-pulse';
+    }
     if (table.operational_stage === 'bill_requested') {
         return 'bg-slate-900/95 ring-4 ring-purple-500 shadow-[0_0_35px_rgba(168,85,247,0.85)] border-2 border-purple-400 animate-pulse';
     }
@@ -473,6 +479,9 @@ function getTableRingClass(table: TableItem): string {
 }
 
 function getTableBadgeClass(table: TableItem): string {
+    if (table.has_waiter_call) {
+        return 'bg-amber-950/95 text-amber-300 border border-amber-400 shadow-amber-900/70 animate-pulse font-black';
+    }
     if (table.operational_stage === 'bill_requested') {
         return 'bg-purple-950/95 text-purple-200 border border-purple-400 shadow-purple-900/60 animate-pulse';
     }
@@ -609,7 +618,70 @@ function copyWaitlistJoinLink() {
 
 // Live Ticker for Table Turn Times
 let turnTicker: any = null;
+
+async function loadFloorServiceCalls() {
+    try {
+        const { data } = await axios.get('/api/admin/service-calls');
+        const calls = data.data ?? [];
+        calls.forEach((c: any) => {
+            const tbl = tables.value.find(t => t.id === c.table_id);
+            if (tbl) {
+                if (c.type === 'waiter_call') {
+                    tbl.has_waiter_call = true;
+                    tbl.service_call = c;
+                } else if (c.type === 'bill_request') {
+                    tbl.operational_stage = 'bill_requested';
+                    tbl.bill_requested_at = c.created_at;
+                    tbl.service_call = c;
+                }
+            }
+        });
+    } catch (_) {}
+}
+
+async function attendTableServiceCall(tbl: TableItem) {
+    if (!tbl.service_call?.id) {
+        tbl.has_waiter_call = false;
+        return;
+    }
+    try {
+        await axios.post(`/api/admin/service-calls/${tbl.service_call.id}/attend`);
+        tbl.has_waiter_call = false;
+        tbl.service_call = null;
+    } catch (e: any) {
+        alert(e.response?.data?.message || 'تعذر تسجيل التلبية');
+    }
+}
+
 onMounted(() => {
+    loadFloorServiceCalls();
+
+    if (props.restaurant?.id && (window as any).Echo) {
+        (window as any).Echo.private(`restaurant.${props.restaurant.id}.orders`)
+            .listen('.table.service_called', (payload: any) => {
+                const sc = payload.service_call;
+                const tbl = tables.value.find(t => t.id === sc.table_id);
+                if (tbl) {
+                    if (sc.type === 'waiter_call') {
+                        tbl.has_waiter_call = true;
+                        tbl.service_call = sc;
+                    } else if (sc.type === 'bill_request') {
+                        tbl.operational_stage = 'bill_requested';
+                        tbl.bill_requested_at = sc.created_at;
+                        tbl.service_call = sc;
+                    }
+                }
+                soundAlerts.playWaiterCallAlert(sc.type === 'bill_request' ? 'bill' : 'waiter');
+            })
+            .listen('.table.service_attended', (payload: any) => {
+                const tbl = tables.value.find(t => t.id === payload.table_id);
+                if (tbl) {
+                    tbl.has_waiter_call = false;
+                    tbl.service_call = null;
+                }
+            });
+    }
+
     turnTicker = setInterval(() => {
         tables.value.forEach(t => {
             if (t.session_started_at) {
@@ -626,6 +698,10 @@ onMounted(() => {
 
 onUnmounted(() => {
     if (turnTicker) clearInterval(turnTicker);
+
+    if (props.restaurant?.id && (window as any).Echo) {
+        (window as any).Echo.leave(`restaurant.${props.restaurant.id}.orders`);
+    }
 });
 </script>
 
@@ -1031,7 +1107,11 @@ onUnmounted(() => {
                                 >
                                     <!-- Neon Breathing Pulse for Active Session or Urgent Stages -->
                                     <div
-                                        v-if="table.operational_stage === 'bill_requested'"
+                                        v-if="table.has_waiter_call"
+                                        class="absolute inset-0 rounded-full animate-ping opacity-45 bg-amber-400 pointer-events-none"
+                                    ></div>
+                                    <div
+                                        v-else-if="table.operational_stage === 'bill_requested'"
                                         class="absolute inset-0 rounded-full animate-ping opacity-30 bg-purple-400 pointer-events-none"
                                     ></div>
                                     <div
@@ -1047,6 +1127,12 @@ onUnmounted(() => {
                                     >
                                         <span>{{ table.name }}</span>
                                         <span class="opacity-80">• {{ getTableStageLabel(table) }}</span>
+                                        <span
+                                            v-if="table.has_waiter_call"
+                                            class="font-mono bg-amber-400 text-stone-950 px-1 py-0.2 rounded font-black animate-pulse"
+                                        >
+                                            🛎️ نداء نادل
+                                        </span>
                                         <span
                                             v-if="table.turn_minutes && table.turn_minutes > 0"
                                             class="font-mono bg-black/40 px-1 py-0.2 rounded"
@@ -1165,6 +1251,15 @@ onUnmounted(() => {
 
                                 <!-- Actions -->
                                 <div class="flex items-center gap-2 ms-auto">
+                                    <button
+                                        v-if="activeTable.has_waiter_call || activeTable.operational_stage === 'bill_requested' || activeTable.service_call"
+                                        type="button"
+                                        @click="attendTableServiceCall(activeTable)"
+                                        class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black transition shadow-xs flex items-center gap-1 cursor-pointer animate-pulse"
+                                        title="تسجيل تلبية نداء الزبون"
+                                    >
+                                        <span>✓ تمت التلبية</span>
+                                    </button>
                                     <button
                                         type="button"
                                         @click="openTableDrawer(activeTable)"
@@ -1319,6 +1414,35 @@ onUnmounted(() => {
                                 <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5">
                                     أدخل معرّف الجهاز لمزامنة إضاءة الليدات الفيزيائية مع حالة هذه الطاولة.
                                 </p>
+                            </div>
+
+                            <!-- Active Service Call Alert Card (Waiter Call / Bill Request) -->
+                            <div
+                                v-if="selectedTable.has_waiter_call || selectedTable.operational_stage === 'bill_requested' || selectedTable.service_call"
+                                class="p-3.5 rounded-2xl border space-y-2.5 shadow-md"
+                                :class="selectedTable.operational_stage === 'bill_requested'
+                                    ? 'bg-purple-950/40 border-purple-500/60 text-purple-200'
+                                    : 'bg-amber-950/40 border-amber-500/60 text-amber-200'"
+                            >
+                                <div class="flex items-center justify-between text-xs font-black">
+                                    <span class="flex items-center gap-1.5">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-current animate-ping"></span>
+                                        <span>{{ selectedTable.operational_stage === 'bill_requested' ? '🧾 طلب حساب وفاتورة' : '🛎️ استدعاء نادل مباشر' }}</span>
+                                    </span>
+                                    <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-black/40">بانتظار التلبية</span>
+                                </div>
+
+                                <p v-if="selectedTable.service_call?.reason || selectedTable.service_call?.notes || selectedTable.service_call?.payment_method" class="text-xs text-stone-300">
+                                    {{ selectedTable.service_call?.reason || (selectedTable.service_call?.payment_method === 'card' ? '💳 دفع بالبطاقة / مدى' : (selectedTable.service_call?.payment_method === 'cash' ? '💵 دفع نقداً' : '')) || selectedTable.service_call?.notes }}
+                                </p>
+
+                                <button
+                                    type="button"
+                                    @click="attendTableServiceCall(selectedTable)"
+                                    class="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black shadow-md active:scale-95 transition flex items-center justify-center gap-1.5 cursor-pointer"
+                                >
+                                    <span>✓ تسجيل تمت التلبية</span>
+                                </button>
                             </div>
 
                             <!-- Active Session Management Card -->

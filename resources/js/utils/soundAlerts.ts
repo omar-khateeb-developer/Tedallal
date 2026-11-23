@@ -316,6 +316,59 @@ class SoundAlertEngine {
             console.warn('[SoundEngine] Customer alert error:', e);
         }
     }
+
+    /**
+     * ============================================================
+     * 🛎️ 4. نداء استدعاء النادل والفاتورة (Silent Waiter Call Alert)
+     * ============================================================
+     * رنين جرس فندقي راقٍ ذو طبقتين يلفت انتباه الكاشير وطاقم الصالة بلباقة وهدوء
+     */
+    public playWaiterCallAlert(type: 'waiter' | 'bill' = 'waiter') {
+        const ctx = this.getContext();
+        if (!ctx || !this.masterGain) return;
+
+        try {
+            const now = ctx.currentTime;
+            this.vibrate([150, 80, 250]);
+
+            const playNote = (start: number, freq: number, duration: number, vol: number) => {
+                const osc = ctx.createOscillator();
+                const subOsc = ctx.createOscillator();
+                osc.type = 'triangle';
+                subOsc.type = 'sine';
+
+                osc.frequency.setValueAtTime(freq, start);
+                subOsc.frequency.setValueAtTime(freq * 0.5, start);
+
+                const gain = ctx.createGain();
+                gain.gain.setValueAtTime(0, start);
+                gain.gain.linearRampToValueAtTime(vol, start + 0.012);
+                gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
+
+                osc.connect(gain);
+                subOsc.connect(gain);
+                gain.connect(this.masterGain!);
+
+                osc.start(start);
+                subOsc.start(start);
+                osc.stop(start + duration);
+                subOsc.stop(start + duration);
+            };
+
+            if (type === 'bill') {
+                // نغمة طلب الفاتورة: ثلاثية تصاعدية ناعمة (E6 -> G#6 -> B6)
+                playNote(now, 1318, 0.35, 0.85);
+                playNote(now + 0.15, 1661, 0.40, 0.90);
+                playNote(now + 0.32, 1975, 0.85, 0.95);
+            } else {
+                // نغمة استدعاء النادل: جرس كونسيرج راقٍ ثنائي (C6 -> G6)
+                playNote(now, 1046, 0.45, 0.90);
+                playNote(now + 0.18, 1568, 0.90, 0.95);
+            }
+        } catch (e) {
+            console.warn('[SoundEngine] Waiter call alert error:', e);
+        }
+    }
 }
 
 // تصدير نسخة عامة مفردة (Singleton) تستخدم في جميع شاشات التطبيق

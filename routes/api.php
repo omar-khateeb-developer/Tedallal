@@ -20,7 +20,10 @@ use App\Http\Controllers\Api\Admin\PromoCodeController as AdminPromoCodeControll
 
 Route::prefix('public')->middleware('throttle:public-api')->group(function () {
     Route::get('tables/{token}', [TableController::class, 'show']);
+    Route::post('tables/{token}/call-waiter', [TableController::class, 'callWaiter']);
     Route::post('tables/{token}/request-bill', [TableController::class, 'requestBill']);
+    Route::post('tables/{token}/cancel-service-call', [TableController::class, 'cancelServiceCall']);
+    Route::get('tables/{token}/service-status', [TableController::class, 'getServiceStatus']);
     Route::post('sessions', [SessionController::class, 'store'])->middleware('throttle:public-sessions');
     Route::get('sessions/{sessionToken}', [SessionController::class, 'show']);
     Route::get('menu', [MenuController::class, 'index']);
@@ -99,6 +102,10 @@ Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
         Route::get('orders', [AdminOrderController::class, 'index']);
         Route::get('orders/{order}', [AdminOrderController::class, 'show']);
         Route::patch('orders/{order}/status', [AdminOrderController::class, 'updateStatus']);
+
+        // نداءات الخدمة الصامتة للطاولات وطلب الفاتورة
+        Route::get('service-calls', [\App\Http\Controllers\Api\Admin\TableServiceCallController::class, 'index']);
+        Route::post('service-calls/{id}/attend', [\App\Http\Controllers\Api\Admin\TableServiceCallController::class, 'attend']);
     });
 
     Route::middleware('permission:manage_tables')->group(function () {

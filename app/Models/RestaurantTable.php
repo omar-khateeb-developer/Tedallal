@@ -85,6 +85,18 @@ class RestaurantTable extends Model
         return $this->hasMany(WaitlistEntry::class, 'assigned_table_id');
     }
 
+    public function serviceCalls(): HasMany
+    {
+        return $this->hasMany(TableServiceCall::class, 'table_id');
+    }
+
+    public function activeServiceCall(): HasOne
+    {
+        return $this->hasOne(TableServiceCall::class, 'table_id')
+            ->where('status', 'pending')
+            ->latestOfMany();
+    }
+
     public function getTurnMinutes(): int
     {
         if (! $this->session_started_at) {

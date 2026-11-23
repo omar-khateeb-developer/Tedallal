@@ -3,6 +3,7 @@ import AddItemModal from '@/Components/Customer/AddItemModal.vue';
 import AiWaiterModal from '@/Components/Customer/AiWaiterModal.vue';
 import CartDrawer from '@/Components/Customer/CartDrawer.vue';
 import CheckoutModal from '@/Components/Customer/CheckoutModal.vue';
+import ServiceCallModal from '@/Components/Customer/ServiceCallModal.vue';
 import CustomerLayout from '@/Layouts/CustomerLayout.vue';
 import { router } from '@inertiajs/vue3';
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
@@ -369,11 +370,62 @@ watch(cartOpen, (isOpen) => {
     }
 });
 
+// ================= SERVICE CALL MODAL STATE (SILENT WAITER & BILL) =================
+const showServiceModal = ref(false);
+const serviceModalDefaultTab = ref<'waiter' | 'bill'>('waiter');
+const activePendingCall = ref<any>(null);
+const serviceAlertToast = ref<string | null>(null);
+
+const activeOrdersTotal = computed(() => {
+    if (!props.activeOrders || props.activeOrders.length === 0) return undefined;
+    const sum = props.activeOrders.reduce((acc, o) => acc + parseFloat(o.total || '0'), 0);
+    return sum > 0 ? sum.toFixed(2) : undefined;
+});
+
+async function checkServiceStatus() {
+    try {
+        const { data } = await axios.get(`/api/public/tables/${props.table.public_token}/service-status`);
+        if (data.data?.has_active_call && data.data.calls?.length > 0) {
+            activePendingCall.value = data.data.calls[0];
+        } else {
+            activePendingCall.value = null;
+        }
+    } catch (_) {}
+}
+
+function openServiceModal(tab: 'waiter' | 'bill' = 'waiter') {
+    serviceModalDefaultTab.value = tab;
+    showServiceModal.value = true;
+    triggerHaptic('light');
+}
+
+function onServiceCallSent(type: 'waiter' | 'bill', data: any) {
+    activePendingCall.value = data.service_call;
+    serviceAlertToast.value = type === 'bill'
+        ? 'تم إرسال طلب الفاتورة إلى الكاشير بنجاح! 🧾'
+        : 'تم استدعاء النادل، وهو في طريقه إليكم الآن 🛎️';
+    setTimeout(() => {
+        serviceAlertToast.value = null;
+    }, 4500);
+}
+
+async function cancelPendingServiceCall() {
+    try {
+        await axios.post(`/api/public/tables/${props.table.public_token}/cancel-service-call`);
+        activePendingCall.value = null;
+        serviceAlertToast.value = 'تم إلغاء الطلب بنجاح.';
+        setTimeout(() => {
+            serviceAlertToast.value = null;
+        }, 3000);
+    } catch (_) {}
+}
+
 onMounted(() => {
     if (props.sessionToken) {
         axios.defaults.headers.common['X-Session-Token'] = props.sessionToken;
     }
     refreshCartSummary();
+    checkServiceStatus();
     if (props.openCart) {
         cartOpen.value = true;
     }
@@ -396,23 +448,103 @@ onMounted(() => {
             <p class="text-sm text-stone-500 dark:text-slate-400">{{ table.name }}</p>
         </template>
 
-        <!-- زر السلة العلوي في شريط التنقل -->
+        <!-- أزرار الإجراءات في شريط التنقل العلوي -->
         <template #actions>
-            <button
-                v-if="cartCount > 0"
-                type="button"
-                class="relative flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-300 dark:hover:bg-amber-900/60 transition-colors border border-amber-200/80 dark:border-amber-700/60 active:scale-95 shadow-2xs"
-                title="عرض السلة"
-                @click="openCartDrawer"
-            >
-                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
-                <span class="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-amber-600 px-1 text-[10px] font-black text-white shadow">
-                    {{ cartCount }}
-                </span>
-            </button>
+            <div class="flex items-center gap-1.5">
+                <!-- زر طلب النادل / الفاتورة السريع -->
+                <button
+                    type="button"
+                    class="relative flex h-10 items-center justify-center gap-1.5 px-3 rounded-xl bg-amber-500/15 text-amber-600 hover:bg-amber-500/25 dark:bg-amber-500/20 dark:text-amber-300 dark:hover:bg-amber-500/30 transition-all border border-amber-500/40 active:scale-95 shadow-2xs font-bold text-xs"
+                    title="طلب النادل أو الفاتورة"
+                    @click="openServiceModal('waiter')"
+                >
+                    <span class="text-sm">🛎️</span>
+                    <span class="hidden sm:inline">الخدمة</span>
+                    <span
+                        v-if="activePendingCall"
+                        class="absolute -top-1 -right-1 flex h-2.5 w-2.5 rounded-full bg-amber-500 animate-ping"
+                    ></span>
+                </button>
+
+                <!-- زر السلة العلوي في شريط التنقل -->
+                <button
+                    v-if="cartCount > 0"
+                    type="button"
+                    class="relative flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-300 dark:hover:bg-amber-900/60 transition-colors border border-amber-200/80 dark:border-amber-700/60 active:scale-95 shadow-2xs"
+                    title="عرض السلة"
+                    @click="openCartDrawer"
+                >
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                    <span class="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-amber-600 px-1 text-[10px] font-black text-white shadow">
+                        {{ cartCount }}
+                    </span>
+                </button>
+            </div>
         </template>
+
+        <!-- إشعار نجاح طلب الخدمة المؤقت -->
+        <transition name="toast-slide">
+            <div
+                v-if="serviceAlertToast"
+                class="mb-3 p-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white text-xs font-bold shadow-lg flex items-center justify-between gap-2"
+            >
+                <div class="flex items-center gap-2">
+                    <span class="text-base">✅</span>
+                    <span>{{ serviceAlertToast }}</span>
+                </div>
+                <button type="button" @click="serviceAlertToast = null" class="text-white/80 hover:text-white text-sm font-black">✕</button>
+            </div>
+        </transition>
+
+        <!-- بطاقة متابعة نداء الخدمة النشط للطاولة -->
+        <div
+            v-if="activePendingCall"
+            class="mb-4 p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/40 text-stone-900 dark:text-white flex items-center justify-between gap-3 shadow-xs"
+        >
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-full bg-amber-500/20 text-amber-500 flex items-center justify-center shrink-0">
+                    <span class="animate-pulse">{{ activePendingCall.type === 'bill_request' ? '🧾' : '🛎️' }}</span>
+                </div>
+                <div>
+                    <p class="text-xs font-black text-amber-600 dark:text-amber-400">
+                        {{ activePendingCall.type === 'bill_request' ? 'تم طلب الفاتورة' : 'النداء قيد التلبية' }}
+                    </p>
+                    <p class="text-[11px] text-stone-600 dark:text-stone-300">
+                        {{ activePendingCall.type === 'bill_request' ? 'الكاشير يجهز الحساب الآن' : 'النادل في طريقه إلى طاولتكم' }}
+                        <span v-if="activePendingCall.reason">({{ activePendingCall.reason }})</span>
+                    </p>
+                </div>
+            </div>
+            <button
+                type="button"
+                @click="cancelPendingServiceCall"
+                class="px-2.5 py-1.5 rounded-xl bg-stone-200 dark:bg-stone-800 hover:bg-rose-500/20 hover:text-rose-400 text-[10px] font-bold text-stone-600 dark:text-stone-400 border border-stone-300 dark:border-stone-700 transition-all shrink-0 active:scale-95"
+            >
+                إلغاء الطلب
+            </button>
+        </div>
+
+        <!-- شريط استدعاء النادل والفاتورة السريع -->
+        <div class="mb-4 grid grid-cols-2 gap-2">
+            <button
+                type="button"
+                @click="openServiceModal('waiter')"
+                class="py-2.5 px-3 rounded-2xl bg-white dark:bg-stone-900/90 hover:bg-amber-50 dark:hover:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/50 text-stone-800 dark:text-stone-200 font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-2xs active:scale-98"
+            >
+                <span class="text-amber-500">🛎️</span>
+                <span>استدعاء النادل</span>
+            </button>
+            <button
+                type="button"
+                @click="openServiceModal('bill')"
+                class="py-2.5 px-3 rounded-2xl bg-white dark:bg-stone-900/90 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/50 text-stone-800 dark:text-stone-200 font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-2xs active:scale-98"
+            >
+                <span class="text-emerald-500">🧾</span>
+                <span>طلب الفاتورة</span>
+            </button>
+        </div>
 
         <!-- خطأ -->
         <div v-if="errorMessage" class="mb-4 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/60 px-4 py-3 text-sm text-red-700 dark:text-red-300 flex items-center justify-between gap-2 shadow-2xs">
@@ -862,6 +994,15 @@ onMounted(() => {
             :restaurant-name="restaurant.name"
             :currency="restaurant.currency"
             @item-added="refreshCartSummary"
+        />
+
+        <ServiceCallModal
+            :show="showServiceModal"
+            :table="table"
+            :currency="restaurant.currency"
+            :active-orders-total="activeOrdersTotal"
+            @close="showServiceModal = false"
+            @call-sent="onServiceCallSent"
         />
     </CustomerLayout>
 </template>
