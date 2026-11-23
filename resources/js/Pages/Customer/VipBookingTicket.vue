@@ -140,6 +140,7 @@ function copyTicketLink() {
                             href="https://tedallal.tech"
                             target="_blank"
                             rel="noopener noreferrer"
+                            dir="ltr"
                             class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-[10px] font-semibold text-slate-400 hover:text-amber-400 transition-colors"
                         >
                             <span class="text-amber-500">⚡</span>

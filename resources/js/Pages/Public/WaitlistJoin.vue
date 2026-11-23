@@ -151,6 +151,7 @@ async function submitJoin() {
                 href="https://tedallal.tech"
                 target="_blank"
                 rel="noopener noreferrer"
+                dir="ltr"
                 class="inline-flex items-center gap-1.5 text-[10.5px] text-slate-500 hover:text-amber-400 font-mono transition-colors"
             >
                 <span class="text-amber-500">⚡</span>

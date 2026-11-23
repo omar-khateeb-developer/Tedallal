@@ -1169,6 +1169,7 @@ onUnmounted(() => {
                                     href="https://tedallal.tech"
                                     target="_blank"
                                     rel="noopener noreferrer"
+                                    dir="ltr"
                                     class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 hover:bg-white/10 text-[10px] font-semibold text-stone-400 hover:text-[#D4AF37] transition-all border border-white/10"
                                 >
                                     <span class="text-[#D4AF37]">⚡</span>
@@ -1203,6 +1204,7 @@ onUnmounted(() => {
                 href="https://tedallal.tech"
                 target="_blank"
                 rel="noopener noreferrer"
+                dir="ltr"
                 class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 hover:bg-white/10 text-[10.5px] font-semibold text-stone-400 hover:text-[#D4AF37] transition-all border border-white/10"
             >
                 <span class="text-[#D4AF37]">⚡</span>

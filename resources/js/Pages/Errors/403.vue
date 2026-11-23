@@ -293,6 +293,7 @@ onMounted(() => {
                     href="https://tedallal.tech"
                     target="_blank"
                     rel="noopener noreferrer"
+                    dir="ltr"
                     class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 hover:bg-white/10 text-[10.5px] font-semibold text-slate-400 hover:text-amber-400 border border-white/10 transition-colors"
                 >
                     <span class="text-amber-500">⚡</span>
