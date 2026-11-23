@@ -81,5 +81,32 @@
     <body class="font-sans antialiased" style="font-family: 'Cairo', sans-serif;">
         @include('partials.app-splash')
         @inertia
+
+        {{-- Fallback Recovery: In case of network timeout, chunk loading, or script failure --}}
+        <script>
+            (function() {
+                setTimeout(function() {
+                    var app = document.getElementById('app');
+                    if (app && (!app.children || app.children.length === 0)) {
+                        var fallbackId = 'tedallal-app-fallback';
+                        if (!document.getElementById(fallbackId)) {
+                            var div = document.createElement('div');
+                            div.id = fallbackId;
+                            div.setAttribute('dir', 'rtl');
+                            div.style.cssText = 'position:fixed;inset:0;z-index:9999998;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#060913;color:#fff;padding:24px;text-align:center;font-family:Cairo,sans-serif;';
+                            div.innerHTML = '<div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);padding:32px 24px;border-radius:24px;max-width:380px;width:100%;box-shadow:0 20px 40px rgba(0,0,0,0.5);">' +
+                                '<div style="font-size:42px;margin-bottom:12px;">⚡</div>' +
+                                '<h3 style="font-size:18px;font-weight:800;color:#f3f4f6;margin-bottom:8px;">تعذر اكتمال تحميل الصفحة</h3>' +
+                                '<p style="font-size:13px;color:#9ca3af;margin-bottom:20px;line-height:1.6;">يبدو أن هناك بطء في الاتصال أو تحديثاً في ملفات النظام، اضغط أدناه لإعادة التحميل.</p>' +
+                                '<button onclick="window.location.reload(true)" style="width:100%;background:linear-gradient(135deg,#d4af37,#f59e0b);color:#000;font-weight:800;font-size:14px;padding:12px 20px;border-radius:14px;border:none;cursor:pointer;box-shadow:0 4px 15px rgba(212,175,55,0.3);">' +
+                                'إعادة المحاولة الآن' +
+                                '</button>' +
+                                '</div>';
+                            document.body.appendChild(div);
+                        }
+                    }
+                }, 5000);
+            })();
+        </script>
     </body>
 </html>

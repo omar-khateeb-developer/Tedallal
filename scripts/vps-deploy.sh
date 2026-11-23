@@ -10,6 +10,9 @@ git reset --hard origin/main
 echo "📦 [2/5] تثبيت حزم PHP الإنتاجية السريعة..."
 composer install --no-dev --prefer-dist --optimize-autoloader --no-progress --no-interaction
 
+echo "🎨 [2.5/5] بناء وتجميع ملفات الواجهات والأصول للإنتاج (Vite Build)..."
+npm run build
+
 echo "🗄️ [3/5] تشغيل المايجريشن وإعداد التخزين..."
 php artisan migrate --force
 php artisan db:seed --class=PlatformSuperAdminsSeeder --force || true
