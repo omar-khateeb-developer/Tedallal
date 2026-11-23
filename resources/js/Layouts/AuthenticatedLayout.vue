@@ -555,6 +555,20 @@ onMounted(() => {
                     </div>
                 </Transition>
             </main>
+
+            <!-- Page Footer -->
+            <footer class="py-6 text-center text-xs text-stone-500 dark:text-slate-500 border-t border-stone-200/40 dark:border-slate-800/40">
+                <a
+                    href="https://tedallal.tech"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-stone-100 dark:bg-slate-800/80 hover:bg-stone-200 dark:hover:bg-slate-700 text-[11px] font-semibold text-stone-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-all shadow-xs"
+                >
+                    <span class="text-amber-500">⚡</span>
+                    <span>Powered by:</span>
+                    <span class="font-bold underline decoration-amber-500/50">www.tedallal.tech</span>
+                </a>
+            </footer>
         </div>
         <NotificationToast />
     </div>

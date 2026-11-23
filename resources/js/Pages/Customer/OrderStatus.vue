@@ -74,7 +74,8 @@ function shareOrderOnWhatsApp() {
     const text = `فاتورة وتتبع طلب #${props.orderNumber}${tableText} من ${props.restaurant.name} 🍽️\n` +
         `• الحالة: ${order.value.status_label}\n` +
         `• المبلغ الإجمالي: ${formatPrice(order.value.total)}${itemsText}\n\n` +
-        `🔗 رابط تتبع الفاتورة والطلب لحظياً:\n${url}`;
+        `🔗 رابط تتبع الفاتورة والطلب لحظياً:\n${url}\n\n` +
+        `⚡ Powered by: www.tedallal.tech`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
 }
 
@@ -426,20 +427,6 @@ const currentStepIndex = computed(() => {
                         (اختياري: لمشاركة ملخص الطلب وحساب الطاولة مع أصدقائك عبر واتساب)
                     </p>
                 </div>
-            </div>
-
-            <!-- Powered by Tedallal Brand Footer -->
-            <div class="mt-6 text-center pb-24">
-                <a
-                    href="https://tedallal.tech"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-stone-100 dark:bg-slate-800/80 hover:bg-stone-200 dark:hover:bg-slate-700 text-[11px] font-semibold text-stone-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-all shadow-xs"
-                >
-                    <span class="text-amber-500">⚡</span>
-                    <span>Powered by:</span>
-                    <span class="font-bold underline decoration-amber-500/50">www.tedallal.tech</span>
-                </a>
             </div>
 
             <!-- Sticky Back Button -->

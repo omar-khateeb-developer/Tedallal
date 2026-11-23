@@ -272,11 +272,16 @@ const preferenceLabel = computed(() => {
 
         <!-- Footer -->
         <footer class="p-4 text-center border-t border-slate-800/60 bg-slate-900/40">
-            <span class="text-[11px] text-slate-500 flex items-center justify-center gap-1.5 font-mono">
-                <span>مدعوم بواسطة</span>
-                <span class="text-amber-400 font-bold">منصة تدلل</span>
-                <span>• Toast POS Logic</span>
-            </span>
+            <a
+                href="https://tedallal.tech"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-1.5 text-[11px] text-slate-500 hover:text-amber-400 font-mono transition-colors"
+            >
+                <span class="text-amber-500">⚡</span>
+                <span>Powered by:</span>
+                <span class="font-bold underline decoration-amber-500/50">www.tedallal.tech</span>
+            </a>
         </footer>
     </div>
 </template>

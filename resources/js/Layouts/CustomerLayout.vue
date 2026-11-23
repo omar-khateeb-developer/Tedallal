@@ -64,6 +64,19 @@ onMounted(() => {
         </header>
         <main class="mx-auto max-w-lg px-4 pb-28 pt-4">
             <slot />
+            <!-- Powered by Tedallal Brand Footer -->
+            <div class="mt-8 pt-6 pb-2 text-center border-t border-stone-200/60 dark:border-slate-800/60">
+                <a
+                    href="https://tedallal.tech"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-stone-100 dark:bg-slate-800/80 hover:bg-stone-200 dark:hover:bg-slate-700 text-[11px] font-semibold text-stone-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-all shadow-xs"
+                >
+                    <span class="text-amber-500">⚡</span>
+                    <span>Powered by:</span>
+                    <span class="font-bold underline decoration-amber-500/50">www.tedallal.tech</span>
+                </a>
+            </div>
         </main>
         <slot name="footer" />
     </div>

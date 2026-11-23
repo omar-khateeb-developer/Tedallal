@@ -285,9 +285,21 @@ onMounted(() => {
             </div>
 
             <!-- Footer Note -->
-            <p class="mt-6 text-xs text-slate-500">
-                {{ i18n[currentLang].footer }}
-            </p>
+            <div class="mt-6 flex flex-col items-center gap-2">
+                <p class="text-xs text-slate-500">
+                    {{ i18n[currentLang].footer }}
+                </p>
+                <a
+                    href="https://tedallal.tech"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 hover:bg-white/10 text-[10.5px] font-semibold text-slate-400 hover:text-amber-400 border border-white/10 transition-colors"
+                >
+                    <span class="text-amber-500">⚡</span>
+                    <span>Powered by:</span>
+                    <span class="font-bold underline decoration-amber-500/50">www.tedallal.tech</span>
+                </a>
+            </div>
         </main>
     </div>
 </template>

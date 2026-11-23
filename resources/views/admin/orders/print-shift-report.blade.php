@@ -190,7 +190,7 @@
 
         <div class="footer">
             <div>منظومة تدلّل السحابية الذكية لإدارة ونمو المطاعم</div>
-            <div style="direction: ltr; margin-top: 1mm;">tedallal.tech</div>
+            <div style="direction: ltr; margin-top: 1mm; font-weight: 700; font-size: 10px;">Powered by: www.tedallal.tech</div>
         </div>
     </div>
 

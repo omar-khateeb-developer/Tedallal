@@ -145,8 +145,18 @@ async function submitJoin() {
             </form>
         </div>
 
-        <footer class="p-3 text-center text-[11px] text-slate-600 font-mono">
-            نظام تدلل لإدارة الطوابير والمطاعم
+        <footer class="p-4 text-center border-t border-slate-800/60 bg-slate-900/40 flex flex-col items-center gap-1.5">
+            <span class="text-[11px] text-slate-500 font-mono">نظام تدلل لإدارة الطوابير والمطاعم</span>
+            <a
+                href="https://tedallal.tech"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-1.5 text-[10.5px] text-slate-500 hover:text-amber-400 font-mono transition-colors"
+            >
+                <span class="text-amber-500">⚡</span>
+                <span>Powered by:</span>
+                <span class="font-bold underline decoration-amber-500/50">www.tedallal.tech</span>
+            </a>
         </footer>
     </div>
 </template>

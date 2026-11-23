@@ -135,6 +135,18 @@ function copyTicketLink() {
                     <p class="text-[11px] text-slate-400 font-mono">
                         يُرجى إبراز هذا الرمز عند الاستقبال لتسجيل وصولكم الفوري
                     </p>
+                    <div class="pt-2 text-center">
+                        <a
+                            href="https://tedallal.tech"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-[10px] font-semibold text-slate-400 hover:text-amber-400 transition-colors"
+                        >
+                            <span class="text-amber-500">⚡</span>
+                            <span>Powered by:</span>
+                            <span class="font-bold underline decoration-amber-500/50">www.tedallal.tech</span>
+                        </a>
+                    </div>
                 </div>
             </div>
 

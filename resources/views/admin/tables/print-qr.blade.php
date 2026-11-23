@@ -290,7 +290,7 @@
                         تصفح المنيو الرقمي مباشرة • اطلب بدون انتظار • شارك عجلة الحظ
                     </p>
                     <div class="watermark">
-                        منظومة «تدلّل» الذكية للضيافة • <span dir="ltr">tedallal.tech</span>
+                        Powered by: www.tedallal.tech • منظومة «تدلّل» الذكية للضيافة
                     </div>
                 </div>
             </article>

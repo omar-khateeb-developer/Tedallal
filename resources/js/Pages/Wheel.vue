@@ -1162,6 +1162,20 @@ onUnmounted(() => {
                                     <span>📋 {{ copied ? 'تم النسخ ✓' : 'نسخ كود الخصم' }}</span>
                                 </button>
                             </div>
+
+                            <!-- Powered by Tedallal Brand in Voucher Card -->
+                            <div class="mt-3 pt-2 text-center border-t border-white/10">
+                                <a
+                                    href="https://tedallal.tech"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 hover:bg-white/10 text-[10px] font-semibold text-stone-400 hover:text-[#D4AF37] transition-all border border-white/10"
+                                >
+                                    <span class="text-[#D4AF37]">⚡</span>
+                                    <span>Powered by:</span>
+                                    <span class="font-bold underline decoration-[#D4AF37]/50">www.tedallal.tech</span>
+                                </a>
+                            </div>
                         </div>
 
                         <!-- Reset / Re-test Option for Demo or Testing -->
@@ -1183,8 +1197,18 @@ onUnmounted(() => {
         </main>
 
         <!-- Footer -->
-        <footer class="w-full max-w-md pt-3 pb-3 text-center text-[11px] text-[#9CA3AF]/60 relative z-10">
-            منظومة تدلّل الذكية لأتمتة المطاعم • ضيافة فاخرة وعروض مبهجة
+        <footer class="w-full max-w-md pt-3 pb-6 text-center text-[11px] text-[#9CA3AF]/70 relative z-10 flex flex-col items-center gap-2">
+            <div>منظومة تدلّل الذكية لأتمتة المطاعم • ضيافة فاخرة وعروض مبهجة</div>
+            <a
+                href="https://tedallal.tech"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 hover:bg-white/10 text-[10.5px] font-semibold text-stone-400 hover:text-[#D4AF37] transition-all border border-white/10"
+            >
+                <span class="text-[#D4AF37]">⚡</span>
+                <span>Powered by:</span>
+                <span class="font-bold underline decoration-[#D4AF37]/50">www.tedallal.tech</span>
+            </a>
         </footer>
     </div>
 </template>

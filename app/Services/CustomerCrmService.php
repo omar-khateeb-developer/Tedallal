@@ -327,7 +327,7 @@ final class CustomerCrmService
             $msg .= "\n🌟 يسعدنا تجدد زيارتك! هذه زيارتك رقم ({$visits}) في مطعمنا «{$restaurant->name}».\n";
         }
 
-        $msg .= "\n✨ نتطلع لخدمتكم دائماً بكل حب!";
+        $msg .= "\n✨ نتطلع لخدمتكم دائماً بكل حب!\n⚡ Powered by: www.tedallal.tech";
 
         return $msg;
     }
@@ -382,7 +382,7 @@ final class CustomerCrmService
             }
         }
 
-        $message .= "\nيسعدنا تشريفكم في زيارتكم القادمة للاستفادة من الهدية قبل انتهائها ✨";
+        $message .= "\nيسعدنا تشريفكم في زيارتكم القادمة للاستفادة من الهدية قبل انتهائها ✨\n⚡ Powered by: www.tedallal.tech";
 
         $url = 'https://wa.me/' . $this->toWhatsAppDigits($customer->phone) . '?text=' . rawurlencode($message);
 
