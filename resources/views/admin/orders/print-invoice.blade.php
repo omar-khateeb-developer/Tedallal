@@ -285,7 +285,7 @@
 
         <div class="footer">
             <div>شكراً لزيارتكم! نتمنى لكم يوماً سعيداً.</div>
-            <div style="margin-top: 1mm; font-size: 10px; font-weight: 700; color: #555; text-align: center; letter-spacing: 0.5px;">
+            <div style="direction: ltr; margin-top: 1mm; font-size: 10px; font-weight: 700; color: #555; text-align: center; letter-spacing: 0.5px;">
                 Powered by: www.tedallal.tech
             </div>
         </div>
