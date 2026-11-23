@@ -164,6 +164,10 @@
                 width: 80mm;
                 margin: 0;
             }
+
+            .no-print {
+                display: none !important;
+            }
         }
     </style>
 </head>
@@ -259,16 +263,16 @@
             @if((float) $order->discount_amount > 0)
             <div style="display: flex; justify-content: space-between; font-weight: 600; font-size: 11px; margin-bottom: 0.8mm; color: #444;">
                 <span>المجموع الفرعي:</span>
-                <span dir="ltr">{{ (int) round((float) $order->subtotal) }} {{ $restaurant->currency }}</span>
+                <span dir="ltr">{{ (int) round((float) $order->subtotal) }} {{ $restaurant->currency ?? 'ل.س' }}</span>
             </div>
             <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 11px; color: #b91c1c; margin-bottom: 0.8mm;">
                 <span>قيمة الحسم:</span>
-                <span dir="ltr">-{{ (int) round((float) $order->discount_amount) }} {{ $restaurant->currency }}</span>
+                <span dir="ltr">-{{ (int) round((float) $order->discount_amount) }} {{ $restaurant->currency ?? 'ل.س' }}</span>
             </div>
             @endif
             <div class="total-row" style="{{ (float) $order->discount_amount > 0 ? 'border-top: 1px dashed #666; padding-top: 1mm; margin-top: 0.8mm;' : '' }}">
                 <span>الإجمالي:</span>
-                <span dir="ltr">{{ (int) round((float) $order->total) }} {{ $restaurant->currency }}</span>
+                <span dir="ltr">{{ (int) round((float) $order->total) }} {{ $restaurant->currency ?? 'ل.س' }}</span>
             </div>
         </div>
 
@@ -288,6 +292,12 @@
             <div style="direction: ltr; margin-top: 1mm; font-size: 10px; font-weight: 700; color: #555; text-align: center; letter-spacing: 0.5px;">
                 Powered by: www.tedallal.tech
             </div>
+        </div>
+
+        <div class="no-print" style="margin-top: 4mm; text-align: center; border-top: 1px dashed #ccc; padding-top: 3mm;">
+            <button onclick="window.print()" style="padding: 7px 16px; background: #0f172a; color: #fff; border: none; border-radius: 8px; font-weight: 800; font-size: 12px; cursor: pointer;">
+                🖨️ طباعة الفاتورة الآن
+            </button>
         </div>
     </div>
 

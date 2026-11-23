@@ -19,22 +19,25 @@ final class OrderCreationService
 
     public function createFromCart(TableSession $session, ?string $customerNote = null, ?string $promoCodeStr = null, ?string $serviceType = 'dine_in'): Order
     {
-        if (! $session->isActive()) {
-            throw ValidationException::withMessages([
-                'session' => ['انتهت جلسة الطاولة.'],
-            ]);
-        }
+        return DB::transaction(function () use ($session, $customerNote, $promoCodeStr, $serviceType) {
+            // Lock session row to prevent race conditions & double-submits
+            $lockedSession = TableSession::where('id', $session->id)->lockForUpdate()->first();
 
-        $summary = $this->cartService->summary($session);
+            if (! $lockedSession || ! $lockedSession->isActive()) {
+                throw ValidationException::withMessages([
+                    'session' => ['انتهت جلسة الطاولة.'],
+                ]);
+            }
 
-        if ($summary['items']->isEmpty()) {
-            throw ValidationException::withMessages([
-                'cart' => ['السلة فارغة.'],
-            ]);
-        }
+            $summary = $this->cartService->summary($lockedSession);
 
-        return DB::transaction(function () use ($session, $customerNote, $summary, $promoCodeStr, $serviceType) {
-            $table = $session->table()->lockForUpdate()->first();
+            if ($summary['items']->isEmpty()) {
+                throw ValidationException::withMessages([
+                    'cart' => ['السلة فارغة.'],
+                ]);
+            }
+
+            $table = $lockedSession->table()->lockForUpdate()->first();
             $restaurant = $table->restaurant;
 
             $lockedItems = $summary['items']->map(function ($cartItem) {
@@ -155,7 +158,7 @@ final class OrderCreationService
 
                 if ($staffUsers->isNotEmpty()) {
                     $tableNumber = $order->table ? ($order->table->name ?? "طاولة {$order->table->number}") : 'طلب خارجي';
-                    $formattedTotal = number_format($order->total_amount, 0) . ' ' . ($order->restaurant->currency ?? 'ل.س');
+                    $formattedTotal = number_format((float) ($order->total ?? 0), 0) . ' ' . ($restaurant->currency ?? 'ل.س');
 
                     \Illuminate\Support\Facades\Notification::send($staffUsers, new \App\Notifications\TedallalPushNotification(
                         title: "🔔 طلب جديد #{$order->order_number} ({$tableNumber})",
@@ -166,7 +169,7 @@ final class OrderCreationService
                         data: [
                             'type' => 'new_order',
                             'order_number' => $order->order_number,
-                            'total' => $order->total_amount,
+                            'total' => (string) $order->total,
                         ]
                     ));
                 }

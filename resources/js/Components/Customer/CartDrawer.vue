@@ -125,12 +125,19 @@ function removePromo() {
     showPromoInput.value = false;
 }
 
+const isSubmittingLocal = ref(false);
+
 function handleOrderSubmit() {
+    if (isSubmittingLocal.value || props.submitting) return;
+    isSubmittingLocal.value = true;
     emit('submit-order', {
         serviceType: serviceType.value,
         customerNote: generalNote.value.trim(),
         promoCode: appliedCode.value,
     });
+    setTimeout(() => {
+        isSubmittingLocal.value = false;
+    }, 3000);
 }
 
 function close() {
@@ -382,12 +389,12 @@ defineExpose({ load, count, subtotal, finalTotal, serviceType, generalNote, appl
                 <!-- زر الإرسال المباشر للطلب (خطوة واحدة فقط بدون أي نوافذ إضافية) -->
                 <button
                     type="button"
-                    :disabled="submitting || items.length === 0"
+                    :disabled="submitting || isSubmittingLocal || items.length === 0"
                     class="w-full rounded-2xl bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:from-amber-700 hover:to-amber-500 py-3.5 text-base font-black text-white shadow-lg shadow-amber-500/25 active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
                     @click="handleOrderSubmit"
                 >
-                    <span v-if="submitting" class="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                    <span>{{ submitting ? 'جاري إرسال الطلب للمطبخ...' : 'إرسال الطلب الآن ⚡' }}</span>
+                    <span v-if="submitting || isSubmittingLocal" class="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    <span>{{ (submitting || isSubmittingLocal) ? 'جاري إرسال الطلب للمطبخ...' : 'إرسال الطلب الآن ⚡' }}</span>
                     <span v-if="!submitting" class="text-xs bg-black/20 px-2.5 py-0.5 rounded-full font-black">
                         {{ finalTotalFormatted }} {{ currency }}
                     </span>

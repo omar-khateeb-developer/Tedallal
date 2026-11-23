@@ -172,18 +172,18 @@
         <div style="font-weight: 800; font-size: 12px; margin-bottom: 1mm;">💰 الحسابات المالية:</div>
         <div class="stat-row">
             <span>المجموع الفرعي (Subtotal):</span>
-            <span>{{ $totalSubtotal }} {{ $restaurant->currency }}</span>
+            <span>{{ $totalSubtotal }} {{ $restaurant->currency ?? 'ل.س' }}</span>
         </div>
         <div class="stat-row">
             <span>إجمالي الخصومات (كوبونات وعجلة الحظ):</span>
-            <span style="color: #b91c1c;">- {{ $totalDiscount }} {{ $restaurant->currency }}</span>
+            <span style="color: #b91c1c;">- {{ $totalDiscount }} {{ $restaurant->currency ?? 'ل.س' }}</span>
         </div>
 
         <div class="double-divider"></div>
 
         <div class="stat-row highlight">
             <span>صافي المبيعات (المحصل بالصندوق):</span>
-            <span>{{ $totalSales }} {{ $restaurant->currency }}</span>
+            <span>{{ $totalSales }} {{ $restaurant->currency ?? 'ل.س' }}</span>
         </div>
 
         <div class="divider"></div>

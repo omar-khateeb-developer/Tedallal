@@ -1867,6 +1867,7 @@ onUnmounted(() => {
                                         >
                                             <option value="all">كل الميزات</option>
                                             <option value="ai_waiter">🤖 الويتر الذكي (AI)</option>
+                                            <option value="whatsapp_ai_reply">⚡🤖 الرد الذكي للواتساب (AI)</option>
                                             <option value="analytics">📈 التحليلات الذكية</option>
                                             <option value="offers">🎁 نظام العروض والكوبونات</option>
                                             <option value="whatsapp_reminders">💬 تذكيرات الواتساب</option>
@@ -2110,6 +2111,18 @@ onUnmounted(() => {
                                                 <span class="text-sm font-medium text-emerald-700 flex items-center gap-1">
                                                     <span>💬</span>
                                                     <span>تذكيرات الواتساب</span>
+                                                </span>
+                                            </label>
+
+                                            <label class="inline-flex items-center gap-2 cursor-pointer">
+                                                <input type="checkbox"
+                                                    :checked="!!((restaurant.effective_features || restaurant.features)?.whatsapp_ai_reply)"
+                                                    @change="toggleFeature(restaurant, 'whatsapp_ai_reply')"
+                                                    class="rounded border-gray-300 text-purple-600 shadow-sm focus:border-purple-300 focus:ring focus:ring-purple-200 focus:ring-opacity-50"
+                                                >
+                                                <span class="text-sm font-bold text-purple-700 dark:text-purple-300 flex items-center gap-1">
+                                                    <span>⚡🤖</span>
+                                                    <span>الرد الذكي للواتساب (AI)</span>
                                                 </span>
                                             </label>
 

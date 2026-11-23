@@ -41,6 +41,7 @@ class WhatsAppController extends ApiController
             'qr_code' => $session['qr_code'],
             'phone' => $session['phone'] ?: $restaurant->whatsapp_phone,
             'connected_at' => $session['connected_at'] ?: $restaurant->whatsapp_connected_at?->format('Y-m-d h:i A'),
+            'has_ai_reply_feature' => $restaurant->hasWhatsappAiReplyFeature(),
             'auto_reply_enabled' => (bool) $restaurant->whatsapp_auto_reply_enabled,
             'auto_reply_message' => $restaurant->whatsapp_auto_reply_message,
             'expiring_reminders_enabled' => (bool) $restaurant->whatsapp_expiring_reminders_enabled,
@@ -101,15 +102,21 @@ class WhatsAppController extends ApiController
         $restaurant = $this->restaurantContext->current();
 
         $validated = $request->validate([
-            'whatsapp_auto_reply_enabled' => ['required', 'boolean'],
+            'whatsapp_auto_reply_enabled' => ['sometimes', 'boolean'],
             'whatsapp_auto_reply_message' => ['nullable', 'string', 'max:1000'],
             'whatsapp_expiring_reminders_enabled' => ['required', 'boolean'],
         ]);
+
+        if (! $restaurant->hasWhatsappAiReplyFeature()) {
+            $validated['whatsapp_auto_reply_enabled'] = false;
+            $validated['whatsapp_auto_reply_message'] = null;
+        }
 
         $restaurant->update($validated);
         $this->restaurantContext->forget();
 
         return $this->success([
+            'has_ai_reply_feature' => $restaurant->hasWhatsappAiReplyFeature(),
             'auto_reply_enabled' => (bool) $restaurant->whatsapp_auto_reply_enabled,
             'auto_reply_message' => $restaurant->whatsapp_auto_reply_message,
             'expiring_reminders_enabled' => (bool) $restaurant->whatsapp_expiring_reminders_enabled,

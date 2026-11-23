@@ -29,7 +29,7 @@ final class CartService
                 'menu_item_id' => $menuItem->id,
             ]);
 
-            $cartItem->quantity = ($cartItem->exists ? $cartItem->quantity : 0) + $quantity;
+            $cartItem->quantity = min(99, ($cartItem->exists ? $cartItem->quantity : 0) + $quantity);
             $cartItem->note = $note ?? $cartItem->note;
             $cartItem->save();
 

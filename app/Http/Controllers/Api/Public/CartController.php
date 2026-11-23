@@ -35,7 +35,7 @@ class CartController extends ApiController
     {
         $validated = $request->validate([
             'menu_item_id' => ['required', 'integer'],
-            'quantity' => ['sometimes', 'integer', 'min:1'],
+            'quantity' => ['sometimes', 'integer', 'min:1', 'max:99'],
             'note' => ['nullable', 'string', 'max:500'],
         ]);
 
@@ -65,7 +65,7 @@ class CartController extends ApiController
     public function update(Request $request, CartItem $cartItem)
     {
         $validated = $request->validate([
-            'quantity' => ['required', 'integer', 'min:0'],
+            'quantity' => ['required', 'integer', 'min:0', 'max:99'],
             'note' => ['nullable', 'string', 'max:500'],
         ]);
 

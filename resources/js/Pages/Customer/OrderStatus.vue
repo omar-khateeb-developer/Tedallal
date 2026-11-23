@@ -134,14 +134,24 @@ function subscribeToRealtime() {
     );
 }
 
+function onVisibilityChange() {
+    if (document.visibilityState === 'visible') {
+        loadOrder();
+    }
+}
+
 onMounted(() => {
     loadOrder();
     subscribeToRealtime();
     pollTimer = setInterval(loadOrder, 10000);
+    window.addEventListener('focus', loadOrder);
+    document.addEventListener('visibilitychange', onVisibilityChange);
 });
 
 onUnmounted(() => {
     if (pollTimer) clearInterval(pollTimer);
+    window.removeEventListener('focus', loadOrder);
+    document.removeEventListener('visibilitychange', onVisibilityChange);
     if (window.Echo) {
         window.Echo.leave(`order.${props.orderNumber}`);
     }

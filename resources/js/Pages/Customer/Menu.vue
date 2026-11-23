@@ -6,7 +6,7 @@ import CheckoutModal from '@/Components/Customer/CheckoutModal.vue';
 import ServiceCallModal from '@/Components/Customer/ServiceCallModal.vue';
 import CustomerLayout from '@/Layouts/CustomerLayout.vue';
 import { router } from '@inertiajs/vue3';
-import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { normalizeVisualViewport } from '@/composables/useVisualViewport';
 import axios from 'axios';
 
@@ -346,6 +346,7 @@ watch(checkoutOpen, (isOpen) => {
 });
 
 async function handleDirectOrderSubmit(payload: { serviceType: string; customerNote: string; promoCode: string }) {
+    if (submitting.value) return;
     submitting.value = true;
     errorMessage.value = '';
     try {
@@ -360,6 +361,11 @@ async function handleDirectOrderSubmit(payload: { serviceType: string; customerN
         triggerHaptic('success');
         router.visit(`/t/${props.table.public_token}/orders/${data.data.order_number}`);
     } catch (e: any) {
+        if (e.response?.status === 401) {
+            errorMessage.value = 'انتهت صلاحية جلسة الطاولة. جاري تحديث الصفحة تلقائياً...';
+            setTimeout(() => window.location.reload(), 1200);
+            return;
+        }
         errorMessage.value = e.response?.data?.message || 'تعذر إرسال الطلب. تحقق من السلة وحاول مرة أخرى.';
     } finally {
         submitting.value = false;
@@ -472,6 +478,25 @@ onMounted(() => {
             promoCode.value = urlPromo.trim().toUpperCase();
         }
     } catch (_) {}
+
+    window.addEventListener('focus', onTabFocus);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+});
+
+function onTabFocus() {
+    refreshCartSummary();
+    checkServiceStatus();
+}
+
+function onVisibilityChange() {
+    if (document.visibilityState === 'visible') {
+        onTabFocus();
+    }
+}
+
+onUnmounted(() => {
+    window.removeEventListener('focus', onTabFocus);
+    document.removeEventListener('visibilitychange', onVisibilityChange);
 });
 </script>
 

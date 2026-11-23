@@ -89,6 +89,7 @@ const waFeatureLockedMsg = ref('');
 const waAutoReplyEnabled = ref(false);
 const waAutoReplyMessage = ref('');
 const waExpiringRemindersEnabled = ref(true);
+const hasAiReplyFeature = ref(false);
 const waSavingSettings = ref(false);
 const waSettingsNotice = ref<string | null>(null);
 
@@ -108,6 +109,7 @@ async function fetchWhatsappStatus() {
         waQrCode.value = data.qr_code || null;
         waPhone.value = data.phone || null;
         waConnectedAt.value = data.connected_at || null;
+        hasAiReplyFeature.value = Boolean(data.has_ai_reply_feature);
         waAutoReplyEnabled.value = Boolean(data.auto_reply_enabled);
         waAutoReplyMessage.value = data.auto_reply_message || '';
         waExpiringRemindersEnabled.value = data.expiring_reminders_enabled !== false;
@@ -662,31 +664,35 @@ onUnmounted(stopWaPolling);
                                 </div>
                             </label>
 
-                            <!-- المجيب الآلي -->
-                            <label class="flex items-start gap-3 cursor-pointer select-none pt-2 border-t border-stone-100 dark:border-slate-800">
-                                <input
-                                    type="checkbox"
-                                    v-model="waAutoReplyEnabled"
-                                    class="mt-1 h-4 w-4 rounded border-stone-300 dark:border-slate-600 text-emerald-600 focus:ring-emerald-500"
-                                />
-                                <div>
-                                    <span class="block text-xs font-bold text-stone-800 dark:text-stone-200">
-                                        تفعيل الرد التلقائي على محادثات الزبائن (Auto-Reply)
-                                    </span>
-                                    <span class="block text-[11px] text-stone-500 dark:text-slate-400 mt-0.5">
-                                        إرسال رسالة ترحيبية فورية تلقائية عندما يراسل الزبون رقم المطعم عبر واتساب.
-                                    </span>
-                                </div>
-                            </label>
+                            <!-- المجيب الآلي الذكي (يظهر فقط إذا تم تفعيله لمطعمك كترقية مخصصة من قِبل إدارة المنصة) -->
+                            <div v-if="hasAiReplyFeature" class="pt-3 border-t border-stone-100 dark:border-slate-800">
+                                <label class="flex items-start gap-3 cursor-pointer select-none">
+                                    <input
+                                        type="checkbox"
+                                        v-model="waAutoReplyEnabled"
+                                        class="mt-1 h-4 w-4 rounded border-stone-300 dark:border-slate-600 text-purple-600 focus:ring-purple-500"
+                                    />
+                                    <div>
+                                        <span class="block text-xs font-bold text-stone-800 dark:text-stone-200 flex items-center gap-1.5">
+                                            <span>⚡🤖</span>
+                                            <span>تفعيل الرد الذكي على محادثات الزبائن (AI Auto-Reply)</span>
+                                            <span class="text-[10px] px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 font-black">مفعل من المنصة</span>
+                                        </span>
+                                        <span class="block text-[11px] text-stone-500 dark:text-slate-400 mt-0.5">
+                                            إرسال رسالة ترحيبية فورية تلقائية عندما يراسل الزبون رقم المطعم عبر واتساب.
+                                        </span>
+                                    </div>
+                                </label>
 
-                            <div v-if="waAutoReplyEnabled" class="pt-2">
-                                <label class="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1">نص رسالة الرد التلقائي:</label>
-                                <textarea
-                                    v-model="waAutoReplyMessage"
-                                    rows="2"
-                                    placeholder="أهلاً بك في مطعمنا! يمكنك تصفح المنيو وطلب وجبتك مباشرة عبر الرابط..."
-                                    class="w-full rounded-xl text-xs border-stone-300 dark:border-slate-700 bg-stone-50 dark:bg-slate-800 text-stone-900 dark:text-white"
-                                />
+                                <div v-if="waAutoReplyEnabled" class="pt-2">
+                                    <label class="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1">نص رسالة الرد التلقائي:</label>
+                                    <textarea
+                                        v-model="waAutoReplyMessage"
+                                        rows="2"
+                                        placeholder="أهلاً بك في مطعمنا! يمكنك تصفح المنيو وطلب وجبتك مباشرة عبر الرابط..."
+                                        class="w-full rounded-xl text-xs border-stone-300 dark:border-slate-700 bg-stone-50 dark:bg-slate-800 text-stone-900 dark:text-white"
+                                    />
+                                </div>
                             </div>
 
                             <div class="flex items-center justify-between pt-2">

@@ -246,8 +246,17 @@ class Restaurant extends Model
         return $this->whatsapp_status === 'connected';
     }
 
+    public function hasWhatsappAiReplyFeature(): bool
+    {
+        return $this->hasFeature('whatsapp_ai_reply');
+    }
+
     public function isWhatsappAutoReplyActive(): bool
     {
+        if (! $this->hasWhatsappAiReplyFeature()) {
+            return false;
+        }
+
         return (bool) $this->whatsapp_auto_reply_enabled && ! empty($this->whatsapp_auto_reply_message);
     }
 
