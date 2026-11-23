@@ -105,7 +105,7 @@ class WhatsAppWebhookController extends Controller
             if ($event === 'platform_message.received') {
                 $text = trim((string) $request->input('text'));
                 $from = (string) $request->input('from');
-                $senderName = (string) $request->input('sender_name') ?: 'صاحب مطعم (واتساب)';
+                $senderName = (string) ($request->input('sender_name') ?: $request->input('name') ?: $request->input('pushname') ?: $request->input('notify_name'));
 
                 if (empty($text) || empty($from)) {
                     return response()->json(['success' => true]);
@@ -125,16 +125,46 @@ class WhatsAppWebhookController extends Controller
                     ]);
                 }
 
-                // حفظ أو تحديث العميل المحتمل تلقائياً في CRM المنصة
+                // حفظ أو تحديث بيانات العميل (الهاتف والاسم) تلقائياً في CRM المنصة
                 try {
-                    $lead = ConsultationLead::firstOrNew(['phone' => $from]);
-                    if (! $lead->exists) {
-                        $lead->name = $senderName;
-                        $lead->restaurant_name = 'استفسار عبر واتساب المنصة المباشر';
+                    $rawFrom = trim((string) $from);
+                    $targetPhone = $cleanFrom ?: $rawFrom;
+
+                    $lead = ConsultationLead::where(function ($q) use ($rawFrom, $cleanFrom) {
+                        $q->where('phone', $cleanFrom)->orWhere('phone', $rawFrom);
+                        if (strlen($cleanFrom) >= 9) {
+                            $q->orWhere('phone', 'like', '%' . substr($cleanFrom, -9));
+                        }
+                    })->first();
+
+                    $extractedName = $this->extractSenderName($text);
+                    $extractedRest = $this->extractRestaurantName($text);
+                    $extractedCity = $this->extractCityName($text);
+
+                    $targetName = $extractedName ?: (!empty($senderName) && $senderName !== 'صاحب مطعم (واتساب)' ? $senderName : null);
+
+                    if (! $lead) {
+                        $lead = new ConsultationLead();
+                        $lead->phone = $targetPhone;
+                        $lead->name = $targetName ?: 'عميل واتساب محتمل';
+                        $lead->restaurant_name = $extractedRest ?: 'استفسار عبر واتساب المنصة المباشر';
+                        $lead->city = $extractedCity;
                         $lead->status = 'new';
                         $lead->notes = "[واتساب " . now()->format('Y-m-d H:i') . "]: {$text}";
                         $lead->save();
                     } else {
+                        // تحديث الاسم إذا توفر اسم حقيقي
+                        if ($targetName && (empty($lead->name) || in_array($lead->name, ['صاحب مطعم (واتساب)', 'عميل واتساب محتمل', 'غير محدد', '']))) {
+                            $lead->name = $targetName;
+                        }
+                        // تحديث اسم المطعم إذا توفر
+                        if ($extractedRest && ($lead->restaurant_name === 'استفسار عبر واتساب المنصة المباشر' || empty($lead->restaurant_name))) {
+                            $lead->restaurant_name = $extractedRest;
+                        }
+                        // تحديث المدينة إذا توفرت
+                        if ($extractedCity && empty($lead->city)) {
+                            $lead->city = $extractedCity;
+                        }
                         $lead->notes = ($lead->notes ? $lead->notes . "\n---\n" : '') . "[واتساب " . now()->format('Y-m-d H:i') . "]: {$text}";
                         $lead->save();
                     }
@@ -261,6 +291,45 @@ class WhatsAppWebhookController extends Controller
         if ($event === 'message.received') {
             $text = (string) $request->input('text');
             $from = (string) $request->input('from');
+            $senderName = (string) ($request->input('sender_name') ?: $request->input('name') ?: $request->input('pushname') ?: $request->input('notify_name'));
+
+            // حفظ بيانات الزبون (الهاتف والاسم) فوراً في سجل عملاء المطعم CRM
+            if (! empty($from) && $restaurant) {
+                try {
+                    $cleanFrom = preg_replace('/[^0-9]/', '', (string) $from);
+                    $customer = \App\Models\RestaurantCustomer::withoutGlobalScopes()
+                        ->where('restaurant_id', $restaurant->id)
+                        ->where(function ($q) use ($from, $cleanFrom) {
+                            $q->where('phone', $from)->orWhere('phone', $cleanFrom);
+                            if (strlen($cleanFrom) >= 9) {
+                                $q->orWhere('phone', 'like', '%' . substr($cleanFrom, -9));
+                            }
+                        })
+                        ->first();
+
+                    $extractedName = $this->extractSenderName($text);
+                    $targetName = $extractedName ?: (!empty($senderName) && $senderName !== 'عميل واتساب' ? $senderName : null);
+
+                    if (! $customer) {
+                        \App\Models\RestaurantCustomer::withoutGlobalScopes()->create([
+                            'restaurant_id' => $restaurant->id,
+                            'name' => $targetName ?: 'عميل واتساب',
+                            'phone' => $cleanFrom ?: $from,
+                            'visits_count' => 1,
+                            'total_spent' => 0,
+                            'last_visit_at' => now(),
+                        ]);
+                    } else {
+                        $updates = ['last_visit_at' => now()];
+                        if ($targetName && (empty($customer->name) || $customer->name === 'عميل واتساب')) {
+                            $updates['name'] = $targetName;
+                        }
+                        $customer->update($updates);
+                    }
+                } catch (\Throwable $custErr) {
+                    Log::warning('Failed to auto-save RestaurantCustomer on inbound message: ' . $custErr->getMessage());
+                }
+            }
 
             // إذا كان المطعم مفعلاً للرد التلقائي
             if ($restaurant->isWhatsappAutoReplyActive()) {
@@ -279,5 +348,61 @@ class WhatsAppWebhookController extends Controller
         }
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * استخراج اسم العميل بذكاء إذا ذكره في رسالته (بالعربية أو الإنجليزية).
+     */
+    protected function extractSenderName(string $text): ?string
+    {
+        // 1. الأنماط العربية: "معك فلان", "اسمي فلان", "معكم فلان", "أنا فلان"
+        if (preg_match('/(?:اسمي|معك|معكم|أنا|انا|محدثكم|أخوكم|اخوكم)\s+([^\n\r,\.!\?]{2,40})/ui', $text, $matches)) {
+            $candidate = trim($matches[1]);
+            // إزالة الكلمات الزائدة التابعة مثل "من مطعم..." أو "صاحب مطعم..." أو "بدي..."
+            $candidate = preg_replace('/\s+(من|صاحب|مدير|شيف|مطعم|كافيه|مقهى|بدي|حابب|اريد|أريد|استفسر|أسأل).*/ui', '', $candidate);
+            $candidate = trim($candidate, " \t\n\r\0\x0B-–—:؛،.");
+            if (mb_strlen($candidate) >= 2 && mb_strlen($candidate) <= 35) {
+                return $candidate;
+            }
+        }
+
+        // 2. English patterns: "my name is X", "i am X", "this is X"
+        if (preg_match('/(?:my name is|i am|i\'m|this is)\s+([a-zA-Z\s]{2,35})/i', $text, $matches)) {
+            $candidate = trim($matches[1]);
+            $candidate = preg_replace('/\s+(from|owner|manager|chef|calling|texting|asking|looking).*/i', '', $candidate);
+            $candidate = trim($candidate);
+            if (strlen($candidate) >= 2 && strlen($candidate) <= 35) {
+                return $candidate;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * استخراج اسم المطعم أو المنشأة إذا ورد في رسالة العميل.
+     */
+    protected function extractRestaurantName(string $text): ?string
+    {
+        if (preg_match('/(?:مطعم|كافيه|مقهى|سلسلة|فندق|شاورما|مشاوي|بيتزا)\s+([^\n\r,\.!\?]{2,40})/ui', $text, $matches)) {
+            $candidate = trim($matches[0]);
+            $candidate = preg_replace('/\s+(في|بمدينة|بـ|عندنا|عندي|حابب|بدي|اريد|أريد).*/ui', '', $candidate);
+            $candidate = trim($candidate, " \t\n\r\0\x0B-–—:؛،.");
+            if (mb_strlen($candidate) >= 3 && mb_strlen($candidate) <= 50) {
+                return $candidate;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * استخراج اسم المدينة إذا وردت في رسالة العميل.
+     */
+    protected function extractCityName(string $text): ?string
+    {
+        if (preg_match('/(?:في|من|بمدينة|مدينة)\s+(دمشق|حلب|حمص|اللاذقية|طرطوس|حماة|السويداء|درعا|الرياض|جدة|الدمام|مكة|المدينة|دبي|أبوظبي|الدوحة|مسقط|الكويت|عمان|بيروت|القاهرة)/ui', $text, $matches)) {
+            return trim($matches[1]);
+        }
+        return null;
     }
 }

@@ -251,7 +251,7 @@ async function startSession(sessionId) {
                 continue;
             }
 
-            const senderName = msg.pushName || null;
+            const senderName = msg.pushName || msg.verifiedBizName || null;
             logger.info({ sessionId: sId, from: cleanPhone, senderName, text: text.substring(0, 40) }, `Inbound message to ${isPlatform ? 'Platform Owner' : 'restaurant'}`);
 
             // Forward to Laravel webhook
