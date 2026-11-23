@@ -154,11 +154,11 @@ function printReceipt(orderId: number) {
 }
 
 function formatReceiptTime(isoStr?: string | null): string {
-    if (!isoStr) return new Date().toLocaleTimeString('ar-SY', { hour: '2-digit', minute: '2-digit' });
+    if (!isoStr) return new Date().toLocaleTimeString('ar-SY-u-nu-latn', { hour: '2-digit', minute: '2-digit' });
     try {
         const d = new Date(isoStr);
-        return d.toLocaleDateString('ar-SY', { year: 'numeric', month: 'short', day: 'numeric' }) + ' ' +
-               d.toLocaleTimeString('ar-SY', { hour: '2-digit', minute: '2-digit' });
+        return d.toLocaleDateString('ar-SY-u-nu-latn', { year: 'numeric', month: 'short', day: 'numeric' }) + ' ' +
+               d.toLocaleTimeString('ar-SY-u-nu-latn', { hour: '2-digit', minute: '2-digit' });
     } catch {
         return String(isoStr);
     }

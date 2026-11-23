@@ -190,7 +190,7 @@ const updateOrderStatus = (order: SimulatedOrder, newStatus: 'preparing' | 'read
 };
 
 const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat('ar-SY').format(val) + ' ل.س';
+    return new Intl.NumberFormat('ar-SY-u-nu-latn').format(val) + ' ل.س';
 };
 
 const formatSeconds = (sec: number) => {

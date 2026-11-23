@@ -41,7 +41,7 @@ const formatSyp = (amount: number) => {
     if (amount >= 1_000_000) {
         return (amount / 1_000_000).toFixed(1) + ' مليون ل.س';
     }
-    return new Intl.NumberFormat('ar-SY').format(amount) + ' ل.س';
+    return new Intl.NumberFormat('ar-SY-u-nu-latn').format(amount) + ' ل.س';
 };
 </script>
 

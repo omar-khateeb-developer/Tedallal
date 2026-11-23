@@ -329,7 +329,7 @@ function exportVoucher(format: 'al_ameen' | 'al_bayan' | 'universal_excel') {
                         <p class="text-xs text-slate-600">الرقم الضريبي / السجل: {{ restaurant?.tax_number || 'مسجل نظامياً' }}</p>
                     </div>
                     <div class="text-left text-xs text-slate-600">
-                        <p>تاريخ استخراج التقرير: {{ new Date().toLocaleString('ar-SA') }}</p>
+                        <p>تاريخ استخراج التقرير: {{ new Date().toLocaleString('ar-SA-u-nu-latn') }}</p>
                         <p>الفترة المحاسبية: {{ activeView === 'daily' ? `${selectedMonth} / ${selectedYear}` : (activeView === 'monthly' ? `سنة ${selectedYear}` : 'تقرير مالي') }}</p>
                         <p class="font-bold text-slate-900">العملة: {{ reportData?.currency || 'SYP' }}</p>
                     </div>
@@ -765,7 +765,7 @@ function exportVoucher(format: 'al_ameen' | 'al_bayan' | 'universal_excel') {
                     <div class="text-center border-b border-dashed border-slate-300 dark:border-slate-700 pb-2">
                         <p class="font-black font-sans text-sm text-slate-900 dark:text-white">{{ restaurant?.name || 'منظومة تدلّل' }}</p>
                         <p class="text-[10px] text-slate-500 font-sans">كشف إغلاق الصندوق المالي المعتمد</p>
-                        <p class="text-[10px] text-slate-400 mt-1">{{ new Date().toLocaleString('ar-SA') }}</p>
+                        <p class="text-[10px] text-slate-400 mt-1">{{ new Date().toLocaleString('ar-SA-u-nu-latn') }}</p>
                     </div>
 
                     <div class="space-y-1.5 text-slate-700 dark:text-slate-300">

@@ -272,7 +272,7 @@ onMounted(load);
                     <div v-if="userLogs.length === 0" class="text-stone-500 dark:text-slate-400 text-sm py-8 text-center">لا توجد نشاطات مسجلة لهذا المستخدم.</div>
                     <div v-for="log in userLogs" :key="log.id" class="pt-2.5 first:pt-0">
                         <p class="text-sm font-medium text-stone-800 dark:text-stone-200">{{ log.description }}</p>
-                        <p class="text-xs text-stone-400 dark:text-slate-500 mt-1 font-mono" dir="ltr">{{ new Date(log.created_at).toLocaleString('ar-EG') }}</p>
+                        <p class="text-xs text-stone-400 dark:text-slate-500 mt-1 font-mono" dir="ltr">{{ new Date(log.created_at).toLocaleString('ar-EG-u-nu-latn') }}</p>
                     </div>
                 </div>
             </div>

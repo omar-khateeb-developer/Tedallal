@@ -390,7 +390,7 @@ function formatText(text: string): string {
                         <div class="flex items-center gap-1.5 text-[10px] text-stone-400 px-1 font-bold">
                             <span>{{ msg.role === 'user' ? (locale === 'ar' ? 'أنت' : 'You') : (locale === 'ar' ? 'مستشار تدلّل' : 'Tedallal Consultant') }}</span>
                             <span>•</span>
-                            <span>{{ msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}</span>
+                            <span>{{ msg.timestamp.toLocaleTimeString('ar-u-nu-latn', { hour: '2-digit', minute: '2-digit' }) }}</span>
                         </div>
 
                         <!-- Bubble -->

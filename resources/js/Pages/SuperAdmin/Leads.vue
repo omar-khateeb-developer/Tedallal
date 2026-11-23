@@ -206,7 +206,7 @@ const getWhatsAppUrl = (lead: Lead) => {
 const formatDate = (dateStr: string) => {
     if (!dateStr) return '';
     const date = new Date(dateStr);
-    return date.toLocaleDateString('ar-SY', {
+    return date.toLocaleDateString('ar-SY-u-nu-latn', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',

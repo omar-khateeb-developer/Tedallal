@@ -150,7 +150,7 @@ function elapsedBadgeClass(order: Order): string {
 function formatTime(iso?: string): string {
     if (!iso) return '';
     const d = new Date(iso);
-    return d.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit', hour12: true });
+    return d.toLocaleTimeString('ar-SA-u-nu-latn', { hour: '2-digit', minute: '2-digit', hour12: true });
 }
 
 const orders = ref<Order[]>([]);

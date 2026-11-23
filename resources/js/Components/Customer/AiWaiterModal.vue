@@ -42,7 +42,7 @@ const messages = ref<ChatMessage[]>([
 
 function getCurrentTime(): string {
     const d = new Date();
-    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleTimeString('ar-u-nu-latn', { hour: '2-digit', minute: '2-digit' });
 }
 
 const quickPrompts = [

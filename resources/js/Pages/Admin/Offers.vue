@@ -310,7 +310,7 @@ const deleteOffer = async (id: number) => {
                                     <!-- Internal code (admin only) -->
                                     <td class="py-3 px-4 font-mono text-xs text-stone-400 dark:text-slate-500" dir="ltr">{{ offer.code }}</td>
 
-                                    <td class="py-3 px-4 text-gray-600 dark:text-slate-400 text-xs">{{ offer.expires_at ? new Date(offer.expires_at).toLocaleDateString('ar') : 'مفتوح' }}</td>
+                                    <td class="py-3 px-4 text-gray-600 dark:text-slate-400 text-xs">{{ offer.expires_at ? new Date(offer.expires_at).toLocaleDateString('ar-u-nu-latn') : 'مفتوح' }}</td>
 
                                     <!-- Toggle active/inactive (affects wheel visibility) -->
                                     <td class="py-3 px-4">
@@ -366,10 +366,10 @@ const deleteOffer = async (id: number) => {
                                         </span>
                                     </td>
                                     <td class="py-3 px-4 text-gray-600 dark:text-slate-400 text-xs">
-                                        {{ voucher.starts_at ? new Date(voucher.starts_at).toLocaleString() : 'فوري' }}
+                                        {{ voucher.starts_at ? new Date(voucher.starts_at).toLocaleString('ar-u-nu-latn') : 'فوري' }}
                                     </td>
                                     <td class="py-3 px-4 text-gray-600 dark:text-slate-400 text-xs">
-                                        {{ voucher.expires_at ? new Date(voucher.expires_at).toLocaleDateString() : '-' }}
+                                        {{ voucher.expires_at ? new Date(voucher.expires_at).toLocaleDateString('ar-u-nu-latn') : '-' }}
                                     </td>
                                     <td class="py-3 px-4">
                                         <span v-if="voucher.times_used > 0" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
