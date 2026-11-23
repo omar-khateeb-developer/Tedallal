@@ -38,12 +38,17 @@ const isBillRequested = ref(false);
 const isRequestingBill = ref(false);
 
 async function requestBill() {
+    if (!props.publicToken) {
+        alert('تعذر إرسال طلب الحساب حالياً، يرجى إعلام الكاشير مباشرة.');
+        return;
+    }
     isRequestingBill.value = true;
     try {
         await axios.post(`/api/public/tables/${props.publicToken}/request-bill`);
         isBillRequested.value = true;
-    } catch (e) {
-        alert('تعذر إرسال طلب الحساب حالياً، يرجى إعلام الكاشير مباشرة.');
+    } catch (e: any) {
+        const msg = e?.response?.data?.message || 'تعذر إرسال طلب الحساب حالياً، يرجى إعلام الكاشير مباشرة.';
+        alert(msg);
     } finally {
         isRequestingBill.value = false;
     }
@@ -142,6 +147,14 @@ onUnmounted(() => {
 });
 
 const isPrepaid = computed(() => order.value?.restaurant_type === 'prepaid');
+
+const canRequestBill = computed(() => {
+    if (!order.value) return false;
+    if (isPrepaid.value) return false;
+    if (order.value.paid_at) return false;
+    if (order.value.service_type && order.value.service_type !== 'dine_in') return false;
+    return order.value.status === 'ready' || order.value.status === 'served';
+});
 
 const steps = computed(() => {
     if (isPrepaid.value) {
@@ -376,8 +389,14 @@ const currentStepIndex = computed(() => {
                     <span class="text-amber-600 dark:text-amber-400 text-lg">{{ formatPrice(order.total) }}</span>
                 </div>
 
-                <!-- زر طلب الحساب / الفاتورة من الكاشير -->
-                <div v-if="order.service_type === 'dine_in' || !order.service_type" class="mt-3">
+                <!-- حالة تسوية الحساب / الفاتورة من الكاشير -->
+                <div v-if="order.paid_at" class="mt-3 p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-700/60 text-center text-xs font-bold text-emerald-700 dark:text-emerald-300 flex items-center justify-center gap-2">
+                    <span class="text-base">✓</span>
+                    <span>تم تسوية ودفع الحساب بنجاح</span>
+                </div>
+
+                <!-- زر طلب الحساب / الفاتورة من الكاشير (يظهر فقط عند جاهزية الطلب أو تقديمه وقبل الدفع) -->
+                <div v-else-if="canRequestBill" class="mt-3">
                     <button
                         v-if="!isBillRequested"
                         type="button"
@@ -393,15 +412,20 @@ const currentStepIndex = computed(() => {
                     </div>
                 </div>
 
-                <!-- زر مشاركة الفاتورة عبر واتساب -->
-                <button
-                    @click="shareOrderOnWhatsApp"
-                    type="button"
-                    class="mt-3 w-full flex items-center justify-center gap-2 rounded-2xl bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60 py-3 text-sm font-bold shadow-xs transition-all cursor-pointer active:scale-95"
-                >
-                    <span class="text-base">💬</span>
-                    <span>مشاركة الفاتورة وتفاصيل الطلب عبر واتساب</span>
-                </button>
+                <!-- زر ثانوي أنيق لمشاركة الفاتورة مع رفقاء الطاولة عبر واتساب -->
+                <div class="mt-4 pt-3 border-t border-dashed border-stone-200 dark:border-slate-800 text-center">
+                    <button
+                        @click="shareOrderOnWhatsApp"
+                        type="button"
+                        class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 dark:bg-slate-800/80 dark:hover:bg-slate-800 text-stone-600 dark:text-slate-300 border border-stone-200 dark:border-slate-700/60 text-xs font-bold transition-all cursor-pointer active:scale-95"
+                    >
+                        <span class="text-emerald-500 text-sm">💬</span>
+                        <span>مشاركة تفاصيل الفاتورة مع رفقاء الطاولة</span>
+                    </button>
+                    <p class="mt-1 text-[11px] text-stone-400 dark:text-slate-500">
+                        (اختياري: لمشاركة ملخص الطلب وحساب الطاولة مع أصدقائك عبر واتساب)
+                    </p>
+                </div>
             </div>
 
             <!-- Powered by Tedallal Brand Footer -->

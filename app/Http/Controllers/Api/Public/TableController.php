@@ -84,7 +84,11 @@ class TableController extends ApiController
         \App\Services\ActivityLogger::log('waiter_called', "استدعاء نادل للطاولة {$table->name} ({$reasonText})");
 
         // Broadcast to floor plan & cashier screens
-        broadcast(new TableServiceCalled($serviceCall));
+        try {
+            broadcast(new TableServiceCalled($serviceCall));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Broadcast failed for TableServiceCalled (waiter): ' . $e->getMessage());
+        }
 
         // Push notification to staff
         $this->dispatchStaffNotification(
@@ -146,7 +150,11 @@ class TableController extends ApiController
         \App\Services\ActivityLogger::log('bill_requested', "طلب الزبون الحساب للطاولة {$table->name} (" . ($paymentMethod === 'card' ? 'بطاقة/مدى' : 'نقداً') . ")");
 
         // Broadcast live event
-        broadcast(new TableServiceCalled($serviceCall));
+        try {
+            broadcast(new TableServiceCalled($serviceCall));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Broadcast failed for TableServiceCalled (bill): ' . $e->getMessage());
+        }
 
         // Dispatch web push notification to staff
         $methodLabel = $paymentMethod === 'card' ? 'بطاقة / مدى' : 'نقداً';
