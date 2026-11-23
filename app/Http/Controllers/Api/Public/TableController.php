@@ -22,7 +22,7 @@ class TableController extends ApiController
             ->first();
 
         if (! $table || ! $table->isActive()) {
-            Log::warning('Invalid table token accessed', ['token' => substr($token, 0, 8).'...']);
+            Log::warning('Invalid table token accessed', ['token' => substr($token, 0, 8) . '...']);
 
             return $this->error('الطاولة غير موجودة.', 404);
         }
