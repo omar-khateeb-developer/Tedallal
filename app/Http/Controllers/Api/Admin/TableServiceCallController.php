@@ -38,7 +38,11 @@ class TableServiceCallController extends ApiController
         \App\Services\ActivityLogger::log('service_call_attended', "تمت تلبية نداء الخدمة ({$call->type}) للطاولة {$call->table?->name}");
 
         // Broadcast to live floor plan & orders screens
-        broadcast(new TableServiceAttended($call));
+        try {
+            broadcast(new TableServiceAttended($call));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Broadcast failed for TableServiceAttended: ' . $e->getMessage());
+        }
 
         return $this->success([
             'message' => 'تم تسجيل تلبية النداء بنجاح.',

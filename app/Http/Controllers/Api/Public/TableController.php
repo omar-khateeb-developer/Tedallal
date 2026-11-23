@@ -193,7 +193,11 @@ class TableController extends ApiController
 
         foreach ($pendingCalls as $call) {
             $call->update(['status' => 'cancelled']);
-            broadcast(new TableServiceAttended($call));
+            try {
+                broadcast(new TableServiceAttended($call));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Broadcast failed for TableServiceAttended cancel: ' . $e->getMessage());
+            }
         }
 
         return $this->success([
