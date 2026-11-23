@@ -15,6 +15,7 @@ class MenuItem extends Model
         'restaurant_id',
         'category_id',
         'name',
+        'external_sku',
         'description',
         'image',
         'price',

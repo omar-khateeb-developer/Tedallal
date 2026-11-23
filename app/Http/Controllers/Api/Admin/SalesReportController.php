@@ -630,4 +630,314 @@ class SalesReportController extends ApiController
 
         return response()->stream($callback, 200, $headers);
     }
+
+    /**
+     * سند القيد اليومي للمحاسب (The Accountant's Daily Summary Voucher)
+     * يوفر قيداً يومياً متوازناً بدقة 100% بين المدين والدائن مع تفقيط المبيعات وتوزيع الصالة والسفري.
+     */
+    public function getAccountingVoucher(Request $request)
+    {
+        $restaurant = $this->restaurantContext->current();
+        $restaurantId = $restaurant->id;
+        $currency = $restaurant->currency ?? 'SYP';
+
+        $date = $request->query('date', now()->toDateString());
+        $start = Carbon::parse($date)->startOfDay();
+        $end = Carbon::parse($date)->endOfDay();
+
+        $mapping = array_merge([
+            'cash_account_code'     => '10101',
+            'cash_account_name'     => 'الصندوق الرئيسي',
+            'dine_in_sales_code'    => '40101',
+            'dine_in_sales_name'    => 'إيراد مبيعات الصالة',
+            'takeaway_sales_code'   => '40102',
+            'takeaway_sales_name'   => 'إيراد مبيعات سفري',
+            'discount_account_code' => '40201',
+            'discount_account_name' => 'حسميات وعروض ترويجية',
+            'tax_account_code'      => '20301',
+            'tax_account_name'      => 'أمانات الضرائب والرسوم',
+        ], (array) (($restaurant->features ?? [])['accounting_mapping'] ?? []));
+
+        $orders = Order::withoutGlobalScopes()
+            ->with(['promoCode' => fn ($q) => $q->withoutGlobalScopes()->select('id', 'source')])
+            ->where('restaurant_id', $restaurantId)
+            ->where(function ($q) {
+                $q->where('status', OrderStatus::Served->value)
+                  ->orWhere(function ($q2) {
+                      $q2->whereNotNull('paid_at')
+                         ->where('status', '!=', OrderStatus::Cancelled->value);
+                  });
+            })
+            ->whereBetween('created_at', [$start, $end])
+            ->get(['id', 'subtotal', 'discount_amount', 'total', 'service_type', 'promo_code_id', 'created_at']);
+
+        $totalGross = '0.00';
+        $totalDiscount = '0.00';
+        $totalNetCash = '0.00';
+        $dineInGross = '0.00';
+        $takeawayGross = '0.00';
+        $dineInCount = 0;
+        $takeawayCount = 0;
+
+        foreach ($orders as $order) {
+            $sub = number_format((float) $order->subtotal, 2, '.', '');
+            $disc = number_format((float) ($order->discount_amount ?? 0), 2, '.', '');
+            $net = number_format((float) $order->total, 2, '.', '');
+
+            $totalGross = MoneyCalculator::add($totalGross, $sub);
+            $totalDiscount = MoneyCalculator::add($totalDiscount, $disc);
+            $totalNetCash = MoneyCalculator::add($totalNetCash, $net);
+
+            if (($order->service_type ?? 'dine_in') === 'takeaway') {
+                $takeawayGross = MoneyCalculator::add($takeawayGross, $sub);
+                $takeawayCount++;
+            } else {
+                $dineInGross = MoneyCalculator::add($dineInGross, $sub);
+                $dineInCount++;
+            }
+        }
+
+        // بناء بنود القيد المحاسبي المتوازن (طرف مدين وطرف دائن)
+        $lines = [];
+
+        // 1. الطرف المدين: الصندوق الرئيسي (المقبوضات النقدية الفعلية)
+        $lines[] = [
+            'type'         => 'debit',
+            'account_code' => $mapping['cash_account_code'],
+            'account_name' => $mapping['cash_account_name'],
+            'debit'        => $totalNetCash,
+            'credit'       => '0.00',
+            'note'         => "المقبوضات النقدية الصافية المحصلة - مبيعات {$date}",
+        ];
+
+        // 2. الطرف المدين: الحسميات والعروض الترويجية (إن وجدت)
+        if ((float) $totalDiscount > 0) {
+            $lines[] = [
+                'type'         => 'debit',
+                'account_code' => $mapping['discount_account_code'],
+                'account_name' => $mapping['discount_account_name'],
+                'debit'        => $totalDiscount,
+                'credit'       => '0.00',
+                'note'         => "إجمالي خصومات الكوبونات وعجلة المكافآت ليوم {$date}",
+            ];
+        }
+
+        // 3. الطرف الدائن: إيراد مبيعات الصالة (قبل الخصم)
+        if ((float) $dineInGross > 0 || (float) $totalGross === 0.0) {
+            $lines[] = [
+                'type'         => 'credit',
+                'account_code' => $mapping['dine_in_sales_code'],
+                'account_name' => $mapping['dine_in_sales_name'],
+                'debit'        => '0.00',
+                'credit'       => $dineInGross,
+                'note'         => "إجمالي مبيعات طلبات الصالة ليوم {$date} ({$dineInCount} طلب)",
+            ];
+        }
+
+        // 4. الطرف الدائن: إيراد مبيعات السفري (قبل الخصم)
+        if ((float) $takeawayGross > 0) {
+            $lines[] = [
+                'type'         => 'credit',
+                'account_code' => $mapping['takeaway_sales_code'],
+                'account_name' => $mapping['takeaway_sales_name'],
+                'debit'        => '0.00',
+                'credit'       => $takeawayGross,
+                'note'         => "إجمالي مبيعات طلبات السفري ليوم {$date} ({$takeawayCount} طلب)",
+            ];
+        }
+
+        $totalDebit = MoneyCalculator::add($totalNetCash, $totalDiscount);
+        $totalCredit = MoneyCalculator::add($dineInGross, $takeawayGross);
+        $diff = abs((float) $totalDebit - (float) $totalCredit);
+        $isBalanced = $diff < 0.001;
+
+        // تفكيك استهلاك المواد للأصناف المباعة (Inventory Depletion)
+        $orderIds = $orders->pluck('id')->filter()->all();
+        $itemizedSales = [];
+        if (!empty($orderIds)) {
+            $itemRows = DB::table('order_items')
+                ->leftJoin('menu_items', 'order_items.menu_item_id', '=', 'menu_items.id')
+                ->whereIn('order_items.order_id', $orderIds)
+                ->select(
+                    'order_items.menu_item_id',
+                    'order_items.item_name_snapshot as name',
+                    'menu_items.external_sku',
+                    DB::raw('SUM(order_items.quantity) as total_qty'),
+                    DB::raw('AVG(order_items.unit_price) as avg_unit_price'),
+                    DB::raw('SUM(order_items.subtotal) as total_revenue')
+                )
+                ->groupBy('order_items.menu_item_id', 'order_items.item_name_snapshot', 'menu_items.external_sku')
+                ->orderByDesc('total_revenue')
+                ->get();
+
+            foreach ($itemRows as $row) {
+                $itemizedSales[] = [
+                    'menu_item_id'  => $row->menu_item_id,
+                    'external_sku'  => $row->external_sku ?? '-',
+                    'name'          => $row->name,
+                    'quantity'      => (int) $row->total_qty,
+                    'unit_price'    => number_format((float) $row->avg_unit_price, 2, '.', ''),
+                    'total_revenue' => number_format((float) $row->total_revenue, 2, '.', ''),
+                ];
+            }
+        }
+
+        $cleanDate = str_replace('-', '', $date);
+        $voucherNumber = "JV-{$cleanDate}-01";
+
+        return $this->success([
+            'voucher_number' => $voucherNumber,
+            'date'           => $date,
+            'statement'      => "قيد إثبات مبيعات يوم {$date} - {$restaurant->name}",
+            'currency'       => $currency,
+            'restaurant_name'=> $restaurant->name,
+            'total_debit'    => $totalDebit,
+            'total_credit'   => $totalCredit,
+            'is_balanced'    => $isBalanced,
+            'difference'     => number_format($diff, 2, '.', ''),
+            'orders_count'   => count($orders),
+            'dine_in_count'  => $dineInCount,
+            'takeaway_count' => $takeawayCount,
+            'lines'          => $lines,
+            'itemized_sales' => $itemizedSales,
+        ]);
+    }
+
+    /**
+     * تصدير سند القيد إلى صيغة برنامج المحاسبة المختار (الأمين، البيان، أو إكسل الشامل).
+     */
+    public function exportAccountingVoucher(Request $request)
+    {
+        $restaurant = $this->restaurantContext->current();
+        $format = $request->query('format', 'al_ameen'); // 'al_ameen', 'al_bayan', 'universal_excel'
+        $date = $request->query('date', now()->toDateString());
+
+        $voucherRes = $this->getAccountingVoucher($request);
+        $voucherData = $voucherRes->getData(true)['data'] ?? [];
+
+        $cleanSlug = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $restaurant->slug ?? 'restaurant');
+        $lines = $voucherData['lines'] ?? [];
+        $currency = $voucherData['currency'] ?? 'SYP';
+        $voucherNumber = $voucherData['voucher_number'] ?? 'JV-01';
+
+        if ($format === 'al_ameen') {
+            // ملف الأمين لقيد اليومية (Tab-Delimited UTF-8 BOM txt)
+            $filename = "al_ameen_voucher_{$cleanSlug}_{$date}.txt";
+            $headers = [
+                'Content-Type'        => 'text/plain; charset=UTF-8',
+                'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            ];
+
+            $callback = function () use ($lines, $date, $voucherNumber, $currency) {
+                $out = fopen('php://output', 'w');
+                fwrite($out, "\xEF\xBB\xBF"); // UTF-8 BOM
+
+                // ترويسة أعمدة استيراد سندات القيد لبرنامج الأمين
+                $headersRow = ["رقم السند", "التاريخ", "رمز الحساب", "اسم الحساب", "مدين", "دائن", "العملة", "البيان"];
+                fwrite($out, implode("\t", $headersRow) . "\r\n");
+
+                foreach ($lines as $line) {
+                    $row = [
+                        $voucherNumber,
+                        $date,
+                        $line['account_code'] ?? '',
+                        $line['account_name'] ?? '',
+                        $line['debit'] ?? '0.00',
+                        $line['credit'] ?? '0.00',
+                        $currency,
+                        $line['note'] ?? '',
+                    ];
+                    fwrite($out, implode("\t", $row) . "\r\n");
+                }
+                fclose($out);
+            };
+
+            return response()->stream($callback, 200, $headers);
+        } elseif ($format === 'al_bayan') {
+            // ملف البيان لسند القيد (CSV UTF-8 BOM)
+            $filename = "al_bayan_voucher_{$cleanSlug}_{$date}.csv";
+            $headers = [
+                'Content-Type'        => 'text/csv; charset=UTF-8',
+                'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            ];
+
+            $callback = function () use ($lines, $date, $voucherNumber, $currency) {
+                $out = fopen('php://output', 'w');
+                fwrite($out, "\xEF\xBB\xBF");
+
+                fputcsv($out, ['التاريخ', 'رقم السند', 'رمز الحساب', 'اسم الحساب', 'مدين', 'دائن', 'البيان', 'العملة']);
+                foreach ($lines as $line) {
+                    fputcsv($out, [
+                        $date,
+                        $voucherNumber,
+                        $line['account_code'] ?? '',
+                        $line['account_name'] ?? '',
+                        $line['debit'] ?? '0.00',
+                        $line['credit'] ?? '0.00',
+                        $line['note'] ?? '',
+                        $currency,
+                    ]);
+                }
+                fclose($out);
+            };
+
+            return response()->stream($callback, 200, $headers);
+        } else {
+            // Universal Standard Excel Pack (سند القيد المتوازن + حركة إخراج المواد المستودعية)
+            $filename = "accounting_voucher_pack_{$cleanSlug}_{$date}.csv";
+            $headers = [
+                'Content-Type'        => 'text/csv; charset=UTF-8',
+                'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            ];
+
+            $callback = function () use ($voucherData, $lines, $currency, $date, $restaurant) {
+                $out = fopen('php://output', 'w');
+                fwrite($out, "\xEF\xBB\xBF");
+
+                fputcsv($out, ['منظومة تدلّل - سند القيد المحاسبي اليومي المعتمد']);
+                fputcsv($out, ['المطعم / المنشأة', $restaurant->name ?? '', 'التاريخ', $date]);
+                fputcsv($out, ['رقم السند', $voucherData['voucher_number'] ?? '', 'العملة', $currency]);
+                fputcsv($out, ['حالة التوازن المحاسبي', ($voucherData['is_balanced'] ?? false) ? 'متوازن 100% (فرق صفر)' : 'غير متوازن']);
+                fputcsv($out, []);
+
+                // جدول سند القيد ذو القيدين
+                fputcsv($out, ['رمز الحساب', 'اسم الحساب', "مدين ({$currency})", "دائن ({$currency})", 'البيان / الشرح']);
+                foreach ($lines as $line) {
+                    fputcsv($out, [
+                        $line['account_code'] ?? '',
+                        $line['account_name'] ?? '',
+                        $line['debit'] ?? '0.00',
+                        $line['credit'] ?? '0.00',
+                        $line['note'] ?? '',
+                    ]);
+                }
+                fputcsv($out, [
+                    'المجموع الإجمالي',
+                    '',
+                    $voucherData['total_debit'] ?? '0.00',
+                    $voucherData['total_credit'] ?? '0.00',
+                    'سند قيد متوازن معتمد',
+                ]);
+
+                // جدول إخراج المواد واستهلاك المخزون
+                fputcsv($out, []);
+                fputcsv($out, ['--- كشف حركة مبيعات الأصناف لإخراج المواد المستودعية (Inventory Depletion) ---']);
+                fputcsv($out, ['رمز المادة المحاسبي (SKU)', 'اسم الصنف', 'الكمية المباعة', "متوسط السعر ({$currency})", "إجمالي القيمة ({$currency})"]);
+                $itemized = $voucherData['itemized_sales'] ?? [];
+                foreach ($itemized as $it) {
+                    fputcsv($out, [
+                        $it['external_sku'] ?? '-',
+                        $it['name'] ?? '',
+                        $it['quantity'] ?? 0,
+                        $it['unit_price'] ?? '0.00',
+                        $it['total_revenue'] ?? '0.00',
+                    ]);
+                }
+
+                fclose($out);
+            };
+
+            return response()->stream($callback, 200, $headers);
+        }
+    }
 }

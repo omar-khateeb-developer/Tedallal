@@ -31,6 +31,7 @@ class UpdateMenuItemRequest extends FormRequest
                 Rule::exists('menu_categories', 'id')->where(fn ($q) => $q->where('restaurant_id', $restaurantId)),
             ],
             'name' => ['sometimes', 'string', 'max:150'],
+            'external_sku' => ['nullable', 'string', 'max:100'],
             'description' => ['nullable', 'string'],
             'price' => ['sometimes', 'numeric', 'min:0'],
             'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:10240'],

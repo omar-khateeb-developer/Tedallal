@@ -22,6 +22,18 @@ class RestaurantResource extends JsonResource
             'address' => $this->address,
             'currency' => $this->currency,
             'auto_print_on_ready' => (bool) (($this->features ?? [])['auto_print_on_ready'] ?? false),
+            'accounting_mapping' => array_merge([
+                'cash_account_code' => '10101',
+                'cash_account_name' => 'الصندوق الرئيسي',
+                'dine_in_sales_code' => '40101',
+                'dine_in_sales_name' => 'مبيعات الصالة',
+                'takeaway_sales_code' => '40102',
+                'takeaway_sales_name' => 'مبيعات السفري',
+                'discount_account_code' => '40201',
+                'discount_account_name' => 'حسميات وعروض ترويجية',
+                'tax_account_code' => '20301',
+                'tax_account_name' => 'أمانات الضرائب والرسوم',
+            ], (array) (($this->features ?? [])['accounting_mapping'] ?? [])),
         ];
     }
 }

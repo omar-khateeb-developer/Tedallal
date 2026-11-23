@@ -31,6 +31,7 @@ class StoreMenuItemRequest extends FormRequest
                 Rule::exists('menu_categories', 'id')->where(fn ($q) => $q->where('restaurant_id', $restaurantId)),
             ],
             'name' => ['required', 'string', 'max:150'],
+            'external_sku' => ['nullable', 'string', 'max:100'],
             'description' => ['nullable', 'string'],
             'price' => ['required', 'numeric', 'min:0'],
             'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:10240'],

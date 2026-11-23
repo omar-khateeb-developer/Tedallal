@@ -6,6 +6,7 @@ import CheckoutModal from '@/Components/Customer/CheckoutModal.vue';
 import CustomerLayout from '@/Layouts/CustomerLayout.vue';
 import { router } from '@inertiajs/vue3';
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import { normalizeVisualViewport } from '@/Composables/useVisualViewport';
 import axios from 'axios';
 
 interface MenuItem {
@@ -310,11 +311,25 @@ async function quickDecrement(item: MenuItem) {
 }
 
 function openCheckout() {
+    normalizeVisualViewport();
     cartOpen.value = false;
     nextTick(() => {
         checkoutOpen.value = true;
     });
 }
+
+function openCartDrawer() {
+    normalizeVisualViewport();
+    cartOpen.value = true;
+}
+
+watch(cartOpen, (isOpen) => {
+    if (isOpen) normalizeVisualViewport();
+});
+
+watch(checkoutOpen, (isOpen) => {
+    if (isOpen) normalizeVisualViewport();
+});
 
 async function submitOrder() {
     submitting.value = true;
@@ -388,7 +403,7 @@ onMounted(() => {
                 type="button"
                 class="relative flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-300 dark:hover:bg-amber-900/60 transition-colors border border-amber-200/80 dark:border-amber-700/60 active:scale-95 shadow-2xs"
                 title="عرض السلة"
-                @click="cartOpen = true"
+                @click="openCartDrawer"
             >
                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
@@ -755,7 +770,7 @@ onMounted(() => {
                     <button
                         type="button"
                         class="text-xs font-bold text-amber-400 hover:text-amber-300 underline shrink-0 px-1 py-0.5"
-                        @click="cartOpen = true"
+                        @click="openCartDrawer"
                     >
                         عرض السلة
                     </button>
@@ -773,7 +788,7 @@ onMounted(() => {
                     type="button"
                     class="group relative flex w-full items-center justify-between rounded-2xl bg-gradient-to-r from-stone-900 via-stone-850 to-stone-900 px-4 py-3 text-white shadow-2xl shadow-stone-900/40 border border-stone-700/50 active:scale-[0.98] transition-all duration-300"
                     :class="{ 'ring-2 ring-amber-500/80 scale-[1.02] shadow-amber-500/20': isCartBumping }"
-                    @click="cartOpen = true"
+                    @click="openCartDrawer"
                 >
                     <!-- الأيقونة والعدد المختار المنبثق منها -->
                     <div class="flex items-center gap-3">

@@ -6,11 +6,11 @@ import AdminNav from '@/Components/Admin/AdminNav.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 
 interface Category { id: number; name: string }
-interface MenuItemRow { id: number; name: string; description: string; price: string; is_available: boolean; is_active: boolean; category_id: number; image: string | null }
+interface MenuItemRow { id: number; name: string; external_sku?: string | null; description: string; price: string; is_available: boolean; is_active: boolean; category_id: number; image: string | null }
 
 const categories = ref<Category[]>([]);
 const items = ref<MenuItemRow[]>([]);
-const form = ref({ category_id: '', name: '', description: '', price: '', image: null as File | null });
+const form = ref({ category_id: '', name: '', external_sku: '', description: '', price: '', image: null as File | null });
 const toastMessage = ref('');
 const selectedImage = ref<string | null>(null);
 const creatingItem = ref(false);
@@ -35,6 +35,9 @@ async function createItem() {
         const formData = new FormData();
         formData.append('category_id', form.value.category_id);
         formData.append('name', form.value.name);
+        if (form.value.external_sku) {
+            formData.append('external_sku', form.value.external_sku);
+        }
         formData.append('description', form.value.description);
         formData.append('price', form.value.price);
         if (form.value.image) {
@@ -46,6 +49,7 @@ async function createItem() {
         });
         
         form.value.name = '';
+        form.value.external_sku = '';
         form.value.price = '';
         form.value.description = '';
         form.value.image = null;
@@ -96,11 +100,12 @@ onMounted(load);
         <div class="mx-auto max-w-4xl p-6" dir="rtl">
             <AdminNav />
             <div class="mb-4 space-y-2">
-                <div class="grid gap-2 sm:grid-cols-5">
+                <div class="grid gap-2 sm:grid-cols-6">
                     <select v-model="form.category_id" class="rounded-xl border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white text-sm focus:border-amber-500 focus:ring-amber-500">
                         <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
                     </select>
                     <input v-model="form.name" class="rounded-xl border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white text-sm focus:border-amber-500 focus:ring-amber-500" placeholder="الاسم" />
+                    <input v-model="form.external_sku" class="rounded-xl border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white text-xs font-mono focus:border-amber-500 focus:ring-amber-500" placeholder="رمز SKU (محاسبة)" dir="ltr" title="رمز المادة في برنامج المحاسبة (الأمين / البيان) لخصم المخزون" />
                     <input v-model="form.price" class="rounded-xl border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white text-sm focus:border-amber-500 focus:ring-amber-500" placeholder="السعر" dir="ltr" />
                     <input type="file" id="createImageInput" accept="image/*" class="rounded-xl border border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-700 dark:text-stone-300 text-xs file:mr-2 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-amber-50 dark:file:bg-amber-950/60 file:text-amber-700 dark:file:text-amber-400 hover:file:bg-amber-100" @change="e => form.image = (e.target as HTMLInputElement).files?.[0] ?? null" />
                     <button class="rounded-xl bg-amber-600 dark:bg-amber-500 text-white dark:text-slate-950 font-bold flex items-center justify-center transition-all disabled:opacity-50 hover:bg-amber-700 dark:hover:bg-amber-400" :disabled="creatingItem" @click="createItem">
@@ -133,6 +138,14 @@ onMounted(load);
                                 :value="item.name"
                                 class="min-w-[120px] flex-1 rounded-lg border-stone-200 dark:border-slate-700 bg-stone-50 dark:bg-slate-900 text-stone-900 dark:text-white text-sm px-3 py-1.5 focus:border-amber-500 focus:ring-amber-500"
                                 @change="updateItem(item, 'name', ($event.target as HTMLInputElement).value)"
+                            />
+                            <input
+                                :value="item.external_sku ?? ''"
+                                class="w-24 rounded-lg border-stone-200 dark:border-slate-700 bg-stone-50 dark:bg-slate-900 text-stone-900 dark:text-white text-xs px-2.5 py-1.5 focus:border-amber-500 focus:ring-amber-500 font-mono text-center"
+                                dir="ltr"
+                                placeholder="رمز SKU"
+                                title="رمز المادة في برنامج المحاسبة (الأمين / البيان) لخصم المخزون"
+                                @change="updateItem(item, 'external_sku', ($event.target as HTMLInputElement).value)"
                             />
                             <input
                                 :value="item.price"

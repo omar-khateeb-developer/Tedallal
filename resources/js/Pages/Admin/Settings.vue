@@ -24,6 +24,18 @@ const form = ref({
     auto_print_on_ready: false,
     navbar_image: null as File | null,
     logo: null as File | null,
+    accounting_mapping: {
+        cash_account_code: '10101',
+        cash_account_name: 'الصندوق الرئيسي',
+        dine_in_sales_code: '40101',
+        dine_in_sales_name: 'إيراد مبيعات الصالة',
+        takeaway_sales_code: '40102',
+        takeaway_sales_name: 'إيراد مبيعات سفري',
+        discount_account_code: '40201',
+        discount_account_name: 'حسميات وعروض ترويجية',
+        tax_account_code: '20301',
+        tax_account_name: 'أمانات الضرائب والرسوم',
+    },
 });
 
 const saving = ref(false);
@@ -76,6 +88,18 @@ async function load() {
         auto_print_on_ready: !!data.data.auto_print_on_ready,
         navbar_image: null,
         logo: null,
+        accounting_mapping: {
+            cash_account_code: data.data.accounting_mapping?.cash_account_code || '10101',
+            cash_account_name: data.data.accounting_mapping?.cash_account_name || 'الصندوق الرئيسي',
+            dine_in_sales_code: data.data.accounting_mapping?.dine_in_sales_code || '40101',
+            dine_in_sales_name: data.data.accounting_mapping?.dine_in_sales_name || 'إيراد مبيعات الصالة',
+            takeaway_sales_code: data.data.accounting_mapping?.takeaway_sales_code || '40102',
+            takeaway_sales_name: data.data.accounting_mapping?.takeaway_sales_name || 'إيراد مبيعات سفري',
+            discount_account_code: data.data.accounting_mapping?.discount_account_code || '40201',
+            discount_account_name: data.data.accounting_mapping?.discount_account_name || 'حسميات وعروض ترويجية',
+            tax_account_code: data.data.accounting_mapping?.tax_account_code || '20301',
+            tax_account_name: data.data.accounting_mapping?.tax_account_name || 'أمانات الضرائب والرسوم',
+        },
     };
 }
 
@@ -99,6 +123,19 @@ async function save() {
         if (form.value.logo) {
             formData.append('logo', form.value.logo);
         }
+
+        // إرسال خريطة الحسابات لبرامج المحاسبة (Accounting Bridge)
+        const acc = form.value.accounting_mapping;
+        formData.append('accounting_mapping[cash_account_code]', acc.cash_account_code);
+        formData.append('accounting_mapping[cash_account_name]', acc.cash_account_name);
+        formData.append('accounting_mapping[dine_in_sales_code]', acc.dine_in_sales_code);
+        formData.append('accounting_mapping[dine_in_sales_name]', acc.dine_in_sales_name);
+        formData.append('accounting_mapping[takeaway_sales_code]', acc.takeaway_sales_code);
+        formData.append('accounting_mapping[takeaway_sales_name]', acc.takeaway_sales_name);
+        formData.append('accounting_mapping[discount_account_code]', acc.discount_account_code);
+        formData.append('accounting_mapping[discount_account_name]', acc.discount_account_name);
+        formData.append('accounting_mapping[tax_account_code]', acc.tax_account_code);
+        formData.append('accounting_mapping[tax_account_name]', acc.tax_account_name);
 
         const { data } = await axios.post('/api/admin/restaurant', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
@@ -284,6 +321,72 @@ onMounted(load);
                             </span>
                         </div>
                     </label>
+                </div>
+
+                <!-- بطاقة جسر الربط المحاسبي الذكي (Accounting ERP Bridge) -->
+                <div class="rounded-2xl border border-amber-200/80 dark:border-amber-900/40 bg-gradient-to-b from-amber-50/50 via-white to-white dark:from-amber-950/20 dark:via-[#0a0f1d] dark:to-[#0a0f1d] p-5 space-y-4">
+                    <div class="flex items-start gap-3">
+                        <span class="text-2xl p-2 rounded-xl bg-amber-100 dark:bg-amber-950/70 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400">📑</span>
+                        <div>
+                            <h4 class="font-black text-sm text-stone-900 dark:text-white flex items-center gap-2">
+                                <span>جسر الربط المحاسبي الذكي (Accounting ERP Bridge)</span>
+                                <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold border border-emerald-300 dark:border-emerald-800">الأمين • البيان • أودو</span>
+                            </h4>
+                            <p class="text-xs text-stone-600 dark:text-slate-400 mt-1 leading-relaxed">
+                                طابق رموز وأسماء الحسابات مع دليل الحسابات لديك في برنامج المحاسبة، ليتم إنشاء <strong>«سند القيد اليومي»</strong> متوازناً بنسبة خطأ 0% وجاهزاً للترحيل والنسخ بنقرة واحدة دون الحاجة لتغيير منظومة مطعمك الحالية.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
+                        <!-- حساب الصندوق (الطرف المدين) -->
+                        <div class="p-3 rounded-xl bg-white dark:bg-slate-900/70 border border-stone-200 dark:border-slate-800 space-y-2">
+                            <span class="text-xs font-black text-stone-800 dark:text-stone-200 flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                <span>حساب الصندوق الرئيسي (كاشير - مدين)</span>
+                            </span>
+                            <div class="grid grid-cols-3 gap-2">
+                                <input v-model="form.accounting_mapping.cash_account_code" placeholder="رمز الحساب" class="col-span-1 rounded-lg border-stone-200 dark:border-slate-700 bg-stone-50 dark:bg-slate-800 text-xs font-mono font-bold text-center" dir="ltr" />
+                                <input v-model="form.accounting_mapping.cash_account_name" placeholder="اسم الحساب" class="col-span-2 rounded-lg border-stone-200 dark:border-slate-700 bg-stone-50 dark:bg-slate-800 text-xs font-bold" />
+                            </div>
+                        </div>
+
+                        <!-- حساب الخصومات والعروض (الطرف المدين) -->
+                        <div class="p-3 rounded-xl bg-white dark:bg-slate-900/70 border border-stone-200 dark:border-slate-800 space-y-2">
+                            <span class="text-xs font-black text-stone-800 dark:text-stone-200 flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                                <span>حساب الخصومات الترويجية (مدين)</span>
+                            </span>
+                            <div class="grid grid-cols-3 gap-2">
+                                <input v-model="form.accounting_mapping.discount_account_code" placeholder="رمز الحساب" class="col-span-1 rounded-lg border-stone-200 dark:border-slate-700 bg-stone-50 dark:bg-slate-800 text-xs font-mono font-bold text-center" dir="ltr" />
+                                <input v-model="form.accounting_mapping.discount_account_name" placeholder="اسم الحساب" class="col-span-2 rounded-lg border-stone-200 dark:border-slate-700 bg-stone-50 dark:bg-slate-800 text-xs font-bold" />
+                            </div>
+                        </div>
+
+                        <!-- حساب مبيعات الصالة (الطرف الدائن) -->
+                        <div class="p-3 rounded-xl bg-white dark:bg-slate-900/70 border border-stone-200 dark:border-slate-800 space-y-2">
+                            <span class="text-xs font-black text-stone-800 dark:text-stone-200 flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                                <span>حساب إيراد مبيعات الصالة (دائن)</span>
+                            </span>
+                            <div class="grid grid-cols-3 gap-2">
+                                <input v-model="form.accounting_mapping.dine_in_sales_code" placeholder="رمز الحساب" class="col-span-1 rounded-lg border-stone-200 dark:border-slate-700 bg-stone-50 dark:bg-slate-800 text-xs font-mono font-bold text-center" dir="ltr" />
+                                <input v-model="form.accounting_mapping.dine_in_sales_name" placeholder="اسم الحساب" class="col-span-2 rounded-lg border-stone-200 dark:border-slate-700 bg-stone-50 dark:bg-slate-800 text-xs font-bold" />
+                            </div>
+                        </div>
+
+                        <!-- حساب مبيعات السفري (الطرف الدائن) -->
+                        <div class="p-3 rounded-xl bg-white dark:bg-slate-900/70 border border-stone-200 dark:border-slate-800 space-y-2">
+                            <span class="text-xs font-black text-stone-800 dark:text-stone-200 flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                                <span>حساب إيراد مبيعات السفري (دائن)</span>
+                            </span>
+                            <div class="grid grid-cols-3 gap-2">
+                                <input v-model="form.accounting_mapping.takeaway_sales_code" placeholder="رمز الحساب" class="col-span-1 rounded-lg border-stone-200 dark:border-slate-700 bg-stone-50 dark:bg-slate-800 text-xs font-mono font-bold text-center" dir="ltr" />
+                                <input v-model="form.accounting_mapping.takeaway_sales_name" placeholder="اسم الحساب" class="col-span-2 rounded-lg border-stone-200 dark:border-slate-700 bg-stone-50 dark:bg-slate-800 text-xs font-bold" />
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <p v-if="message" class="text-sm font-medium" :class="message.includes('نجاح') ? 'text-green-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'">

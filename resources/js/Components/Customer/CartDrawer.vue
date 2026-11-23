@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, watch, onUnmounted } from 'vue';
+import { ref, toRef, watch, onUnmounted } from 'vue';
 import axios from 'axios';
+import { useVisualViewportModal } from '@/Composables/useVisualViewport';
 
 export interface CartLine {
     id: number;
@@ -13,6 +14,8 @@ const props = defineProps<{
     open: boolean;
     currency: string;
 }>();
+
+const { modalStyle } = useVisualViewportModal(toRef(props, 'open'));
 
 const emit = defineEmits<{
     'update:open': [value: boolean];
@@ -86,9 +89,12 @@ defineExpose({ load, count, subtotal });
         <div
             v-if="open"
             class="fixed inset-x-0 bottom-0 z-50 flex flex-col max-h-[85dvh] rounded-t-3xl bg-white dark:bg-[#0a0f1d] text-stone-900 dark:text-white shadow-2xl border-t border-stone-200/80 dark:border-slate-800 transition-colors"
+            :style="modalStyle"
             dir="rtl"
         >
-            <div class="shrink-0 flex items-center justify-between border-b border-stone-100 dark:border-slate-800 bg-white/95 dark:bg-[#0a0f1d]/95 backdrop-blur-md px-4 py-4">
+            <!-- مقبض السحب المرئي لشاشات الموبايل -->
+            <div class="w-12 h-1.5 rounded-full bg-stone-300 dark:bg-stone-700 mx-auto my-2 shrink-0"></div>
+            <div class="shrink-0 flex items-center justify-between border-b border-stone-100 dark:border-slate-800 bg-white/95 dark:bg-[#0a0f1d]/95 backdrop-blur-md px-4 py-3">
                 <h2 class="text-lg font-bold text-stone-900 dark:text-white flex items-center gap-2">
                     <span>السلة</span>
                     <span class="text-xs px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-black">({{ count }})</span>

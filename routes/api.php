@@ -75,6 +75,8 @@ Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
         Route::get('insights', [\App\Http\Controllers\Api\Admin\InsightsController::class, 'index']);
         Route::get('reports/sales', [\App\Http\Controllers\Api\Admin\SalesReportController::class, 'index']);
         Route::get('reports/sales/export', [\App\Http\Controllers\Api\Admin\SalesReportController::class, 'export']);
+        Route::get('reports/accounting-voucher', [\App\Http\Controllers\Api\Admin\SalesReportController::class, 'getAccountingVoucher']);
+        Route::get('reports/accounting-voucher/export', [\App\Http\Controllers\Api\Admin\SalesReportController::class, 'exportAccountingVoucher']);
         Route::apiResource('promo-codes', AdminPromoCodeController::class)->parameters([
             'promo-codes' => 'promoCode',
         ]);

@@ -195,6 +195,72 @@ function exportReport() {
 }
 
 const showZReportModal = ref(false);
+
+// Accounting Bridge Voucher States & Actions
+const showAccountingVoucherModal = ref(false);
+const voucherDate = ref(new Date().toISOString().split('T')[0]);
+const voucherData = ref<any>(null);
+const voucherLoading = ref(false);
+const copySuccess = ref(false);
+
+async function openAccountingVoucherModal(targetDate?: string) {
+    if (targetDate) {
+        voucherDate.value = targetDate;
+    } else {
+        voucherDate.value = new Date().toISOString().split('T')[0];
+    }
+    showAccountingVoucherModal.value = true;
+    await fetchAccountingVoucher();
+}
+
+async function fetchAccountingVoucher() {
+    voucherLoading.value = true;
+    try {
+        const { data } = await axios.get(`/api/admin/reports/accounting-voucher?date=${voucherDate.value}`);
+        voucherData.value = data.data;
+    } catch (e) {
+        console.error('Failed to load accounting voucher', e);
+    } finally {
+        voucherLoading.value = false;
+    }
+}
+
+async function copyVoucherText() {
+    if (!voucherData.value) return;
+    const v = voucherData.value;
+    const lines = v.lines || [];
+    let text = `سند قيد مبيعات يومي - ${v.restaurant_name || ''}\n`;
+    text += `رقم السند: ${v.voucher_number} | التاريخ: ${v.date}\n`;
+    text += `حالة التوازن: ${v.is_balanced ? 'متوازن محاسبياً (0% فرق) ✓' : 'غير متوازن'}\n`;
+    text += `العملة: ${v.currency}\n`;
+    text += `--------------------------------------------------\n`;
+    text += `رمز الحساب\tاسم الحساب\tمدين\tدائن\tالبيان\n`;
+    for (const l of lines) {
+        text += `${l.account_code}\t${l.account_name}\t${l.debit}\t${l.credit}\t${l.note}\n`;
+    }
+    text += `--------------------------------------------------\n`;
+    text += `المجموع: مدين=${formatNumber(v.total_debit)} | دائن=${formatNumber(v.total_credit)} (فرق: ${v.difference})\n`;
+
+    try {
+        await navigator.clipboard.writeText(text);
+        copySuccess.value = true;
+        setTimeout(() => { copySuccess.value = false; }, 2500);
+    } catch {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        copySuccess.value = true;
+        setTimeout(() => { copySuccess.value = false; }, 2500);
+    }
+}
+
+function exportVoucher(format: 'al_ameen' | 'al_bayan' | 'universal_excel') {
+    const url = `/api/admin/reports/accounting-voucher/export?format=${format}&date=${voucherDate.value}`;
+    window.open(url, '_blank');
+}
 </script>
 
 <template>
@@ -214,6 +280,14 @@ const showZReportModal = ref(false);
                 </div>
 
                 <div class="flex items-center gap-2 print:hidden flex-wrap">
+                    <button
+                        @click="openAccountingVoucherModal()"
+                        class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-black text-xs flex items-center gap-1.5 shadow-md transition-all active:scale-95"
+                    >
+                        <span>📑</span>
+                        <span>سند القيد اليومي للمحاسب (الأمين / البيان)</span>
+                    </button>
+
                     <button
                         @click="showZReportModal = true"
                         class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md transition-all active:scale-95"
@@ -595,6 +669,15 @@ const showZReportModal = ref(false);
                                             <span class="text-slate-400 font-mono ml-2">#{{ row.day_number }}</span>
                                             <span>{{ row.day_name }}</span>
                                             <span class="text-[10px] text-slate-400 font-mono mr-2">({{ row.date }})</span>
+                                            <button
+                                                v-if="row.orders_count > 0"
+                                                @click.stop="openAccountingVoucherModal(row.date)"
+                                                class="mr-2 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 hover:bg-amber-200 dark:bg-amber-950/80 dark:hover:bg-amber-900/80 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-800 transition-colors inline-flex items-center gap-1"
+                                                title="عرض وتصدير سند القيد المحاسبي لهذا اليوم"
+                                            >
+                                                <span>📑</span>
+                                                <span>سند القيد</span>
+                                            </button>
                                         </template>
                                         <template v-else-if="activeView === 'monthly'">
                                             <span>{{ row.month_name }}</span>
@@ -741,6 +824,226 @@ const showZReportModal = ref(false);
                     <button
                         @click="showZReportModal = false"
                         class="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition-colors"
+                    >
+                        إغلاق
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Accounting Bridge Journal Voucher Modal (سند القيد اليومي للمحاسب) -->
+        <div
+            v-if="showAccountingVoucherModal"
+            class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm print:hidden overflow-y-auto"
+            dir="rtl"
+            @click.self="showAccountingVoucherModal = false"
+        >
+            <div class="relative w-full max-w-4xl bg-white dark:bg-[#0c1222] rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-5 sm:p-7 overflow-hidden space-y-6 animate-in fade-in zoom-in-95 duration-200 max-h-[92dvh] overflow-y-auto" @click.stop>
+                <!-- Modal Header -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 gap-3">
+                    <div class="flex items-center gap-3">
+                        <span class="w-11 h-11 rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center text-2xl font-black">📑</span>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h3 class="font-black text-slate-900 dark:text-white text-lg">سند القيد اليومي للمحاسب (Journal Voucher)</h3>
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">متوازن 100% ✓</span>
+                            </div>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                سند قيد محاسبي مزدوج ومتوازن جاهز للترحيل الفوري إلى (الأمين، البيان، آفاق، أودو، أو إكسل).
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        @click="showAccountingVoucherModal = false"
+                        class="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center text-sm font-bold transition-colors self-end sm:self-center"
+                    >
+                        ✕
+                    </button>
+                </div>
+
+                <!-- Date Selector and Quick Actions Bar -->
+                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-slate-600 dark:text-slate-400">تاريخ السند:</span>
+                        <input
+                            type="date"
+                            v-model="voucherDate"
+                            @change="fetchAccountingVoucher"
+                            class="px-3 py-1.5 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono font-bold text-xs focus:ring-amber-500 focus:border-amber-500"
+                        />
+                        <button
+                            @click="fetchAccountingVoucher"
+                            class="p-1.5 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 transition-colors"
+                            title="تحديث البيانات"
+                        >
+                            🔄
+                        </button>
+                    </div>
+
+                    <!-- Quick Export and Copy Actions -->
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button
+                            @click="copyVoucherText"
+                            class="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-sm transition-all active:scale-95"
+                        >
+                            <span>{{ copySuccess ? '✓' : '📋' }}</span>
+                            <span>{{ copySuccess ? 'تم نسخ القيد للمحفظة!' : 'نسخ القيد للمحاسب' }}</span>
+                        </button>
+
+                        <div class="inline-flex rounded-xl shadow-xs border border-slate-200 dark:border-slate-700 overflow-hidden text-xs font-bold">
+                            <button
+                                @click="exportVoucher('al_ameen')"
+                                class="px-3 py-2 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 border-l border-slate-200 dark:border-slate-700 transition flex items-center gap-1"
+                                title="تصدير ملف قيد متوافق مع استيراد برنامج الأمين"
+                            >
+                                <span>📥</span>
+                                <span>الأمين (.txt)</span>
+                            </button>
+                            <button
+                                @click="exportVoucher('al_bayan')"
+                                class="px-3 py-2 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 border-l border-slate-200 dark:border-slate-700 transition flex items-center gap-1"
+                                title="تصدير ملف قيد لبرنامج البيان"
+                            >
+                                <span>📥</span>
+                                <span>البيان (.csv)</span>
+                            </button>
+                            <button
+                                @click="exportVoucher('universal_excel')"
+                                class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white transition flex items-center gap-1"
+                                title="تصدير كشف شامل يتضمن القيد وحركات إخراج المواد المستودعية"
+                            >
+                                <span>📊</span>
+                                <span>Excel الشامل</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Voucher Body Card (Document Preview) -->
+                <div v-if="voucherLoading" class="py-16 text-center text-slate-400">
+                    <span class="inline-block h-6 w-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mb-2"></span>
+                    <p class="text-xs">جاري تجهيز سند القيد ومطابقة الحسابات...</p>
+                </div>
+
+                <div v-else-if="voucherData" class="space-y-5">
+                    <!-- Voucher Header Badge -->
+                    <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs">
+                        <div class="space-y-0.5">
+                            <p class="text-slate-500 dark:text-slate-400">البيان الرسمي للسند:</p>
+                            <p class="font-black text-slate-900 dark:text-white text-sm">{{ voucherData.statement }}</p>
+                        </div>
+                        <div class="flex items-center gap-4 text-xs font-mono">
+                            <div>
+                                <span class="text-slate-400 ml-1">رقم السند:</span>
+                                <span class="font-black text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-lg">{{ voucherData.voucher_number }}</span>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 ml-1">عدد الطلبات:</span>
+                                <span class="font-bold text-slate-800 dark:text-slate-200">{{ voucherData.orders_count }} (صالة: {{ voucherData.dine_in_count }} | سفري: {{ voucherData.takeaway_count }})</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Double-entry Journal Table -->
+                    <div class="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
+                        <table class="w-full text-right text-xs">
+                            <thead class="bg-slate-100/80 dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-black border-b border-slate-200 dark:border-slate-800">
+                                <tr>
+                                    <th class="p-3 w-28">رمز الحساب</th>
+                                    <th class="p-3">اسم الحساب</th>
+                                    <th class="p-3 w-32 text-emerald-600 dark:text-emerald-400">مدين (Debit)</th>
+                                    <th class="p-3 w-32 text-amber-600 dark:text-amber-400">دائن (Credit)</th>
+                                    <th class="p-3">البيان والشرح</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
+                                <tr v-for="(line, idx) in voucherData.lines" :key="idx" class="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition">
+                                    <td class="p-3 font-mono font-bold text-slate-500 dark:text-slate-400">{{ line.account_code }}</td>
+                                    <td class="p-3 font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                                        <span class="w-2 h-2 rounded-full" :class="line.type === 'debit' ? 'bg-emerald-500' : 'bg-amber-500'"></span>
+                                        <span>{{ line.account_name }}</span>
+                                    </td>
+                                    <td class="p-3 font-mono font-black" :class="Number(line.debit) > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-300 dark:text-slate-600'">
+                                        {{ formatNumber(line.debit) }}
+                                    </td>
+                                    <td class="p-3 font-mono font-black" :class="Number(line.credit) > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-300 dark:text-slate-600'">
+                                        {{ formatNumber(line.credit) }}
+                                    </td>
+                                    <td class="p-3 text-slate-500 dark:text-slate-400 text-[11px]">{{ line.note }}</td>
+                                </tr>
+                            </tbody>
+                            <tfoot class="bg-amber-500/10 font-black border-t-2 border-amber-500/30 text-slate-900 dark:text-white">
+                                <tr>
+                                    <td colspan="2" class="p-3.5 text-sm">
+                                        <div class="flex items-center gap-2">
+                                            <span>المجموع المتوازن:</span>
+                                            <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold">
+                                                فرق التوازن: {{ voucherData.difference }} {{ voucherData.currency }} ✓
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="p-3.5 font-mono text-emerald-600 dark:text-emerald-400 text-sm">
+                                        {{ formatNumber(voucherData.total_debit) }} {{ voucherData.currency }}
+                                    </td>
+                                    <td class="p-3.5 font-mono text-amber-600 dark:text-amber-400 text-sm">
+                                        {{ formatNumber(voucherData.total_credit) }} {{ voucherData.currency }}
+                                    </td>
+                                    <td class="p-3.5 text-xs text-slate-500 dark:text-slate-400">سند معتمد ومتوازن</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <!-- Inventory Depletion / Dish Breakdown Accordion -->
+                    <div v-if="voucherData.itemized_sales && voucherData.itemized_sales.length > 0" class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 p-4 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="text-base">📦</span>
+                                <h4 class="font-black text-xs text-slate-900 dark:text-white">
+                                    كشف إخراج المواد المستودعية واستهلاك الأصناف (Inventory Depletion)
+                                </h4>
+                            </div>
+                            <span class="text-[11px] text-slate-500 dark:text-slate-400">
+                                {{ voucherData.itemized_sales.length }} صنف تم بيعه اليوم
+                            </span>
+                        </div>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                            استخدم هذه الرموز (SKU) في برنامج المحاسبة لإجراء سند إخراج بضاعة من المستودع وخصم تكلفة المواد الأولية بدقة.
+                        </p>
+
+                        <div class="overflow-x-auto max-h-56 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                            <table class="w-full text-right text-[11px]">
+                                <thead class="bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold sticky top-0">
+                                    <tr>
+                                        <th class="p-2 w-28">رمز المحاسبة (SKU)</th>
+                                        <th class="p-2">اسم الصنف</th>
+                                        <th class="p-2 w-20 text-center">الكمية</th>
+                                        <th class="p-2 w-24">متوسط السعر</th>
+                                        <th class="p-2 w-28">إجمالي الدخل</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 dark:divide-slate-800 bg-white/70 dark:bg-slate-900/70">
+                                    <tr v-for="(it, i) in voucherData.itemized_sales" :key="i">
+                                        <td class="p-2 font-mono font-bold text-amber-700 dark:text-amber-400">{{ it.external_sku }}</td>
+                                        <td class="p-2 font-bold text-slate-800 dark:text-slate-200">{{ it.name }}</td>
+                                        <td class="p-2 text-center font-mono font-black text-slate-900 dark:text-white">{{ it.quantity }}</td>
+                                        <td class="p-2 font-mono text-slate-500">{{ formatNumber(it.unit_price) }}</td>
+                                        <td class="p-2 font-mono font-bold text-slate-900 dark:text-white">{{ formatNumber(it.total_revenue) }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Close Button -->
+                <div class="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                        💡 نصيحة: يمكنك تخصيص أرقام الحسابات من <a href="/admin/settings" class="text-amber-600 dark:text-amber-400 underline font-bold">إعدادات المطعم</a>.
+                    </p>
+                    <button
+                        @click="showAccountingVoucherModal = false"
+                        class="px-5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition"
                     >
                         إغلاق
                     </button>

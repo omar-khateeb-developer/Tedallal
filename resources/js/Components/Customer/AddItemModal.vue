@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, watch, onUnmounted } from 'vue';
+import { ref, computed, watch, onUnmounted } from 'vue';
+import { useVisualViewportModal } from '@/Composables/useVisualViewport';
 
 export interface MenuItemOption {
     id: number;
@@ -12,6 +13,9 @@ const props = defineProps<{
     currency: string;
     loading: boolean;
 }>();
+
+const isOpen = computed(() => !!props.item);
+const { modalStyle } = useVisualViewportModal(isOpen);
 
 const emit = defineEmits<{
     close: [];
@@ -51,9 +55,12 @@ function onImageError(event: Event) {
         <div
             v-if="item"
             class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs p-0 sm:p-4 overflow-y-auto"
+            :style="modalStyle"
             @click.self="emit('close')"
         >
             <div class="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#0a0f1d] p-5 sm:p-6 shadow-2xl border-t sm:border border-stone-200/80 dark:border-slate-800 transition-colors max-h-[92dvh] overflow-y-auto pb-[max(1.25rem,env(safe-area-inset-bottom))]" dir="rtl">
+                <!-- مقبض السحب المرئي للموبايل -->
+                <div class="w-12 h-1.5 rounded-full bg-stone-300 dark:bg-stone-700 mx-auto -mt-2 mb-3 sm:hidden"></div>
                 <div class="mb-4 aspect-video w-full overflow-hidden rounded-2xl border border-stone-100 dark:border-slate-800 flex items-center justify-center bg-gradient-to-br from-amber-50 to-stone-100 dark:from-slate-900 dark:to-[#070709]">
                     <img
                         :src="(item as any).image || '/images/tedallal-golden-logo-pure.png'"

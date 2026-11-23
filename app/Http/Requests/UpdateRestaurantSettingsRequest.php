@@ -23,6 +23,17 @@ class UpdateRestaurantSettingsRequest extends FormRequest
             'navbar_image' => ['nullable', 'image', 'max:2048'],
             'logo' => ['nullable', 'image', 'max:2048'],
             'auto_print_on_ready' => ['nullable', 'boolean'],
+            'accounting_mapping' => ['nullable', 'array'],
+            'accounting_mapping.cash_account_code' => ['nullable', 'string', 'max:50'],
+            'accounting_mapping.cash_account_name' => ['nullable', 'string', 'max:100'],
+            'accounting_mapping.dine_in_sales_code' => ['nullable', 'string', 'max:50'],
+            'accounting_mapping.dine_in_sales_name' => ['nullable', 'string', 'max:100'],
+            'accounting_mapping.takeaway_sales_code' => ['nullable', 'string', 'max:50'],
+            'accounting_mapping.takeaway_sales_name' => ['nullable', 'string', 'max:100'],
+            'accounting_mapping.discount_account_code' => ['nullable', 'string', 'max:50'],
+            'accounting_mapping.discount_account_name' => ['nullable', 'string', 'max:100'],
+            'accounting_mapping.tax_account_code' => ['nullable', 'string', 'max:50'],
+            'accounting_mapping.tax_account_name' => ['nullable', 'string', 'max:100'],
         ];
     }
 }

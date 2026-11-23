@@ -48,6 +48,16 @@ class RestaurantController extends ApiController
             unset($validated['auto_print_on_ready']);
         }
 
+        if ($request->has('accounting_mapping')) {
+            $features = $validated['features'] ?? ($restaurant->features ?? []);
+            $features['accounting_mapping'] = array_merge(
+                (array) ($features['accounting_mapping'] ?? []),
+                (array) ($request->input('accounting_mapping') ?? [])
+            );
+            $validated['features'] = $features;
+            unset($validated['accounting_mapping']);
+        }
+
         $restaurant->update($validated);
         $this->restaurantContext->forget();
 
