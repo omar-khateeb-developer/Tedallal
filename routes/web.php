@@ -164,5 +164,24 @@ Route::middleware(['auth'])->prefix('api/push')->group(function () {
 });
 Route::get('/api/push/public-key', [\App\Http\Controllers\Api\PushSubscriptionController::class, 'publicKey'])->name('push.key');
 
+// استعراض صفحات الأخطاء الفاخرة المعتمدة
+Route::get('/errors/403', function () {
+    if (request()->header('X-Inertia')) {
+        return \Inertia\Inertia::render('Errors/403', [
+            'message' => 'هذه الصفحة مخصصة لمدير النظام أو مدير المطعم فقط.',
+        ]);
+    }
+    return response()->view('errors.403', [
+        'message' => 'هذه الصفحة مخصصة لمدير النظام أو مدير المطعم فقط.',
+    ], 403);
+})->name('errors.403');
+
+Route::get('/errors/404', function () {
+    if (request()->header('X-Inertia')) {
+        return \Inertia\Inertia::render('Errors/404');
+    }
+    return response()->view('errors.404', [], 404);
+})->name('errors.404');
+
 require __DIR__.'/auth.php';
 

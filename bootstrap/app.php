@@ -45,6 +45,40 @@ return Application::configure(basePath: dirname(__DIR__))
             fn (Request $request) => $request->is('api/*'),
         );
 
+        // 403 Forbidden / Access Denied
+        $render403 = function (\Throwable $e, Request $request) {
+            $message = $e->getMessage() ?: 'ليس لديك الصلاحية للوصول إلى هذه الصفحة أو هذا الإجراء.';
+            if ($request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $message,
+                ], 403);
+            }
+
+            if ($request->header('X-Inertia')) {
+                return \Inertia\Inertia::render('Errors/403', [
+                    'message' => $e->getMessage() ?: null,
+                ])->toResponse($request)->setStatusCode(403);
+            }
+
+            return response()->view('errors.403', [
+                'exception' => $e,
+                'message' => $e->getMessage() ?: null,
+            ], 403);
+        };
+
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException $e, Request $request) use ($render403) {
+            return $render403($e, $request);
+        });
+
+        $exceptions->render(function (\Illuminate\Auth\Access\AuthorizationException $e, Request $request) use ($render403) {
+            return $render403($e, $request);
+        });
+
+        $exceptions->render(function (\Spatie\Permission\Exceptions\UnauthorizedException $e, Request $request) use ($render403) {
+            return $render403($e, $request);
+        });
+
         $exceptions->render(function (\Illuminate\Database\Eloquent\ModelNotFoundException $e, Request $request) {
             if ($request->is('api/*')) {
                 return response()->json([
