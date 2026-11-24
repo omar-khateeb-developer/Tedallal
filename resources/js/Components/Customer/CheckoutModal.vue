@@ -102,13 +102,12 @@ const emit = defineEmits<{
     <Teleport to="body">
         <div
             v-if="open"
-            class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs p-0 sm:p-4 overflow-y-auto"
-            :style="modalStyle"
+            class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/65 backdrop-blur-xs p-0 sm:p-4 overflow-hidden"
             @click.self="emit('close')"
         >
-            <div class="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#0a0f1d] p-5 sm:p-6 shadow-2xl border-t sm:border border-stone-200/80 dark:border-slate-800 transition-colors max-h-[90dvh] overflow-y-auto scrollbar-hide pb-[max(1.25rem,env(safe-area-inset-bottom))]" dir="rtl">
+            <div class="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#0a0f1d] p-5 sm:p-6 shadow-2xl border-t sm:border border-stone-200/80 dark:border-slate-800 transition-colors max-h-[88dvh] overflow-y-auto scrollbar-hide pb-[max(1.25rem,env(safe-area-inset-bottom))]" dir="rtl">
                 <!-- مقبض السحب المرئي للموبايل -->
-                <div class="w-12 h-1.5 rounded-full bg-stone-300 dark:bg-stone-700 mx-auto -mt-2 mb-3 sm:hidden"></div>
+                <div class="w-12 h-1.5 rounded-full bg-stone-300 dark:bg-stone-700 mx-auto -mt-2 mb-3 sm:hidden shrink-0"></div>
                 <div class="flex items-center justify-between pb-3 border-b border-stone-100 dark:border-slate-800">
                     <div>
                         <h3 class="text-xl font-bold text-stone-900 dark:text-white">تأكيد وإرسال الطلب</h3>

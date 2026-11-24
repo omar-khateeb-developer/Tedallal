@@ -165,17 +165,15 @@ defineExpose({ load, count, subtotal, finalTotal, serviceType, generalNote, appl
     <Teleport to="body">
         <div
             v-if="open"
-            class="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs transition-opacity"
-            @click="close"
-        />
-        <div
-            v-if="open"
-            class="fixed inset-x-0 bottom-0 z-50 flex flex-col max-h-[92dvh] rounded-t-3xl bg-white dark:bg-[#0a0f1d] text-stone-900 dark:text-white shadow-2xl border-t border-stone-200/80 dark:border-slate-800 transition-colors"
-            :style="modalStyle"
-            dir="rtl"
+            class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/65 backdrop-blur-xs transition-opacity overflow-hidden p-0 sm:p-4"
+            @click.self="close"
         >
-            <!-- مقبض السحب المرئي لشاشات الموبايل -->
-            <div class="w-12 h-1.5 rounded-full bg-stone-300 dark:bg-stone-700 mx-auto my-2 shrink-0"></div>
+            <div
+                class="w-full max-w-lg flex flex-col max-h-[88dvh] rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#0a0f1d] text-stone-900 dark:text-white shadow-2xl border-t sm:border border-stone-200/80 dark:border-slate-800 transition-colors"
+                dir="rtl"
+            >
+                <!-- مقبض السحب المرئي لشاشات الموبايل -->
+                <div class="w-12 h-1.5 rounded-full bg-stone-300 dark:bg-stone-700 mx-auto my-2.5 shrink-0 sm:hidden"></div>
 
             <!-- هيدر السلة الفاخر -->
             <div class="shrink-0 flex items-center justify-between border-b border-stone-100 dark:border-slate-800 bg-white/95 dark:bg-[#0a0f1d]/95 backdrop-blur-md px-4 py-3">
@@ -401,5 +399,6 @@ defineExpose({ load, count, subtotal, finalTotal, serviceType, generalNote, appl
                 </button>
             </div>
         </div>
-    </Teleport>
+    </div>
+</Teleport>
 </template>

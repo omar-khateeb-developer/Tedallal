@@ -738,10 +738,10 @@ onUnmounted(() => {
             </div>
         </div>
 
-        <!-- قائمة الأصناف: النمط الشبكي (Restoria Grid 2-cols) أو القائمة الأفقية -->
+        <!-- قائمة الأصناف: النمط الشبكي الفاخر (عمودان مريحان للموبايل) أو القائمة الأفقية -->
         <div
             :class="viewMode === 'grid'
-                ? 'grid grid-cols-2 sm:grid-cols-3 gap-3 pb-32'
+                ? 'grid grid-cols-2 gap-3.5 pb-32'
                 : 'grid grid-cols-1 gap-3 pb-32'"
         >
             <!-- بطاقة النمط الشبكي (Restoria Luxury Grid) -->
@@ -790,20 +790,20 @@ onUnmounted(() => {
                         <div>
                             <span
                                 v-if="activeCategory === 'all' && item.category_name"
-                                class="inline-block text-[10px] font-bold text-amber-600 dark:text-amber-400/90 mb-0.5"
+                                class="inline-block text-[11px] font-bold text-amber-600 dark:text-amber-400/90 mb-1"
                             >
                                 {{ item.category_name }}
                             </span>
-                            <h3 class="font-bold text-gray-900 dark:text-white text-sm line-clamp-1 group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">
+                            <h3 class="font-bold text-gray-900 dark:text-white text-sm sm:text-base line-clamp-2 leading-snug group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">
                                 {{ item.name }}
                             </h3>
-                            <p v-if="item.description" class="mt-1 text-[11px] text-stone-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                            <p v-if="item.description" class="mt-1 text-xs text-stone-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
                                 {{ item.description }}
                             </p>
                         </div>
 
                         <div class="flex items-center justify-between mt-3 pt-2 border-t border-stone-100 dark:border-slate-800/60">
-                            <p class="font-black text-amber-600 dark:text-amber-400 text-xs sm:text-sm">
+                            <p class="font-black text-amber-600 dark:text-amber-400 text-sm sm:text-base">
                                 {{ formatPrice(item.price) }}
                             </p>
 
@@ -815,18 +815,18 @@ onUnmounted(() => {
                                 >
                                     <button
                                         type="button"
-                                        class="h-6 w-6 rounded-full bg-white dark:bg-slate-800 text-amber-800 dark:text-amber-300 font-bold flex items-center justify-center hover:bg-amber-100 dark:hover:bg-slate-700 active:scale-90 transition-all text-xs"
+                                        class="h-7 w-7 rounded-full bg-white dark:bg-slate-800 text-amber-800 dark:text-amber-300 font-bold flex items-center justify-center hover:bg-amber-100 dark:hover:bg-slate-700 active:scale-90 transition-all text-xs"
                                         :disabled="updatingItemIds.has(item.id)"
                                         @click="quickDecrement(item)"
                                     >
                                         −
                                     </button>
-                                    <span class="text-xs font-black text-amber-900 dark:text-amber-200 min-w-[14px] text-center">
+                                    <span class="text-xs font-black text-amber-900 dark:text-amber-200 min-w-[16px] text-center">
                                         {{ cartItemsByMenuItemId[item.id].quantity }}
                                     </span>
                                     <button
                                         type="button"
-                                        class="h-6 w-6 rounded-full bg-amber-600 dark:bg-amber-500 text-white font-bold flex items-center justify-center hover:bg-amber-700 dark:hover:bg-amber-400 active:scale-90 transition-all text-xs"
+                                        class="h-7 w-7 rounded-full bg-amber-600 dark:bg-amber-500 text-white font-bold flex items-center justify-center hover:bg-amber-700 dark:hover:bg-amber-400 active:scale-90 transition-all text-xs"
                                         :disabled="updatingItemIds.has(item.id)"
                                         @click="quickIncrement(item)"
                                     >
@@ -836,12 +836,12 @@ onUnmounted(() => {
                                 <button
                                     v-else
                                     type="button"
-                                    class="h-7 w-7 rounded-full bg-amber-600 dark:bg-amber-500 text-white flex items-center justify-center shadow-md shadow-amber-200 dark:shadow-amber-950/50 hover:bg-amber-700 dark:hover:bg-amber-400 active:scale-90 transition-transform disabled:opacity-50"
+                                    class="h-8 w-8 rounded-full bg-amber-600 dark:bg-amber-500 text-white flex items-center justify-center shadow-md shadow-amber-200 dark:shadow-amber-950/50 hover:bg-amber-700 dark:hover:bg-amber-400 active:scale-90 transition-transform disabled:opacity-50"
                                     :disabled="updatingItemIds.has(item.id)"
                                     title="إضافة سريعة"
                                     @click="quickAdd(item)"
                                 >
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
                                     </svg>
                                 </button>
