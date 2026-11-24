@@ -227,11 +227,11 @@ const currentStepIndex = computed(() => {
                     title="التنبيه الصوتي مفعّل، انقر لتجربة نغمة جاهزية الطلب"
                 >
                     <span>🔔</span>
-                    <span class="text-[11px] hidden xs:inline">تنبيه صوتي</span>
+                    <span class="text-[0.6875rem] hidden sm:inline">تنبيه صوتي</span>
                 </button>
 
                 <div v-if="order" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 text-stone-950 font-black text-xs shadow-md border border-amber-300 select-none">
-                    <span class="text-[10px] font-bold opacity-80">طلب</span>
+                    <span class="text-[0.625rem] font-bold opacity-80">طلب</span>
                     <span class="text-base font-mono tracking-tight font-black">#{{ shortOrderNumber }}</span>
                 </div>
             </div>
@@ -441,7 +441,7 @@ const currentStepIndex = computed(() => {
 
             <!-- Sticky Back Button -->
             <div class="fixed inset-x-0 bottom-0 z-30 bg-gradient-to-t from-stone-50 via-stone-50 to-transparent dark:from-[#060913] dark:via-[#060913] dark:to-transparent pt-8 pb-4 px-4 transition-colors">
-                <div class="mx-auto max-w-lg">
+                <div class="mx-auto max-w-2xl">
                     <Link
                         :href="`/t/${publicToken}`"
                         class="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:from-amber-700 hover:to-amber-500 py-3.5 px-4 font-bold text-white shadow-lg shadow-amber-500/25 transition active:scale-95"

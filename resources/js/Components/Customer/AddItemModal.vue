@@ -15,7 +15,14 @@ const props = defineProps<{
 }>();
 
 const isOpen = computed(() => !!props.item);
-const { modalStyle } = useVisualViewportModal(isOpen);
+const { viewportBackdropStyle } = useVisualViewportModal(isOpen);
+
+function formatUnitPrice(val: string | number | undefined): string {
+    const clean = String(val ?? '0').replace(/,/g, '');
+    const num = parseFloat(clean);
+    if (isNaN(num)) return '0';
+    return Number.isInteger(num) ? num.toLocaleString() : parseFloat(num.toFixed(2)).toLocaleString();
+}
 
 const emit = defineEmits<{
     close: [];
@@ -62,10 +69,11 @@ function onImageError(event: Event) {
     <Teleport to="body">
         <div
             v-if="item"
+            :style="viewportBackdropStyle"
             class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/65 backdrop-blur-xs p-0 sm:p-4 overflow-hidden"
             @click.self="emit('close')"
         >
-            <div class="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#0a0f1d] p-5 sm:p-6 shadow-2xl border-t sm:border border-stone-200/80 dark:border-slate-800 transition-colors max-h-[88dvh] flex flex-col pb-[max(1.25rem,env(safe-area-inset-bottom))]" dir="rtl">
+            <div class="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#0a0f1d] p-5 sm:p-6 shadow-2xl border-t sm:border border-stone-200/80 dark:border-slate-800 transition-colors max-h-[90%] flex flex-col pb-[max(1.25rem,env(safe-area-inset-bottom))]" dir="rtl">
                 <!-- مقبض السحب المرئي للموبايل -->
                 <div class="w-12 h-1.5 rounded-full bg-stone-300 dark:bg-stone-700 mx-auto -mt-2 mb-3 sm:hidden shrink-0"></div>
                 
@@ -83,7 +91,7 @@ function onImageError(event: Event) {
                         />
                     </div>
                     <h3 class="text-xl font-bold text-stone-900 dark:text-white">{{ item.name }}</h3>
-                    <p class="text-amber-700 dark:text-amber-400 font-bold text-lg">{{ item.price }} {{ currency }}</p>
+                    <p class="text-amber-700 dark:text-amber-400 font-bold text-lg">{{ formatUnitPrice(item.price) }} {{ currency }}</p>
 
                     <div class="mt-2 flex items-center justify-center gap-4">
                         <button
@@ -108,7 +116,7 @@ function onImageError(event: Event) {
                         <textarea
                             v-model="note"
                             rows="2"
-                            class="w-full rounded-xl border-stone-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-slate-500 text-[16px] sm:text-sm focus:border-amber-500 focus:ring-amber-500 transition-colors"
+                            class="w-full rounded-xl border-stone-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-slate-500 text-base sm:text-sm focus:border-amber-500 focus:ring-amber-500 transition-colors"
                             placeholder="مثال: بدون بصل، زيادة صوص..."
                         />
                     </div>

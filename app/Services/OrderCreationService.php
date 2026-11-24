@@ -139,7 +139,7 @@ final class OrderCreationService
 
             $order->load(['items', 'table']);
 
-            if ($table) {
+            if ($table && $order->service_type !== 'takeaway') {
                 $table->update([
                     'operational_stage' => 'preparing',
                     'stage_updated_at' => now(),

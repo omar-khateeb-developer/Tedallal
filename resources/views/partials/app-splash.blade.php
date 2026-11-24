@@ -13,6 +13,7 @@
             position: fixed;
             inset: 0;
             z-index: 9999999;
+            overflow: hidden;
             background-color: #060913;
             background-image: 
                 radial-gradient(circle at 50% 38%, rgba(212, 175, 55, 0.14) 0%, transparent 60%),

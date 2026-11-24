@@ -451,7 +451,7 @@ useRestaurantOrders(restaurantId.value, {
                                 </span>
                                 <p class="font-black text-gray-900 dark:text-white text-base">{{ order.order_number }}</p>
                                 <span class="text-xs font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded-full border border-amber-200/50 dark:border-amber-800/40">
-                                    {{ (order.service_type ?? 'dine_in') === 'takeaway' ? '🥡 سفري' : (order.table?.name ? `🍽️ محلي (${order.table.name})` : '🍽️ محلي') }}
+                                    {{ (order.service_type ?? 'dine_in') === 'takeaway' ? (order.table?.name ? `🥡 سفري (${order.table.name})` : '🥡 سفري') : (order.table?.name ? `🍽️ محلي (${order.table.name})` : '🍽️ محلي') }}
                                 </span>
                                 <span v-if="order.pickup_window" class="text-xs font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 px-2 py-0.5 rounded-full border border-sky-200 dark:border-sky-800/40">
                                     🏢 نافذة {{ order.pickup_window }}
@@ -640,7 +640,7 @@ useRestaurantOrders(restaurantId.value, {
                             <div class="flex justify-between">
                                 <span class="text-stone-500">نوع الطلب:</span>
                                 <span class="font-bold">
-                                    {{ receiptOrder.service_type === 'takeaway' ? '🥡 سفري' : (receiptOrder.table?.name ? `🍽️ محلي (${receiptOrder.table.name})` : '🍽️ محلي') }}
+                                    {{ receiptOrder.service_type === 'takeaway' ? (receiptOrder.table?.name ? `🥡 سفري (${receiptOrder.table.name})` : '🥡 سفري') : (receiptOrder.table?.name ? `🍽️ محلي (${receiptOrder.table.name})` : '🍽️ محلي') }}
                                     <span v-if="receiptOrder.pickup_window" class="text-stone-700"> - نافذة {{ receiptOrder.pickup_window }}</span>
                                 </span>
                             </div>

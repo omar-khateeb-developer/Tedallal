@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, toRef } from 'vue';
 import axios from 'axios';
 import { useVisualViewportModal } from '@/composables/useVisualViewport';
 
@@ -15,7 +15,7 @@ const emit = defineEmits<{
     (e: 'callSent', type: 'waiter' | 'bill', data: any): void;
 }>();
 
-const { modalContainerStyle } = useVisualViewportModal();
+const { viewportBackdropStyle } = useVisualViewportModal(toRef(props, 'show'));
 
 const activeTab = ref<'waiter' | 'bill'>('waiter');
 const selectedReason = ref<string>('general');
@@ -100,38 +100,44 @@ async function submitBillRequest() {
 </script>
 
 <template>
-    <div
-        v-if="show"
-        class="fixed inset-0 z-50 flex items-end justify-center bg-black/75 backdrop-blur-sm transition-opacity duration-300"
-        @click.self="emit('close')"
-    >
+    <Teleport to="body">
         <div
-            :style="modalContainerStyle"
-            class="w-full max-w-lg bg-stone-900 border-t border-amber-500/40 rounded-t-3xl shadow-2xl p-6 text-white pb-8 overflow-y-auto max-h-[85vh] animate-in slide-in-from-bottom-6 duration-200"
+            v-if="show"
+            :style="viewportBackdropStyle"
+            class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 backdrop-blur-sm transition-opacity duration-300 overflow-hidden p-0 sm:p-4"
+            @click.self="emit('close')"
         >
-            <!-- Drag Indicator -->
-            <div class="flex justify-center -mt-2 mb-4">
-                <div class="w-12 h-1.5 rounded-full bg-stone-700"></div>
-            </div>
+            <div
+                class="w-full max-w-lg bg-stone-900 border-t sm:border border-amber-500/40 rounded-t-3xl sm:rounded-3xl shadow-2xl text-white max-h-[90%] flex flex-col overflow-hidden"
+                dir="rtl"
+            >
+                <div class="shrink-0 px-6 pt-4 pb-3 border-b border-stone-800">
+                    <!-- Drag Indicator -->
+                    <div class="flex justify-center mb-3 sm:hidden">
+                        <div class="w-12 h-1.5 rounded-full bg-stone-700"></div>
+                    </div>
 
-            <!-- Header -->
-            <div class="flex items-center justify-between border-b border-stone-800 pb-4 mb-5">
-                <div>
-                    <h3 class="text-lg font-bold text-amber-400 flex items-center gap-2">
-                        <span>🛎️ خدمة الطاولة الهادئة</span>
-                    </h3>
-                    <p class="text-xs text-stone-400 mt-0.5">
-                        {{ table.name }} • نلبي رغباتكم بكل رقي ودون الحاجة لمناداة
-                    </p>
+                    <!-- Header -->
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-bold text-amber-400 flex items-center gap-2">
+                                <span>🛎️ خدمة الطاولة الهادئة</span>
+                            </h3>
+                            <p class="text-xs text-stone-400 mt-0.5">
+                                {{ table.name }} • نلبي رغباتكم بكل رقي ودون الحاجة لمناداة
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            @click="emit('close')"
+                            class="w-8 h-8 rounded-full bg-stone-800 text-stone-400 hover:text-white flex items-center justify-center text-sm font-bold active:scale-95 transition-all"
+                        >
+                            ✕
+                        </button>
+                    </div>
                 </div>
-                <button
-                    type="button"
-                    @click="emit('close')"
-                    class="w-8 h-8 rounded-full bg-stone-800 text-stone-400 hover:text-white flex items-center justify-center text-sm font-bold active:scale-95 transition-all"
-                >
-                    ✕
-                </button>
-            </div>
+
+                <div class="flex-1 overflow-y-auto p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
 
             <!-- Tab Switcher -->
             <div class="grid grid-cols-2 gap-2 p-1.5 bg-stone-950/80 rounded-2xl border border-stone-800 mb-6">
@@ -189,8 +195,7 @@ async function submitBillRequest() {
                         v-model="customNote"
                         type="text"
                         placeholder="مثال: يرجى إحضار كرسي للأطفال أو مناديل إضافية..."
-                        class="w-full bg-stone-950 border border-stone-700 rounded-xl px-3.5 py-3 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-amber-400"
-                        style="font-size: 16px;"
+                        class="w-full bg-stone-950 border border-stone-700 rounded-xl px-3.5 py-3 text-base sm:text-xs text-white placeholder-stone-500 focus:outline-none focus:border-amber-400"
                     />
                 </div>
 
@@ -254,8 +259,7 @@ async function submitBillRequest() {
                         v-model="customNote"
                         type="text"
                         placeholder="مثال: فاتورة ضريبية، أو تقسيم الحساب..."
-                        class="w-full bg-stone-950 border border-stone-700 rounded-xl px-3.5 py-3 text-xs text-white placeholder-stone-500 focus:outline-none focus:border-amber-400"
-                        style="font-size: 16px;"
+                        class="w-full bg-stone-950 border border-stone-700 rounded-xl px-3.5 py-3 text-base sm:text-xs text-white placeholder-stone-500 focus:outline-none focus:border-amber-400"
                     />
                 </div>
 
@@ -269,6 +273,8 @@ async function submitBillRequest() {
                     <span v-else class="animate-pulse">⏳ جاري إشعار الكاشير...</span>
                 </button>
             </div>
+            </div>
         </div>
     </div>
+    </Teleport>
 </template>

@@ -3,7 +3,7 @@
 // عامل الخدمة الملكي لإدارة التخزين المؤقت والإشعارات الفورية والتثبيت المستقل
 // ==============================================================================
 
-const CACHE_NAME = 'tedallal-cache-v1';
+const CACHE_NAME = 'tedallal-cache-v2';
 const PRECACHE_ASSETS = [
     '/',
     '/site.webmanifest',

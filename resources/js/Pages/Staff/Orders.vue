@@ -522,7 +522,7 @@ useRestaurantOrders(restaurantId.value, {
                                             <p class="font-black text-gray-900 dark:text-white text-lg">{{ order.order_number }}</p>
                                             <div class="flex items-center gap-1.5 flex-wrap mt-1">
                                                 <span class="text-xs font-semibold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded-full inline-block border border-amber-200/50 dark:border-amber-800/40">
-                                                    {{ (order.service_type ?? 'dine_in') === 'takeaway' ? '🥡 سفري' : (order.table?.name || 'محلي') }}
+                                                    {{ (order.service_type ?? 'dine_in') === 'takeaway' ? (order.table?.name ? `🥡 سفري (${order.table.name})` : '🥡 سفري') : (order.table?.name || 'محلي') }}
                                                 </span>
                                                 <span v-if="order.pickup_window" class="text-xs font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 px-2 py-0.5 rounded-full inline-block border border-sky-200 dark:border-sky-800/40">
                                                     🏢 نافذة {{ order.pickup_window }}

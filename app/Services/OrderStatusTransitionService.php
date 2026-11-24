@@ -74,7 +74,7 @@ final class OrderStatusTransitionService
 
         $order->update($updateData);
 
-        if ($order->table) {
+        if ($order->table && $order->service_type !== 'takeaway') {
             if ($target === OrderStatus::Served) {
                 $order->table->update([
                     'operational_stage' => 'served',

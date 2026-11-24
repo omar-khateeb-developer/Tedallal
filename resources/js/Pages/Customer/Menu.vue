@@ -536,7 +536,7 @@ onUnmounted(() => {
                     <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                     </svg>
-                    <span class="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-amber-600 px-1 text-[10px] font-black text-white shadow">
+                    <span class="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-600 px-1 text-[0.625rem] font-black text-white shadow">
                         {{ cartCount }}
                     </span>
                 </button>
@@ -653,7 +653,7 @@ onUnmounted(() => {
                     v-model="searchQuery"
                     type="search"
                     dir="rtl"
-                    placeholder="ابحث عن وجبتك المفضلة، مشروب، أو حلوى..."
+                    placeholder="ابحث عن وجبة أو مشروب..."
                     class="w-full rounded-2xl border border-stone-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/90 text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-slate-500 text-xs sm:text-sm pr-10 pl-9 py-2.5 shadow-xs focus:border-amber-500 focus:ring-amber-500 transition-all backdrop-blur-md"
                 />
                 <span class="absolute right-3.5 text-stone-400 dark:text-slate-500 text-sm pointer-events-none">
@@ -676,7 +676,7 @@ onUnmounted(() => {
         </div>
 
         <!-- تبويبات الأصناف - تثبت بسلاسة تحت الهيدر عند التمرير مع تأثير زجاجي فاخر -->
-        <div class="sticky top-[64px] sm:top-[68px] z-10 -mx-4 bg-stone-50/90 dark:bg-[#060913]/90 backdrop-blur-xl px-4 pt-2.5 pb-3 mb-3 border-b border-stone-200/70 dark:border-slate-800/80 shadow-xs transition-all">
+        <div class="sticky top-[4.5rem] z-10 -mx-4 bg-stone-50/95 dark:bg-[#060913]/95 backdrop-blur-xl px-4 pt-2.5 pb-3 mb-3 border-b border-stone-200/70 dark:border-slate-800/80 shadow-xs transition-all">
             <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide scroll-smooth">
                 <!-- تبويب الكل -->
                 <button
@@ -720,7 +720,7 @@ onUnmounted(() => {
                         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z"/>
                         </svg>
-                        <span class="text-[11px]">شبكي</span>
+                        <span class="text-[0.6875rem]">شبكي</span>
                     </button>
                     <button
                         type="button"
@@ -732,7 +732,7 @@ onUnmounted(() => {
                         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h16v2H4v-2z"/>
                         </svg>
-                        <span class="text-[11px]">قائمة</span>
+                        <span class="text-[0.6875rem]">قائمة</span>
                     </button>
                 </div>
             </div>
@@ -769,7 +769,7 @@ onUnmounted(() => {
                         <!-- شارة الطهي الفاخرة (Restoria Badge) -->
                         <span
                             v-if="getDishBadge(item, idx)"
-                            class="absolute top-2 start-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] shadow-sm backdrop-blur-md"
+                            class="absolute top-2 start-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.625rem] shadow-sm backdrop-blur-md"
                             :class="getDishBadge(item, idx)?.style"
                         >
                             <span>{{ getDishBadge(item, idx)?.icon }}</span>
@@ -779,7 +779,7 @@ onUnmounted(() => {
                         <!-- شارة الكمية في السلة -->
                         <span
                             v-if="cartItemsByMenuItemId[item.id]"
-                            class="absolute top-2 end-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-amber-500 px-1 text-[11px] font-black text-stone-950 shadow-md ring-2 ring-white dark:ring-slate-900"
+                            class="absolute top-2 end-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1 text-[0.6875rem] font-black text-stone-950 shadow-md ring-2 ring-white dark:ring-slate-900"
                         >
                             {{ cartItemsByMenuItemId[item.id].quantity }}
                         </span>
@@ -790,7 +790,7 @@ onUnmounted(() => {
                         <div>
                             <span
                                 v-if="activeCategory === 'all' && item.category_name"
-                                class="inline-block text-[11px] font-bold text-amber-600 dark:text-amber-400/90 mb-1"
+                                class="inline-block text-[0.6875rem] font-bold text-amber-600 dark:text-amber-400/90 mb-1"
                             >
                                 {{ item.category_name }}
                             </span>
@@ -878,7 +878,7 @@ onUnmounted(() => {
                         <!-- شارة الكمية في زاوية الصورة -->
                         <span
                             v-if="cartItemsByMenuItemId[item.id]"
-                            class="absolute -top-1.5 -right-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-amber-500 px-1 text-[11px] font-black text-stone-950 shadow-md ring-2 ring-white dark:ring-slate-900"
+                            class="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1 text-[0.6875rem] font-black text-stone-950 shadow-md ring-2 ring-white dark:ring-slate-900"
                         >
                             {{ cartItemsByMenuItemId[item.id].quantity }}
                         </span>
@@ -889,7 +889,7 @@ onUnmounted(() => {
                         <div>
                             <span
                                 v-if="activeCategory === 'all' && item.category_name"
-                                class="inline-block text-[10px] font-bold text-amber-600 dark:text-amber-400/90 mb-0.5"
+                                class="inline-block text-[0.625rem] font-bold text-amber-600 dark:text-amber-400/90 mb-0.5"
                             >
                                 {{ item.category_name }}
                             </span>
@@ -899,7 +899,7 @@ onUnmounted(() => {
                                 </h3>
                                 <span
                                     v-if="getDishBadge(item, idx)"
-                                    class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] shadow-2xs"
+                                    class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.625rem] shadow-2xs"
                                     :class="getDishBadge(item, idx)?.style"
                                 >
                                     <span>{{ getDishBadge(item, idx)?.icon }}</span>
@@ -975,7 +975,7 @@ onUnmounted(() => {
         <!-- تنبيه عائم سريع وأنيق عند الإضافة لا يحجب الأصناف -->
         <Transition name="toast-slide">
             <div
-                v-if="toastInfo && toastInfo.show"
+                v-if="toastInfo && toastInfo.show && !cartOpen && !checkoutOpen"
                 class="fixed bottom-24 inset-x-0 mx-auto max-w-sm z-40 px-4 pointer-events-none"
             >
                 <div class="flex items-center justify-between gap-3 bg-stone-900/95 text-white backdrop-blur-md px-4 py-3 rounded-2xl shadow-2xl border border-stone-700/60 pointer-events-auto">
@@ -1002,7 +1002,7 @@ onUnmounted(() => {
         <Transition name="cart-bar">
             <div
                 v-if="cartCount > 0 && !cartOpen && !checkoutOpen"
-                class="fixed inset-x-0 bottom-3 z-30 mx-auto max-w-lg px-4 pb-[env(safe-area-inset-bottom,0px)]"
+                class="fixed inset-x-0 bottom-3 z-30 mx-auto max-w-2xl px-4 pb-[env(safe-area-inset-bottom,0px)]"
             >
                 <button
                     type="button"
@@ -1020,7 +1020,7 @@ onUnmounted(() => {
                             <!-- شارة العدد المنبثقة من السلة -->
                             <span
                                 :key="cartCount"
-                                class="absolute -top-1.5 -right-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-amber-500 px-1 text-[11px] font-black text-stone-950 shadow-md animate-bounce-short"
+                                class="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1 text-[0.6875rem] font-black text-stone-950 shadow-md animate-bounce-short"
                             >
                                 {{ cartCount }}
                             </span>
@@ -1030,7 +1030,7 @@ onUnmounted(() => {
                                 <span>عرض السلة</span>
                                 <span class="text-xs font-semibold text-stone-400">({{ cartCount }} {{ cartCount === 1 ? 'صنف' : 'أصناف' }})</span>
                             </p>
-                            <p class="text-[11px] text-amber-400/90 font-medium">اضغط للمراجعة وتأكيد الطلب</p>
+                            <p class="text-[0.6875rem] text-amber-400/90 font-medium">اضغط للمراجعة وتأكيد الطلب</p>
                         </div>
                     </div>
 
@@ -1084,6 +1084,7 @@ onUnmounted(() => {
             v-if="restaurant.features?.ai_waiter"
             :restaurant-name="restaurant.name"
             :currency="restaurant.currency"
+            :has-cart-bar="cartCount > 0 && !cartOpen && !checkoutOpen"
             @item-added="refreshCartSummary"
         />
 

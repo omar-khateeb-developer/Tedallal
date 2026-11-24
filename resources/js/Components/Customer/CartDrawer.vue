@@ -20,7 +20,14 @@ const props = withDefaults(defineProps<{
     submitting: false,
 });
 
-const { modalStyle } = useVisualViewportModal(toRef(props, 'open'));
+const { viewportBackdropStyle } = useVisualViewportModal(toRef(props, 'open'));
+
+function formatPriceValue(val: string | number): string {
+    const clean = String(val ?? '0').replace(/,/g, '');
+    const num = parseFloat(clean);
+    if (isNaN(num)) return '0';
+    return Number.isInteger(num) ? num.toLocaleString() : parseFloat(num.toFixed(2)).toLocaleString();
+}
 
 const emit = defineEmits<{
     'update:open': [value: boolean];
@@ -165,11 +172,12 @@ defineExpose({ load, count, subtotal, finalTotal, serviceType, generalNote, appl
     <Teleport to="body">
         <div
             v-if="open"
+            :style="viewportBackdropStyle"
             class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/65 backdrop-blur-xs transition-opacity overflow-hidden p-0 sm:p-4"
             @click.self="close"
         >
             <div
-                class="w-full max-w-lg flex flex-col max-h-[88dvh] rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#0a0f1d] text-stone-900 dark:text-white shadow-2xl border-t sm:border border-stone-200/80 dark:border-slate-800 transition-colors"
+                class="w-full max-w-lg flex flex-col max-h-[90%] rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#0a0f1d] text-stone-900 dark:text-white shadow-2xl border-t sm:border border-stone-200/80 dark:border-slate-800 transition-colors"
                 dir="rtl"
             >
                 <!-- مقبض السحب المرئي لشاشات الموبايل -->
@@ -226,7 +234,7 @@ defineExpose({ load, count, subtotal, finalTotal, serviceType, generalNote, appl
                             <div class="flex-1 min-w-0">
                                 <h3 class="font-bold text-stone-900 dark:text-white text-sm truncate">{{ item.menu_item.name }}</h3>
                                 <p class="text-xs font-black text-amber-700 dark:text-amber-400 mt-0.5">
-                                    {{ item.menu_item.price }} {{ currency }}
+                                    {{ formatPriceValue(item.menu_item.price) }} {{ currency }}
                                 </p>
                             </div>
                             <div class="flex items-center gap-1.5 bg-white dark:bg-slate-800/80 border border-stone-200 dark:border-slate-700 rounded-full p-0.5 shadow-2xs shrink-0">
@@ -252,7 +260,7 @@ defineExpose({ load, count, subtotal, finalTotal, serviceType, generalNote, appl
                         <input
                             :value="item.note ?? ''"
                             type="text"
-                            class="mt-2.5 w-full rounded-xl border-stone-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-slate-500 text-[13px] px-3 py-1.5 focus:border-amber-500 focus:ring-amber-500"
+                            class="mt-2.5 w-full rounded-xl border-stone-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-slate-500 text-base sm:text-sm px-3 py-1.5 focus:border-amber-500 focus:ring-amber-500"
                             placeholder="ملاحظة خاصة على هذا الصنف (اختياري)..."
                             @change="updateNote(item, ($event.target as HTMLInputElement).value)"
                         />

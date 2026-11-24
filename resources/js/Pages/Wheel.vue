@@ -295,7 +295,9 @@ function drawWheel(angle: number) {
 
     const dpr = window.devicePixelRatio || 1;
     const logicalSize = 360;
-    const size = logicalSize * dpr;
+    const cssSize = canvas.clientWidth || logicalSize;
+    const effectiveDpr = Math.max(dpr, (cssSize / logicalSize) * dpr);
+    const size = Math.round(logicalSize * effectiveDpr);
 
     if (canvas.width !== size || canvas.height !== size) {
         canvas.width = size;
@@ -303,7 +305,7 @@ function drawWheel(angle: number) {
     }
 
     ctx.save();
-    ctx.scale(dpr, dpr);
+    ctx.scale(effectiveDpr, effectiveDpr);
     ctx.clearRect(0, 0, logicalSize, logicalSize);
 
     const center = logicalSize / 2;
@@ -760,7 +762,7 @@ onUnmounted(() => {
 
     <div
         dir="rtl"
-        class="min-h-screen bg-[#070707] text-[#F3F4F6] flex flex-col items-center justify-between p-4 selection:bg-[#D4AF37] selection:text-black relative overflow-x-hidden font-tajawal antialiased"
+        class="min-h-screen bg-[#070707] text-[#F3F4F6] flex flex-col items-center justify-between p-4 selection:bg-[#D4AF37] selection:text-black relative overflow-x-clip font-tajawal antialiased"
     >
         <!-- Confetti container -->
         <div id="confetti-container" class="pointer-events-none fixed inset-0 overflow-hidden z-50"></div>
@@ -796,10 +798,10 @@ onUnmounted(() => {
                         <span v-if="restaurant.menu_url" class="text-xs text-[#D4AF37] opacity-80 group-hover:opacity-100 transition-opacity">↗</span>
                     </div>
                     <div class="flex items-center gap-2 mt-0.5">
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#D4AF37]/15 text-[#FCF6BA] border border-[#D4AF37]/30">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[0.625rem] font-bold bg-[#D4AF37]/15 text-[#FCF6BA] border border-[#D4AF37]/30">
                             ✨ عجلة الحظ والهدايا
                         </span>
-                        <span v-if="order_number" class="text-[11px] text-[#9CA3AF] font-mono">
+                        <span v-if="order_number" class="text-[0.6875rem] text-[#9CA3AF] font-mono">
                             #{{ order_number }}
                         </span>
                     </div>
@@ -810,7 +812,7 @@ onUnmounted(() => {
             <div class="flex items-center gap-2">
                 <span
                     v-if="is_demo"
-                    class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40"
+                    class="px-2.5 py-1 rounded-full text-[0.625rem] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40"
                 >
                     وضع المعاينة التجريبي
                 </span>
@@ -850,7 +852,7 @@ onUnmounted(() => {
             <div v-else class="w-full flex flex-col items-center">
 
                 <!-- The Interactive Wheel Container -->
-                <div class="relative w-[340px] h-[340px] sm:w-[380px] sm:h-[380px] flex items-center justify-center my-3 select-none">
+                <div class="relative w-[min(86vw,23.75rem)] h-[min(86vw,23.75rem)] flex items-center justify-center my-3 select-none">
 
                     <!-- Slanted Ribbon / Void Stamp Banner when QR is already claimed -->
                     <div
@@ -902,7 +904,7 @@ onUnmounted(() => {
                         <!-- Claimed State: Locked -->
                         <template v-if="props.is_claimed">
                             <span class="text-base leading-none">🔒</span>
-                            <span class="font-serif font-black text-[10px] mt-0.5 text-stone-900">مُستخدم</span>
+                            <span class="font-serif font-black text-[0.625rem] mt-0.5 text-stone-900">مُستخدم</span>
                         </template>
 
                         <!-- Ready to Spin State -->
@@ -915,13 +917,13 @@ onUnmounted(() => {
                         <!-- Spinning State: Golden Crown with subtle pulse (No Gear) -->
                         <template v-else-if="isSpinning">
                             <span class="text-xl animate-pulse">👑</span>
-                            <span class="text-[9px] font-bold mt-0.5 text-black/90">حظاً موفقاً</span>
+                            <span class="text-[0.5625rem] font-bold mt-0.5 text-black/90">حظاً موفقاً</span>
                         </template>
 
                         <!-- Already Claimed State (won in current session) -->
                         <template v-else>
                             <span class="text-lg">👑</span>
-                            <span class="text-[10px] font-bold">مبروك!</span>
+                            <span class="text-[0.625rem] font-bold">مبروك!</span>
                         </template>
                     </button>
                 </div>
@@ -1000,18 +1002,18 @@ onUnmounted(() => {
 
                                 <div class="space-y-2.5">
                                     <div>
-                                        <label class="block text-[11px] font-bold text-emerald-200 mb-1">الاسم الكامل (حقيقي):</label>
+                                        <label class="block text-[0.6875rem] font-bold text-emerald-200 mb-1">الاسم الكامل (حقيقي):</label>
                                         <input
                                             v-model="customerName"
                                             type="text"
                                             dir="rtl"
                                             maxlength="50"
                                             placeholder="مثال: أحمد محمد"
-                                            class="w-full text-[16px] py-2.5 px-3.5 rounded-xl bg-black/70 border border-emerald-500/40 text-white placeholder-stone-500 focus:outline-none focus:border-emerald-400"
+                                            class="w-full text-base py-2.5 px-3.5 rounded-xl bg-black/70 border border-emerald-500/40 text-white placeholder-stone-500 focus:outline-none focus:border-emerald-400"
                                         />
                                     </div>
                                     <div>
-                                        <label class="block text-[11px] font-bold text-emerald-200 mb-1">رقم الواتساب (يبدأ بـ 09 فقط):</label>
+                                        <label class="block text-[0.6875rem] font-bold text-emerald-200 mb-1">رقم الواتساب (يبدأ بـ 09 فقط):</label>
                                         <input
                                             v-model="whatsappPhone"
                                             type="tel"
@@ -1019,7 +1021,7 @@ onUnmounted(() => {
                                             dir="ltr"
                                             maxlength="10"
                                             placeholder="09XXXXXXXX"
-                                            class="w-full text-center text-[16px] py-2.5 px-3.5 rounded-xl bg-black/70 border border-emerald-500/40 text-white placeholder-stone-500 focus:outline-none focus:border-emerald-400 font-mono tracking-wider"
+                                            class="w-full text-center text-base py-2.5 px-3.5 rounded-xl bg-black/70 border border-emerald-500/40 text-white placeholder-stone-500 focus:outline-none focus:border-emerald-400 font-mono tracking-wider"
                                         />
                                     </div>
                                 </div>
@@ -1064,7 +1066,7 @@ onUnmounted(() => {
                                 <p v-if="isAutoSent" class="text-xs font-bold text-emerald-200 leading-relaxed">
                                     🎉 تم إرسال كود الخصم ورابط تفعيله في المنيو مباشرة من رقم واتساب المطعم إلى رقمك ({{ whatsappPhone }}) بنجاح! تفقد رسائلك الآن.
                                 </p>
-                                <p v-else class="text-[11px] text-emerald-100/80 leading-relaxed">
+                                <p v-else class="text-[0.6875rem] text-emerald-100/80 leading-relaxed">
                                     تم حفظ كود الخصم الخاص بك في سجل المطعم. يمكنك مراسلة واتساب المطعم لحفظ نسختك ومتابعة طلبك:
                                 </p>
                                 <div v-if="isAutoSent" class="w-full py-2.5 px-4 rounded-xl bg-emerald-800/80 border border-emerald-400/40 text-emerald-100 text-xs font-bold flex items-center justify-center gap-2">
@@ -1103,7 +1105,7 @@ onUnmounted(() => {
                                         <span v-else class="font-bold">
                                             تم تسجيل زيارتك الأولى باسم «{{ customerName }}»!
                                         </span>
-                                        <span v-if="(loyaltyResult?.enabled ?? props.loyalty_config?.enabled)" class="block text-[11px] text-amber-200/80 mt-0.5">
+                                        <span v-if="(loyaltyResult?.enabled ?? props.loyalty_config?.enabled)" class="block text-[0.6875rem] text-amber-200/80 mt-0.5">
                                             تبقّى لك {{ loyaltyResult?.remaining_visits ?? ((props.loyalty_config?.target_visits || 5) - (claimedVisitsCount % (props.loyalty_config?.target_visits || 5))) }} زيارات فقط لتحصل على: {{ loyaltyResult?.reward_label || props.loyalty_config?.reward_label }}
                                         </span>
                                     </div>
@@ -1170,7 +1172,7 @@ onUnmounted(() => {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     dir="ltr"
-                                    class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 hover:bg-white/10 text-[10px] font-semibold text-stone-400 hover:text-[#D4AF37] transition-all border border-white/10"
+                                    class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 hover:bg-white/10 text-[0.625rem] font-semibold text-stone-400 hover:text-[#D4AF37] transition-all border border-white/10"
                                 >
                                     <span class="text-[#D4AF37]">⚡</span>
                                     <span>Powered by:</span>
@@ -1198,14 +1200,14 @@ onUnmounted(() => {
         </main>
 
         <!-- Footer -->
-        <footer class="w-full max-w-md pt-3 pb-6 text-center text-[11px] text-[#9CA3AF]/70 relative z-10 flex flex-col items-center gap-2">
+        <footer class="w-full max-w-md pt-3 pb-6 text-center text-[0.6875rem] text-[#9CA3AF]/70 relative z-10 flex flex-col items-center gap-2">
             <div>منظومة تدلّل الذكية لأتمتة المطاعم • ضيافة فاخرة وعروض مبهجة</div>
             <a
                 href="https://tedallal.tech"
                 target="_blank"
                 rel="noopener noreferrer"
                 dir="ltr"
-                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 hover:bg-white/10 text-[10.5px] font-semibold text-stone-400 hover:text-[#D4AF37] transition-all border border-white/10"
+                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 hover:bg-white/10 text-[0.65625rem] font-semibold text-stone-400 hover:text-[#D4AF37] transition-all border border-white/10"
             >
                 <span class="text-[#D4AF37]">⚡</span>
                 <span>Powered by:</span>

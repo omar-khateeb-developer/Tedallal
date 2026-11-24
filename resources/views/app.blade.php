@@ -66,6 +66,20 @@
                         document.documentElement.style.colorScheme = 'dark';
                     }
                 } catch (e) {}
+                try {
+                    var path = window.location.pathname || '';
+                    var isCustomerRoute = /^\/(t|wheel|wheel-demo|w|r)(\/|$)/.test(path);
+                    var minScreen = Math.min(window.screen.width || 9999, window.screen.height || 9999);
+                    var isCoarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+                    var hasTouch = (navigator.maxTouchPoints || 0) > 0 || isCoarse;
+                    var iw = window.innerWidth || 0;
+                    var ih = window.innerHeight || 1;
+                    var isPortraitTall = (ih / iw) >= 1.65;
+                    var isPhoneDesktopMode = isCustomerRoute && hasTouch && iw >= 750 && (minScreen <= 560 || (isCoarse && isPortraitTall && iw >= 850));
+                    if (isPhoneDesktopMode) {
+                        document.documentElement.classList.add('tld-desktop-mode-phone');
+                    }
+                } catch (e) {}
             })();
         </script>
 

@@ -12,7 +12,14 @@ const props = defineProps<{
     isPrepaid?: boolean;
 }>();
 
-const { modalStyle } = useVisualViewportModal(toRef(props, 'open'));
+const { viewportBackdropStyle } = useVisualViewportModal(toRef(props, 'open'));
+
+function formatNum(val: string | number): string {
+    const clean = String(val ?? '0').replace(/,/g, '');
+    const num = parseFloat(clean);
+    if (isNaN(num)) return '0';
+    return Number.isInteger(num) ? num.toLocaleString() : parseFloat(num.toFixed(2)).toLocaleString();
+}
 
 const customerNote = defineModel<string>('customerNote', { default: '' });
 const serviceType = defineModel<string>('serviceType', { default: 'dine_in' });
@@ -102,23 +109,29 @@ const emit = defineEmits<{
     <Teleport to="body">
         <div
             v-if="open"
+            :style="viewportBackdropStyle"
             class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/65 backdrop-blur-xs p-0 sm:p-4 overflow-hidden"
             @click.self="emit('close')"
         >
-            <div class="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#0a0f1d] p-5 sm:p-6 shadow-2xl border-t sm:border border-stone-200/80 dark:border-slate-800 transition-colors max-h-[88dvh] overflow-y-auto scrollbar-hide pb-[max(1.25rem,env(safe-area-inset-bottom))]" dir="rtl">
-                <!-- مقبض السحب المرئي للموبايل -->
-                <div class="w-12 h-1.5 rounded-full bg-stone-300 dark:bg-stone-700 mx-auto -mt-2 mb-3 sm:hidden shrink-0"></div>
-                <div class="flex items-center justify-between pb-3 border-b border-stone-100 dark:border-slate-800">
-                    <div>
-                        <h3 class="text-xl font-bold text-stone-900 dark:text-white">تأكيد وإرسال الطلب</h3>
-                        <p class="text-xs text-stone-500 dark:text-slate-400 mt-0.5">
-                            {{ itemCount }} صنف في السلة
-                        </p>
+            <div class="w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#0a0f1d] shadow-2xl border-t sm:border border-stone-200/80 dark:border-slate-800 transition-colors max-h-[90%] flex flex-col overflow-hidden" dir="rtl">
+                <!-- مقبض السحب المرئي للموبايل + الهيدر المثبت -->
+                <div class="shrink-0 px-5 pt-4 pb-3 border-b border-stone-100 dark:border-slate-800 bg-white/95 dark:bg-[#0a0f1d]/95">
+                    <div class="w-12 h-1.5 rounded-full bg-stone-300 dark:bg-stone-700 mx-auto mb-3 sm:hidden"></div>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-xl font-bold text-stone-900 dark:text-white">تأكيد وإرسال الطلب</h3>
+                            <p class="text-xs text-stone-500 dark:text-slate-400 mt-0.5">
+                                {{ itemCount }} صنف في السلة
+                            </p>
+                        </div>
+                        <button type="button" @click="emit('close')" class="h-8 w-8 rounded-full flex items-center justify-center text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-slate-800 text-lg font-bold transition-colors">
+                            ✕
+                        </button>
                     </div>
-                    <button type="button" @click="emit('close')" class="text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 text-xl font-bold">
-                        ✕
-                    </button>
                 </div>
+
+                <!-- جسم النافذة القابل للتمرير -->
+                <div class="flex-1 overflow-y-auto scrollbar-hide px-5 py-4 space-y-4">
 
                 <!-- خيار نوع الطلب (محلي / سفري) -->
                 <div class="mt-4">
@@ -178,7 +191,7 @@ const emit = defineEmits<{
                             type="text"
                             placeholder="أدخل كود الكوبون..."
                             :disabled="!!appliedCode"
-                            class="flex-1 rounded-xl border-stone-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white placeholder:text-stone-400 text-[16px] sm:text-xs uppercase font-bold focus:border-amber-500 focus:ring-amber-500"
+                            class="flex-1 rounded-xl border-stone-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white placeholder:text-stone-400 text-base sm:text-xs uppercase font-bold focus:border-amber-500 focus:ring-amber-500"
                             dir="ltr"
                         />
                         <button
@@ -242,48 +255,51 @@ const emit = defineEmits<{
                 </div>
 
                 <!-- ملاحظات عامة للطلب -->
-                <div class="mt-4">
+                <div>
                     <label class="mb-1 block text-xs font-bold text-stone-700 dark:text-slate-300">ملاحظات عامة للطلب (اختياري)</label>
                     <textarea
                         v-model="customerNote"
                         rows="2"
-                        class="w-full rounded-xl border-stone-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-slate-500 text-[16px] sm:text-xs focus:border-amber-500 focus:ring-amber-500 transition-colors"
+                        class="w-full rounded-xl border-stone-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white placeholder:text-stone-400 dark:placeholder:text-slate-500 text-base sm:text-xs focus:border-amber-500 focus:ring-amber-500 transition-colors"
                         placeholder="أي تفضيلات أو ملاحظات خاصة بالطاولة أو التقديم..."
                     />
                 </div>
-
-                <!-- ملخص الحساب -->
-                <div class="mt-4 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/60 p-3.5 space-y-1.5">
-                    <div class="flex justify-between text-xs text-stone-600 dark:text-slate-300 font-medium">
-                        <span>المجموع الفرعي:</span>
-                        <span>{{ subtotal }} {{ currency }}</span>
-                    </div>
-                    <div v-if="appliedCode" class="flex justify-between text-xs text-emerald-600 dark:text-emerald-400 font-bold">
-                        <span>قيمة الخصم ({{ appliedCode }}):</span>
-                        <span>- {{ discountAmount }} {{ currency }}</span>
-                    </div>
-                    <div class="flex justify-between text-base font-black text-stone-900 dark:text-white pt-1.5 border-t border-amber-200/60 dark:border-amber-800/60">
-                        <span>الإجمالي المطلوب:</span>
-                        <span class="text-amber-600 dark:text-amber-400">{{ finalTotal }} {{ currency }}</span>
-                    </div>
                 </div>
 
-                <div class="mt-5 flex gap-3">
-                    <button
-                        type="button"
-                        class="flex-1 rounded-xl bg-stone-100 dark:bg-slate-800 hover:bg-stone-200 dark:hover:bg-slate-700 py-3 font-semibold text-stone-700 dark:text-slate-300 active:scale-95 transition-all text-sm"
-                        @click="emit('close')"
-                    >
-                        رجوع
-                    </button>
-                    <button
-                        type="button"
-                        class="flex-1 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 py-3 font-bold text-white shadow-lg shadow-amber-200 dark:shadow-amber-950/50 active:scale-95 transition-all disabled:opacity-50 text-sm"
-                        :disabled="loading"
-                        @click="emit('confirm')"
-                    >
-                        {{ loading ? 'جاري الإرسال...' : 'إرسال الطلب ⚡' }}
-                    </button>
+                <!-- الفوتر الثابت بالأسفل: ملخص الحساب وزر الإرسال (ظاهر دائماً 100%) -->
+                <div class="shrink-0 border-t border-stone-200 dark:border-slate-800 bg-white/95 dark:bg-[#0a0f1d]/95 backdrop-blur-md px-5 pt-3.5 pb-[max(1.1rem,env(safe-area-inset-bottom))] space-y-3">
+                    <div class="rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/60 p-3 space-y-1">
+                        <div class="flex justify-between text-xs text-stone-600 dark:text-slate-300 font-medium">
+                            <span>المجموع الفرعي:</span>
+                            <span>{{ formatNum(subtotal) }} {{ currency }}</span>
+                        </div>
+                        <div v-if="appliedCode" class="flex justify-between text-xs text-emerald-600 dark:text-emerald-400 font-bold">
+                            <span>قيمة الخصم ({{ appliedCode }}):</span>
+                            <span>- {{ formatNum(discountAmount) }} {{ currency }}</span>
+                        </div>
+                        <div class="flex justify-between text-base font-black text-stone-900 dark:text-white pt-1 border-t border-amber-200/60 dark:border-amber-800/60">
+                            <span>الإجمالي المطلوب:</span>
+                            <span class="text-amber-600 dark:text-amber-400">{{ formatNum(finalTotal) }} {{ currency }}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button
+                            type="button"
+                            class="w-1/3 rounded-xl bg-stone-100 dark:bg-slate-800 hover:bg-stone-200 dark:hover:bg-slate-700 py-3 font-semibold text-stone-700 dark:text-slate-300 active:scale-95 transition-all text-sm"
+                            @click="emit('close')"
+                        >
+                            رجوع
+                        </button>
+                        <button
+                            type="button"
+                            class="flex-1 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 py-3.5 font-black text-white shadow-lg shadow-amber-200 dark:shadow-amber-950/50 active:scale-95 transition-all disabled:opacity-50 text-sm"
+                            :disabled="loading"
+                            @click="emit('confirm')"
+                        >
+                            {{ loading ? 'جاري الإرسال...' : 'إرسال الطلب ⚡' }}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

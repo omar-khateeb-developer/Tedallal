@@ -149,6 +149,12 @@ html.dark ::-webkit-scrollbar-thumb:hover {
 html, body {
     touch-action: manipulation;
     -webkit-text-size-adjust: 100%;
+    overflow-x: clip;
+}
+
+/* Automatically scale customer UI when a mobile phone browser opens in Desktop Mode (~980px viewport) */
+html.tld-desktop-mode-phone {
+    font-size: clamp(24px, 3.3vw, 34px);
 }
 
 button, a, input, select, textarea, [role="button"] {

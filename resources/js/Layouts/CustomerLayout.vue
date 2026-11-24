@@ -17,21 +17,30 @@ onMounted(() => {
 
 <template>
     <div class="min-h-screen bg-stone-50 text-stone-900 dark:bg-[#060913] dark:text-slate-100 transition-colors duration-300 font-sans" dir="rtl">
-        <header class="sticky top-0 z-20 border-b border-stone-200/80 bg-white/95 dark:border-slate-800/80 dark:bg-[#0a0f1d]/90 backdrop-blur-md transition-colors duration-300">
-            <div
-                v-if="navbarImage"
-                class="h-24 w-full bg-cover bg-center"
-                :style="{ backgroundImage: `url(${navbarImage})` }"
-            ></div>
-            <div class="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
+        <!-- صورة الغلاف الفاخرة: تنساب بسلاسة مع التمرير ولا تحجب تبويبات الأقسام -->
+        <div
+            v-if="navbarImage"
+            class="relative h-32 sm:h-40 w-full bg-cover bg-center overflow-hidden"
+            :style="{ backgroundImage: `url(${navbarImage})` }"
+        >
+            <div class="absolute inset-0 bg-gradient-to-b from-black/25 via-black/10 to-stone-50 dark:to-[#060913]"></div>
+        </div>
+
+        <header class="sticky top-0 z-20 border-b border-stone-200/80 bg-white/95 dark:border-slate-800/80 dark:bg-[#0a0f1d]/95 backdrop-blur-md transition-colors duration-300">
+            <div class="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
                 <div class="flex items-center gap-3 min-w-0">
-                    <img v-if="logo" :src="logo" class="h-10 w-10 object-contain rounded-xl border border-stone-200/80 dark:border-slate-800 shrink-0 bg-white dark:bg-slate-900 shadow-2xs" alt="Restaurant Logo" />
+                    <img
+                        v-if="logo"
+                        :src="logo"
+                        class="h-10 w-10 object-contain rounded-xl border border-stone-200/80 dark:border-amber-500/30 shrink-0 bg-white dark:bg-stone-100/95 p-0.5 shadow-2xs"
+                        alt="Restaurant Logo"
+                    />
                     <div v-else-if="navbarImage" class="h-10 w-10 rounded-xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-lg shrink-0 shadow-2xs">
                         🍽️
                     </div>
                     <div class="min-w-0">
                         <slot name="title">
-                            <p class="text-[11px] font-semibold text-stone-400 dark:text-amber-400/90 tracking-wide leading-none mb-1">تدلّل</p>
+                            <p class="text-[0.6875rem] font-semibold text-stone-400 dark:text-amber-400/90 tracking-wide leading-none mb-1">تدلّل</p>
                             <h1 class="text-base sm:text-lg font-bold text-stone-900 dark:text-white truncate">{{ title }}</h1>
                         </slot>
                     </div>
@@ -48,13 +57,13 @@ onMounted(() => {
                             <svg class="h-4 w-4 text-amber-400 transition-transform duration-300 rotate-0 hover:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                             </svg>
-                            <span class="text-[11px] text-amber-300/90 font-bold hidden sm:inline">فاتح</span>
+                            <span class="text-[0.6875rem] text-amber-300/90 font-bold hidden sm:inline">فاتح</span>
                         </span>
                         <span v-else class="flex items-center gap-1.5">
                             <svg class="h-4 w-4 text-slate-700 transition-transform duration-300 hover:-rotate-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                             </svg>
-                            <span class="text-[11px] text-stone-700 font-bold hidden sm:inline">داكن</span>
+                            <span class="text-[0.6875rem] text-stone-700 font-bold hidden sm:inline">داكن</span>
                         </span>
                     </button>
 
@@ -62,7 +71,7 @@ onMounted(() => {
                 </div>
             </div>
         </header>
-        <main class="mx-auto max-w-lg px-4 pb-28 pt-4">
+        <main class="mx-auto max-w-2xl px-4 pb-28 pt-4">
             <slot />
             <!-- Powered by Tedallal Brand Footer -->
             <div class="mt-8 pt-6 pb-2 text-center border-t border-stone-200/60 dark:border-slate-800/60">
@@ -71,7 +80,7 @@ onMounted(() => {
                     target="_blank"
                     rel="noopener noreferrer"
                     dir="ltr"
-                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-stone-100 dark:bg-slate-800/80 hover:bg-stone-200 dark:hover:bg-slate-700 text-[11px] font-semibold text-stone-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-all shadow-xs"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-stone-100 dark:bg-slate-800/80 hover:bg-stone-200 dark:hover:bg-slate-700 text-[0.6875rem] font-semibold text-stone-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-all shadow-xs"
                 >
                     <span class="text-amber-500">⚡</span>
                     <span>Powered by:</span>

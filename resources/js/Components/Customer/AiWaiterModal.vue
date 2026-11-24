@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue';
+import { ref, nextTick, watch, onMounted, onUnmounted } from 'vue';
 import axios from 'axios';
+import { useVisualViewportModal } from '@/composables/useVisualViewport';
 
 const props = defineProps<{
     restaurantName: string;
     currency: string;
+    hasCartBar?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -12,6 +14,163 @@ const emit = defineEmits<{
 }>();
 
 const isOpen = ref(false);
+const { viewportBackdropStyle } = useVisualViewportModal(isOpen);
+
+// ================= DRAGGABLE + MAGNETIC EDGE-SNAP STATE =================
+const POS_STORAGE_KEY = 'tedallal_ai_waiter_pos';
+const DRAG_THRESHOLD_PX = 8;
+
+const fabRef = ref<HTMLElement | null>(null);
+const posReady = ref(false);
+const isDragging = ref(false);
+const pos = ref({ x: 16, y: 0 });
+const dockState = ref<{ side: 'left' | 'right'; yRatio: number }>({ side: 'left', yRatio: 1 });
+
+let dragStartPointer = { x: 0, y: 0 };
+let dragStartPos = { x: 0, y: 0 };
+let hasMovedBeyondThreshold = false;
+let suppressNextClick = false;
+let activePointerId: number | null = null;
+
+function getSafeBounds() {
+    const rootRem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    const edgeMargin = Math.round(rootRem * 1.0);
+    const minY = Math.round(rootRem * 5.0);
+    const bottomReserved = props.hasCartBar ? Math.round(rootRem * 5.75) : Math.round(rootRem * 1.0);
+
+    const vw = window.innerWidth || 390;
+    const vh = window.innerHeight || 844;
+    const btnW = fabRef.value?.offsetWidth || Math.round(rootRem * 9.5);
+    const btnH = fabRef.value?.offsetHeight || Math.round(rootRem * 2.75);
+
+    const minX = edgeMargin;
+    const maxX = Math.max(edgeMargin, vw - edgeMargin - btnW);
+    const maxY = Math.max(minY, vh - bottomReserved - btnH);
+
+    return { minX, maxX, minY, maxY, vw, btnW };
+}
+
+function applyDockedPosition() {
+    if (typeof window === 'undefined') return;
+    const { minX, maxX, minY, maxY } = getSafeBounds();
+    const clampedRatio = Math.min(1, Math.max(0, dockState.value.yRatio));
+    pos.value = {
+        x: dockState.value.side === 'left' ? minX : maxX,
+        y: Math.round(minY + clampedRatio * (maxY - minY)),
+    };
+    posReady.value = true;
+}
+
+function loadSavedDockState() {
+    try {
+        const raw = localStorage.getItem(POS_STORAGE_KEY);
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            if ((parsed.side === 'left' || parsed.side === 'right') && typeof parsed.yRatio === 'number') {
+                dockState.value = {
+                    side: parsed.side,
+                    yRatio: Math.min(1, Math.max(0, parsed.yRatio)),
+                };
+            }
+        }
+    } catch {}
+}
+
+function saveDockState() {
+    try {
+        localStorage.setItem(POS_STORAGE_KEY, JSON.stringify(dockState.value));
+    } catch {}
+}
+
+function onFabPointerDown(e: PointerEvent) {
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+    const el = fabRef.value;
+    if (!el) return;
+
+    activePointerId = e.pointerId;
+    hasMovedBeyondThreshold = false;
+    dragStartPointer = { x: e.clientX, y: e.clientY };
+    dragStartPos = { ...pos.value };
+
+    try {
+        el.setPointerCapture(e.pointerId);
+    } catch {}
+}
+
+function onFabPointerMove(e: PointerEvent) {
+    if (activePointerId !== e.pointerId) return;
+
+    const dx = e.clientX - dragStartPointer.x;
+    const dy = e.clientY - dragStartPointer.y;
+
+    if (!hasMovedBeyondThreshold) {
+        if (Math.hypot(dx, dy) < DRAG_THRESHOLD_PX) return;
+        hasMovedBeyondThreshold = true;
+        isDragging.value = true;
+    }
+
+    const { minX, maxX, minY, maxY } = getSafeBounds();
+    pos.value = {
+        x: Math.min(maxX, Math.max(minX, dragStartPos.x + dx)),
+        y: Math.min(maxY, Math.max(minY, dragStartPos.y + dy)),
+    };
+}
+
+function onFabPointerUpOrCancel(e: PointerEvent) {
+    if (activePointerId !== e.pointerId) return;
+    const el = fabRef.value;
+    if (el) {
+        try {
+            if (el.hasPointerCapture(e.pointerId)) {
+                el.releasePointerCapture(e.pointerId);
+            }
+        } catch {}
+    }
+    activePointerId = null;
+
+    if (hasMovedBeyondThreshold) {
+        suppressNextClick = true;
+        setTimeout(() => {
+            suppressNextClick = false;
+        }, 120);
+
+        const { minY, maxY, vw, btnW } = getSafeBounds();
+        const center = pos.value.x + btnW / 2;
+        dockState.value = {
+            side: center < vw / 2 ? 'left' : 'right',
+            yRatio: maxY > minY ? Math.min(1, Math.max(0, (pos.value.y - minY) / (maxY - minY))) : 1,
+        };
+        saveDockState();
+        isDragging.value = false;
+        applyDockedPosition();
+    } else {
+        isDragging.value = false;
+    }
+}
+
+function onFabClick() {
+    if (suppressNextClick) {
+        suppressNextClick = false;
+        return;
+    }
+    openModal();
+}
+
+watch(() => props.hasCartBar, () => {
+    if (!isDragging.value) {
+        nextTick(applyDockedPosition);
+    }
+});
+
+onMounted(() => {
+    loadSavedDockState();
+    nextTick(applyDockedPosition);
+    window.addEventListener('resize', applyDockedPosition);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('resize', applyDockedPosition);
+});
 const inputMessage = ref('');
 const loading = ref(false);
 const addingItemId = ref<number | null>(null);
@@ -137,21 +296,49 @@ defineExpose({
 
 <template>
     <div>
-        <!-- زر فتح المحادثة العائم في صفحة المنيو -->
+        <!-- زر فتح المحادثة القابل للسحب والالتصاق المغناطيسي بحواف الشاشة -->
         <button
+            ref="fabRef"
             type="button"
-            @click="openModal"
-            class="fixed bottom-20 left-4 z-30 flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 px-4 py-3 text-white shadow-xl shadow-purple-600/30 hover:shadow-purple-600/50 hover:scale-105 active:scale-95 transition-all duration-300 border border-purple-400/40"
+            @click="onFabClick"
+            @pointerdown="onFabPointerDown"
+            @pointermove="onFabPointerMove"
+            @pointerup="onFabPointerUpOrCancel"
+            @pointercancel="onFabPointerUpOrCancel"
+            :style="posReady ? { top: `${pos.y}px`, left: `${pos.x}px`, touchAction: 'none' } : { touchAction: 'none' }"
+            :class="[
+                'fixed z-30 flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-600/95 via-indigo-600/95 to-purple-700/95 backdrop-blur-md px-3 py-2 text-white shadow-xl shadow-purple-600/30 border border-purple-400/40 select-none',
+                !posReady ? (hasCartBar ? 'bottom-[88px] left-4' : 'bottom-4 left-4') : '',
+                isDragging
+                    ? 'scale-105 cursor-grabbing ring-2 ring-purple-300/70 shadow-2xl shadow-purple-500/50 transition-none'
+                    : 'cursor-grab hover:shadow-purple-600/50 hover:scale-105 active:scale-95 transition-all duration-300'
+            ]"
+            title="اسحب للتحريك أو اضغط للتحدث مع الويتر الذكي"
             dir="rtl"
         >
-            <span class="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-lg">
+            <!-- مقبض سحب بصري خفيف -->
+            <span class="flex flex-col gap-0.5 opacity-60 pr-0.5 pointer-events-none" aria-hidden="true">
+                <span class="flex gap-0.5">
+                    <span class="w-1 h-1 rounded-full bg-white"></span>
+                    <span class="w-1 h-1 rounded-full bg-white"></span>
+                </span>
+                <span class="flex gap-0.5">
+                    <span class="w-1 h-1 rounded-full bg-white"></span>
+                    <span class="w-1 h-1 rounded-full bg-white"></span>
+                </span>
+                <span class="flex gap-0.5">
+                    <span class="w-1 h-1 rounded-full bg-white"></span>
+                    <span class="w-1 h-1 rounded-full bg-white"></span>
+                </span>
+            </span>
+            <span class="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-sm pointer-events-none">
                 👨‍🍳
             </span>
-            <div class="text-right">
-                <span class="block text-xs font-black tracking-wide leading-none">اسأل الويتر الذكي</span>
-                <span class="block text-[10px] text-purple-200 mt-0.5 leading-none">اقتراحات فورية · AI</span>
+            <div class="text-right pointer-events-none">
+                <span class="block text-[0.6875rem] font-black tracking-wide leading-none">الويتر الذكي</span>
+                <span class="block text-[0.5625rem] text-purple-200 mt-0.5 leading-none">اقتراح فوري · AI</span>
             </div>
-            <span class="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse pointer-events-none"></span>
         </button>
 
         <!-- نافذة المحادثة المنبثقة (Modal / Drawer) -->
@@ -166,11 +353,12 @@ defineExpose({
             >
                 <div
                     v-if="isOpen"
-                    class="fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs p-0 sm:p-4"
+                    :style="viewportBackdropStyle"
+                    class="fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs p-0 sm:p-4 overflow-hidden"
                     dir="rtl"
                     @click.self="closeModal"
                 >
-                    <div class="flex flex-col w-full max-w-lg h-[85vh] sm:h-[650px] bg-white dark:bg-[#0a0f1d] rounded-t-3xl sm:rounded-3xl shadow-2xl border border-stone-200 dark:border-slate-800 overflow-hidden transition-colors">
+                    <div class="flex flex-col w-full max-w-lg h-[88%] sm:h-[650px] max-h-[90%] bg-white dark:bg-[#0a0f1d] rounded-t-3xl sm:rounded-3xl shadow-2xl border border-stone-200 dark:border-slate-800 overflow-hidden transition-colors pb-[env(safe-area-inset-bottom,0px)]">
                         <!-- رأس المحادثة -->
                         <div class="flex items-center justify-between p-4 bg-gradient-to-r from-purple-700 via-indigo-700 to-purple-800 text-white shrink-0 shadow-sm">
                             <div class="flex items-center gap-3">
