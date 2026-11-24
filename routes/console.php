@@ -55,4 +55,8 @@ Artisan::command('tables:generate-qr {--force : Force re-generate all QR codes e
     ->dailyAt('00:30')
     ->withoutOverlapping();
 
+\Illuminate\Support\Facades\Schedule::command('tedallal:backup')
+    ->dailyAt('03:00')
+    ->withoutOverlapping();
+
 

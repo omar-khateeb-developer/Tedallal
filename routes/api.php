@@ -179,5 +179,11 @@ Route::prefix('super-admin')->middleware(['auth:sanctum', EnsureUserHasRole::cla
     Route::post('platform-whatsapp/disconnect', [\App\Http\Controllers\Api\SuperAdmin\PlatformWhatsAppController::class, 'disconnect']);
     Route::post('platform-whatsapp/settings', [\App\Http\Controllers\Api\SuperAdmin\PlatformWhatsAppController::class, 'updateSettings']);
     Route::post('platform-whatsapp/send-test', [\App\Http\Controllers\Api\SuperAdmin\PlatformWhatsAppController::class, 'sendTest']);
+
+    // إدارة النسخ الاحتياطي للنظام (Automated Backups)
+    Route::get('backups', [\App\Http\Controllers\Api\SuperAdmin\BackupController::class, 'index']);
+    Route::post('backups/create', [\App\Http\Controllers\Api\SuperAdmin\BackupController::class, 'create']);
+    Route::get('backups/download/{filename}', [\App\Http\Controllers\Api\SuperAdmin\BackupController::class, 'download']);
+    Route::delete('backups/{filename}', [\App\Http\Controllers\Api\SuperAdmin\BackupController::class, 'destroy']);
 });
 
