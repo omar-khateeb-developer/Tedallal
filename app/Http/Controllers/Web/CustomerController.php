@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\MenuCategory;
 use App\Models\Order;
+use App\Models\PromoCode;
 use App\Models\Restaurant;
 use App\Models\RestaurantTable;
+use App\Services\CustomerCrmService;
 use App\Services\TableSessionService;
 use App\Services\TokenGenerator;
 use Illuminate\Http\RedirectResponse;
@@ -20,6 +22,7 @@ class CustomerController extends Controller
     public function __construct(
         private readonly TableSessionService $tableSessionService,
         private readonly TokenGenerator $tokenGenerator,
+        private readonly CustomerCrmService $customerCrmService,
     ) {}
 
     public function table(Request $request, string $token): Response|\Illuminate\Http\Response
@@ -162,6 +165,41 @@ class CustomerController extends Controller
             'currency' => $cleanCurrency,
         ]);
 
+        $urlPromoData = null;
+        $rawCoupon = trim((string) ($request->query('coupon') ?: $request->query('promo') ?: ''));
+        if ($rawCoupon !== '') {
+            $cleanCode = strtoupper($rawCoupon);
+            $promo = PromoCode::withoutGlobalScopes()
+                ->with('freeMenuItem')
+                ->where('restaurant_id', $table->restaurant_id)
+                ->where(function ($q) use ($rawCoupon, $cleanCode) {
+                    $q->where('code', $rawCoupon)
+                        ->orWhere('code', $cleanCode);
+                })
+                ->first();
+
+            if ($promo) {
+                $diagnostics = $promo->getValidationDiagnostics(null, $cleanCurrency);
+                $val = (float) $promo->discount_value;
+                $cleanVal = ($val == (int) $val) ? (int) $val : $val;
+                $discountLabel = ($promo->discount_type === 'percentage' && ! $promo->free_menu_item_id)
+                    ? "خصم {$cleanVal}%"
+                    : $this->customerCrmService->formatPromoLabel($promo, $table->restaurant);
+
+                $urlPromoData = [
+                    'code' => $promo->code,
+                    'discount_label' => $discountLabel,
+                    'discount_type' => $promo->discount_type,
+                    'discount_value' => $val,
+                    'min_order_value' => (float) $promo->min_order_value,
+                    'valid' => (bool) $diagnostics['valid'],
+                    'reason_code' => $diagnostics['reason_code'],
+                    'reason_message' => $diagnostics['reason_message'],
+                    'expires_at' => $promo->expires_at?->format('Y-m-d'),
+                ];
+            }
+        }
+
         return Inertia::render('Customer/Menu', [
             'restaurant' => $restaurantData,
             'table' => $table,
@@ -169,6 +207,7 @@ class CustomerController extends Controller
             'sessionToken' => $session->session_token,
             'openCart' => $request->boolean('cart'),
             'activeOrders' => $activeOrders,
+            'urlPromo' => $urlPromoData,
         ]);
     }
 

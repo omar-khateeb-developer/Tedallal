@@ -195,12 +195,51 @@ class TakeawayCounterTest extends TestCase
             'status' => 'active',
         ]);
 
+        \App\Models\PromoCode::withoutGlobalScopes()->create([
+            'restaurant_id' => $restaurant->id,
+            'code' => 'LUCK-ZL3WLA',
+            'source' => 'lucky_wheel',
+            'discount_type' => 'percentage',
+            'discount_value' => 15,
+            'min_order_value' => 0,
+            'is_active' => true,
+            'starts_at' => now()->subDay(),
+            'expires_at' => now()->addDays(14),
+            'is_single_use' => true,
+            'times_used' => 0,
+        ]);
+
         // زيارة الرابط المرسل في الواتساب /m/{slug}?coupon=...
         $resA = $this->get('/m/bait-alsham-test?coupon=LUCK-ZL3WLA');
         $resA->assertOk();
         $propsA = $resA->viewData('page')['props'];
         $this->assertSame('takeaway', $propsA['table']['table_type']);
         $this->assertSame('الطلب السفري المباشر', $propsA['table']['name']);
+        $this->assertSame('LUCK-ZL3WLA', $propsA['urlPromo']['code']);
+        $this->assertTrue($propsA['urlPromo']['valid']);
+        $this->assertSame(15.0, (float) $propsA['urlPromo']['discount_value']);
+        $this->assertStringContainsString('15', $propsA['urlPromo']['discount_label']);
+
+        // رابط بكوبون منتهي يعرض تفاصيل عدم الصلاحية بدقة
+        \App\Models\PromoCode::withoutGlobalScopes()->create([
+            'restaurant_id' => $restaurant->id,
+            'code' => 'OLD-EXP',
+            'source' => 'lucky_wheel',
+            'discount_type' => 'fixed',
+            'discount_value' => 25,
+            'min_order_value' => 0,
+            'is_active' => true,
+            'starts_at' => now()->subDays(10),
+            'expires_at' => now()->subDay(),
+            'is_single_use' => false,
+            'times_used' => 0,
+        ]);
+
+        $resExpired = $this->get('/m/bait-alsham-test?coupon=OLD-EXP');
+        $resExpired->assertOk();
+        $expiredPromo = $resExpired->viewData('page')['props']['urlPromo'];
+        $this->assertFalse($expiredPromo['valid']);
+        $this->assertSame('expired', $expiredPromo['reason_code']);
 
         // زيارة أخرى عبر /r/{slug} يجب أن تعيد استخدام نفس نقطة السفري لكن بجلسة مستقلة
         $resB = $this->get('/r/bait-alsham-test');

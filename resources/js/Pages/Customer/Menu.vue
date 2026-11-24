@@ -45,6 +45,17 @@ const props = defineProps<{
         status: string;
         total: string;
     }[];
+    urlPromo?: {
+        code: string;
+        discount_label: string;
+        discount_type: string;
+        discount_value: number;
+        min_order_value: number;
+        valid: boolean;
+        reason_code: string;
+        reason_message: string;
+        expires_at?: string | null;
+    } | null;
 }>();
 
 const activeCategory = ref<number | 'all'>('all');
@@ -475,12 +486,18 @@ onMounted(() => {
         cartOpen.value = true;
     }
 
-    // Auto-apply coupon from URL query param (?coupon=XYZ or ?promo=XYZ)
+    // Auto-apply coupon from server-resolved prop or URL query param (?coupon=XYZ or ?promo=XYZ)
     try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const urlPromo = urlParams.get('coupon') || urlParams.get('promo');
-        if (urlPromo) {
-            promoCode.value = urlPromo.trim().toUpperCase();
+        if (props.urlPromo) {
+            if (props.urlPromo.valid || props.urlPromo.reason_code === 'future_start') {
+                promoCode.value = props.urlPromo.code;
+            }
+        } else {
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlPromoParam = urlParams.get('coupon') || urlParams.get('promo');
+            if (urlPromoParam) {
+                promoCode.value = urlPromoParam.trim().toUpperCase();
+            }
         }
     } catch (_) {}
 
@@ -626,16 +643,50 @@ onUnmounted(() => {
             <span class="shrink-0 rounded-full bg-sky-600 text-white px-2.5 py-0.5 text-[10px] font-black">سفري</span>
         </div>
 
-        <!-- شارة تفعيل كود الخصم القادم من الرابط -->
+        <!-- شارة تفعيل كود الخصم القادم من الرابط مع توضيح قيمته -->
         <div
-            v-if="promoCode"
+            v-if="urlPromo && urlPromo.valid"
             class="mb-4 flex items-center justify-between gap-2.5 rounded-2xl bg-emerald-50/90 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/60 px-3.5 py-2.5 text-xs text-emerald-900 dark:text-emerald-200 shadow-2xs"
         >
             <div class="flex items-center gap-2 min-w-0">
                 <span class="text-base shrink-0">🎟️</span>
-                <p class="font-bold">تم تجهيز كود الخصم (<span dir="ltr" class="font-mono">{{ promoCode }}</span>) — سيُطبق تلقائياً عند فتح السلة!</p>
+                <div class="min-w-0">
+                    <p class="font-bold">
+                        تم تجهيز كود الخصم (<span dir="ltr" class="font-mono">{{ urlPromo.code }}</span>)
+                        <span class="text-emerald-700 dark:text-emerald-300 font-black">بقيمة {{ urlPromo.discount_label }}</span>
+                        — سيُطبق تلقائياً على فاتورتك عند فتح السلة!
+                    </p>
+                    <p v-if="urlPromo.min_order_value > 0" class="text-[11px] opacity-80 mt-0.5">
+                        الحد الأدنى للطلب لتفعيل الخصم: {{ urlPromo.min_order_value }} {{ restaurant.currency }}
+                    </p>
+                </div>
             </div>
-            <span class="shrink-0 rounded-full bg-emerald-600 text-white px-2.5 py-0.5 text-[10px] font-black">مفعّل</span>
+            <span class="shrink-0 rounded-full bg-emerald-600 text-white px-2.5 py-0.5 text-[10px] font-black">{{ urlPromo.discount_label }}</span>
+        </div>
+        <div
+            v-else-if="urlPromo && !urlPromo.valid"
+            class="mb-4 flex items-center justify-between gap-2.5 rounded-2xl bg-amber-50/90 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/60 px-3.5 py-2.5 text-xs text-amber-900 dark:text-amber-200 shadow-2xs"
+        >
+            <div class="flex items-center gap-2 min-w-0">
+                <span class="text-base shrink-0">🎟️</span>
+                <div class="min-w-0">
+                    <p class="font-bold">
+                        كود الخصم (<span dir="ltr" class="font-mono">{{ urlPromo.code }}</span>) — {{ urlPromo.discount_label }}
+                    </p>
+                    <p class="text-[11px] opacity-85 mt-0.5">{{ urlPromo.reason_message }}</p>
+                </div>
+            </div>
+            <span class="shrink-0 rounded-full bg-amber-600 text-white px-2.5 py-0.5 text-[10px] font-black">تنبيه</span>
+        </div>
+        <div
+            v-else-if="promoCode"
+            class="mb-4 flex items-center justify-between gap-2.5 rounded-2xl bg-amber-50/90 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/60 px-3.5 py-2.5 text-xs text-amber-900 dark:text-amber-200 shadow-2xs"
+        >
+            <div class="flex items-center gap-2 min-w-0">
+                <span class="text-base shrink-0">🎟️</span>
+                <p class="font-bold">كود الخصم (<span dir="ltr" class="font-mono">{{ promoCode }}</span>) غير مسجل أو غير صالح لهذا المطعم.</p>
+            </div>
+            <span class="shrink-0 rounded-full bg-amber-600 text-white px-2.5 py-0.5 text-[10px] font-black">غير صالح</span>
         </div>
 
         <!-- خطأ -->

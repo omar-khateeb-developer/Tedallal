@@ -67,23 +67,14 @@ const finalTotal = computed(() => {
     return Math.max(0, sub - disc).toFixed(2);
 });
 
-const finalTotalFormatted = computed(() => {
-    const num = parseFloat(finalTotal.value);
-    const intVal = isNaN(num) ? 0 : Math.round(num);
-    return intVal.toLocaleString();
-});
+const appliedDiscountType = ref<'percentage' | 'fixed' | ''>('');
+const appliedDiscountValue = ref<number>(0);
 
-const subtotalFormatted = computed(() => {
-    const num = parseFloat(subtotal.value);
-    const intVal = isNaN(num) ? 0 : Math.round(num);
-    return intVal.toLocaleString();
-});
+const finalTotalFormatted = computed(() => formatPriceValue(finalTotal.value));
 
-const discountFormatted = computed(() => {
-    const num = parseFloat(discountAmount.value);
-    const intVal = isNaN(num) ? 0 : Math.round(num);
-    return intVal.toLocaleString();
-});
+const subtotalFormatted = computed(() => formatPriceValue(subtotal.value));
+
+const discountFormatted = computed(() => formatPriceValue(discountAmount.value));
 
 async function load() {
     loading.value = true;
@@ -125,10 +116,14 @@ async function applyPromo() {
         });
         appliedCode.value = data.data.code;
         discountAmount.value = data.data.discount_amount.toString();
+        appliedDiscountType.value = data.data.discount_type || '';
+        appliedDiscountValue.value = Number(data.data.discount_value || 0);
     } catch (e: any) {
         promoError.value = e.response?.data?.message || 'الكوبون غير صالح أو لا يغطي الحد الأدنى للطلب';
         appliedCode.value = '';
         discountAmount.value = '0.00';
+        appliedDiscountType.value = '';
+        appliedDiscountValue.value = 0;
     } finally {
         validatingPromo.value = false;
     }
@@ -137,6 +132,8 @@ async function applyPromo() {
 function removePromo() {
     appliedCode.value = '';
     discountAmount.value = '0.00';
+    appliedDiscountType.value = '';
+    appliedDiscountValue.value = 0;
     promoInput.value = '';
     promoError.value = '';
     showPromoInput.value = false;
@@ -339,7 +336,15 @@ defineExpose({ load, count, subtotal, finalTotal, serviceType, generalNote, appl
                     <div v-if="appliedCode" class="flex items-center justify-between p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-xs">
                         <div class="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 font-bold">
                             <span>🎉</span>
-                            <span>تم تطبيق الكوبون ({{ appliedCode }}) - خصم {{ discountFormatted }} {{ currency }}</span>
+                            <span>
+                                تم تطبيق الكوبون ({{ appliedCode }}) —
+                                <template v-if="appliedDiscountType === 'percentage' && appliedDiscountValue > 0">
+                                    خصم {{ appliedDiscountValue }}% ({{ discountFormatted }} {{ currency }})
+                                </template>
+                                <template v-else>
+                                    خصم {{ discountFormatted }} {{ currency }}
+                                </template>
+                            </span>
                         </div>
                         <button type="button" @click="removePromo" class="text-stone-400 hover:text-rose-500 font-black px-1.5 py-0.5 rounded-md hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors">✕</button>
                     </div>
