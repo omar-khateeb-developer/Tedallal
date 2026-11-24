@@ -133,11 +133,11 @@ const preferenceLabel = computed(() => {
                         طاولتك جاهزة الآن!
                     </span>
                     <h2 class="text-2xl font-black text-white mb-2">
-                        أهلاً بك يا {{ entry.guest_name }}
+                        أهلاً بحضرتك {{ entry.guest_name }}
                     </h2>
                     <p class="text-sm text-emerald-200/90 leading-relaxed mb-4">
-                        طاولتك <span v-if="assignedTable" class="font-black text-white px-2 py-0.5 rounded bg-emerald-800/80 border border-emerald-500">({{ assignedTable }})</span> أصبحت جاهزة في انتظارك.
-                        يرجى التوجه لموظف الاستقبال لتأكيد دخولك.
+                        طاولة حضرتك <span v-if="assignedTable" class="font-black text-white px-2 py-0.5 rounded bg-emerald-800/80 border border-emerald-500">({{ assignedTable }})</span> أصبحت جاهزة في انتظاركم.
+                        يرجى التوجه لموظف الاستقبال لتأكيد الجلوس.
                     </p>
                     <div class="p-3 bg-emerald-950/60 rounded-xl border border-emerald-800/60 text-xs text-emerald-300">
                         ⏱️ يُرجى الحضور خلال 5 دقائق لضمان حجز الطاولة.

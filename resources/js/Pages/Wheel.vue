@@ -1087,10 +1087,10 @@ onUnmounted(() => {
                             <div v-if="claimedSuccess && (claimedVisitsCount >= 2 || loyaltyResult?.enabled || props.loyalty_config?.enabled)" class="my-3 p-3.5 rounded-2xl bg-gradient-to-r from-[#D4AF37]/15 via-amber-950/40 to-[#D4AF37]/15 border border-[#D4AF37]/40 text-start space-y-1.5">
                                 <div v-if="loyaltyResult?.milestone_reached && loyaltyResult?.loyalty_voucher" class="space-y-1.5 text-center">
                                     <div class="text-sm font-black text-[#FCF6BA]">
-                                        🏆 ألف مبروك يا {{ customerName }}! استحققت جائزة الولاء الكبرى!
+                                        🏆 أهلاً بحضرتك {{ customerName }}! ألف مبروك استحقاق جائزة الولاء الكبرى!
                                     </div>
                                     <div class="text-xs text-emerald-300 font-bold">
-                                        هذه زيارتك رقم ({{ claimedVisitsCount }}) — جائزتك: {{ loyaltyResult.loyalty_voucher.reward_label }}
+                                        هذه الزيارة رقم ({{ claimedVisitsCount }}) — جائزة حضرتك: {{ loyaltyResult.loyalty_voucher.reward_label }}
                                     </div>
                                     <div v-if="voucher.code" class="font-mono text-base font-black text-[#FCF6BA] bg-black/50 py-1.5 px-3 rounded-xl inline-block border border-[#D4AF37]/40" dir="ltr">
                                         {{ loyaltyResult.loyalty_voucher.code }}
@@ -1100,7 +1100,7 @@ onUnmounted(() => {
                                     <span class="text-xl shrink-0">🌟</span>
                                     <div class="text-xs text-[#F3E5AB] leading-relaxed">
                                         <span v-if="claimedVisitsCount >= 2" class="font-extrabold">
-                                            أهلاً بعودتك يا {{ customerName }}! هذه زيارتك رقم ({{ claimedVisitsCount }}) في {{ restaurant.name }}.
+                                            أهلاً بحضرتك {{ customerName }}! هذه الزيارة رقم ({{ claimedVisitsCount }}) في {{ restaurant.name }}.
                                         </span>
                                         <span v-else class="font-bold">
                                             تم تسجيل زيارتك الأولى باسم «{{ customerName }}»!

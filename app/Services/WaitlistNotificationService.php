@@ -29,14 +29,14 @@ class WaitlistNotificationService
         }
 
         $trackingUrl = $entry->getTrackingUrl();
-        $message = "مرحباً بك {$entry->guest_name} في *{$restaurant->name}* ✨\n\n"
+        $message = "أهلاً بحضرتك {$entry->guest_name} في *{$restaurant->name}* ✨\n\n"
             . "تم تسجيلك بنجاح في قائمة الانتظار الذكية! 📋\n"
             . "🔢 رقمك في الطابور: *#{$entry->queue_number}*\n"
             . "👥 عدد الأفراد: {$entry->party_size}\n"
             . "⏱️ الوقت التقديري المتوقع: {$entry->estimated_wait_minutes} دقيقة\n\n"
-            . "📲 يمكنك متابعة دورك لحظة بلحظة وتصفح المنيو لاختيار وجبتك مسبقاً عبر الرابط التالي:\n"
+            . "📲 يمكن لحضرتك متابعة دورك لحظة بلحظة وتصفح المنيو لاختيار وجبتك مسبقاً عبر الرابط التالي:\n"
             . "{$trackingUrl}\n\n"
-            . "سنرسل لك إشعاراً فور جهوزية طاولتك بإذن الله. نتمنى لك أوقاتاً ممتعة!";
+            . "سنرسل لك إشعاراً فور جهوزية طاولتك بإذن الله. نتمنى لحضرتك أوقاتاً ممتعة!";
 
         $result = $this->whatsAppGateway->sendMessage($restaurant, $phone, $message);
         return $result['success'] ?? false;
@@ -59,10 +59,10 @@ class WaitlistNotificationService
 
         $tableName = $table ? $table->name : ($entry->assignedTable?->name ?? 'طاولتك');
 
-        $message = "أهلاً بك {$entry->guest_name} 🌟\n\n"
-            . "طاولتك *({$tableName})* في *{$restaurant->name}* أصبحت جاهزة في انتظارك الآن! 🎉\n\n"
-            . "📍 يرجى التوجه إلى قسم الاستقبال خلال *5 دقائق* لتأكيد جلوسك.\n\n"
-            . "نتمنى لك وجبة شهية وأسعد اللحظات! 🍽️✨";
+        $message = "أهلاً بحضرتك {$entry->guest_name} 🌟\n\n"
+            . "طاولة حضرتك *({$tableName})* في *{$restaurant->name}* أصبحت جاهزة في انتظاركم الآن! 🎉\n\n"
+            . "📍 يرجى التوجه إلى قسم الاستقبال خلال *5 دقائق* لتأكيد الجلوس.\n\n"
+            . "نتمنى لحضرتك وجبة شهية وأسعد اللحظات! 🍽️✨";
 
         $result = $this->whatsAppGateway->sendMessage($restaurant, $phone, $message);
         return $result['success'] ?? false;

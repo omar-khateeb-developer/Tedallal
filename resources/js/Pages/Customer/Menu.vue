@@ -626,6 +626,18 @@ onUnmounted(() => {
             <span class="shrink-0 rounded-full bg-sky-600 text-white px-2.5 py-0.5 text-[10px] font-black">سفري</span>
         </div>
 
+        <!-- شارة تفعيل كود الخصم القادم من الرابط -->
+        <div
+            v-if="promoCode"
+            class="mb-4 flex items-center justify-between gap-2.5 rounded-2xl bg-emerald-50/90 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/60 px-3.5 py-2.5 text-xs text-emerald-900 dark:text-emerald-200 shadow-2xs"
+        >
+            <div class="flex items-center gap-2 min-w-0">
+                <span class="text-base shrink-0">🎟️</span>
+                <p class="font-bold">تم تجهيز كود الخصم (<span dir="ltr" class="font-mono">{{ promoCode }}</span>) — سيُطبق تلقائياً عند فتح السلة!</p>
+            </div>
+            <span class="shrink-0 rounded-full bg-emerald-600 text-white px-2.5 py-0.5 text-[10px] font-black">مفعّل</span>
+        </div>
+
         <!-- خطأ -->
         <div v-if="errorMessage" class="mb-4 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/60 px-4 py-3 text-sm text-red-700 dark:text-red-300 flex items-center justify-between gap-2 shadow-2xs">
             <div class="flex items-center gap-2">
@@ -1082,6 +1094,7 @@ onUnmounted(() => {
             :currency="restaurant.currency"
             :is-prepaid="restaurant.type === 'prepaid' || (restaurant as any).restaurant_type === 'prepaid'"
             :is-takeaway-point="isTakeawayPoint"
+            :initial-promo-code="promoCode"
             :submitting="submitting"
             @submit-order="handleDirectOrderSubmit"
             @updated="refreshCartSummary"

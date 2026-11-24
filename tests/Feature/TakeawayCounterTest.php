@@ -186,4 +186,38 @@ class TakeawayCounterTest extends TestCase
         $this->assertContains('طاولة صالة A1', $bookingNames);
         $this->assertNotContains('كاونتر سفري سريع', $bookingNames);
     }
+
+    public function test_restaurant_slug_menu_and_alias_routes_resolve_isolated_takeaway_sessions(): void
+    {
+        $restaurant = Restaurant::factory()->create([
+            'name' => 'مطعم بيت الشام',
+            'slug' => 'bait-alsham-test',
+            'status' => 'active',
+        ]);
+
+        // زيارة الرابط المرسل في الواتساب /m/{slug}?coupon=...
+        $resA = $this->get('/m/bait-alsham-test?coupon=LUCK-ZL3WLA');
+        $resA->assertOk();
+        $propsA = $resA->viewData('page')['props'];
+        $this->assertSame('takeaway', $propsA['table']['table_type']);
+        $this->assertSame('الطلب السفري المباشر', $propsA['table']['name']);
+
+        // زيارة أخرى عبر /r/{slug} يجب أن تعيد استخدام نفس نقطة السفري لكن بجلسة مستقلة
+        $resB = $this->get('/r/bait-alsham-test');
+        $resB->assertOk();
+        $propsB = $resB->viewData('page')['props'];
+        $this->assertSame($propsA['table']['id'], $propsB['table']['id']);
+        $this->assertNotSame($propsA['sessionToken'], $propsB['sessionToken']);
+
+        $this->assertSame(
+            1,
+            RestaurantTable::withoutGlobalScopes()
+                ->where('restaurant_id', $restaurant->id)
+                ->where('table_type', RestaurantTable::TYPE_TAKEAWAY)
+                ->count()
+        );
+
+        // رابط لمطعم غير موجود يرد 404
+        $this->get('/m/unknown-restaurant-slug')->assertNotFound();
+    }
 }

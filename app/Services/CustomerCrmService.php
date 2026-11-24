@@ -314,17 +314,17 @@ final class CustomerCrmService
         if ($loyalty['enabled']) {
             $target = (int) $loyalty['target_visits'];
             if ($loyaltyVoucher) {
-                $msg .= "\n🏆 مفاجأة الولاء الكبرى! لأنها زيارتك رقم ({$visits}) في مطعمنا، لقد استحققت الجائزة الكبرى: {$loyalty['reward_label']}!\n"
+                $msg .= "\n🏆 مفاجأة الولاء الكبرى! لأنها الزيارة رقم ({$visits}) لحضرتك في مطعمنا، يسعدنا تتويجك بالجائزة الكبرى: {$loyalty['reward_label']}!\n"
                     . "🎗️ كود جائزة الولاء: {$loyaltyVoucher->code} (صالح لغاية {$loyaltyVoucher->expires_at?->format('Y-m-d')})\n";
             } elseif ($visits >= 2) {
                 $remaining = $target - ($visits % $target);
-                $msg .= "\n🌟 أهلاً بعودتك مجدداً! هذه زيارتك رقم ({$visits}) لدينا — تبقى لك {$remaining} زيارات فقط لتحصل على الجائزة الكبرى: {$loyalty['reward_label']}!\n";
+                $msg .= "\n🌟 أهلاً بحضرتك مجدداً! هذه الزيارة رقم ({$visits}) لدينا — تبقى لحضرتك {$remaining} زيارات فقط للحصول على الجائزة الكبرى: {$loyalty['reward_label']}!\n";
             } else {
                 $remaining = $target - 1;
-                $msg .= "\n✨ هذه زيارتك رقم (1) في برنامج ولاء «{$restaurant->name}» — اجمع {$remaining} زيارات أخرى لتحصل على الجائزة الكبرى: {$loyalty['reward_label']}!\n";
+                $msg .= "\n✨ هذه الزيارة رقم (1) لحضرتك في برنامج ولاء «{$restaurant->name}» — اجمع {$remaining} زيارات أخرى للحصول على الجائزة الكبرى: {$loyalty['reward_label']}!\n";
             }
         } elseif ($visits >= 2) {
-            $msg .= "\n🌟 يسعدنا تجدد زيارتك! هذه زيارتك رقم ({$visits}) في مطعمنا «{$restaurant->name}».\n";
+            $msg .= "\n🌟 يسعدنا تجدد زيارة حضرتك! هذه الزيارة رقم ({$visits}) في مطعمنا «{$restaurant->name}».\n";
         }
 
         $msg .= "\n✨ نتطلع لخدمتكم دائماً بكل حب!\n⚡ Powered by: www.tedallal.tech";
@@ -335,10 +335,10 @@ final class CustomerCrmService
     private function getRandomVoucherGreeting(string $customerName, string $restaurantName): string
     {
         $templates = [
-            "🎁 مبروك يا {$customerName}! حالفك الحظ معنا في مطعمنا «{$restaurantName}» 🎉",
-            "✨ يسعد أوقاتك يا {$customerName}! مبروك فوزك اليوم في مطعم «{$restaurantName}» 🌟",
-            "🎉 أهلاً وسهلاً بك يا {$customerName}! لقد ربحت معنا في مطعمنا «{$restaurantName}» 🥳",
-            "🌟 نورتنا يا {$customerName}! مبروك حصولك على الهدية المميزة من «{$restaurantName}» 🎁",
+            "🎁 أهلاً بحضرتك {$customerName}! ألف مبروك الفوز معنا في مطعمنا «{$restaurantName}» 🎉",
+            "✨ أهلاً بحضرتك {$customerName}! يسعدنا تهنئة حضرتك بالفوز اليوم في مطعم «{$restaurantName}» 🌟",
+            "🎉 أهلاً بحضرتك {$customerName}! لقد فزت معنا بهدية مميزة في مطعمنا «{$restaurantName}» 🥳",
+            "🌟 أهلاً بحضرتك {$customerName}! نبارك لحضرتك الحصول على الهدية المميزة من «{$restaurantName}» 🎁",
         ];
         return $templates[array_rand($templates)];
     }
@@ -346,9 +346,9 @@ final class CustomerCrmService
     private function getRandomReminderGreeting(string $customerName, string $restaurantName): string
     {
         $templates = [
-            "مرحباً {$customerName} 👋 نود تذكيرك من مطعمنا «{$restaurantName}» بأن لديك هدية خاصة منتظرة! ✨",
-            "يسعد أوقاتك يا {$customerName} 🌸 من مطعم «{$restaurantName}» نذكّرك بخصمك الرائع قبل فوات الأوان!",
-            "أهلاً بك يا {$customerName} 🌟 لا تنسَ أن لديك خصماً مميزاً في مطعم «{$restaurantName}» نتمنى أن يسعدك!",
+            "أهلاً بحضرتك {$customerName} 👋 نود تذكير حضرتك من مطعمنا «{$restaurantName}» بأن لديك هدية خاصة منتظرة! ✨",
+            "أهلاً بحضرتك {$customerName} 🌸 من مطعم «{$restaurantName}» نذكّرك بخصمك الرائع قبل انتهاء المدة!",
+            "أهلاً بحضرتك {$customerName} 🌟 لا تنسَ أن لدى حضرتك خصماً مميزاً في مطعم «{$restaurantName}» يسعدنا تشريفكم!",
         ];
         return $templates[array_rand($templates)];
     }
@@ -378,7 +378,7 @@ final class CustomerCrmService
             $target = (int) $loyalty['target_visits'];
             $rem = $visits % $target === 0 ? 0 : ($target - ($visits % $target));
             if ($rem > 0) {
-                $message .= "\n🌟 رصيدك الحالي: {$visits} زيارة (متبقي {$rem} زيارات للحصول على: {$loyalty['reward_label']}).\n";
+                $message .= "\n🌟 رصيد حضرتك الحالي: {$visits} زيارة (متبقي {$rem} زيارات للحصول على: {$loyalty['reward_label']}).\n";
             }
         }
 
@@ -403,11 +403,11 @@ final class CustomerCrmService
         $baseUrl = rtrim((string) config('app.url', 'https://tedallal.tech'), '/');
         $menuUrl = "{$baseUrl}/m/{$restaurant->slug}?coupon={$promo->code}";
 
-        return "⏳ تنبيه ينتهي قريباً! عزيزي {$customer->name} ✨\n\n"
-            . "نود تذكيرك بأن خصمك الرائع ({$discountLabel}) من مطعم «{$restaurantName}» سينتهي غداً بتاريخ: {$expiresText}!\n\n"
+        return "⏳ أهلاً بحضرتك {$customer->name}! تنبيه ينتهي قريباً ✨\n\n"
+            . "نود تذكير حضرتك بأن الخصم الخاص ({$discountLabel}) من مطعم «{$restaurant->name}» سينتهي غداً بتاريخ: {$expiresText}!\n\n"
             . "🎟️ كود الخصم الخاص بك: {$promo->code}\n"
             . "📲 اطلب واستفد من الخصم فوراً من الرابط:\n{$menuUrl}\n\n"
-            . "يسعدنا جداً حضورك أو طلبك اليوم قبل انتهاء الصلاحية 🎉";
+            . "يسعدنا جداً تشريف حضرتك أو طلبك اليوم قبل انتهاء الصلاحية 🎉";
     }
 
     /**
@@ -513,8 +513,8 @@ final class CustomerCrmService
                     . "📲 للطلب وتطبيق الخصم فوراً:\n{$menuUrl}";
             }
         } elseif ($campaignType === 'vip_reward') {
-            $message = "🌟 أهلاً وسهلاً بعميلنا المميز {$cleanName}! ✨\n\n"
-                . "تقديراً لولائك الدائم وتكرار زياراتك لمطعم «{$restaurantName}»، يسعدنا إهداؤك هذه الهدية الخاصة:\n";
+            $message = "🌟 أهلاً بحضرتك {$cleanName}! ✨\n\n"
+                . "تقديراً لولائك الدائم وتشريف حضرتك المتكرر لمطعم «{$restaurantName}»، يسعدنا تقديم هذه الهدية الخاصة:\n";
             if ($promo) {
                 $discountLabel = $this->formatPromoLabel($promo, $restaurant);
                 $menuUrl = "{$baseUrl}/m/{$restaurant->slug}?coupon={$promo->code}";
@@ -524,10 +524,10 @@ final class CustomerCrmService
                     . "📅 صالح لغاية: {$expiresText}\n"
                     . "📲 للطلب وتطبيق الخصم مباشرة في المنيو:\n{$menuUrl}\n\n";
             }
-            $message .= "يسعدنا ويشرفنا دائماً وجودك بيننا، ونتطلع لاستقبالك في أقرب وقت! 👑";
+            $message .= "يسعدنا ويشرفنا دائماً وجود حضرتك بيننا، ونتطلع لاستقبالكم في أقرب وقت! 👑";
         } elseif ($campaignType === 'win_back') {
-            $message = "🌸 اشتقنالك يا {$cleanName} في مطعمنا «{$restaurantName}»! 👋\n\n"
-                . "مر وقت منذ آخر زيارة شرّفتنا بها، وحبينا نهديك كود خصم خاص لتنورنا مجدداً وندللك على ذوقك:\n";
+            $message = "🌸 أهلاً بحضرتك {$cleanName} في مطعمنا «{$restaurantName}»! 👋\n\n"
+                . "مرّ وقت منذ آخر زيارة تشرّفنا بها، ويسعدنا إهداء حضرتك كود خصم خاص للترحيب بكم مجدداً:\n";
             if ($promo) {
                 $discountLabel = $this->formatPromoLabel($promo, $restaurant);
                 $menuUrl = "{$baseUrl}/m/{$restaurant->slug}?coupon={$promo->code}";
@@ -537,10 +537,10 @@ final class CustomerCrmService
                     . "📅 صالح لغاية: {$expiresText}\n"
                     . "📲 للطلب المباشر أو زيارتنا:\n{$menuUrl}\n\n";
             }
-            $message .= "طاولتك بانتظارك وأشهى الأطباق جاهزة لعيونك! نتشرف بزيارتك دائماً ✨";
+            $message .= "نسعد دائماً بتشريف حضرتك وأشهى الأطباق جاهزة لذوقكم الرفيع ✨";
         } else { // welcome_lead / default
-            $message = "🎉 أهلاً بك يا {$cleanName} في عائلة «{$restaurantName}»! ✨\n\n"
-                . "سعدنا جداً بزيارتك الأولى لنا، وحبينا نشكرك ونهديك كود خصم لزيارتك القادمة:\n";
+            $message = "🎉 أهلاً بحضرتك {$cleanName} في عائلة «{$restaurantName}»! ✨\n\n"
+                . "سعدنا جداً بزيارة حضرتك الأولى لنا، ويسعدنا تقديم كود خصم خاص للزيارة القادمة:\n";
             if ($promo) {
                 $discountLabel = $this->formatPromoLabel($promo, $restaurant);
                 $menuUrl = "{$baseUrl}/m/{$restaurant->slug}?coupon={$promo->code}";
@@ -550,7 +550,7 @@ final class CustomerCrmService
                     . "📅 صالح لغاية: {$expiresText}\n"
                     . "📲 رابط المنيو وتطبيق الخصم:\n{$menuUrl}\n\n";
             }
-            $message .= "نتطلع لرؤيتك مجدداً وخدمتك بأعلى معايير الضيافة! 🍽️";
+            $message .= "نتطلع لخدمة حضرتك مجدداً بأعلى معايير الضيافة! 🍽️";
         }
 
         $url = 'https://wa.me/' . $this->toWhatsAppDigits($customer->phone) . '?text=' . rawurlencode($message);

@@ -5,10 +5,13 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\MenuCategory;
 use App\Models\Order;
+use App\Models\Restaurant;
 use App\Models\RestaurantTable;
 use App\Services\TableSessionService;
+use App\Services\TokenGenerator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -16,6 +19,7 @@ class CustomerController extends Controller
 {
     public function __construct(
         private readonly TableSessionService $tableSessionService,
+        private readonly TokenGenerator $tokenGenerator,
     ) {}
 
     public function table(Request $request, string $token): Response|\Illuminate\Http\Response
@@ -52,6 +56,75 @@ class CustomerController extends Controller
             ], 200);
         }
 
+        return $this->renderMenuResponse($request, $table);
+    }
+
+    /**
+     * Direct restaurant public menu entry (/m/{slug}, /r/{slug}) used by WhatsApp coupons,
+     * CRM campaigns, and marketing links. Always resolves an isolated Takeaway QR point so
+     * external customers never collide with dining-room table sessions.
+     */
+    public function restaurantMenu(Request $request, string $slug): Response|\Illuminate\Http\Response
+    {
+        $cleanSlug = trim($slug);
+
+        $restaurant = Restaurant::withoutGlobalScopes()
+            ->where('slug', $cleanSlug)
+            ->first();
+
+        if (! $restaurant) {
+            return response()->view('customer.table-not-found', [
+                'token' => $cleanSlug,
+                'reason' => 'not_found',
+            ], 404);
+        }
+
+        if (! $restaurant->isActive()) {
+            return response()->view('customer.table-not-found', [
+                'token' => $cleanSlug,
+                'restaurant' => $restaurant,
+                'reason' => 'restaurant_closed',
+            ], 200);
+        }
+
+        $takeawayPoint = RestaurantTable::withoutGlobalScopes()
+            ->where('restaurant_id', $restaurant->id)
+            ->where('table_type', RestaurantTable::TYPE_TAKEAWAY)
+            ->where('status', 'active')
+            ->orderBy('id')
+            ->first();
+
+        if (! $takeawayPoint) {
+            $takeawayPoint = DB::transaction(function () use ($restaurant) {
+                $existing = RestaurantTable::withoutGlobalScopes()
+                    ->where('restaurant_id', $restaurant->id)
+                    ->where('table_type', RestaurantTable::TYPE_TAKEAWAY)
+                    ->where('status', 'active')
+                    ->lockForUpdate()
+                    ->orderBy('id')
+                    ->first();
+
+                if ($existing) {
+                    return $existing;
+                }
+
+                return RestaurantTable::query()->create([
+                    'restaurant_id' => $restaurant->id,
+                    'name' => 'الطلب السفري المباشر',
+                    'public_token' => $this->tokenGenerator->generatePublicToken(),
+                    'status' => 'active',
+                    'table_type' => RestaurantTable::TYPE_TAKEAWAY,
+                ]);
+            });
+        }
+
+        $takeawayPoint->setRelation('restaurant', $restaurant);
+
+        return $this->renderMenuResponse($request, $takeawayPoint);
+    }
+
+    private function renderMenuResponse(Request $request, RestaurantTable $table): Response
+    {
         $session = $this->tableSessionService->resolveOrCreate(
             $table,
             $request->cookie('tedallal_session')

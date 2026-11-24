@@ -431,10 +431,10 @@ const currentStepIndex = computed(() => {
                         class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-stone-100 hover:bg-stone-200 dark:bg-slate-800/80 dark:hover:bg-slate-800 text-stone-600 dark:text-slate-300 border border-stone-200 dark:border-slate-700/60 text-xs font-bold transition-all cursor-pointer active:scale-95"
                     >
                         <span class="text-emerald-500 text-sm">💬</span>
-                        <span>مشاركة تفاصيل الفاتورة مع رفقاء الطاولة</span>
+                        <span>{{ (order.service_type ?? 'dine_in') === 'takeaway' ? 'مشاركة تفاصيل الطلب عبر واتساب' : 'مشاركة تفاصيل الفاتورة مع رفقاء الطاولة' }}</span>
                     </button>
                     <p class="mt-1 text-[11px] text-stone-400 dark:text-slate-500">
-                        (اختياري: لمشاركة ملخص الطلب وحساب الطاولة مع أصدقائك عبر واتساب)
+                        {{ (order.service_type ?? 'dine_in') === 'takeaway' ? '(اختياري: لمشاركة ملخص الطلب ورقم الاستلام عبر واتساب)' : '(اختياري: لمشاركة ملخص الطلب وحساب الطاولة مع أصدقائك عبر واتساب)' }}
                     </p>
                 </div>
             </div>
@@ -446,8 +446,8 @@ const currentStepIndex = computed(() => {
                         :href="`/t/${publicToken}`"
                         class="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:from-amber-700 hover:to-amber-500 py-3.5 px-4 font-bold text-white shadow-lg shadow-amber-500/25 transition active:scale-95"
                     >
-                        <span class="text-lg">🍽️</span>
-                        <span>طلب المزيد لطاولتك (العودة للمنيو)</span>
+                        <span class="text-lg">{{ (order.service_type ?? 'dine_in') === 'takeaway' ? '🥡' : '🍽️' }}</span>
+                        <span>{{ (order.service_type ?? 'dine_in') === 'takeaway' ? 'طلب وجبة إضافية (العودة للمنيو)' : 'طلب المزيد لطاولتك (العودة للمنيو)' }}</span>
                         <svg class="h-5 w-5 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                     </Link>
                 </div>

@@ -227,7 +227,7 @@ class TableBookingController extends Controller
         // Dispatch OTP via WhatsApp if connected
         $otpSentViaWhatsapp = false;
         if ($restaurant->isWhatsappConnected()) {
-            $msg = "👑 كود التحقق لحجز طاولة VIP في {$restaurant->name} هو: *{$reservation->otp_code}*\nصالح لمدة 10 دقائق.\nشكراً لثقتكم!";
+            $msg = "👑 أهلاً بحضرتك {$reservation->guest_name}! كود التحقق لحجز طاولة VIP في {$restaurant->name} هو: *{$reservation->otp_code}*\nصالح لمدة 10 دقائق.\nشكراً لثقتكم!";
             $waRes = $this->whatsAppGateway->sendMessage($restaurant, $cleanPhone, $msg);
             $otpSentViaWhatsapp = $waRes['success'] ?? false;
         }
@@ -295,7 +295,7 @@ class TableBookingController extends Controller
 
         // Send confirmation WhatsApp message
         if ($restaurant->isWhatsappConnected()) {
-            $msg = "✨ مرحباً بك {$reservation->guest_name} 👑\nتم تأكيد حجز طاولة VIP بنجاح في *{$restaurant->name}*!\n\n📅 التاريخ: {$reservation->reservation_date->format('Y-m-d')}\n⏰ التوقيت: {$reservation->time_slot}\n🍽️ الطاولة: {$reservation->table->name} ({$reservation->table->zone})\n👥 عدد الضيوف: {$reservation->guests_count}\n🎫 رمز الحجز: *{$reservation->getFormattedCode()}*\n\nنتطلع لاستقبالكم وتقديم تجربة استثنائية تليق بكم!";
+            $msg = "✨ أهلاً بحضرتك {$reservation->guest_name} 👑\nتم تأكيد حجز طاولة VIP بنجاح في *{$restaurant->name}*!\n\n📅 التاريخ: {$reservation->reservation_date->format('Y-m-d')}\n⏰ التوقيت: {$reservation->time_slot}\n🍽️ الطاولة: {$reservation->table->name} ({$reservation->table->zone})\n👥 عدد الضيوف: {$reservation->guests_count}\n🎫 رمز الحجز: *{$reservation->getFormattedCode()}*\n\nنتطلع لاستقبال حضرتك وتقديم تجربة استثنائية تليق بكم!";
             $this->whatsAppGateway->sendMessage($restaurant, $reservation->guest_phone, $msg);
         }
 

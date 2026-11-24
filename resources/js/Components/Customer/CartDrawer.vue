@@ -15,10 +15,12 @@ const props = withDefaults(defineProps<{
     currency: string;
     isPrepaid?: boolean;
     isTakeawayPoint?: boolean;
+    initialPromoCode?: string;
     submitting?: boolean;
 }>(), {
     isPrepaid: false,
     isTakeawayPoint: false,
+    initialPromoCode: '',
     submitting: false,
 });
 
@@ -160,10 +162,15 @@ function close() {
     emit('updated');
 }
 
-watch(() => props.open, (isOpen) => {
+watch(() => props.open, async (isOpen) => {
     if (isOpen) {
         document.body.style.overflow = 'hidden';
-        load();
+        await load();
+        if (props.initialPromoCode && !appliedCode.value && !promoInput.value && items.value.length > 0) {
+            promoInput.value = props.initialPromoCode.trim().toUpperCase();
+            showPromoInput.value = true;
+            await applyPromo();
+        }
     } else {
         document.body.style.overflow = '';
     }

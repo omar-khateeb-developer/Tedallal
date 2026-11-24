@@ -40,6 +40,12 @@ Route::redirect('/sandbox', '/demo');
 Route::get('/t/{token}', [CustomerController::class, 'table'])->name('customer.menu');
 Route::get('/t/{token}/cart', [CustomerController::class, 'cart'])->name('customer.cart');
 Route::get('/t/{token}/orders/{orderNumber}', [CustomerController::class, 'order'])->name('customer.order');
+Route::get('/m/{slug}', [CustomerController::class, 'restaurantMenu'])
+    ->where('slug', '[A-Za-z0-9\-_]+')
+    ->name('customer.restaurant_menu');
+Route::get('/r/{slug}', [CustomerController::class, 'restaurantMenu'])
+    ->where('slug', '[A-Za-z0-9\-_]+')
+    ->name('customer.restaurant_menu_alias');
 
 // Public VIP Table Booking Engine (حجز طاولات VIP المسبق والمرئي)
 Route::get('/r/{slug}/vip-booking', [\App\Http\Controllers\Web\Public\TableBookingController::class, 'show'])->name('public.booking.show');
