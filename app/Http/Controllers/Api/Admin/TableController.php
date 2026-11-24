@@ -43,6 +43,7 @@ class TableController extends ApiController
             'name' => $validated['name'],
             'public_token' => $this->tokenGenerator->generatePublicToken(),
             'status' => $validated['status'] ?? 'active',
+            'table_type' => $validated['table_type'] ?? RestaurantTable::TYPE_DINE_IN,
             'pos_x' => $validated['pos_x'] ?? 50,
             'pos_y' => $validated['pos_y'] ?? 50,
             'shape' => $validated['shape'] ?? 'circle',

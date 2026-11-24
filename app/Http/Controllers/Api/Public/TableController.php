@@ -49,6 +49,10 @@ class TableController extends ApiController
             return $this->error('المطعم غير متاح للخدمة حالياً.', 403);
         }
 
+        if ($table->isTakeaway()) {
+            return $this->error('خدمة استدعاء النادل متوفرة لطاولات الصالة فقط، طلبك عبر هذه النقطة هو طلب سفري.', 422);
+        }
+
         // Anti-spam protection: check if a waiter call was sent in the last 45 seconds and is still pending
         $recentPending = TableServiceCall::where('table_id', $table->id)
             ->where('type', 'waiter_call')
@@ -122,6 +126,10 @@ class TableController extends ApiController
 
         if (! $table->restaurant || ! $table->restaurant->isActive()) {
             return $this->error('المطعم غير متاح للخدمة حالياً.', 403);
+        }
+
+        if ($table->isTakeaway()) {
+            return $this->error('طلب الفاتورة على الطاولة متوفر للصالة فقط، طلبات هذه النقطة تُسدد وتُستلم كطلب سفري.', 422);
         }
 
         // Anti-tamper check: Ensure table has active orders before requesting bill

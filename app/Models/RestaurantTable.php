@@ -16,11 +16,20 @@ class RestaurantTable extends Model
 
     protected $table = 'restaurant_tables';
 
+    public const TYPE_DINE_IN = 'dine_in';
+
+    public const TYPE_TAKEAWAY = 'takeaway';
+
+    protected $attributes = [
+        'table_type' => self::TYPE_DINE_IN,
+    ];
+
     protected $fillable = [
         'restaurant_id',
         'name',
         'public_token',
         'status',
+        'table_type',
         'pos_x',
         'pos_y',
         'shape',
@@ -127,6 +136,16 @@ class RestaurantTable extends Model
     public function isActive(): bool
     {
         return $this->status === TableStatus::Active;
+    }
+
+    public function isTakeaway(): bool
+    {
+        return ($this->table_type ?? self::TYPE_DINE_IN) === self::TYPE_TAKEAWAY;
+    }
+
+    public function scopeDineIn($query)
+    {
+        return $query->where('table_type', self::TYPE_DINE_IN);
     }
 
     public function publicUrl(?string $baseUrl = null): string

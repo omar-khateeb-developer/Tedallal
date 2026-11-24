@@ -251,7 +251,7 @@
                 <option value="">جميع الطاولات ({{ count($allTables) }})</option>
                 @foreach ($allTables as $t)
                     <option value="{{ $t->id }}" {{ $selectedTableId === $t->id ? 'selected' : '' }}>
-                        {{ $t->name }}
+                        {{ $t->isTakeaway() ? '🥡 ' : '🍽️ ' }}{{ $t->name }}
                     </option>
                 @endforeach
             </select>
@@ -264,6 +264,7 @@
 
     <div class="grid" id="cardsGrid">
         @foreach ($tables as $table)
+            @php $isTakeawayPoint = ($table['table_type'] ?? 'dine_in') === 'takeaway'; @endphp
             <article class="card">
                 <div>
                     @if ($restaurant->logo)
@@ -274,7 +275,9 @@
                             <span class="restaurant-name">{{ $restaurant->name }}</span>
                         </div>
                     @endif
-                    <div class="table-pill">{{ $table['name'] }}</div>
+                    <div class="table-pill" @if($isTakeawayPoint) style="background: #0284c7; color: #ffffff;" @endif>
+                        {{ $isTakeawayPoint ? '🥡 ' . $table['name'] . ' (سفري / استلام)' : $table['name'] }}
+                    </div>
                 </div>
 
                 <div class="qr-wrapper">
@@ -284,10 +287,14 @@
                 <div>
                     <div class="cta-title">
                         <span>📱</span>
-                        <span>امسح بكاميرا الهاتف للطلب</span>
+                        <span>{{ $isTakeawayPoint ? 'امسح للطلب السفري والاستلام السريع' : 'امسح بكاميرا الهاتف للطلب' }}</span>
                     </div>
                     <p class="cta-sub">
-                        تصفح المنيو الرقمي مباشرة • اطلب بدون انتظار • شارك عجلة الحظ
+                        @if($isTakeawayPoint)
+                            اطلب وجبتك من هاتفك فوراً • تابع التجهيز لحظياً • استلم بدون انتظار
+                        @else
+                            تصفح المنيو الرقمي مباشرة • اطلب بدون انتظار • شارك عجلة الحظ
+                        @endif
                     </p>
                     <div class="watermark">
                         <span dir="ltr">Powered by: www.tedallal.tech</span> • منظومة «تدلّل» الذكية للضيافة

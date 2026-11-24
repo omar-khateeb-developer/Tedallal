@@ -35,7 +35,7 @@ const props = defineProps<{
         logo?: string | null;
         features?: Record<string, any>;
     };
-    table: { name: string; public_token: string };
+    table: { name: string; public_token: string; table_type?: 'dine_in' | 'takeaway' };
     categories: Category[];
     sessionToken?: string;
     openCart?: boolean;
@@ -104,8 +104,11 @@ const checkoutOpen = ref(false);
 const selectedItem = ref<MenuItem | null>(null);
 const adding = ref(false);
 const submitting = ref(false);
+const isTakeawayPoint = computed(() => props.table?.table_type === 'takeaway');
 const customerNote = ref('');
-const serviceType = ref<'dine_in' | 'takeaway'>('dine_in');
+const serviceType = ref<'dine_in' | 'takeaway'>(
+    props.table?.table_type === 'takeaway' ? 'takeaway' : 'dine_in'
+);
 const promoCode = ref('');
 const cartSubtotal = ref('0.00');
 const cartDrawerRef = ref<InstanceType<typeof CartDrawer> | null>(null);
@@ -352,7 +355,7 @@ async function handleDirectOrderSubmit(payload: { serviceType: string; customerN
     try {
         const { data } = await axios.post('/api/public/orders', {
             customer_note: payload.customerNote || null,
-            service_type: payload.serviceType,
+            service_type: isTakeawayPoint.value ? 'takeaway' : payload.serviceType,
             promo_code: payload.promoCode || null,
         });
         cartOpen.value = false;
@@ -378,7 +381,7 @@ async function submitOrder() {
     try {
         const { data } = await axios.post('/api/public/orders', {
             customer_note: customerNote.value || null,
-            service_type: serviceType.value,
+            service_type: isTakeawayPoint.value ? 'takeaway' : serviceType.value,
             promo_code: promoCode.value || null,
         });
         checkoutOpen.value = false;
@@ -423,6 +426,7 @@ const activeOrdersTotal = computed(() => {
 });
 
 async function checkServiceStatus() {
+    if (isTakeawayPoint.value) return;
     try {
         const { data } = await axios.get(`/api/public/tables/${props.table.public_token}/service-status`);
         if (data.data?.has_active_call && data.data.calls?.length > 0) {
@@ -434,6 +438,7 @@ async function checkServiceStatus() {
 }
 
 function openServiceModal(tab: 'waiter' | 'bill' = 'waiter') {
+    if (isTakeawayPoint.value) return;
     serviceModalDefaultTab.value = tab;
     showServiceModal.value = true;
     triggerHaptic('light');
@@ -504,14 +509,20 @@ onUnmounted(() => {
     <CustomerLayout :navbar-image="restaurant.navbar_image" :logo="restaurant.logo">
         <template #title>
             <h1 class="text-lg font-bold text-stone-900 dark:text-white">{{ restaurant.name }}</h1>
-            <p class="text-sm text-stone-500 dark:text-slate-400">{{ table.name }}</p>
+            <p
+                class="text-sm"
+                :class="isTakeawayPoint ? 'text-sky-600 dark:text-sky-400 font-bold' : 'text-stone-500 dark:text-slate-400'"
+            >
+                {{ isTakeawayPoint ? `🥡 ${table.name} • طلب سفري` : table.name }}
+            </p>
         </template>
 
         <!-- أزرار الإجراءات في شريط التنقل العلوي -->
         <template #actions>
             <div class="flex items-center gap-1.5">
-                <!-- زر طلب النادل / الفاتورة السريع -->
+                <!-- زر طلب النادل / الفاتورة السريع (لطاولات الصالة فقط) -->
                 <button
+                    v-if="!isTakeawayPoint"
                     type="button"
                     class="relative flex h-10 items-center justify-center gap-1.5 px-3 rounded-xl bg-amber-500/15 text-amber-600 hover:bg-amber-500/25 dark:bg-amber-500/20 dark:text-amber-300 dark:hover:bg-amber-500/30 transition-all border border-amber-500/40 active:scale-95 shadow-2xs font-bold text-xs"
                     title="طلب النادل أو الفاتورة"
@@ -559,7 +570,7 @@ onUnmounted(() => {
 
         <!-- بطاقة متابعة نداء الخدمة النشط للطاولة -->
         <div
-            v-if="activePendingCall"
+            v-if="activePendingCall && !isTakeawayPoint"
             class="mb-4 p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/40 text-stone-900 dark:text-white flex items-center justify-between gap-3 shadow-xs"
         >
             <div class="flex items-center gap-2.5">
@@ -585,8 +596,8 @@ onUnmounted(() => {
             </button>
         </div>
 
-        <!-- شريط استدعاء النادل والفاتورة السريع -->
-        <div class="mb-4 grid grid-cols-2 gap-2">
+        <!-- شريط استدعاء النادل والفاتورة السريع لطاولات الصالة / تنبيه نقطة السفري -->
+        <div v-if="!isTakeawayPoint" class="mb-4 grid grid-cols-2 gap-2">
             <button
                 type="button"
                 @click="openServiceModal('waiter')"
@@ -603,6 +614,16 @@ onUnmounted(() => {
                 <span class="text-emerald-500">🧾</span>
                 <span>طلب الفاتورة</span>
             </button>
+        </div>
+        <div
+            v-else
+            class="mb-4 flex items-center justify-between gap-2.5 rounded-2xl bg-sky-50/90 dark:bg-sky-950/30 border border-sky-200/80 dark:border-sky-800/60 px-3.5 py-2.5 text-xs text-sky-900 dark:text-sky-200 shadow-2xs"
+        >
+            <div class="flex items-center gap-2 min-w-0">
+                <span class="text-base shrink-0">🥡</span>
+                <p class="font-bold">نقطة استلام سفري — اطلب من المنيو واستلم طلبك عند جاهزيته مباشرة</p>
+            </div>
+            <span class="shrink-0 rounded-full bg-sky-600 text-white px-2.5 py-0.5 text-[10px] font-black">سفري</span>
         </div>
 
         <!-- خطأ -->
@@ -1060,6 +1081,7 @@ onUnmounted(() => {
             v-model:open="cartOpen"
             :currency="restaurant.currency"
             :is-prepaid="restaurant.type === 'prepaid' || (restaurant as any).restaurant_type === 'prepaid'"
+            :is-takeaway-point="isTakeawayPoint"
             :submitting="submitting"
             @submit-order="handleDirectOrderSubmit"
             @updated="refreshCartSummary"
@@ -1076,6 +1098,7 @@ onUnmounted(() => {
             :item-count="cartCount"
             :loading="submitting"
             :is-prepaid="restaurant.type === 'prepaid'"
+            :is-takeaway-point="isTakeawayPoint"
             @close="checkoutOpen = false"
             @confirm="submitOrder"
         />
@@ -1089,6 +1112,7 @@ onUnmounted(() => {
         />
 
         <ServiceCallModal
+            v-if="!isTakeawayPoint"
             :show="showServiceModal"
             :table="table"
             :currency="restaurant.currency"

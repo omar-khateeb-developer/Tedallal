@@ -41,6 +41,7 @@ class TablePrintController extends Controller
                 return [
                     'id' => $table->id,
                     'name' => $table->name,
+                    'table_type' => $table->table_type ?? RestaurantTable::TYPE_DINE_IN,
                     'public_url' => $publicUrl,
                     'qr_base64' => base64_encode($this->qrCodeService->buildRawPng($table)),
                 ];

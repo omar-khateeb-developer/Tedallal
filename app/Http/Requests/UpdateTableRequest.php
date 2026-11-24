@@ -25,6 +25,7 @@ class UpdateTableRequest extends FormRequest
         return [
             'name' => ['sometimes', 'string', 'max:100'],
             'status' => ['sometimes', 'in:active,inactive'],
+            'table_type' => ['sometimes', 'string', 'in:dine_in,takeaway'],
             'pos_x' => ['sometimes', 'numeric'],
             'pos_y' => ['sometimes', 'numeric'],
             'shape' => ['sometimes', 'string', 'in:circle,rectangle,booth,vip'],

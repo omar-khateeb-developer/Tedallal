@@ -50,12 +50,14 @@ class CartController extends ApiController
 
         $menuItem = MenuItem::withoutGlobalScopes()
             ->where('restaurant_id', $restaurantId)
-            ->where('is_available', true)
-            ->where('is_active', true)
             ->find($validated['menu_item_id']);
 
         if (! $menuItem) {
-            return $this->error('عذراً، هذا الصنف غير متوفر حالياً.', 404);
+            return $this->error('الصنف غير موجود في قائمة هذا المطعم.', 404);
+        }
+
+        if (! $menuItem->isOrderable()) {
+            return $this->error('عذراً، هذا الصنف غير متوفر حالياً.', 422);
         }
 
         $cartItem = $this->cartService->addItem(

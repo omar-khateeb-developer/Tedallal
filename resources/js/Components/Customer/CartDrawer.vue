@@ -14,9 +14,11 @@ const props = withDefaults(defineProps<{
     open: boolean;
     currency: string;
     isPrepaid?: boolean;
+    isTakeawayPoint?: boolean;
     submitting?: boolean;
 }>(), {
     isPrepaid: false,
+    isTakeawayPoint: false,
     submitting: false,
 });
 
@@ -42,7 +44,13 @@ const count = ref(0);
 const loading = ref(false);
 
 // 1-Step Unified Checkout State
-const serviceType = ref<'dine_in' | 'takeaway'>('dine_in');
+const serviceType = ref<'dine_in' | 'takeaway'>(props.isTakeawayPoint ? 'takeaway' : 'dine_in');
+
+watch(() => props.isTakeawayPoint, (takeaway) => {
+    if (takeaway) {
+        serviceType.value = 'takeaway';
+    }
+}, { immediate: true });
 const generalNote = ref('');
 const promoInput = ref('');
 const appliedCode = ref('');
@@ -138,7 +146,7 @@ function handleOrderSubmit() {
     if (isSubmittingLocal.value || props.submitting) return;
     isSubmittingLocal.value = true;
     emit('submit-order', {
-        serviceType: serviceType.value,
+        serviceType: props.isTakeawayPoint ? 'takeaway' : serviceType.value,
         customerNote: generalNote.value.trim(),
         promoCode: appliedCode.value,
     });
@@ -270,7 +278,17 @@ defineExpose({ load, count, subtotal, finalTotal, serviceType, generalNote, appl
                 <!-- 2. خيار نوع الخدمة المباشر (محلي أو سفري) بلمسة واحدة -->
                 <div class="pt-2 border-t border-stone-100 dark:border-slate-800/80">
                     <label class="mb-1.5 block text-xs font-bold text-stone-700 dark:text-slate-300">طريقة الاستلام</label>
-                    <div class="grid grid-cols-2 gap-2">
+                    <div
+                        v-if="isTakeawayPoint"
+                        class="flex items-center gap-3 rounded-xl border border-sky-200 dark:border-sky-800/70 bg-sky-50/90 dark:bg-sky-950/30 px-3.5 py-2.5 text-sky-800 dark:text-sky-200"
+                    >
+                        <span class="text-xl shrink-0">🥡</span>
+                        <div class="text-xs leading-relaxed">
+                            <p class="font-bold">طلب سفري (تغليف للاستلام المباشر)</p>
+                            <p class="text-[11px] opacity-85">محدد تلقائياً لرمز نقطة الاستلام ولا يحتاج إلى طاولة.</p>
+                        </div>
+                    </div>
+                    <div v-else class="grid grid-cols-2 gap-2">
                         <button
                             type="button"
                             @click="serviceType = 'dine_in'"

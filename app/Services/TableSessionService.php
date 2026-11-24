@@ -13,14 +13,27 @@ final class TableSessionService
         private readonly TokenGenerator $tokenGenerator,
     ) {}
 
-    public function resolveOrCreate(RestaurantTable $table): TableSession
+    public function resolveOrCreate(RestaurantTable $table, ?string $preferredSessionToken = null): TableSession
     {
-        return DB::transaction(function () use ($table) {
-            $existing = TableSession::query()
-                ->where('table_id', $table->id)
-                ->where('status', 'active')
-                ->lockForUpdate()
-                ->first();
+        return DB::transaction(function () use ($table, $preferredSessionToken) {
+            if ($table->isTakeaway()) {
+                // نقاط الاستلام / السفري يمسحها زبائن متفرقون بنفس الـ QR؛
+                // لذلك يأخذ كل زبون جلسته المستقلة المربوطة بـ cookie متصفحه فقط.
+                $existing = $preferredSessionToken
+                    ? TableSession::query()
+                        ->where('table_id', $table->id)
+                        ->where('session_token', $preferredSessionToken)
+                        ->where('status', 'active')
+                        ->lockForUpdate()
+                        ->first()
+                    : null;
+            } else {
+                $existing = TableSession::query()
+                    ->where('table_id', $table->id)
+                    ->where('status', 'active')
+                    ->lockForUpdate()
+                    ->first();
+            }
 
             if ($existing) {
                 // فحص انتهاء صلاحية الجلسة القديمة (جلسات الزبائن السابقين):

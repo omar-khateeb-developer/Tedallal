@@ -52,7 +52,10 @@ class CustomerController extends Controller
             ], 200);
         }
 
-        $session = $this->tableSessionService->resolveOrCreate($table);
+        $session = $this->tableSessionService->resolveOrCreate(
+            $table,
+            $request->cookie('tedallal_session')
+        );
 
         cookie()->queue(cookie(
             'tedallal_session',

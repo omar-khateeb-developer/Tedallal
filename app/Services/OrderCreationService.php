@@ -110,13 +110,17 @@ final class OrderCreationService
             $total = MoneyCalculator::subtract($subtotal, $discountAmount);
             if ((float)$total < 0) $total = '0.00';
 
+            $effectiveServiceType = ($table && $table->isTakeaway())
+                ? 'takeaway'
+                : (in_array($serviceType, ['takeaway', 'dine_in'], true) ? $serviceType : 'dine_in');
+
             $order = Order::query()->create([
                 'restaurant_id' => $restaurant->id,
                 'table_id' => $table->id,
                 'table_session_id' => $session->id,
                 'order_number' => $this->orderNumberGenerator->generate($restaurant->id),
                 'status' => OrderStatus::Pending,
-                'service_type' => in_array($serviceType, ['takeaway', 'dine_in'], true) ? $serviceType : 'dine_in',
+                'service_type' => $effectiveServiceType,
                 'subtotal' => $subtotal,
                 'total' => $total,
                 'promo_code_id' => $promoCode?->id,

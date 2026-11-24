@@ -29,7 +29,10 @@ class SessionController extends ApiController
             return $this->error('الطاولة غير موجودة.', 404);
         }
 
-        $session = $this->tableSessionService->resolveOrCreate($table);
+        $session = $this->tableSessionService->resolveOrCreate(
+            $table,
+            $request->cookie('tedallal_session')
+        );
         $session->load('table.restaurant');
 
         $cookie = cookie(

@@ -41,6 +41,7 @@ class RestaurantTableResource extends JsonResource
             'name' => $this->name,
             'public_token' => $this->public_token,
             'status' => $this->status,
+            'table_type' => $this->table_type ?? RestaurantTable::TYPE_DINE_IN,
             'pos_x' => (float) ($this->pos_x ?? 50),
             'pos_y' => (float) ($this->pos_y ?? 50),
             'shape' => $this->shape ?? 'circle',

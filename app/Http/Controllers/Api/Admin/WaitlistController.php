@@ -140,7 +140,7 @@ class WaitlistController extends ApiController
 
         $table = null;
         if (! empty($validated['table_id'])) {
-            $table = RestaurantTable::where('restaurant_id', $restaurant->id)->find($validated['table_id']);
+            $table = RestaurantTable::where('restaurant_id', $restaurant->id)->dineIn()->find($validated['table_id']);
             if ($table) {
                 $entry->update(['assigned_table_id' => $table->id]);
             }
@@ -181,7 +181,7 @@ class WaitlistController extends ApiController
             'table_id' => ['required', 'integer', 'exists:restaurant_tables,id'],
         ]);
 
-        $table = RestaurantTable::where('restaurant_id', $restaurant->id)->findOrFail($validated['table_id']);
+        $table = RestaurantTable::where('restaurant_id', $restaurant->id)->dineIn()->findOrFail($validated['table_id']);
 
         $entry->update([
             'status' => 'seated',

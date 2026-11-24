@@ -48,12 +48,14 @@ class DashboardController extends Controller
 
         $tables = RestaurantTable::query()
             ->where('restaurant_id', $restaurant->id)
+            ->dineIn()
             ->with(['activeSession'])
             ->orderBy('name')
             ->get();
 
         $zones = RestaurantTable::query()
             ->where('restaurant_id', $restaurant->id)
+            ->dineIn()
             ->whereNotNull('zone')
             ->distinct()
             ->pluck('zone')

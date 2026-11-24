@@ -47,7 +47,7 @@ class DashboardController extends ApiController
                 'today_revenue' => number_format((float) $todayRevenue, 2, '.', ''),
                 'active_tables' => TableSession::query()
                     ->where('status', 'active')
-                    ->whereHas('table', fn($q) => $q->where('restaurant_id', $restaurantId))
+                    ->whereHas('table', fn($q) => $q->where('restaurant_id', $restaurantId)->dineIn())
                     ->count(),
                 'unavailable_menu_items' => MenuItem::withoutGlobalScopes()
                     ->where('restaurant_id', $restaurantId)

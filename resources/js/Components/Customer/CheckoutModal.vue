@@ -10,6 +10,7 @@ const props = defineProps<{
     itemCount: number;
     loading: boolean;
     isPrepaid?: boolean;
+    isTakeawayPoint?: boolean;
 }>();
 
 const { viewportBackdropStyle } = useVisualViewportModal(toRef(props, 'open'));
@@ -24,6 +25,12 @@ function formatNum(val: string | number): string {
 const customerNote = defineModel<string>('customerNote', { default: '' });
 const serviceType = defineModel<string>('serviceType', { default: 'dine_in' });
 const promoCode = defineModel<string>('promoCode', { default: '' });
+
+watch(() => props.isTakeawayPoint, (takeaway) => {
+    if (takeaway) {
+        serviceType.value = 'takeaway';
+    }
+}, { immediate: true });
 
 const promoInput = ref('');
 const appliedCode = ref('');
@@ -136,7 +143,17 @@ const emit = defineEmits<{
                 <!-- خيار نوع الطلب (محلي / سفري) -->
                 <div class="mt-4">
                     <label class="mb-2 block text-xs font-bold text-stone-700 dark:text-slate-300">نوع الطلب</label>
-                    <div class="grid grid-cols-2 gap-2.5">
+                    <div
+                        v-if="isTakeawayPoint"
+                        class="flex items-center gap-3 rounded-xl border border-sky-200 dark:border-sky-800/70 bg-sky-50/90 dark:bg-sky-950/30 px-3.5 py-2.5 text-sky-800 dark:text-sky-200"
+                    >
+                        <span class="text-xl shrink-0">🥡</span>
+                        <div class="text-xs leading-relaxed">
+                            <p class="font-bold">طلب سفري (استلام مباشر)</p>
+                            <p class="text-[11px] opacity-85">تم تحديد الطلب كسفري تلقائياً لكونك تمسح رمز نقطة الاستلام.</p>
+                        </div>
+                    </div>
+                    <div v-else class="grid grid-cols-2 gap-2.5">
                         <button
                             type="button"
                             @click="serviceType = 'dine_in'"

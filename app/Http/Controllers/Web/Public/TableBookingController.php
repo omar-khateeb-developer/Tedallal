@@ -36,6 +36,7 @@ class TableBookingController extends Controller
         $tables = $restaurant->tables()
             ->withoutGlobalScopes()
             ->where('status', 'active')
+            ->dineIn()
             ->orderBy('name')
             ->get([
                 'id',
@@ -163,6 +164,7 @@ class TableBookingController extends Controller
         $table = $restaurant->tables()
             ->withoutGlobalScopes()
             ->where('status', 'active')
+            ->dineIn()
             ->findOrFail($validated['table_id']);
 
         // Format clean phone number
