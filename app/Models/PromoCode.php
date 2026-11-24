@@ -187,20 +187,25 @@ class PromoCode extends Model
         ];
     }
 
-    public function calculateDiscount(float $orderTotal): float
+    public function calculateExactDiscount(string $orderTotal): string
     {
-        if (!$this->isValid($orderTotal) || $orderTotal <= 0) {
-            return 0.0;
+        if (! $this->isValid((float) $orderTotal) || (float) $orderTotal <= 0) {
+            return '0.00';
         }
+
+        $cleanTotal = number_format((float) $orderTotal, 2, '.', '');
 
         if ($this->discount_type === 'fixed') {
-            return min((float) $this->discount_value, $orderTotal);
+            $fixed = number_format(max(0.0, (float) $this->discount_value), 2, '.', '');
+            return \App\Support\MoneyCalculator::min($fixed, $cleanTotal);
         }
 
-        // Percentage discount capped at 100% and strictly non-negative
-        $percent = min(max((float) $this->discount_value, 0.0), 100.0);
-        $discount = round($orderTotal * ($percent / 100), 2);
+        $percent = number_format(max(0.0, (float) $this->discount_value), 2, '.', '');
+        return \App\Support\MoneyCalculator::percentage($cleanTotal, $percent);
+    }
 
-        return min($discount, $orderTotal);
+    public function calculateDiscount(float $orderTotal): float
+    {
+        return (float) $this->calculateExactDiscount(number_format($orderTotal, 2, '.', ''));
     }
 }

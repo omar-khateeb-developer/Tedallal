@@ -94,6 +94,14 @@ async function updateQty(item: CartLine, quantity: number) {
         note: item.note,
     });
     await load();
+    if (appliedCode.value) {
+        if (items.value.length > 0) {
+            promoInput.value = appliedCode.value;
+            await applyPromo();
+        } else {
+            removePromo();
+        }
+    }
     emit('updated');
 }
 
@@ -163,10 +171,12 @@ watch(() => props.open, async (isOpen) => {
     if (isOpen) {
         document.body.style.overflow = 'hidden';
         await load();
-        if (props.initialPromoCode && !appliedCode.value && !promoInput.value && items.value.length > 0) {
-            promoInput.value = props.initialPromoCode.trim().toUpperCase();
+        if (items.value.length > 0 && (appliedCode.value || (props.initialPromoCode && !promoInput.value))) {
+            promoInput.value = appliedCode.value || props.initialPromoCode.trim().toUpperCase();
             showPromoInput.value = true;
             await applyPromo();
+        } else if (items.value.length === 0 && appliedCode.value) {
+            removePromo();
         }
     } else {
         document.body.style.overflow = '';
@@ -413,7 +423,9 @@ defineExpose({ load, count, subtotal, finalTotal, serviceType, generalNote, appl
                         <span>{{ subtotalFormatted }} {{ currency }}</span>
                     </div>
                     <div v-if="parseFloat(discountAmount) > 0" class="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
-                        <span>خصم الكوبون:</span>
+                        <span>
+                            خصم الكوبون (<span dir="ltr" class="font-mono">{{ appliedCode }}</span><template v-if="appliedDiscountType === 'percentage' && appliedDiscountValue > 0"> · {{ appliedDiscountValue }}%</template><template v-else-if="appliedDiscountType === 'fixed' && appliedDiscountValue > 0"> · {{ appliedDiscountValue }} {{ currency }}</template>):
+                        </span>
                         <span>-{{ discountFormatted }} {{ currency }}</span>
                     </div>
                     <div class="flex justify-between text-base font-black text-stone-900 dark:text-white pt-0.5">

@@ -23,7 +23,7 @@ class OrderController extends ApiController
         $restaurant = $this->restaurantContext->current();
 
         $query = Order::query()
-            ->with(['items', 'table'])
+            ->with(['items', 'table', 'promoCode'])
             ->where('restaurant_id', $restaurant->id)
             ->latest();
 
@@ -37,7 +37,7 @@ class OrderController extends ApiController
     public function show(Order $order)
     {
         $this->authorizeOrder($order);
-        $order->load(['items', 'table']);
+        $order->load(['items', 'table', 'promoCode']);
 
         return $this->success(new OrderResource($order));
     }

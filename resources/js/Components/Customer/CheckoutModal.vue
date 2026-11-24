@@ -35,6 +35,8 @@ watch(() => props.isTakeawayPoint, (takeaway) => {
 const promoInput = ref('');
 const appliedCode = ref('');
 const discountAmount = ref('0.00');
+const appliedDiscountType = ref<'percentage' | 'fixed' | ''>('');
+const appliedDiscountValue = ref<number>(0);
 const validatingPromo = ref(false);
 const promoError = ref('');
 const promoDebug = ref<any>(null);
@@ -57,6 +59,8 @@ async function applyPromo() {
         });
         appliedCode.value = data.data.code;
         discountAmount.value = data.data.discount_amount.toString();
+        appliedDiscountType.value = data.data.discount_type || '';
+        appliedDiscountValue.value = Number(data.data.discount_value || 0);
         promoCode.value = data.data.code;
         promoDebug.value = data.data.debug || null;
     } catch (e: any) {
@@ -64,6 +68,8 @@ async function applyPromo() {
         promoDebug.value = e.response?.data?.debug || null;
         appliedCode.value = '';
         discountAmount.value = '0.00';
+        appliedDiscountType.value = '';
+        appliedDiscountValue.value = 0;
         promoCode.value = '';
     } finally {
         validatingPromo.value = false;
@@ -88,6 +94,8 @@ async function fastActivate() {
 function removePromo() {
     appliedCode.value = '';
     discountAmount.value = '0.00';
+    appliedDiscountType.value = '';
+    appliedDiscountValue.value = 0;
     promoInput.value = '';
     promoCode.value = '';
     promoError.value = '';
@@ -267,7 +275,16 @@ const emit = defineEmits<{
                     </div>
 
                     <p v-if="appliedCode" class="mt-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
-                        <span>✓</span> تم تطبيق كود الخصم ({{ appliedCode }}) بنجاح!
+                        <span>✓</span>
+                        <span>
+                            تم تطبيق كود الخصم ({{ appliedCode }}) —
+                            <template v-if="appliedDiscountType === 'percentage' && appliedDiscountValue > 0">
+                                خصم {{ appliedDiscountValue }}% ({{ formatNum(discountAmount) }} {{ currency }})
+                            </template>
+                            <template v-else>
+                                خصم {{ formatNum(discountAmount) }} {{ currency }}
+                            </template>
+                        </span>
                     </p>
                 </div>
 
@@ -291,7 +308,9 @@ const emit = defineEmits<{
                             <span>{{ formatNum(subtotal) }} {{ currency }}</span>
                         </div>
                         <div v-if="appliedCode" class="flex justify-between text-xs text-emerald-600 dark:text-emerald-400 font-bold">
-                            <span>قيمة الخصم ({{ appliedCode }}):</span>
+                            <span>
+                                قيمة الخصم ({{ appliedCode }}<template v-if="appliedDiscountType === 'percentage' && appliedDiscountValue > 0"> · {{ appliedDiscountValue }}%</template>):
+                            </span>
                             <span>- {{ formatNum(discountAmount) }} {{ currency }}</span>
                         </div>
                         <div class="flex justify-between text-base font-black text-stone-900 dark:text-white pt-1 border-t border-amber-200/60 dark:border-amber-800/60">

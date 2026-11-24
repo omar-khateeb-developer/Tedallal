@@ -32,6 +32,8 @@ interface Order {
     restaurant_type?: string;
     windows_count?: number;
     subtotal?: string;
+    discount_amount?: string;
+    promo_code?: string | null;
     total: string;
     table?: { name: string };
     customer_note?: string | null;
@@ -684,12 +686,19 @@ useRestaurantOrders(restaurantId.value, {
                         <div class="py-3 border-b-2 border-dashed border-stone-400 space-y-1.5">
                             <div v-if="receiptOrder.subtotal" class="flex justify-between text-stone-600 text-[11px]">
                                 <span>المجموع الفرعي:</span>
-                                <span>{{ receiptOrder.subtotal }} {{ authRestaurant?.currency || 'ل.س' }}</span>
+                                <span>{{ parseFloat(String(receiptOrder.subtotal)).toLocaleString(undefined, { maximumFractionDigits: 2 }) }} {{ (!authRestaurant?.currency || authRestaurant.currency.toUpperCase() === 'SYP') ? 'ل.س' : authRestaurant.currency }}</span>
+                            </div>
+                            <div v-if="parseFloat(String(receiptOrder.discount_amount || '0')) > 0" class="flex justify-between text-emerald-700 font-bold text-[11px]">
+                                <span>
+                                    خصم الكوبون
+                                    <span v-if="receiptOrder.promo_code" dir="ltr" class="font-mono">({{ receiptOrder.promo_code }})</span>:
+                                </span>
+                                <span dir="ltr">-{{ parseFloat(String(receiptOrder.discount_amount)).toLocaleString(undefined, { maximumFractionDigits: 2 }) }} {{ (!authRestaurant?.currency || authRestaurant.currency.toUpperCase() === 'SYP') ? 'ل.س' : authRestaurant.currency }}</span>
                             </div>
                             <div class="flex justify-between items-center text-sm font-black text-stone-950 pt-1">
                                 <span class="text-base">المجموع النهائي:</span>
                                 <span class="text-lg bg-stone-100 px-2 py-0.5 rounded border border-stone-300">
-                                    {{ receiptOrder.total }} {{ authRestaurant?.currency || 'ل.س' }}
+                                    {{ parseFloat(String(receiptOrder.total)).toLocaleString(undefined, { maximumFractionDigits: 2 }) }} {{ (!authRestaurant?.currency || authRestaurant.currency.toUpperCase() === 'SYP') ? 'ل.س' : authRestaurant.currency }}
                                 </span>
                             </div>
                         </div>

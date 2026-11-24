@@ -16,6 +16,8 @@ class OrderResource extends JsonResource
             'status'        => $this->status,
             'status_label'  => $this->status->label(),
             'subtotal'      => $this->subtotal,
+            'discount_amount' => number_format((float) ($this->discount_amount ?? 0), 2, '.', ''),
+            'promo_code'    => $this->whenLoaded('promoCode', fn () => $this->promoCode?->code),
             'total'         => $this->total,
             'service_type'  => $this->service_type ?? 'dine_in',
             'pickup_window' => $this->pickup_window,

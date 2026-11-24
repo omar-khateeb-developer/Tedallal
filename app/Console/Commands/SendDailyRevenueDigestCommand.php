@@ -8,6 +8,7 @@ use App\Models\OrderItem;
 use App\Models\Restaurant;
 use App\Models\RestaurantCustomer;
 use App\Services\WhatsAppGatewayService;
+use App\Support\MoneyCalculator;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
@@ -44,8 +45,16 @@ class SendDailyRevenueDigestCommand extends Command
                 ->where('created_at', '>=', now()->startOfDay())
                 ->get();
 
-            $completedOrders = $orders->filter(fn($o) => in_array($o->status, [OrderStatus::Ready, OrderStatus::Served]));
-            $totalSales = (float) $completedOrders->sum('total');
+            // القاعدة المحاسبية الموحدة: الطلبات المكتملة (served) أو المسددة غير الملغاة
+            $completedOrders = $orders->filter(function ($o) {
+                return $o->status === OrderStatus::Served
+                    || ($o->paid_at !== null && $o->status !== OrderStatus::Cancelled);
+            });
+            $totalSalesStr = '0.00';
+            foreach ($completedOrders as $o) {
+                $totalSalesStr = MoneyCalculator::add($totalSalesStr, number_format((float) $o->total, 2, '.', ''));
+            }
+            $totalSales = (float) $totalSalesStr;
             $ordersCount = $completedOrders->count();
             $cancelledCount = $orders->filter(fn($o) => $o->status === OrderStatus::Cancelled)->count();
 

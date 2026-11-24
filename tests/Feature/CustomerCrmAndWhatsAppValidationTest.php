@@ -572,6 +572,6 @@ class CustomerCrmAndWhatsAppValidationTest extends TestCase
         $this->assertEquals($customer->id, $promo2->fresh()->customer_id);
 
         // Message should mention visit #2 and remaining visits for grand prize
-        $this->assertStringContainsString('زيارتك رقم (2)', $res2['whatsapp_message']);
+        $this->assertStringContainsString('الزيارة رقم (2)', $res2['whatsapp_message']);
     }
 }

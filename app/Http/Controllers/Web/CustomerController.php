@@ -225,7 +225,7 @@ class CustomerController extends Controller
 
         // Ensure the order exists and belongs to this table and restaurant
         $order = Order::withoutGlobalScopes()
-            ->with(['items', 'table', 'tableSession', 'restaurant'])
+            ->with(['items', 'table', 'tableSession', 'restaurant', 'promoCode'])
             ->where('restaurant_id', $table->restaurant_id)
             ->where('table_id', $table->id)
             ->where('order_number', $orderNumber)

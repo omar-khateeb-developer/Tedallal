@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onUnmounted } from 'vue';
 import { useVisualViewportModal } from '@/composables/useVisualViewport';
+import { formatAmount } from '@/utils/money';
 
 export interface MenuItemOption {
     id: number;
@@ -17,12 +18,7 @@ const props = defineProps<{
 const isOpen = computed(() => !!props.item);
 const { viewportBackdropStyle } = useVisualViewportModal(isOpen);
 
-function formatUnitPrice(val: string | number | undefined): string {
-    const clean = String(val ?? '0').replace(/,/g, '');
-    const num = parseFloat(clean);
-    if (isNaN(num)) return '0';
-    return Number.isInteger(num) ? num.toLocaleString() : parseFloat(num.toFixed(2)).toLocaleString();
-}
+const formatUnitPrice = formatAmount;
 
 const emit = defineEmits<{
     close: [];
@@ -36,8 +32,8 @@ const itemTotal = computed(() => {
     if (!props.item?.price) return '0';
     const cleanStr = String(props.item.price).replace(/,/g, '');
     const num = parseFloat(cleanStr);
-    const total = isNaN(num) ? 0 : Math.round(num * quantity.value);
-    return total.toLocaleString();
+    const total = isNaN(num) ? 0 : Math.round(num * quantity.value * 100) / 100;
+    return formatAmount(total);
 });
 
 watch(() => props.item, (newItem) => {

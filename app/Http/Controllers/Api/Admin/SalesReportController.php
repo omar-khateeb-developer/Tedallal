@@ -484,11 +484,12 @@ class SalesReportController extends ApiController
                 ->limit(5)
                 ->get();
 
-            $totalRevenueSum = (float) $validOrders->sum('total');
+            // نستخدم إجمالي المبيعات قبل الخصم لمطابقة صافي بنود order_items قبل الحسم حتى يكتمل التوزيع عند 100%
+            $totalGrossSum = (float) $validOrders->sum('subtotal');
 
             foreach ($rows as $r) {
                 $rev = (float) $r->total_revenue;
-                $sharePct = $totalRevenueSum > 0 ? round(($rev / $totalRevenueSum) * 100, 1) : 0;
+                $sharePct = $totalGrossSum > 0 ? round(($rev / $totalGrossSum) * 100, 1) : 0;
                 $topDishes[] = [
                     'name' => $r->name,
                     'quantity' => (int) $r->total_qty,

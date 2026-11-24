@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Models\RestaurantTable;
 use App\Models\TableSession;
 use App\Services\RestaurantContext;
+use App\Support\MoneyCalculator;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends ApiController
@@ -29,11 +30,23 @@ class DashboardController extends ApiController
             ->groupBy('status')
             ->pluck('count', 'status');
 
-        $todayRevenue = Order::withoutGlobalScopes()
+        // القاعدة المحاسبية الموحدة: يعترف بإيراد الطلبات المكتملة (served) أو المسددة غير الملغاة
+        $recognizedTotals = Order::withoutGlobalScopes()
             ->where('restaurant_id', $restaurantId)
             ->where('created_at', '>=', $today)
-            ->whereNotIn('status', [OrderStatus::Cancelled])
-            ->sum('total');
+            ->where(function ($q) {
+                $q->where('status', OrderStatus::Served->value)
+                  ->orWhere(function ($q2) {
+                      $q2->whereNotNull('paid_at')
+                         ->where('status', '!=', OrderStatus::Cancelled->value);
+                  });
+            })
+            ->pluck('total');
+
+        $todayRevenue = '0.00';
+        foreach ($recognizedTotals as $amt) {
+            $todayRevenue = MoneyCalculator::add($todayRevenue, number_format((float) $amt, 2, '.', ''));
+        }
 
         return response()->json([
             'success' => true,
@@ -44,7 +57,7 @@ class DashboardController extends ApiController
                     + ($orderStats[OrderStatus::Accepted->value] ?? 0),
                 'ready_orders' => $orderStats[OrderStatus::Ready->value] ?? 0,
                 'served_orders' => $orderStats[OrderStatus::Served->value] ?? 0,
-                'today_revenue' => number_format((float) $todayRevenue, 2, '.', ''),
+                'today_revenue' => $todayRevenue,
                 'active_tables' => TableSession::query()
                     ->where('status', 'active')
                     ->whereHas('table', fn($q) => $q->where('restaurant_id', $restaurantId)->dineIn())

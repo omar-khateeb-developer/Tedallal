@@ -24,6 +24,9 @@ const props = defineProps<{
 const order = ref<{
     status: string;
     status_label: string;
+    subtotal?: string;
+    discount_amount?: string;
+    promo_code?: string | null;
     total: string;
     customer_note?: string;
     service_type?: string;
@@ -79,13 +82,16 @@ function shareOrderOnWhatsApp() {
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
 }
 
-function formatPrice(price: string | number) {
-    if (price === null || price === undefined) return '0 ل.س';
-    const cleanStr = String(price).replace(/,/g, '');
+function formatPrice(price: string | number | null | undefined) {
+    const curr = (!props.restaurant.currency || props.restaurant.currency.toUpperCase().trim() === 'SYP') ? 'ل.س' : props.restaurant.currency;
+    if (price === null || price === undefined || price === '') return `0 ${curr}`;
+    const cleanStr = String(price).replace(/,/g, '').trim();
     const num = parseFloat(cleanStr);
-    const intVal = isNaN(num) ? 0 : Math.round(num);
-    const curr = (!props.restaurant.currency || props.restaurant.currency.toUpperCase() === 'SYP') ? 'ل.س' : props.restaurant.currency;
-    return `${intVal} ${curr}`;
+    const safeVal = isNaN(num) ? 0 : Math.round((num + Number.EPSILON) * 100) / 100;
+    const formatted = Number.isInteger(safeVal)
+        ? safeVal.toLocaleString()
+        : parseFloat(safeVal.toFixed(2)).toLocaleString();
+    return `${formatted} ${curr}`;
 }
 
 function notifyStatusChange(oldStatus?: string, newStatus?: string) {
@@ -395,9 +401,25 @@ const currentStepIndex = computed(() => {
                     <p class="font-medium text-stone-700 dark:text-slate-300 whitespace-pre-wrap">{{ order.customer_note }}</p>
                 </div>
 
-                <div class="mt-4 flex justify-between rounded-2xl bg-stone-50 dark:bg-slate-900 p-4 font-bold border border-stone-100 dark:border-slate-800">
-                    <span class="text-stone-600 dark:text-slate-300">المبلغ الإجمالي</span>
-                    <span class="text-amber-600 dark:text-amber-400 text-lg">{{ formatPrice(order.total) }}</span>
+                <div class="mt-4 rounded-2xl bg-stone-50 dark:bg-slate-900 p-4 border border-stone-100 dark:border-slate-800 space-y-2">
+                    <template v-if="parseFloat(String(order.discount_amount || '0')) > 0">
+                        <div class="flex justify-between text-xs text-stone-500 dark:text-slate-400">
+                            <span>المجموع قبل الخصم</span>
+                            <span>{{ formatPrice(order.subtotal ?? order.total) }}</span>
+                        </div>
+                        <div class="flex justify-between text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                            <span>
+                                خصم الكوبون
+                                <span v-if="order.promo_code" dir="ltr" class="font-mono">({{ order.promo_code }})</span>
+                            </span>
+                            <span dir="ltr">-{{ formatPrice(order.discount_amount) }}</span>
+                        </div>
+                        <div class="border-t border-stone-200 dark:border-slate-800 pt-2"></div>
+                    </template>
+                    <div class="flex justify-between items-center font-bold">
+                        <span class="text-stone-600 dark:text-slate-300">المبلغ الإجمالي</span>
+                        <span class="text-amber-600 dark:text-amber-400 text-lg">{{ formatPrice(order.total) }}</span>
+                    </div>
                 </div>
 
                 <!-- حالة تسوية الحساب / الفاتورة من الكاشير -->

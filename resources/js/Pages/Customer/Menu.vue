@@ -413,9 +413,9 @@ function formatPrice(price: string | number) {
     if (price === null || price === undefined) return '0 ل.س';
     const cleanStr = String(price).replace(/,/g, '');
     const num = parseFloat(cleanStr);
-    const intVal = isNaN(num) ? 0 : Math.round(num);
+    const formatted = isNaN(num) ? '0' : (Number.isInteger(num) ? num.toLocaleString() : parseFloat(num.toFixed(2)).toLocaleString());
     const curr = (!props.restaurant.currency || props.restaurant.currency.toUpperCase() === 'SYP') ? 'ل.س' : props.restaurant.currency;
-    return `${intVal} ${curr}`;
+    return `${formatted} ${curr}`;
 }
 
 watch(cartOpen, (isOpen) => {

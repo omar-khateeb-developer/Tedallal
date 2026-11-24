@@ -43,4 +43,40 @@ final class MoneyCalculator
             throw new InvalidArgumentException('Amount cannot be negative.');
         }
     }
+
+    public static function percentage(string $amount, string $percent): string
+    {
+        $bdAmount = BigDecimal::of($amount);
+        if ($bdAmount->isNegativeOrZero()) {
+            return '0.00';
+        }
+
+        $bdPercent = BigDecimal::of($percent);
+        if ($bdPercent->isNegativeOrZero()) {
+            return '0.00';
+        }
+
+        $hundred = BigDecimal::of('100');
+        if ($bdPercent->isGreaterThan($hundred)) {
+            $bdPercent = $hundred;
+        }
+
+        $discount = $bdAmount
+            ->multipliedBy($bdPercent)
+            ->dividedBy($hundred, self::SCALE, RoundingMode::HalfUp);
+
+        return $discount->isGreaterThan($bdAmount)
+            ? $bdAmount->toScale(self::SCALE, RoundingMode::HalfUp)->__toString()
+            : $discount->__toString();
+    }
+
+    public static function min(string $a, string $b): string
+    {
+        $bdA = BigDecimal::of($a);
+        $bdB = BigDecimal::of($b);
+
+        return ($bdA->isLessThanOrEqualTo($bdB) ? $bdA : $bdB)
+            ->toScale(self::SCALE, RoundingMode::HalfUp)
+            ->__toString();
+    }
 }

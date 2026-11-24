@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Services\RestaurantContext;
+use App\Support\MoneyCalculator;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -22,13 +23,18 @@ class ShiftReportController extends Controller
         $date = Carbon::parse($dateParam)->startOfDay();
         $endDate = $date->copy()->endOfDay();
 
-        $orders = Order::where('restaurant_id', $restaurant->id)
+        $orders = Order::withoutGlobalScopes()
+            ->where('restaurant_id', $restaurant->id)
             ->whereBetween('created_at', [$date, $endDate])
             ->get();
 
+        // استبعاد الطلبات الملغاة نهائياً حتى لو سبق دفعها، والاعتراف فقط بالمكتمل (served) أو المسدد غير الملغى
         $paidOrders = $orders->filter(function ($o) {
             $statusVal = $o->status?->value ?? (string) $o->status;
-            return !empty($o->paid_at) || in_array($statusVal, ['accepted', 'preparing', 'ready', 'served']);
+            if ($statusVal === 'cancelled') {
+                return false;
+            }
+            return $statusVal === 'served' || !empty($o->paid_at);
         });
 
         $cancelledOrders = $orders->filter(function ($o) {
@@ -38,12 +44,18 @@ class ShiftReportController extends Controller
 
         $pendingOrders = $orders->filter(function ($o) {
             $statusVal = $o->status?->value ?? (string) $o->status;
-            return $statusVal === 'pending' && empty($o->paid_at);
+            return !in_array($statusVal, ['served', 'cancelled'], true) && empty($o->paid_at);
         });
 
-        $totalSales = $paidOrders->sum(fn ($o) => (float) $o->total);
-        $totalSubtotal = $paidOrders->sum(fn ($o) => (float) $o->subtotal);
-        $totalDiscount = $paidOrders->sum(fn ($o) => (float) ($o->discount_amount ?? 0));
+        $totalSales = '0.00';
+        $totalSubtotal = '0.00';
+        $totalDiscount = '0.00';
+
+        foreach ($paidOrders as $order) {
+            $totalSubtotal = MoneyCalculator::add($totalSubtotal, number_format((float) $order->subtotal, 2, '.', ''));
+            $totalDiscount = MoneyCalculator::add($totalDiscount, number_format((float) ($order->discount_amount ?? 0), 2, '.', ''));
+            $totalSales = MoneyCalculator::add($totalSales, number_format((float) $order->total, 2, '.', ''));
+        }
 
         $takeawayCount = $paidOrders->where('service_type', 'takeaway')->count();
         $dineInCount = $paidOrders->where('service_type', '!=', 'takeaway')->count();
@@ -57,9 +69,9 @@ class ShiftReportController extends Controller
             'paidOrdersCount'      => $paidOrders->count(),
             'cancelledOrdersCount' => $cancelledOrders->count(),
             'pendingOrdersCount'   => $pendingOrders->count(),
-            'totalSales'           => number_format($totalSales, 2, '.', ''),
-            'totalSubtotal'        => number_format($totalSubtotal, 2, '.', ''),
-            'totalDiscount'        => number_format($totalDiscount, 2, '.', ''),
+            'totalSales'           => $totalSales,
+            'totalSubtotal'        => $totalSubtotal,
+            'totalDiscount'        => $totalDiscount,
             'takeawayCount'        => $takeawayCount,
             'dineInCount'          => $dineInCount,
         ]);

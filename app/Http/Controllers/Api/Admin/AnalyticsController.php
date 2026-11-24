@@ -3,25 +3,29 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Api\ApiController;
+use App\Services\RestaurantContext;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 use App\Models\Order;
 use Carbon\Carbon;
 
 class AnalyticsController extends ApiController
 {
+    public function __construct(
+        private readonly RestaurantContext $restaurantContext,
+    ) {}
+
     public function index(Request $request)
     {
-        $restaurant = Auth::user()->restaurant;
+        $restaurant = $this->restaurantContext->current();
 
-        if (!$restaurant->hasAnalyticsFeature()) {
+        if (!$restaurant || !$restaurant->hasAnalyticsFeature()) {
             return $this->error('Feature Locked', 403);
         }
 
         $period = $request->query('period', 'all'); // today, week, month, all
 
-        $query = Order::where('restaurant_id', $restaurant->id);
+        $query = Order::withoutGlobalScopes()->where('restaurant_id', $restaurant->id);
 
         if ($period === 'today') {
             $query->whereDate('created_at', Carbon::today());
@@ -42,7 +46,7 @@ class AnalyticsController extends ApiController
         $averageOrderValue = $servedCount > 0 ? $totalRevenue / $servedCount : 0;
 
         $servedQueryForJoin = DB::table('orders')
-            
+            ->where('restaurant_id', $restaurant->id)
             ->where('status', 'served');
 
         if ($period === 'today') {
@@ -59,6 +63,7 @@ class AnalyticsController extends ApiController
                 $join->on('order_items.order_id', '=', 'o.id');
             })
             ->join('menu_items', 'order_items.menu_item_id', '=', 'menu_items.id')
+            ->where('menu_items.restaurant_id', $restaurant->id)
             ->select('menu_items.name', DB::raw('SUM(order_items.quantity) as total_quantity'), DB::raw('SUM(order_items.subtotal) as total_revenue'))
             ->groupBy('menu_items.id', 'menu_items.name')
             ->orderByDesc('total_quantity')
@@ -71,6 +76,7 @@ class AnalyticsController extends ApiController
                 $join->on('order_items.order_id', '=', 'o.id');
             })
             ->join('menu_items', 'order_items.menu_item_id', '=', 'menu_items.id')
+            ->where('menu_items.restaurant_id', $restaurant->id)
             ->select('menu_items.name', DB::raw('SUM(order_items.quantity) as total_quantity'), DB::raw('SUM(order_items.subtotal) as total_revenue'))
             ->groupBy('menu_items.id', 'menu_items.name')
             ->orderBy('total_quantity')
@@ -84,19 +90,23 @@ class AnalyticsController extends ApiController
             })
             ->join('menu_items', 'order_items.menu_item_id', '=', 'menu_items.id')
             ->join('menu_categories', 'menu_items.category_id', '=', 'menu_categories.id')
+            ->where('menu_items.restaurant_id', $restaurant->id)
             ->select('menu_categories.name', DB::raw('SUM(order_items.subtotal) as total_revenue'), DB::raw('SUM(order_items.quantity) as total_quantity'))
             ->groupBy('menu_categories.id', 'menu_categories.name')
             ->orderByDesc('total_revenue')
             ->get();
 
-        // Hourly distribution
+        // Hourly distribution (strictly isolated per restaurant + SQLite compatible)
+        $driver = DB::getDriverName();
+        $hourExpr = $driver === 'sqlite' ? "CAST(strftime('%H', created_at) AS INTEGER)" : "HOUR(created_at)";
+
         $hourlyDistribution = DB::table('orders')
-            
+            ->where('restaurant_id', $restaurant->id)
             ->where('status', 'served')
             ->when($period === 'today', fn($q) => $q->whereDate('created_at', Carbon::today()))
             ->when($period === 'week', fn($q) => $q->where('created_at', '>=', Carbon::now()->startOfWeek()))
             ->when($period === 'month', fn($q) => $q->where('created_at', '>=', Carbon::now()->startOfMonth()))
-            ->select(DB::raw('HOUR(created_at) as hour'), DB::raw('COUNT(*) as total_orders'))
+            ->select(DB::raw("{$hourExpr} as hour"), DB::raw('COUNT(*) as total_orders'))
             ->groupBy('hour')
             ->orderBy('hour')
             ->get();

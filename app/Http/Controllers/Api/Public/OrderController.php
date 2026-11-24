@@ -48,7 +48,7 @@ class OrderController extends ApiController
         $session = ValidateTableSession::sessionFrom($request);
 
         $order = Order::query()
-            ->with(['items', 'table'])
+            ->with(['items', 'table', 'promoCode'])
             ->where('order_number', $orderNumber)
             ->where('table_session_id', $session->id)
             ->first();
