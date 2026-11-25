@@ -234,7 +234,7 @@ class FlagshipRestaurantsSeeder extends Seeder
         $promos = $this->seedPromoCodes($restaurant->id, [
             ['code' => 'JAMRA15', 'type' => 'percentage', 'val' => '15.00', 'min' => '150.00', 'source' => 'manual', 'single' => false, 'exp' => now()->addMonths(4)],
             ['code' => 'SMOKED50', 'type' => 'fixed', 'val' => '50.00', 'min' => '250.00', 'source' => 'manual', 'single' => false, 'exp' => now()->addMonths(3)],
-            ['code' => 'FREE-BURGER-VIP', 'type' => 'free_item', 'val' => '185.00', 'min' => '200.00', 'source' => 'loyalty', 'single' => true, 'customer_id' => $customers[4]->id, 'free_item_id' => $truffleBurger->id, 'exp' => now()->addDays(20)],
+            ['code' => 'FREE-BURGER-VIP', 'type' => 'fixed', 'val' => '185.00', 'min' => '200.00', 'source' => 'loyalty', 'single' => true, 'customer_id' => $customers[4]->id, 'free_item_id' => $truffleBurger->id, 'exp' => now()->addDays(20)],
             ['code' => 'WHL-JMR77', 'type' => 'percentage', 'val' => '20.00', 'min' => '100.00', 'source' => 'wheel', 'single' => true, 'customer_id' => $customers[0]->id, 'exp' => now()->addDays(2)],
             ['code' => 'LOYAL-JMR05', 'type' => 'percentage', 'val' => '25.00', 'min' => '150.00', 'source' => 'loyalty', 'single' => true, 'customer_id' => $customers[1]->id, 'exp' => now()->addDays(15)],
         ]);

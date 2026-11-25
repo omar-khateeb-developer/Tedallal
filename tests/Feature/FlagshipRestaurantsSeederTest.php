@@ -76,6 +76,9 @@ class FlagshipRestaurantsSeederTest extends TestCase
         $this->assertSame(15, Order::withoutGlobalScopes()->where('restaurant_id', $yasmin->id)->count());
 
         // التأكد من عدم استخدام الصورة الافتراضية لأي صنف وتوافر ملفات الصور فعلياً
+        foreach (PromoCode::withoutGlobalScopes()->whereIn('restaurant_id', [$jamra->id, $yasmin->id])->get() as $promo) {
+            $this->assertContains($promo->discount_type, ['percentage', 'fixed']);
+        }
         $allItems = MenuItem::withoutGlobalScopes()->whereIn('restaurant_id', [$jamra->id, $yasmin->id])->get();
         foreach ($allItems as $item) {
             $this->assertNotSame(MenuItem::DEFAULT_IMAGE, $item->image, "Item {$item->name} fell back to DEFAULT_IMAGE");

@@ -22,7 +22,7 @@ fi
 echo "🗄️ [3/5] تشغيل المايجريشن وإعداد التخزين..."
 php artisan migrate --force
 php artisan db:seed --class=PlatformSuperAdminsSeeder --force || true
-php artisan db:seed --class=FlagshipRestaurantsSeeder --force || true
+php artisan db:seed --class=FlagshipRestaurantsSeeder --force
 php artisan storage:link || true
 chmod -R 777 /var/www/tedallal/storage/app/public/qr 2>/dev/null || true
 chmod 777 /var/www/tedallal/storage/logs/laravel.log 2>/dev/null || true
