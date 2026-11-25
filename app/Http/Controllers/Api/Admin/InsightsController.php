@@ -45,17 +45,17 @@ class InsightsController extends ApiController
             ];
         }
 
-        $servedOrdersQuery = DB::table('orders')
+        $recognizedOrdersQuery = DB::table('orders')
             ->where('restaurant_id', $restaurant->id)
-            ->where('status', 'served')
             ->where('created_at', '>=', $thirtyDaysAgo);
-            
-        $servedCount = (clone $servedOrdersQuery)->count();
+        Order::applyRecognizedRevenue($recognizedOrdersQuery);
 
-        if ($servedCount > 0) {
+        $recognizedCount = (clone $recognizedOrdersQuery)->count();
+
+        if ($recognizedCount > 0) {
             // Find worst performing items (available items that are rarely ordered)
             $worstItems = DB::table('order_items')
-                ->joinSub($servedOrdersQuery, 'o', function ($join) {
+                ->joinSub(clone $recognizedOrdersQuery, 'o', function ($join) {
                     $join->on('order_items.order_id', '=', 'o.id');
                 })
                 ->join('menu_items', 'order_items.menu_item_id', '=', 'menu_items.id')
@@ -83,10 +83,7 @@ class InsightsController extends ApiController
                 ? "CAST(strftime('%H', created_at) AS INTEGER) as hour"
                 : 'HOUR(created_at) as hour';
 
-            $peakHours = DB::table('orders')
-                ->where('restaurant_id', $restaurant->id)
-                ->where('status', 'served')
-                ->where('created_at', '>=', $thirtyDaysAgo)
+            $peakHours = (clone $recognizedOrdersQuery)
                 ->select(DB::raw($hourExpr), DB::raw('COUNT(*) as total'))
                 ->groupBy('hour')
                 ->orderByDesc('total')

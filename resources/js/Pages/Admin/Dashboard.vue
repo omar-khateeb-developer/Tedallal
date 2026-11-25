@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import AdminNav from '@/Components/Admin/AdminNav.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
-import { onMounted, ref } from 'vue';
+import { Head, usePage } from '@inertiajs/vue3';
+import { computed, onMounted, ref } from 'vue';
 import axios from 'axios';
 import CountUp from '@/Components/CountUp.vue';
+import { normalizeCurrency } from '@/utils/money';
 
+const page = usePage();
+const displayCurrency = computed(() => normalizeCurrency((page.props.auth as any)?.restaurant?.currency));
 const stats = ref<Record<string, number | string> | null>(null);
 
 onMounted(async () => {
@@ -56,6 +59,7 @@ onMounted(async () => {
                             <p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1 group-hover:text-amber-500 transition-colors">{{ label }}</p>
                             <p class="text-3xl font-bold text-slate-800 dark:text-white tracking-tight">
                                 <CountUp :to="stats[key]" />
+                                <span v-if="key === 'today_revenue'" class="text-sm font-bold text-amber-500 mr-1.5">{{ displayCurrency }}</span>
                             </p>
                         </div>
                         

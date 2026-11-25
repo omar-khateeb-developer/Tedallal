@@ -1108,7 +1108,7 @@ onUnmounted(() => {
                             <div class="grid grid-cols-3 gap-3 text-center py-2">
                                 <div class="p-2.5 rounded-xl border transition-colors" :class="isDark ? 'bg-stone-900/90 border-[rgba(226,196,133,0.18)]' : 'bg-white border-amber-900/15 shadow-2xs'">
                                     <span class="text-[10px] block mb-0.5" :class="isDark ? 'text-stone-400' : 'text-stone-600 font-bold'">إجمالي المبيعات</span>
-                                    <span class="text-xs sm:text-sm font-black" :class="isDark ? 'text-emerald-400' : 'text-emerald-700'">SAR 12,450</span>
+                                    <span class="text-xs sm:text-sm font-black" :class="isDark ? 'text-emerald-400' : 'text-emerald-700'">{{ formatPrice(49800000, 0) }} {{ currentCurrencySymbol }}</span>
                                 </div>
                                 <div class="p-2.5 rounded-xl border transition-colors" :class="isDark ? 'bg-stone-900/90 border-[rgba(226,196,133,0.18)]' : 'bg-white border-amber-900/15 shadow-2xs'">
                                     <span class="text-[10px] block mb-0.5" :class="isDark ? 'text-stone-400' : 'text-stone-600 font-bold'">عدد الطلبات</span>
@@ -1116,7 +1116,7 @@ onUnmounted(() => {
                                 </div>
                                 <div class="p-2.5 rounded-xl border transition-colors" :class="isDark ? 'bg-stone-900/90 border-[rgba(226,196,133,0.18)]' : 'bg-white border-amber-900/15 shadow-2xs'">
                                     <span class="text-[10px] block mb-0.5" :class="isDark ? 'text-stone-400' : 'text-stone-600 font-bold'">وفورات العمولة</span>
-                                    <span class="text-xs sm:text-sm font-black" :class="isDark ? 'text-amber-400' : 'text-amber-700'">+SAR 2,490</span>
+                                    <span class="text-xs sm:text-sm font-black" :class="isDark ? 'text-amber-400' : 'text-amber-700'">+{{ formatPrice(9960000, 0) }} {{ currentCurrencySymbol }}</span>
                                 </div>
                             </div>
 

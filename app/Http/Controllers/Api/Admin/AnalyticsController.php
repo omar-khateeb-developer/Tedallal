@@ -26,40 +26,23 @@ class AnalyticsController extends ApiController
         $period = $request->query('period', 'all'); // today, week, month, all
 
         $query = Order::withoutGlobalScopes()->where('restaurant_id', $restaurant->id);
-
-        if ($period === 'today') {
-            $query->whereDate('created_at', Carbon::today());
-        } elseif ($period === 'week') {
-            $query->where('created_at', '>=', Carbon::now()->startOfWeek());
-        } elseif ($period === 'month') {
-            $query->where('created_at', '>=', Carbon::now()->startOfMonth());
-        }
+        $this->applyPeriodFilter($query, $period);
 
         $totalOrdersCount = (clone $query)->count();
         $cancelledOrdersCount = (clone $query)->where('status', 'cancelled')->count();
         $cancellationRate = $totalOrdersCount > 0 ? ($cancelledOrdersCount / $totalOrdersCount) * 100 : 0;
 
-        // Served orders for revenue and item stats
-        $servedOrders = (clone $query)->where('status', 'served');
-        $totalRevenue = (clone $servedOrders)->sum('total');
-        $servedCount = (clone $servedOrders)->count();
-        $averageOrderValue = $servedCount > 0 ? $totalRevenue / $servedCount : 0;
+        // Recognized orders (served or prepaid non-cancelled) for revenue and item stats
+        $recognizedOrders = (clone $query)->recognizedRevenue();
+        $totalRevenue = (clone $recognizedOrders)->sum('total');
+        $recognizedCount = (clone $recognizedOrders)->count();
+        $averageOrderValue = $recognizedCount > 0 ? $totalRevenue / $recognizedCount : 0;
 
-        $servedQueryForJoin = DB::table('orders')
-            ->where('restaurant_id', $restaurant->id)
-            ->where('status', 'served');
-
-        if ($period === 'today') {
-            $servedQueryForJoin->whereDate('created_at', Carbon::today());
-        } elseif ($period === 'week') {
-            $servedQueryForJoin->where('created_at', '>=', Carbon::now()->startOfWeek());
-        } elseif ($period === 'month') {
-            $servedQueryForJoin->where('created_at', '>=', Carbon::now()->startOfMonth());
-        }
+        $recognizedSubQuery = $this->recognizedOrdersQuery($restaurant->id, $period);
 
         // Top items
         $topItems = DB::table('order_items')
-            ->joinSub($servedQueryForJoin, 'o', function ($join) {
+            ->joinSub(clone $recognizedSubQuery, 'o', function ($join) {
                 $join->on('order_items.order_id', '=', 'o.id');
             })
             ->join('menu_items', 'order_items.menu_item_id', '=', 'menu_items.id')
@@ -72,7 +55,7 @@ class AnalyticsController extends ApiController
 
         // Worst items
         $worstItems = DB::table('order_items')
-            ->joinSub($servedQueryForJoin, 'o', function ($join) {
+            ->joinSub(clone $recognizedSubQuery, 'o', function ($join) {
                 $join->on('order_items.order_id', '=', 'o.id');
             })
             ->join('menu_items', 'order_items.menu_item_id', '=', 'menu_items.id')
@@ -85,7 +68,7 @@ class AnalyticsController extends ApiController
             
         // Category breakdown
         $categoryBreakdown = DB::table('order_items')
-            ->joinSub($servedQueryForJoin, 'o', function ($join) {
+            ->joinSub(clone $recognizedSubQuery, 'o', function ($join) {
                 $join->on('order_items.order_id', '=', 'o.id');
             })
             ->join('menu_items', 'order_items.menu_item_id', '=', 'menu_items.id')
@@ -100,12 +83,7 @@ class AnalyticsController extends ApiController
         $driver = DB::getDriverName();
         $hourExpr = $driver === 'sqlite' ? "CAST(strftime('%H', created_at) AS INTEGER)" : "HOUR(created_at)";
 
-        $hourlyDistribution = DB::table('orders')
-            ->where('restaurant_id', $restaurant->id)
-            ->where('status', 'served')
-            ->when($period === 'today', fn($q) => $q->whereDate('created_at', Carbon::today()))
-            ->when($period === 'week', fn($q) => $q->where('created_at', '>=', Carbon::now()->startOfWeek()))
-            ->when($period === 'month', fn($q) => $q->where('created_at', '>=', Carbon::now()->startOfMonth()))
+        $hourlyDistribution = $this->recognizedOrdersQuery($restaurant->id, $period)
             ->select(DB::raw("{$hourExpr} as hour"), DB::raw('COUNT(*) as total_orders'))
             ->groupBy('hour')
             ->orderBy('hour')
@@ -120,14 +98,9 @@ class AnalyticsController extends ApiController
         }
         
         // Table performance
-        $tablePerformance = DB::table('orders')
-            ->where('orders.restaurant_id', $restaurant->id)
-            ->where('orders.status', 'served')
+        $tablePerformance = $this->recognizedOrdersQuery($restaurant->id, $period, 'orders')
             ->whereNotNull('orders.table_id')
             ->join('restaurant_tables', 'orders.table_id', '=', 'restaurant_tables.id')
-            ->when($period === 'today', fn($q) => $q->whereDate('orders.created_at', Carbon::today()))
-            ->when($period === 'week', fn($q) => $q->where('orders.created_at', '>=', Carbon::now()->startOfWeek()))
-            ->when($period === 'month', fn($q) => $q->where('orders.created_at', '>=', Carbon::now()->startOfMonth()))
             ->select('restaurant_tables.name', DB::raw('SUM(orders.total) as total_revenue'), DB::raw('COUNT(orders.id) as total_orders'))
             ->groupBy('restaurant_tables.id', 'restaurant_tables.name')
             ->orderByDesc('total_revenue')
@@ -152,7 +125,7 @@ class AnalyticsController extends ApiController
      */
     public function menuEngineering(Request $request)
     {
-        $restaurant = Auth::user()->restaurant;
+        $restaurant = $this->restaurantContext->current();
 
         if (!$restaurant || !$restaurant->hasFeature('menu_engineering')) {
             return response()->json([
@@ -197,19 +170,12 @@ class AnalyticsController extends ApiController
             ]);
         }
 
-        // 2. Served orders item quantities and revenue
+        // 2. Recognized orders item quantities and revenue
         $salesQuery = DB::table('order_items')
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
-            ->where('orders.restaurant_id', $restaurant->id)
-            ->where('orders.status', 'served');
-
-        if ($period === 'today') {
-            $salesQuery->whereDate('orders.created_at', Carbon::today());
-        } elseif ($period === 'week') {
-            $salesQuery->where('orders.created_at', '>=', Carbon::now()->startOfWeek());
-        } elseif ($period === 'month') {
-            $salesQuery->where('orders.created_at', '>=', Carbon::now()->startOfMonth());
-        }
+            ->where('orders.restaurant_id', $restaurant->id);
+        Order::applyRecognizedRevenue($salesQuery, 'orders');
+        $this->applyPeriodFilter($salesQuery, $period, 'orders.created_at');
 
         $salesByItem = $salesQuery
             ->select(
@@ -285,11 +251,8 @@ class AnalyticsController extends ApiController
         $dayExpr = $driver === 'sqlite' ? "CAST(strftime('%w', created_at) AS INTEGER) + 1" : "DAYOFWEEK(created_at)";
         $hourExpr = $driver === 'sqlite' ? "CAST(strftime('%H', created_at) AS INTEGER)" : "HOUR(created_at)";
 
-        $heatmapQuery = DB::table('orders')
-            ->where('restaurant_id', $restaurant->id)
-            ->where('status', 'served')
-            ->when($period === 'week', fn($q) => $q->where('created_at', '>=', Carbon::now()->startOfWeek()))
-            ->when($period === 'month', fn($q) => $q->where('created_at', '>=', Carbon::now()->startOfMonth()))
+        $heatmapPeriod = in_array($period, ['week', 'month'], true) ? $period : 'all';
+        $heatmapQuery = $this->recognizedOrdersQuery($restaurant->id, $heatmapPeriod)
             ->select(
                 DB::raw("{$dayExpr} as day_of_week"),
                 DB::raw("{$hourExpr} as hour"),
@@ -315,5 +278,26 @@ class AnalyticsController extends ApiController
             ],
             'heatmap' => $heatmapQuery,
         ]);
+    }
+
+    private function recognizedOrdersQuery(int $restaurantId, string $period, string $table = '')
+    {
+        $prefix = $table !== '' ? "{$table}." : '';
+        $query = DB::table('orders')->where("{$prefix}restaurant_id", $restaurantId);
+        Order::applyRecognizedRevenue($query, $table);
+        $this->applyPeriodFilter($query, $period, "{$prefix}created_at");
+
+        return $query;
+    }
+
+    private function applyPeriodFilter($query, string $period, string $column = 'created_at'): void
+    {
+        if ($period === 'today') {
+            $query->whereDate($column, Carbon::today());
+        } elseif ($period === 'week') {
+            $query->where($column, '>=', Carbon::now()->startOfWeek());
+        } elseif ($period === 'month') {
+            $query->where($column, '>=', Carbon::now()->startOfMonth());
+        }
     }
 }

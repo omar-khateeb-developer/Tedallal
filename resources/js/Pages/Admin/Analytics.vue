@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import AdminNav from '@/Components/Admin/AdminNav.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import { ref, onMounted, watch, computed } from 'vue';
 import axios from 'axios';
+import { normalizeCurrency } from '@/utils/money';
 import {
   Chart as ChartJS,
   Title,
@@ -30,6 +31,8 @@ ChartJS.register(
   Filler
 );
 
+const page = usePage();
+const displayCurrency = computed(() => normalizeCurrency((page.props.auth as any)?.restaurant?.currency));
 const stats = ref<any>(null);
 const insights = ref<any[]>([]);
 const isLocked = ref(false);
@@ -330,7 +333,7 @@ const categoryChartOptions = {
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                         <div class="bg-white dark:bg-[#0a0f1d] p-5 rounded-xl shadow-xs border border-stone-100 dark:border-slate-800">
                             <p class="text-sm text-stone-500 dark:text-stone-400 mb-1">إجمالي المبيعات</p>
-                            <p class="text-2xl font-bold text-green-600 dark:text-emerald-400">{{ formatCurrency(stats.total_revenue) }} <span class="text-xs text-stone-400">{{ $page.props.auth.restaurant?.currency }}</span></p>
+                            <p class="text-2xl font-bold text-green-600 dark:text-emerald-400">{{ formatCurrency(stats.total_revenue) }} <span class="text-xs text-stone-400">{{ displayCurrency }}</span></p>
                         </div>
                         <div class="bg-white dark:bg-[#0a0f1d] p-5 rounded-xl shadow-xs border border-stone-100 dark:border-slate-800">
                             <p class="text-sm text-stone-500 dark:text-stone-400 mb-1">الطلبات المكتملة</p>
@@ -338,7 +341,7 @@ const categoryChartOptions = {
                         </div>
                         <div class="bg-white dark:bg-[#0a0f1d] p-5 rounded-xl shadow-xs border border-stone-100 dark:border-slate-800">
                             <p class="text-sm text-stone-500 dark:text-stone-400 mb-1">متوسط قيمة الطلب (AOV)</p>
-                            <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">{{ formatCurrency(stats.average_order_value) }} <span class="text-xs text-stone-400">{{ $page.props.auth.restaurant?.currency }}</span></p>
+                            <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">{{ formatCurrency(stats.average_order_value) }} <span class="text-xs text-stone-400">{{ displayCurrency }}</span></p>
                         </div>
                         <div class="bg-white dark:bg-[#0a0f1d] p-5 rounded-xl shadow-xs border border-stone-100 dark:border-slate-800">
                             <p class="text-sm text-stone-500 dark:text-stone-400 mb-1">معدل الإلغاء</p>
@@ -382,7 +385,7 @@ const categoryChartOptions = {
                                         </div>
                                         <div class="text-left">
                                             <div class="text-sm font-bold text-gray-800 dark:text-white">{{ item.total_quantity }} طلب</div>
-                                            <div class="text-xs text-stone-500 dark:text-slate-400">{{ formatCurrency(item.total_revenue) }} {{ $page.props.auth.restaurant?.currency || 'ل.س' }}</div>
+                                            <div class="text-xs text-stone-500 dark:text-slate-400">{{ formatCurrency(item.total_revenue) }} {{ displayCurrency }}</div>
                                         </div>
                                     </div>
                                 </template>
@@ -416,7 +419,7 @@ const categoryChartOptions = {
                                         </div>
                                         <div class="text-left">
                                             <div class="text-sm font-bold text-gray-800 dark:text-white">{{ item.total_quantity }} طلب</div>
-                                            <div class="text-xs text-stone-500 dark:text-slate-400">{{ formatCurrency(item.total_revenue) }} {{ $page.props.auth.restaurant?.currency || 'ل.س' }}</div>
+                                            <div class="text-xs text-stone-500 dark:text-slate-400">{{ formatCurrency(item.total_revenue) }} {{ displayCurrency }}</div>
                                         </div>
                                     </div>
                                 </template>
@@ -468,7 +471,7 @@ const categoryChartOptions = {
                                             <td class="px-4 py-3 font-bold text-stone-400 dark:text-slate-500">#{{ idx + 1 }}</td>
                                             <td class="px-4 py-3 font-medium text-gray-800 dark:text-white">{{ table.name }}</td>
                                             <td class="px-4 py-3 text-stone-700 dark:text-slate-300">{{ table.total_orders }}</td>
-                                            <td class="px-4 py-3 font-semibold text-green-600 dark:text-emerald-400">{{ formatCurrency(table.total_revenue) }} {{ $page.props.auth.restaurant?.currency || 'ل.س' }}</td>
+                                            <td class="px-4 py-3 font-semibold text-green-600 dark:text-emerald-400">{{ formatCurrency(table.total_revenue) }} {{ displayCurrency }}</td>
                                         </tr>
                                     </template>
                                     <template v-else>
@@ -630,7 +633,7 @@ const categoryChartOptions = {
                             <div class="text-xs text-stone-500 dark:text-slate-400 flex items-center gap-3">
                                 <span>متوسط المبيعات للصنف: <strong class="text-stone-800 dark:text-white font-mono">{{ engineeringData.summary?.avg_volume || 0 }}</strong></span>
                                 <span>•</span>
-                                <span>متوسط السعر: <strong class="text-stone-800 dark:text-white font-mono">{{ engineeringData.summary?.avg_price || 0 }} {{ $page.props.auth.restaurant?.currency }}</strong></span>
+                                <span>متوسط السعر: <strong class="text-stone-800 dark:text-white font-mono">{{ engineeringData.summary?.avg_price || 0 }} {{ displayCurrency }}</strong></span>
                             </div>
                         </div>
 
@@ -652,9 +655,9 @@ const categoryChartOptions = {
                                     <tr v-for="it in filteredEngineeringItems" :key="it.id" class="hover:bg-stone-50/50 dark:hover:bg-slate-800/40 transition">
                                         <td class="py-3 px-4 font-bold text-gray-800 dark:text-white">{{ it.name }}</td>
                                         <td class="py-3 px-4 text-xs text-stone-500">{{ it.category }}</td>
-                                        <td class="py-3 px-4 font-mono font-bold text-stone-700 dark:text-slate-300">{{ it.price }} {{ $page.props.auth.restaurant?.currency }}</td>
+                                        <td class="py-3 px-4 font-mono font-bold text-stone-700 dark:text-slate-300">{{ it.price }} {{ displayCurrency }}</td>
                                         <td class="py-3 px-4 font-mono font-bold" :class="it.total_sold >= (engineeringData.summary?.avg_volume || 0) ? 'text-emerald-600' : 'text-stone-500'">{{ it.total_sold }} طلب</td>
-                                        <td class="py-3 px-4 font-mono font-bold text-gray-800 dark:text-white">{{ formatCurrency(it.total_revenue) }} {{ $page.props.auth.restaurant?.currency }}</td>
+                                        <td class="py-3 px-4 font-mono font-bold text-gray-800 dark:text-white">{{ formatCurrency(it.total_revenue) }} {{ displayCurrency }}</td>
                                         <td class="py-3 px-4">
                                             <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold"
                                                   :class="{

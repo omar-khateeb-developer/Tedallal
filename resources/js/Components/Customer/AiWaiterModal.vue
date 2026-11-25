@@ -14,6 +14,9 @@ const emit = defineEmits<{
 }>();
 
 const isOpen = ref(false);
+const restaurantLabel = props.restaurantName.trim().startsWith('مطعم')
+    ? props.restaurantName.trim()
+    : `مطعم ${props.restaurantName.trim()}`;
 const { viewportBackdropStyle } = useVisualViewportModal(isOpen);
 
 // ================= DRAGGABLE + MAGNETIC EDGE-SNAP STATE =================
@@ -194,7 +197,7 @@ interface ChatMessage {
 const messages = ref<ChatMessage[]>([
     {
         role: 'assistant',
-        content: `أهلاً وسهلاً بك في مطعم ${props.restaurantName}! 🌸\nأنا «ويتر تدلل الذكي»، يسعدني أن أساعدك في اختيار أشهى الأطباق حسب رغبتك أو ميزانيتك أو عدد أفرادك. كيف يمكنني تدليلك اليوم؟`,
+        content: `أهلاً وسهلاً بك في ${restaurantLabel}! 🌸\nأنا «ويتر تدلل الذكي»، يسعدني أن أساعدك في اختيار أشهى الأطباق حسب رغبتك أو ميزانيتك أو عدد أفرادك. كيف يمكنني تدليلك اليوم؟`,
         time: getCurrentTime(),
     },
 ]);
@@ -372,7 +375,7 @@ defineExpose({
                                         <span class="bg-white/20 text-[10px] px-2 py-0.5 rounded-full font-mono font-normal">AI Assistant</span>
                                     </h3>
                                     <p class="text-xs text-purple-200 mt-0.5 font-medium">
-                                        مساعد الضيافة لمطعم {{ restaurantName }}
+                                        مساعد الضيافة لـ {{ restaurantLabel }}
                                     </p>
                                 </div>
                             </div>

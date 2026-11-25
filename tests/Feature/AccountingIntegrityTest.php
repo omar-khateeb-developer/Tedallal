@@ -319,4 +319,177 @@ class AccountingIntegrityTest extends TestCase
         $printRes->assertSee('-2.7');
         $printRes->assertSee('15.3');
     }
+
+    public function test_analytics_insights_and_menu_engineering_recognize_prepaid_paid_orders(): void
+    {
+        $restaurant = Restaurant::factory()->create([
+            'type' => 'prepaid',
+            'currency' => 'SYP',
+            'features' => ['analytics' => true, 'menu_engineering' => true],
+        ]);
+        $table = RestaurantTable::factory()->create([
+            'restaurant_id' => $restaurant->id,
+            'name' => 'طاولة 5',
+        ]);
+        $session = app(TableSessionService::class)->resolveOrCreate($table);
+        $category = MenuCategory::factory()->create(['restaurant_id' => $restaurant->id, 'name' => 'مشويات']);
+
+        $servedItem = MenuItem::factory()->create([
+            'restaurant_id' => $restaurant->id,
+            'category_id' => $category->id,
+            'name' => 'طبق مقدم',
+            'price' => 100,
+            'is_active' => true,
+            'is_available' => true,
+        ]);
+        $prepaidItem = MenuItem::factory()->create([
+            'restaurant_id' => $restaurant->id,
+            'category_id' => $category->id,
+            'name' => 'طبق تحضير مدفوع',
+            'price' => 50,
+            'is_active' => true,
+            'is_available' => true,
+        ]);
+        $cancelledItem = MenuItem::factory()->create([
+            'restaurant_id' => $restaurant->id,
+            'category_id' => $category->id,
+            'name' => 'طبق ملغي مدفوع',
+            'price' => 80,
+            'is_active' => true,
+            'is_available' => true,
+        ]);
+        $pendingItem = MenuItem::factory()->create([
+            'restaurant_id' => $restaurant->id,
+            'category_id' => $category->id,
+            'name' => 'طبق غير مدفوع',
+            'price' => 200,
+            'is_active' => true,
+            'is_available' => true,
+        ]);
+
+        // 1. Served order (100.00)
+        $orderServed = Order::create([
+            'restaurant_id' => $restaurant->id,
+            'table_id' => $table->id,
+            'table_session_id' => $session->id,
+            'order_number' => 'ORD-AN-1',
+            'status' => OrderStatus::Served,
+            'paid_at' => now(),
+            'subtotal' => '100.00',
+            'discount_amount' => '0.00',
+            'total' => '100.00',
+        ]);
+        $orderServed->items()->create([
+            'menu_item_id' => $servedItem->id,
+            'item_name_snapshot' => $servedItem->name,
+            'unit_price' => '100.00',
+            'quantity' => 1,
+            'subtotal' => '100.00',
+        ]);
+
+        // 2. Prepaid preparing paid order (50.00) -> MUST be recognized
+        $orderPrepaid = Order::create([
+            'restaurant_id' => $restaurant->id,
+            'table_id' => $table->id,
+            'table_session_id' => $session->id,
+            'order_number' => 'ORD-AN-2',
+            'status' => OrderStatus::Preparing,
+            'paid_at' => now(),
+            'subtotal' => '50.00',
+            'discount_amount' => '0.00',
+            'total' => '50.00',
+        ]);
+        $orderPrepaid->items()->create([
+            'menu_item_id' => $prepaidItem->id,
+            'item_name_snapshot' => $prepaidItem->name,
+            'unit_price' => '50.00',
+            'quantity' => 1,
+            'subtotal' => '50.00',
+        ]);
+
+        // 3. Cancelled order with paid_at (80.00) -> MUST be excluded
+        $orderCancelled = Order::create([
+            'restaurant_id' => $restaurant->id,
+            'table_id' => $table->id,
+            'table_session_id' => $session->id,
+            'order_number' => 'ORD-AN-3',
+            'status' => OrderStatus::Cancelled,
+            'paid_at' => now(),
+            'cancelled_at' => now(),
+            'subtotal' => '80.00',
+            'discount_amount' => '0.00',
+            'total' => '80.00',
+        ]);
+        $orderCancelled->items()->create([
+            'menu_item_id' => $cancelledItem->id,
+            'item_name_snapshot' => $cancelledItem->name,
+            'unit_price' => '80.00',
+            'quantity' => 1,
+            'subtotal' => '80.00',
+        ]);
+
+        // 4. Pending unpaid order (200.00) -> MUST be excluded
+        $orderPending = Order::create([
+            'restaurant_id' => $restaurant->id,
+            'table_id' => $table->id,
+            'table_session_id' => $session->id,
+            'order_number' => 'ORD-AN-4',
+            'status' => OrderStatus::Pending,
+            'paid_at' => null,
+            'subtotal' => '200.00',
+            'discount_amount' => '0.00',
+            'total' => '200.00',
+        ]);
+        $orderPending->items()->create([
+            'menu_item_id' => $pendingItem->id,
+            'item_name_snapshot' => $pendingItem->name,
+            'unit_price' => '200.00',
+            'quantity' => 1,
+            'subtotal' => '200.00',
+        ]);
+
+        $admin = User::factory()->create(['restaurant_id' => $restaurant->id, 'status' => UserStatus::Active]);
+        $admin->assignRole(UserRole::Admin->value);
+        Sanctum::actingAs($admin);
+
+        // Analytics endpoint
+        $analyticsRes = $this->getJson('/api/admin/analytics?period=all');
+        $analyticsRes->assertOk();
+        $this->assertEquals(150.0, (float) $analyticsRes->json('data.total_revenue'));
+        $this->assertSame(4, (int) $analyticsRes->json('data.total_orders'));
+        $this->assertEquals(75.0, (float) $analyticsRes->json('data.average_order_value'));
+        $this->assertEquals(25.0, (float) $analyticsRes->json('data.cancellation_rate'));
+
+        $topNames = collect($analyticsRes->json('data.top_items'))->pluck('name')->all();
+        $this->assertContains('طبق مقدم', $topNames);
+        $this->assertContains('طبق تحضير مدفوع', $topNames);
+        $this->assertNotContains('طبق ملغي مدفوع', $topNames);
+        $this->assertNotContains('طبق غير مدفوع', $topNames);
+        $this->assertSame(2, collect($analyticsRes->json('data.hourly_distribution'))->sum('total_orders'));
+        $this->assertEquals(150.0, (float) $analyticsRes->json('data.table_performance.0.total_revenue'));
+
+        // Menu Engineering endpoint (previously crashed on unimported Auth facade & ignored prepaid paid orders)
+        $menuEngRes = $this->getJson('/api/admin/analytics/menu-engineering?period=all');
+        $menuEngRes->assertOk()->assertJsonPath('data.locked', false);
+        $allAnalyzed = collect([
+            ...($menuEngRes->json('data.stars') ?? []),
+            ...($menuEngRes->json('data.plowhorses') ?? []),
+            ...($menuEngRes->json('data.puzzles') ?? []),
+            ...($menuEngRes->json('data.dogs') ?? []),
+        ])->keyBy('id');
+        $this->assertSame(1, $allAnalyzed->get($servedItem->id)['total_sold']);
+        $this->assertSame(1, $allAnalyzed->get($prepaidItem->id)['total_sold']);
+        $this->assertSame(0, $allAnalyzed->get($cancelledItem->id)['total_sold']);
+        $this->assertSame(0, $allAnalyzed->get($pendingItem->id)['total_sold']);
+        $this->assertSame(2, collect($menuEngRes->json('data.heatmap'))->sum('count'));
+
+        // Insights endpoint
+        $insightsRes = $this->getJson('/api/admin/insights');
+        $insightsRes->assertOk();
+        $insightsList = collect($insightsRes->json('data'));
+        $slowInsight = $insightsList->firstWhere('title', 'أصناف بطيئة الحركة');
+        $this->assertNotNull($slowInsight);
+        $this->assertStringContainsString('طبق تحضير مدفوع', $slowInsight['description']);
+        $this->assertNotNull($insightsList->firstWhere('title', 'أوقات الذروة المربحة'));
+    }
 }

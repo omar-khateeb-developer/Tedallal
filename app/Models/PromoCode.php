@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Traits\HasTenant;
 
 class PromoCode extends Model
@@ -40,22 +42,22 @@ class PromoCode extends Model
         'min_order_value' => 'decimal:2',
     ];
 
-    public function restaurant()
+    public function restaurant(): BelongsTo
     {
         return $this->belongsTo(Restaurant::class);
     }
 
-    public function customer()
+    public function customer(): BelongsTo
     {
         return $this->belongsTo(RestaurantCustomer::class, 'customer_id');
     }
 
-    public function freeMenuItem()
+    public function freeMenuItem(): BelongsTo
     {
         return $this->belongsTo(MenuItem::class, 'free_menu_item_id')->withoutGlobalScopes();
     }
 
-    public function orders()
+    public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
     }
@@ -142,7 +144,7 @@ class PromoCode extends Model
             $reasonMessage = 'هذا الكوبون معطل وموقوف حالياً من قبل إدارة المطعم.';
         } elseif ($isFuture) {
             $reasonCode = 'future_start';
-            $diffMinutes = $now->diffInMinutes($this->starts_at);
+            $diffMinutes = max(0, (int) round($now->diffInMinutes($this->starts_at)));
             $hours = intdiv($diffMinutes, 60);
             $mins = $diffMinutes % 60;
             $timeStr = ($hours > 0 ? "{$hours} ساعة و " : '') . "{$mins} دقيقة";

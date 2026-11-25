@@ -99,15 +99,22 @@ class Order extends Model
         return $this->hasOne(OrderWheelToken::class);
     }
 
-    public function scopeRecognizedRevenue($query)
+    public static function applyRecognizedRevenue($query, string $table = '')
     {
-        return $query->where(function ($q) {
-            $q->where('status', OrderStatus::Served->value)
-                ->orWhere(function ($q2) {
-                    $q2->whereNotNull('paid_at')
-                        ->where('status', '!=', OrderStatus::Cancelled->value);
+        $prefix = $table !== '' ? "{$table}." : '';
+
+        return $query->where(function ($q) use ($prefix) {
+            $q->where("{$prefix}status", OrderStatus::Served->value)
+                ->orWhere(function ($q2) use ($prefix) {
+                    $q2->whereNotNull("{$prefix}paid_at")
+                        ->where("{$prefix}status", '!=', OrderStatus::Cancelled->value);
                 });
         });
+    }
+
+    public function scopeRecognizedRevenue($query, string $table = '')
+    {
+        return static::applyRecognizedRevenue($query, $table);
     }
 
     public function isRecognizedRevenue(): bool

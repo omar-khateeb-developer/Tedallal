@@ -267,7 +267,7 @@ function exportVoucher(format: 'al_ameen' | 'al_bayan' | 'universal_excel') {
 </script>
 
 <template>
-    <Head title="سجل وتقارير المبيعات المالية - تدلّل" />
+    <Head title="سجل وتقارير المبيعات المالية" />
 
     <AuthenticatedLayout>
         <template #header>

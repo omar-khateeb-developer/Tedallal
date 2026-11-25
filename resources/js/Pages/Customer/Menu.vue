@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import CartDrawer from '@/Components/Customer/CartDrawer.vue';
 import CustomerLayout from '@/Layouts/CustomerLayout.vue';
-import { router } from '@inertiajs/vue3';
+import { router, Head } from '@inertiajs/vue3';
 import { computed, defineAsyncComponent, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { normalizeVisualViewport } from '@/composables/useVisualViewport';
 import { formatMoney } from '@/utils/money';
@@ -520,6 +520,8 @@ onUnmounted(() => {
 </script>
 
 <template>
+    <Head :title="restaurant.name" />
+
     <CustomerLayout :navbar-image="restaurant.navbar_image" :logo="restaurant.logo">
         <template #title>
             <h1 class="text-lg font-bold text-stone-900 dark:text-white">{{ restaurant.name }}</h1>
