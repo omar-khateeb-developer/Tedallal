@@ -278,6 +278,7 @@ class WhatsAppWebhookController extends Controller
                 'whatsapp_phone' => $phone ?: $restaurant->whatsapp_phone,
                 'whatsapp_connected_at' => now(),
             ]);
+            Cache::forget("restaurant_whatsapp_otp_alert_{$restaurant->id}");
 
             return response()->json(['success' => true]);
         }

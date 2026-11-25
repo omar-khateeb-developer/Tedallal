@@ -107,11 +107,7 @@ final class CustomerCrmService
      */
     public function toWhatsAppDigits(string $normalizedPhone): string
     {
-        if (str_starts_with($normalizedPhone, '09') && strlen($normalizedPhone) === 10) {
-            return '963' . substr($normalizedPhone, 1);
-        }
-
-        return ltrim($normalizedPhone, '+');
+        return \App\Support\PhoneNormalizer::toWhatsAppDigits($normalizedPhone);
     }
 
     /**

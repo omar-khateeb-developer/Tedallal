@@ -35,31 +35,31 @@ const props = defineProps<{
     maxDate: string;
 }>();
 
-// State — automatically stagger unpositioned or overlapping legacy tables
-const occupiedVipCoords = new Set<string>();
+// State — automatically stagger unpositioned or physically overlapping legacy tables (>=135x130 clear gap)
+const placedVipCoords: Array<{ x: number; y: number }> = [];
+const hasVipOverlap = (x: number, y: number) =>
+    placedVipCoords.some((c) => Math.abs(c.x - x) < 135 && Math.abs(c.y - y) < 130);
+
 const tables = ref<TableGeometry[]>(props.tables.map((t, idx) => {
     let px = Number(t.pos_x) || 0;
     let py = Number(t.pos_y) || 0;
     const isUnpositioned = px <= 0 && py <= 0;
-    let key = `${Math.round(px / 20)}:${Math.round(py / 20)}`;
-    if (isUnpositioned || occupiedVipCoords.has(key)) {
+    if (isUnpositioned || hasVipOverlap(px, py)) {
         let slot = idx;
         while (slot < 100) {
             const col = slot % 4;
             const row = Math.floor(slot / 4);
-            const candidateX = 60 + col * 170;
-            const candidateY = 70 + row * 145;
-            const candidateKey = `${Math.round(candidateX / 20)}:${Math.round(candidateY / 20)}`;
-            if (!occupiedVipCoords.has(candidateKey)) {
+            const candidateX = 65 + col * 185;
+            const candidateY = 82 + row * 168;
+            if (!hasVipOverlap(candidateX, candidateY)) {
                 px = candidateX;
                 py = candidateY;
-                key = candidateKey;
                 break;
             }
             slot++;
         }
     }
-    occupiedVipCoords.add(key);
+    placedVipCoords.push({ x: px, y: py });
 
     return {
         ...t,
@@ -80,20 +80,66 @@ const guestsCount = ref<number>(2);
 const unavailableTableIds = ref<number[]>([]);
 const isCheckingAvailability = ref(false);
 const selectedTable = ref<TableGeometry | null>(null);
+const displayMode = ref<'canvas' | 'cards'>('canvas');
 const zoomLevel = ref<number>(1);
 const blueprintWrapperRef = ref<HTMLElement | null>(null);
+
+const vipZoneLabels: Record<string, string> = {
+    main: 'الصالة الرئيسية',
+    vip: 'جناح النخبة VIP',
+    terrace: 'الشرفة الخارجية',
+    family: 'القسم العائلي',
+};
 
 // Booking Modal State
 const isModalOpen = ref(false);
 const bookingStep = ref<'details' | 'otp' | 'confirmed'>('details');
 const isSubmitting = ref(false);
+const isResending = ref(false);
 const errorMessage = ref('');
+const whatsappUnavailable = ref(false);
+const resendNotice = ref('');
 const holdUuid = ref('');
 const otpCode = ref('');
 const maskedPhone = ref('');
+const sentViaWhatsapp = ref(false);
+const deliveryChannel = ref<'restaurant' | 'platform' | null>(null);
 const devOtp = ref<string | null>(null);
 const timerSeconds = ref(600);
+const resendCooldown = ref(0);
 let timerInterval: any = null;
+let resendInterval: any = null;
+
+function toAsciiDigits(val: string): string {
+    const ar = '٠١٢٣٤٥٦٧٨٩';
+    const fa = '۰۱۲۳۴۵۶۷۸۹';
+    return val
+        .replace(/[٠-٩]/g, (d) => String(ar.indexOf(d)))
+        .replace(/[۰-۹]/g, (d) => String(fa.indexOf(d)));
+}
+
+function normalizeOtpInput() {
+    otpCode.value = toAsciiDigits(otpCode.value).replace(/[^0-9]/g, '').slice(0, 4);
+}
+
+function startResendCooldown(seconds = 25) {
+    clearInterval(resendInterval);
+    resendCooldown.value = seconds;
+    resendInterval = setInterval(() => {
+        if (resendCooldown.value > 0) {
+            resendCooldown.value--;
+        } else {
+            clearInterval(resendInterval);
+        }
+    }, 1000);
+}
+
+function restaurantContactWhatsappUrl(): string | null {
+    const raw = (props.restaurant.phone || '').replace(/[^0-9]/g, '');
+    if (!raw) return null;
+    const intl = raw.startsWith('09') && raw.length === 10 ? `963${raw.slice(1)}` : raw;
+    return `https://wa.me/${intl}`;
+}
 
 // Confirmed Ticket info
 const confirmedData = ref<{
@@ -142,6 +188,9 @@ watch([selectedDate, selectedTimeSlot], () => {
 });
 
 onMounted(() => {
+    if (window.innerWidth < 640) {
+        displayMode.value = 'cards';
+    }
     if (blueprintWrapperRef.value && blueprintWrapperRef.value.clientWidth < 1140) {
         const fitted = Math.max(0.32, Math.min(1, (blueprintWrapperRef.value.clientWidth - 16) / 1140));
         zoomLevel.value = Number(fitted.toFixed(2));
@@ -160,6 +209,8 @@ function onSelectTable(table: TableGeometry) {
     selectedTable.value = table;
     bookingStep.value = 'details';
     errorMessage.value = '';
+    whatsappUnavailable.value = false;
+    resendNotice.value = '';
     isModalOpen.value = true;
 }
 
@@ -173,6 +224,10 @@ async function submitHoldRequest() {
 
     isSubmitting.value = true;
     errorMessage.value = '';
+    whatsappUnavailable.value = false;
+    resendNotice.value = '';
+    otpCode.value = '';
+
     try {
         const { data } = await axios.post(`/api/public/restaurants/${props.restaurant.slug}/reservations/hold`, {
             table_id: selectedTable.value.id,
@@ -188,9 +243,12 @@ async function submitHoldRequest() {
 
         holdUuid.value = data.uuid;
         maskedPhone.value = data.phone_masked;
-        devOtp.value = data.dev_otp;
+        sentViaWhatsapp.value = Boolean(data.sent_via_whatsapp);
+        deliveryChannel.value = data.delivery_channel || null;
+        devOtp.value = data.dev_otp || null;
         timerSeconds.value = data.expires_in_seconds || 600;
         bookingStep.value = 'otp';
+        startResendCooldown(data.resend_after_seconds || 25);
 
         // Start countdown
         clearInterval(timerInterval);
@@ -204,14 +262,40 @@ async function submitHoldRequest() {
         }, 1000);
 
     } catch (e: any) {
+        whatsappUnavailable.value = Boolean(e.response?.data?.whatsapp_unavailable);
         errorMessage.value = e.response?.data?.message || 'حدث خطأ أثناء حجز الطاولة. يرجى المحاولة ثانية.';
     } finally {
         isSubmitting.value = false;
     }
 }
 
+// Resend OTP
+async function resendOtpCode() {
+    if (!holdUuid.value || resendCooldown.value > 0 || isResending.value) return;
+    isResending.value = true;
+    errorMessage.value = '';
+    resendNotice.value = '';
+    try {
+        const { data } = await axios.post(`/api/public/restaurants/${props.restaurant.slug}/reservations/resend-otp`, {
+            uuid: holdUuid.value,
+        });
+        sentViaWhatsapp.value = Boolean(data.sent_via_whatsapp);
+        deliveryChannel.value = data.delivery_channel || null;
+        devOtp.value = data.dev_otp || null;
+        timerSeconds.value = data.expires_in_seconds || 600;
+        startResendCooldown(data.resend_after_seconds || 25);
+        resendNotice.value = data.message || 'تم إعادة إرسال رمز التحقق بنجاح عبر واتساب.';
+    } catch (e: any) {
+        whatsappUnavailable.value = Boolean(e.response?.data?.whatsapp_unavailable);
+        errorMessage.value = e.response?.data?.message || 'تعذر إعادة إرسال رمز التحقق حالياً.';
+    } finally {
+        isResending.value = false;
+    }
+}
+
 // Verify OTP
 async function verifyOtpCode() {
+    normalizeOtpInput();
     if (!holdUuid.value || otpCode.value.length !== 4) {
         errorMessage.value = 'يرجى إدخال رمز التحقق المكون من 4 أرقام.';
         return;
@@ -367,12 +451,12 @@ function resetZoom() {
                     </div>
                 </div>
 
-                <!-- Legend & Availability Bar -->
+                <!-- Legend, View Switcher & Availability Bar -->
                 <div class="mt-4 pt-4 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs">
-                    <div class="flex items-center gap-4">
+                    <div class="flex flex-wrap items-center gap-4">
                         <span class="inline-flex items-center gap-1.5 text-emerald-400 font-medium">
                             <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
-                            <span>طاولة متاحة للحجز الفوري</span>
+                            <span>متاحة للحجز الفوري</span>
                         </span>
                         <span class="inline-flex items-center gap-1.5 text-amber-400 font-medium">
                             <span class="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.8)]"></span>
@@ -380,24 +464,93 @@ function resetZoom() {
                         </span>
                         <span class="inline-flex items-center gap-1.5 text-slate-500 font-medium">
                             <span class="w-2.5 h-2.5 rounded-full bg-slate-700"></span>
-                            <span>محجوزة في هذا التوقيت</span>
+                            <span>محجوزة حالياً</span>
                         </span>
                     </div>
 
-                    <!-- Zoom Controls -->
-                    <div class="flex items-center gap-2">
-                        <span class="text-slate-400 text-[11px] font-mono">Zoom: {{ Math.round(zoomLevel * 100) }}%</span>
-                        <div class="flex items-center bg-slate-950 border border-slate-800 rounded-xl px-1 py-0.5 text-xs font-mono">
-                            <button @click="zoomOut" class="px-2 py-1 hover:text-amber-400 font-bold">-</button>
-                            <button @click="resetZoom" class="px-1.5 hover:text-amber-400 font-bold">100%</button>
-                            <button @click="zoomIn" class="px-2 py-1 hover:text-amber-400 font-bold">+</button>
+                    <!-- View Toggle & Zoom Controls -->
+                    <div class="flex flex-wrap items-center gap-2.5 ms-auto">
+                        <div class="flex items-center bg-slate-950 border border-slate-800 p-1 rounded-xl">
+                            <button
+                                type="button"
+                                @click="displayMode = 'canvas'"
+                                class="px-3 py-1 rounded-lg text-xs font-extrabold transition flex items-center gap-1.5"
+                                :class="displayMode === 'canvas' ? 'bg-amber-500 text-stone-950' : 'text-slate-400 hover:text-white'"
+                            >
+                                <span>🗺️</span>
+                                <span>المخطط</span>
+                            </button>
+                            <button
+                                type="button"
+                                @click="displayMode = 'cards'"
+                                class="px-3 py-1 rounded-lg text-xs font-extrabold transition flex items-center gap-1.5"
+                                :class="displayMode === 'cards' ? 'bg-amber-500 text-stone-950' : 'text-slate-400 hover:text-white'"
+                            >
+                                <span>⊞</span>
+                                <span>القائمة الواضحة</span>
+                            </button>
+                        </div>
+
+                        <div v-if="displayMode === 'canvas'" class="flex items-center gap-2">
+                            <span class="text-slate-400 text-[11px] font-mono">{{ Math.round(zoomLevel * 100) }}%</span>
+                            <div class="flex items-center bg-slate-950 border border-slate-800 rounded-xl px-1 py-0.5 text-xs font-mono">
+                                <button @click="zoomOut" class="px-2 py-1 hover:text-amber-400 font-bold">-</button>
+                                <button @click="resetZoom" class="px-1.5 hover:text-amber-400 font-bold">100%</button>
+                                <button @click="zoomIn" class="px-2 py-1 hover:text-amber-400 font-bold">+</button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
+            <!-- Clean Tap-Friendly Table Cards View -->
+            <div v-if="displayMode === 'cards'" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div
+                    v-for="table in tables"
+                    :key="table.id"
+                    @click="onSelectTable(table)"
+                    class="rounded-3xl border p-5 transition-all flex flex-col justify-between gap-4"
+                    :class="isTableAvailable(table.id)
+                        ? (table.zone === 'vip'
+                            ? 'bg-slate-900/95 border-amber-500/50 hover:border-amber-400 cursor-pointer hover:shadow-lg hover:shadow-amber-500/10'
+                            : 'bg-slate-900/95 border-slate-800 hover:border-emerald-500/70 cursor-pointer hover:shadow-lg hover:shadow-emerald-500/10')
+                        : 'bg-slate-950/60 border-slate-800/70 opacity-55 cursor-not-allowed'"
+                >
+                    <div class="flex items-start justify-between gap-3">
+                        <div>
+                            <h3 class="text-base font-black text-white">{{ table.name }}</h3>
+                            <p class="text-xs text-slate-400 mt-1">
+                                {{ vipZoneLabels[table.zone] || table.zone }} • {{ table.capacity }} مقاعد
+                            </p>
+                        </div>
+                        <span
+                            class="px-3 py-1 rounded-full text-[11px] font-black shrink-0"
+                            :class="!isTableAvailable(table.id)
+                                ? 'bg-slate-800 text-slate-400'
+                                : (table.zone === 'vip' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40')"
+                        >
+                            {{ !isTableAvailable(table.id) ? 'محجوزة' : (table.zone === 'vip' ? '👑 VIP متاحة' : 'متاحة') }}
+                        </span>
+                    </div>
+
+                    <button
+                        type="button"
+                        :disabled="!isTableAvailable(table.id)"
+                        class="w-full py-2.5 rounded-2xl text-xs font-black transition"
+                        :class="!isTableAvailable(table.id)
+                            ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                            : (table.zone === 'vip'
+                                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-stone-950 hover:from-amber-400 hover:to-orange-400'
+                                : 'bg-emerald-600 hover:bg-emerald-500 text-white')"
+                    >
+                        {{ isTableAvailable(table.id) ? 'اختيار وحجز الطاولة ←' : 'غير متاحة في هذا التوقيت' }}
+                    </button>
+                </div>
+            </div>
+
             <!-- Interactive Blueprint Canvas -->
             <div
+                v-show="displayMode === 'canvas'"
                 ref="blueprintWrapperRef"
                 class="relative w-full rounded-3xl bg-[#050810] border-2 border-slate-800/90 shadow-2xl overflow-auto select-none"
                 :style="{ minHeight: Math.max(280, Math.round(640 * zoomLevel) + 24) + 'px' }"
@@ -411,9 +564,9 @@ function resetZoom() {
                 <!-- Architectural Border Frame -->
                 <div class="absolute inset-3 border border-slate-800/60 pointer-events-none rounded-2xl"></div>
 
-                <!-- Dimension Header Tag -->
-                <div class="absolute top-3 left-6 text-[9px] font-mono text-slate-700 pointer-events-none tracking-widest uppercase">
-                    [ VIP RESERVATION BLUEPRINT • SELECT YOUR DESIRED TABLE ]
+                <!-- Arabic Dimension Header Tag -->
+                <div class="absolute top-3 left-6 text-[10px] font-bold text-slate-600 pointer-events-none">
+                    مخطط الحجز التفاعلي • اختر طاولتك المفضلة
                 </div>
 
                 <!-- Canvas Scalable Container -->
@@ -422,62 +575,31 @@ function resetZoom() {
                     class="relative w-[1140px] h-[640px] origin-top-right transition-transform duration-100 mx-auto"
                     :style="{ transform: `scale(${zoomLevel})` }"
                 >
-                    <!-- ================= ARCHITECTURAL WALLS & CORRIDORS ================= -->
-                    <div class="absolute top-6 left-6 right-6 bottom-6 border-2 border-slate-700/80 rounded-2xl pointer-events-none">
-                        <div class="absolute inset-1 border border-slate-800/60 rounded-xl"></div>
-                    </div>
+                    <!-- ================= ARCHITECTURAL WALLS & CORRIDORS (Arabic) ================= -->
+                    <div class="absolute top-6 left-6 right-6 bottom-6 border border-slate-800 rounded-2xl pointer-events-none"></div>
 
                     <!-- Left Main Entrance -->
-                    <div class="absolute top-1/2 left-4 -translate-y-1/2 w-8 h-28 bg-[#050810] border-y-2 border-slate-600 pointer-events-none flex flex-col items-center justify-center z-10">
-                        <div class="w-1.5 h-12 bg-emerald-500/80 rounded-full animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.8)]"></div>
-                        <span class="text-[8px] font-mono text-emerald-400 rotate-90 whitespace-nowrap mt-2 tracking-wider">ENTRANCE</span>
+                    <div class="absolute top-1/2 left-4 -translate-y-1/2 w-7 h-24 bg-[#050810] border-y-2 border-slate-600 pointer-events-none flex flex-col items-center justify-center z-10">
+                        <div class="w-1.5 h-10 bg-emerald-500/80 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.8)]"></div>
+                        <span class="text-[9px] font-bold text-emerald-400 rotate-90 whitespace-nowrap mt-2">المدخل</span>
                     </div>
 
                     <!-- Host Reception Counter -->
-                    <div class="absolute top-[180px] left-[75px] w-24 h-12 bg-stone-900 border border-stone-700/80 rounded-lg pointer-events-none flex flex-col items-center justify-center shadow-lg">
-                        <span class="text-[9px] font-bold text-amber-400/90 font-mono">HOST DESK</span>
-                        <span class="text-[8px] text-stone-500 font-mono">Reception</span>
+                    <div class="absolute bottom-7 left-10 px-3 py-1 bg-stone-900/90 border border-stone-700/80 rounded-lg pointer-events-none flex items-center gap-1.5 shadow-sm">
+                        <span class="text-[10px] font-bold text-amber-400/90">🛎️ الاستقبال</span>
                     </div>
 
                     <!-- Central Dining Hall Guideline -->
-                    <div class="absolute top-1/2 left-28 right-[360px] -translate-y-1/2 h-[130px] border-y border-dashed border-slate-800/80 pointer-events-none flex items-center justify-center">
-                        <span class="text-[10px] uppercase font-mono tracking-widest text-slate-700/60">M a i n &nbsp; D i n i n g &nbsp; H a l l</span>
+                    <div class="absolute top-1/2 left-28 right-[270px] -translate-y-1/2 flex items-center justify-center pointer-events-none">
+                        <span class="text-sm font-black tracking-wide text-slate-800/70">الصالة الرئيسية</span>
                     </div>
 
-                    <!-- ================= VIP PRIVATE LOUNGE SALON (Right Wing) ================= -->
-                    <div class="absolute top-8 right-8 bottom-8 w-[310px] border-2 border-amber-500/90 rounded-2xl bg-slate-950/70 shadow-[0_0_35px_rgba(245,158,11,0.22)] pointer-events-none p-4 flex flex-col justify-between">
-                        <!-- VIP Room Tag -->
-                        <div class="bg-black/85 backdrop-blur-md border border-amber-500/40 px-3.5 py-2 rounded-xl self-start shadow-xl">
-                            <div class="flex items-center gap-1.5 text-xs font-black text-amber-300">
-                                <span>👑</span>
-                                <span>VIP Lounge</span>
-                            </div>
-                            <div class="text-[9px] text-slate-400 font-mono mt-0.5">Private dining salon</div>
+                    <!-- Compact VIP Private Lounge Wing (No Cluttered Placeholder Sofas) -->
+                    <div class="absolute top-8 right-8 bottom-8 w-[225px] border border-dashed border-amber-500/45 rounded-2xl bg-amber-950/[0.06] pointer-events-none p-3.5 flex flex-col justify-start">
+                        <div class="inline-flex items-center gap-1.5 bg-amber-950/70 border border-amber-500/35 px-3 py-1 rounded-lg self-start">
+                            <span class="text-xs">👑</span>
+                            <span class="text-[11px] font-black text-amber-300">جناح النخبة VIP</span>
                         </div>
-
-                        <!-- Top VIP Luxury Sofa Suite -->
-                        <div class="relative w-full h-16 bg-stone-900/90 border border-stone-700/80 rounded-xl flex items-center justify-between px-3 shadow-inner">
-                            <div class="w-4 h-4 rounded-full bg-amber-400/80 shadow-[0_0_12px_rgba(245,158,11,0.9)] flex items-center justify-center text-[8px]">💡</div>
-                            <div class="text-[10px] font-bold text-stone-400 font-mono">🛋️ Luxury Sofa Suite</div>
-                            <div class="w-8 h-8 rounded-md bg-stone-950 border border-stone-800 flex items-center justify-center text-[8px] text-stone-500">Table</div>
-                        </div>
-
-                        <div class="w-full border-t border-dashed border-amber-500/30 my-1"></div>
-
-                        <!-- Bottom VIP Luxury Sofa Suite -->
-                        <div class="relative w-full h-16 bg-stone-900/90 border border-stone-700/80 rounded-xl flex items-center justify-between px-3 shadow-inner">
-                            <div class="w-4 h-4 rounded-full bg-amber-400/80 shadow-[0_0_12px_rgba(245,158,11,0.9)] flex items-center justify-center text-[8px]">💡</div>
-                            <div class="text-[10px] font-bold text-stone-400 font-mono">🛋️ Luxury Sofa Suite</div>
-                            <div class="w-8 h-8 rounded-md bg-stone-950 border border-stone-800 flex items-center justify-center text-[8px] text-stone-500">Table</div>
-                        </div>
-                    </div>
-
-                    <!-- VIP Door Openings -->
-                    <div class="absolute top-[260px] right-[316px] w-3 h-14 bg-[#050810] border-y border-amber-500/60 pointer-events-none z-10 flex items-center justify-center">
-                        <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>
-                    </div>
-                    <div class="absolute top-[370px] right-[316px] w-3 h-14 bg-[#050810] border-y border-amber-500/60 pointer-events-none z-10 flex items-center justify-center">
-                        <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>
                     </div>
 
                     <!-- ================= INTERACTIVE TABLES ON BLUEPRINT ================= -->
@@ -493,7 +615,7 @@ function resetZoom() {
                         ]"
                         :style="{
                             left: table.pos_x + 'px',
-                            top: table.pos_y + 'px',
+                            top: Math.max(54, table.pos_y) + 'px',
                             width: (table.shape === 'vip' ? 140 : (table.shape === 'rectangle' ? 130 : 90)) + 'px',
                             height: (table.shape === 'rectangle' ? 80 : 90) + 'px',
                             transform: `rotate(${table.rotation || 0}deg)`,
@@ -502,19 +624,19 @@ function resetZoom() {
                     >
                         <!-- Chairs -->
                         <template v-if="table.shape === 'circle'">
-                            <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 w-6 h-2.5 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none"></div>
-                            <div class="absolute -bottom-3.5 left-1/2 -translate-x-1/2 w-6 h-2.5 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none"></div>
-                            <div class="absolute top-1/2 -left-3.5 -translate-y-1/2 w-2.5 h-6 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none"></div>
-                            <div class="absolute top-1/2 -right-3.5 -translate-y-1/2 w-2.5 h-6 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none"></div>
+                            <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-5 h-2 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none"></div>
+                            <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 w-5 h-2 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none"></div>
+                            <div class="absolute top-1/2 -left-3 -translate-y-1/2 w-2 h-5 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none"></div>
+                            <div class="absolute top-1/2 -right-3 -translate-y-1/2 w-2 h-5 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none"></div>
                         </template>
 
                         <template v-else-if="table.shape === 'rectangle'">
-                            <div class="absolute -top-3.5 left-3 w-6 h-2.5 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none"></div>
-                            <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 w-6 h-2.5 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none"></div>
-                            <div class="absolute -top-3.5 right-3 w-6 h-2.5 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none"></div>
-                            <div class="absolute -bottom-3.5 left-3 w-6 h-2.5 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none"></div>
-                            <div class="absolute -bottom-3.5 left-1/2 -translate-x-1/2 w-6 h-2.5 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none"></div>
-                            <div class="absolute -bottom-3.5 right-3 w-6 h-2.5 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none"></div>
+                            <div class="absolute -top-3 left-3 w-5 h-2 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none"></div>
+                            <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-5 h-2 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none"></div>
+                            <div class="absolute -top-3 right-3 w-5 h-2 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none"></div>
+                            <div class="absolute -bottom-3 left-3 w-5 h-2 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none"></div>
+                            <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 w-5 h-2 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none"></div>
+                            <div class="absolute -bottom-3 right-3 w-5 h-2 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none"></div>
                         </template>
 
                         <!-- Table Core & Halo -->
@@ -531,31 +653,37 @@ function resetZoom() {
                                             : 'bg-slate-900/90 ring-2 ring-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.4)] border border-emerald-400'))
                             ]"
                         >
-                            <!-- Label Tooltip matching reference image -->
+                            <!-- Top Compact Name Pill (Truncated cleanly) -->
                             <div
-                                class="absolute -top-7 whitespace-nowrap px-2.5 py-0.5 rounded-md text-[10px] font-black flex items-center gap-1 shadow-xl pointer-events-none transition-all z-30"
+                                class="absolute -top-7 max-w-[126px] truncate px-2.5 py-0.5 rounded-full text-[10px] font-black shadow-md pointer-events-none z-30 bg-slate-900/95 text-slate-100 border border-slate-700/90"
                                 :style="{ transform: `rotate(${-(table.rotation || 0)}deg)` }"
-                                :class="!isTableAvailable(table.id)
-                                    ? 'bg-slate-900/90 text-slate-500 border border-slate-800'
-                                    : (table.zone === 'vip'
-                                        ? 'bg-amber-950/95 text-amber-300 border border-amber-500 shadow-amber-900/40'
-                                        : 'bg-emerald-950/95 text-emerald-300 border border-emerald-500 shadow-emerald-900/40')"
+                                :title="table.name"
                             >
-                                <span>{{ table.name }}</span>
-                                <span class="opacity-80">
-                                    • {{ isTableAvailable(table.id) ? (table.zone === 'vip' ? 'VIP' : 'متاحة') : 'محجوزة' }}
-                                </span>
+                                {{ table.name }}
                             </div>
 
                             <!-- Table Number -->
-                            <span class="font-black text-sm text-white drop-shadow-md tracking-tight">
+                            <span class="font-black text-sm text-white drop-shadow-md tracking-tight leading-none">
                                 {{ table.name.replace(/[^0-9]/g, '') ? '#' + table.name.replace(/[^0-9]/g, '') : table.name }}
                             </span>
 
                             <!-- Capacity -->
-                            <span class="text-[9px] text-slate-400 font-mono mt-0.5">
+                            <span class="text-[9px] text-slate-300 font-bold mt-1">
                                 {{ table.capacity }} مقاعد
                             </span>
+
+                            <!-- Bottom Concise Availability Chip -->
+                            <div
+                                class="absolute -bottom-7 whitespace-nowrap px-2 py-0.5 rounded-full text-[9px] font-black shadow-md pointer-events-none z-30"
+                                :style="{ transform: `rotate(${-(table.rotation || 0)}deg)` }"
+                                :class="!isTableAvailable(table.id)
+                                    ? 'bg-slate-900/90 text-slate-500 border border-slate-800'
+                                    : (table.zone === 'vip'
+                                        ? 'bg-amber-950/95 text-amber-300 border border-amber-500'
+                                        : 'bg-emerald-950/95 text-emerald-300 border border-emerald-500')"
+                            >
+                                {{ isTableAvailable(table.id) ? (table.zone === 'vip' ? 'VIP متاحة' : 'متاحة') : 'محجوزة' }}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -591,8 +719,25 @@ function resetZoom() {
                 </div>
 
                 <!-- Error Alert -->
-                <div v-if="errorMessage" class="p-3.5 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-bold">
-                    ⚠️ {{ errorMessage }}
+                <div v-if="errorMessage" class="p-3.5 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-bold space-y-2.5">
+                    <div>⚠️ {{ errorMessage }}</div>
+                    <div v-if="whatsappUnavailable && restaurant.phone" class="flex flex-wrap items-center gap-2 pt-1">
+                        <a
+                            v-if="restaurantContactWhatsappUrl()"
+                            :href="restaurantContactWhatsappUrl()!"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600/90 hover:bg-emerald-500 text-white text-[11px] font-bold transition"
+                        >
+                            <span>مراسلة المطعم عبر واتساب</span>
+                        </a>
+                        <a
+                            :href="`tel:${restaurant.phone}`"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 text-[11px] font-bold transition"
+                        >
+                            <span dir="ltr">{{ restaurant.phone }}</span>
+                        </a>
+                    </div>
                 </div>
 
                 <!-- STEP 1: Guest Information -->
@@ -663,9 +808,19 @@ function resetZoom() {
                     </div>
                     <div>
                         <h4 class="text-base font-extrabold text-white">التحقق من رقم الهاتف</h4>
-                        <p class="text-xs text-slate-400 mt-1">
-                            تم إرسال رمز التحقق المكون من 4 أرقام إلى <span dir="ltr" class="font-mono text-amber-300">{{ maskedPhone }}</span>
+                        <p v-if="sentViaWhatsapp" class="text-xs text-slate-300 mt-1">
+                            تم إرسال رمز التحقق المكون من 4 أرقام عبر واتساب إلى <span dir="ltr" class="font-mono text-amber-300">{{ maskedPhone }}</span>
                         </p>
+                        <p v-else class="text-xs text-amber-300 mt-1">
+                            يرجى إدخال رمز التحقق لتأكيد الحجز للرقم <span dir="ltr" class="font-mono">{{ maskedPhone }}</span>
+                        </p>
+                        <p v-if="sentViaWhatsapp && deliveryChannel === 'platform'" class="text-[11px] text-emerald-400/90 mt-1">
+                            تم الإرسال عبر بوابة تدلّل الرسمية لتأكيد الحجوزات
+                        </p>
+                    </div>
+
+                    <div v-if="resendNotice" class="p-2.5 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs font-bold">
+                        ✓ {{ resendNotice }}
                     </div>
 
                     <!-- Local Dev OTP helper -->
@@ -677,7 +832,9 @@ function resetZoom() {
                     <div>
                         <input
                             v-model="otpCode"
+                            @input="normalizeOtpInput"
                             type="text"
+                            inputmode="numeric"
                             maxlength="4"
                             dir="ltr"
                             placeholder="0000"
@@ -685,8 +842,19 @@ function resetZoom() {
                         />
                     </div>
 
-                    <div class="text-xs text-slate-500 font-mono">
-                        صلاحية الرمز تنتهي خلال: <span class="text-amber-400 font-bold">{{ formatCountdown(timerSeconds) }}</span>
+                    <div class="flex flex-col items-center gap-2 text-xs text-slate-500">
+                        <div class="font-mono">
+                            صلاحية الرمز تنتهي خلال: <span class="text-amber-400 font-bold">{{ formatCountdown(timerSeconds) }}</span>
+                        </div>
+                        <button
+                            type="button"
+                            @click="resendOtpCode"
+                            :disabled="resendCooldown > 0 || isResending"
+                            class="text-xs font-bold transition px-3 py-1 rounded-lg"
+                            :class="resendCooldown > 0 || isResending ? 'text-slate-500 cursor-not-allowed' : 'text-amber-400 hover:text-amber-300 hover:bg-amber-500/10'"
+                        >
+                            {{ isResending ? 'جاري إعادة الإرسال...' : (resendCooldown > 0 ? `إعادة إرسال الرمز بعد ${resendCooldown} ث` : 'إعادة إرسال الرمز عبر واتساب ↻') }}
+                        </button>
                     </div>
 
                     <div class="flex items-center gap-3 pt-2">

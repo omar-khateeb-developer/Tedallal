@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AdminNav from '@/Components/Admin/AdminNav.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import axios from 'axios';
 
@@ -246,6 +246,7 @@ function startWaPolling() {
             waConnectedAt.value = data.connected_at;
             if (data.status === 'connected') {
                 stopWaPolling();
+                router.reload({ only: ['auth'] });
 
                 // في حال كان المدير طلب إرسال تذكير للزبون قبل إتمام الربط
                 if (pendingReminderCustomer.value && pendingReminderPromo.value) {
@@ -468,9 +469,24 @@ watch(showWhatsappModal, (isOpen) => {
     }
 });
 
-onMounted(() => {
+onMounted(async () => {
+    const params = new URLSearchParams(window.location.search);
+    const shouldAutoConnectWa = params.get('connect_whatsapp') === '1';
+
+    if (shouldAutoConnectWa) {
+        showWhatsappModal.value = true;
+        params.delete('connect_whatsapp');
+        const cleanQuery = params.toString();
+        window.history.replaceState({}, '', `${window.location.pathname}${cleanQuery ? '?' + cleanQuery : ''}`);
+    }
+
     fetchCustomers();
-    fetchWhatsappStatus();
+    await fetchWhatsappStatus();
+
+    if (shouldAutoConnectWa && waStatus.value === 'disconnected' && !isLocked.value) {
+        connectWhatsapp();
+    }
+
     window.addEventListener('keydown', handleGlobalKeydown);
 });
 

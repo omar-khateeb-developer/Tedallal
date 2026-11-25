@@ -19,6 +19,25 @@ const restaurant = computed(() => (page.props.auth as any)?.restaurant);
 const userRole = computed(() => user.value?.role);
 const roleLabel = computed(() => user.value?.role_label);
 
+const whatsappWarnDismissed = ref(false);
+const whatsappOtpAlert = computed(() => restaurant.value?.whatsapp_otp_alert || null);
+const showProactiveWhatsappWarning = computed(() => {
+    if (userRole.value !== 'admin' || !restaurant.value || restaurant.value.is_expired) return false;
+    if (whatsappOtpAlert.value) return false;
+    if (whatsappWarnDismissed.value) return false;
+    const needsWaFeature = Boolean(restaurant.value.features?.floor_plan || restaurant.value.features?.whatsapp_reminders);
+    return needsWaFeature && restaurant.value.whatsapp_status !== 'connected';
+});
+
+function dismissProactiveWhatsappWarning() {
+    whatsappWarnDismissed.value = true;
+    try {
+        if (restaurant.value?.id) {
+            sessionStorage.setItem(`tedallal_hide_wa_warn_${restaurant.value.id}`, '1');
+        }
+    } catch {}
+}
+
 const userRoleBadgeClass = computed(() => {
     switch (userRole.value) {
         case 'super_admin':
@@ -57,6 +76,11 @@ const userRoleDotClass = computed(() => {
 
 onMounted(() => {
     initTheme('dark');
+    try {
+        if (restaurant.value?.id && sessionStorage.getItem(`tedallal_hide_wa_warn_${restaurant.value.id}`) === '1') {
+            whatsappWarnDismissed.value = true;
+        }
+    } catch {}
 });
 </script>
 
@@ -546,7 +570,61 @@ onMounted(() => {
 
             <!-- Page Content -->
             <main>
-                <div class="mx-auto max-w-7xl px-4 pt-4 sm:px-6 lg:px-8">
+                <div class="mx-auto max-w-7xl px-4 pt-4 sm:px-6 lg:px-8 space-y-3">
+                    <!-- Urgent Alert: Guest OTP failed because restaurant WhatsApp is not linked -->
+                    <div
+                        v-if="userRole === 'admin' && restaurant && whatsappOtpAlert"
+                        class="rounded-2xl border border-rose-500/40 bg-rose-50 dark:bg-rose-950/60 px-4 py-3 text-rose-900 dark:text-rose-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                        dir="rtl"
+                    >
+                        <div class="flex items-start gap-2.5 text-xs sm:text-sm font-bold leading-relaxed">
+                            <span class="text-lg shrink-0">🚨</span>
+                            <div>
+                                <div class="font-black text-rose-700 dark:text-rose-300">تنبيه عاجل: تعذر إرسال رمز التحقق (<span dir="ltr">OTP</span>) لحجز <span dir="ltr">VIP</span></div>
+                                <p class="font-semibold opacity-95">{{ whatsappOtpAlert.message }}</p>
+                            </div>
+                        </div>
+                        <Link
+                            href="/admin/customers?connect_whatsapp=1"
+                            class="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-black whitespace-nowrap shrink-0 transition shadow-sm"
+                        >
+                            <span>ربط رقم الواتساب الآن</span>
+                            <span>←</span>
+                        </Link>
+                    </div>
+
+                    <!-- Proactive Warning: Restaurant not linked to WhatsApp yet -->
+                    <div
+                        v-else-if="showProactiveWhatsappWarning"
+                        class="rounded-2xl border border-amber-500/40 bg-amber-50 dark:bg-amber-950/40 px-4 py-3 text-amber-950 dark:text-amber-100 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                        dir="rtl"
+                    >
+                        <div class="flex items-start gap-2.5 text-xs sm:text-sm font-semibold leading-relaxed">
+                            <span class="text-lg shrink-0">⚠️</span>
+                            <div>
+                                <span class="font-black text-amber-800 dark:text-amber-300">تنبيه لإدارة «{{ restaurant?.name }}»:</span>
+                                <span> لم يتم ربط المطعم برقم واتساب بعد — يجب ربط المطعم برقم واتساب أولاً قبل استقبال حجوزات <span dir="ltr">VIP</span> وإرسال رمز التحقق (<span dir="ltr">OTP</span>) وتنبيهات قائمة الانتظار للزبائن.</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <Link
+                                href="/admin/customers?connect_whatsapp=1"
+                                class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 text-xs font-black whitespace-nowrap transition shadow-xs"
+                            >
+                                <span>ربط الواتساب الآن</span>
+                                <span>←</span>
+                            </Link>
+                            <button
+                                type="button"
+                                @click="dismissProactiveWhatsappWarning"
+                                class="p-1.5 rounded-lg text-amber-700 dark:text-amber-300 hover:bg-amber-500/15 text-xs font-bold"
+                                title="إخفاء التنبيه لهذه الجلسة"
+                            >
+                                ✕
+                            </button>
+                        </div>
+                    </div>
+
                     <PushNotificationBanner />
                 </div>
                 <Transition name="page" mode="out-in" appear>

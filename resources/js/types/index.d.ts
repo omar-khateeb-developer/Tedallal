@@ -29,6 +29,13 @@ export type PageProps<
             subscription_expires_at?: string | null;
             days_remaining?: number | null;
             is_expired?: boolean;
+            whatsapp_status?: string;
+            whatsapp_phone?: string | null;
+            whatsapp_otp_alert?: {
+                message: string;
+                phone_masked?: string;
+                at?: string;
+            } | null;
         };
     };
     restaurantId?: number;

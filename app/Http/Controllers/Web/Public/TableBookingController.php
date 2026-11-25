@@ -3,13 +3,16 @@
 namespace App\Http\Controllers\Web\Public;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\Restaurant;
 use App\Models\RestaurantTable;
 use App\Models\TableReservation;
 use App\Services\WhatsAppGatewayService;
+use App\Support\PhoneNormalizer;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -168,13 +171,31 @@ class TableBookingController extends Controller
             ->dineIn()
             ->findOrFail($validated['table_id']);
 
-        // Format clean phone number
-        $cleanPhone = preg_replace('/[^\d\+]/', '', $validated['guest_phone']);
+        // Normalize & validate phone number (handles Arabic/Persian numerals, 09..., +963 09..., 00963..., international)
+        $rawPhone = (string) $validated['guest_phone'];
+        if (! PhoneNormalizer::isValidWhatsAppCandidate($rawPhone)) {
+            return response()->json([
+                'success' => false,
+                'error_code' => 'invalid_phone',
+                'message' => 'يرجى إدخال رقم واتساب صحيح (مثال: 0933123456 أو +963933123456).',
+            ], 422);
+        }
+
+        $cleanPhone = PhoneNormalizer::toStorageFormat($rawPhone);
 
         /** @var TableReservation $reservation */
         $reservation = null;
 
         DB::transaction(function () use ($restaurant, $table, $validated, $cleanPhone, $request, &$reservation) {
+            // Clean up any stale pending hold by the exact same phone on the exact same slot
+            // so retries don't self-lock the guest before verification succeeds.
+            TableReservation::where('table_id', $table->id)
+                ->whereDate('reservation_date', $validated['reservation_date'])
+                ->where('time_slot', $validated['time_slot'])
+                ->where('guest_phone', $cleanPhone)
+                ->where('status', 'pending_verification')
+                ->delete();
+
             // Pessimistic Concurrency Lock (Eliminates Double Booking Race Conditions)
             $isConflict = TableReservation::where('table_id', $table->id)
                 ->whereDate('reservation_date', $validated['reservation_date'])
@@ -204,7 +225,7 @@ class TableBookingController extends Controller
                 abort(429, 'لديك طلب حجز قيد التحقق حالياً. يرجى إتمام التحقق أو الانتظار.');
             }
 
-            $otpCode = (string) rand(1000, 9999);
+            $otpCode = (string) random_int(1000, 9999);
 
             $reservation = TableReservation::create([
                 'uuid' => (string) Str::uuid(),
@@ -225,26 +246,142 @@ class TableBookingController extends Controller
             ]);
         });
 
-        // Dispatch OTP via WhatsApp if connected
-        $otpSentViaWhatsapp = false;
-        if ($restaurant->isWhatsappConnected()) {
-            $msg = "👑 أهلاً بحضرتك {$reservation->guest_name}! كود التحقق لحجز طاولة VIP في {$restaurant->name} هو: *{$reservation->otp_code}*\nصالح لمدة 10 دقائق.\nشكراً لثقتكم!";
-            $waRes = $this->whatsAppGateway->sendMessage($restaurant, $cleanPhone, $msg);
-            $otpSentViaWhatsapp = $waRes['success'] ?? false;
-        }
+        // Mask phone: 0967****569
+        $maskedPhone = strlen($cleanPhone) >= 7
+            ? substr($cleanPhone, 0, 4) . '****' . substr($cleanPhone, -3)
+            : $cleanPhone;
 
-        // Mask phone: 0933***123
-        $maskedPhone = substr($cleanPhone, 0, 4) . '****' . substr($cleanPhone, -3);
+        // Dispatch OTP via restaurant WhatsApp, automatically falling back to Platform WhatsApp
+        $msg = "👑 أهلاً بحضرتك {$reservation->guest_name}! كود التحقق لحجز طاولة VIP في *{$restaurant->name}* هو: *{$reservation->otp_code}*\nصالح لمدة 10 دقائق.\nشكراً لثقتكم!";
+        $waRes = $this->whatsAppGateway->sendTransactionalWithFallback($restaurant, $cleanPhone, $msg);
+        $otpSentViaWhatsapp = ! empty($waRes['success']);
+
+        if (! $otpSentViaWhatsapp) {
+            if (($waRes['error_code'] ?? null) === 'not_on_whatsapp') {
+                $reservation->delete();
+
+                return response()->json([
+                    'success' => false,
+                    'error_code' => 'not_on_whatsapp',
+                    'message' => 'الرقم المدخل غير مسجل في تطبيق واتساب. يرجى التحقق من الرقم مع رمز الدولة وإعادة المحاولة.',
+                ], 422);
+            }
+
+            $this->recordUnlinkedWhatsappAlertIfNeeded($restaurant, $maskedPhone);
+
+            // Never freeze the table or mislead the guest in production if OTP delivery failed
+            if (! app()->environment(['local', 'testing'])) {
+                $reservation->delete();
+
+                return response()->json([
+                    'success' => false,
+                    'whatsapp_unavailable' => true,
+                    'reason_unlinked' => ! $restaurant->isWhatsappConnected(),
+                    'error_code' => $waRes['error_code'] ?? 'whatsapp_unavailable',
+                    'restaurant_phone' => $restaurant->phone,
+                    'message' => 'تعذر إرسال رمز التحقق عبر واتساب حالياً لأن خدمة الواتساب غير متصلة. يرجى المحاولة بعد قليل أو التواصل مع إدارة المطعم مباشرة.',
+                ], 503);
+            }
+        }
 
         return response()->json([
             'success' => true,
-            'message' => 'تم حجز الطاولة مؤقتاً. يرجى إدخال رمز التحقق لتأكيد الحجز.',
+            'message' => $otpSentViaWhatsapp
+                ? 'تم حجز الطاولة مؤقتاً وإرسال رمز التحقق عبر واتساب.'
+                : 'تم حجز الطاولة مؤقتاً.',
             'uuid' => $reservation->uuid,
             'expires_in_seconds' => 600,
+            'resend_after_seconds' => 25,
             'phone_masked' => $maskedPhone,
             'sent_via_whatsapp' => $otpSentViaWhatsapp,
-            // For local / development testing convenience
+            'delivery_channel' => $waRes['channel'] ?? null,
+            // For local development testing convenience only
             'dev_otp' => app()->environment('local') ? $reservation->otp_code : null,
+        ]);
+    }
+
+    /**
+     * Resend verification OTP for an active pending reservation hold.
+     */
+    public function resendOtp(string $slug, Request $request): JsonResponse
+    {
+        $restaurant = Restaurant::where('slug', $slug)
+            ->where('status', 'active')
+            ->firstOrFail();
+
+        $validated = $request->validate([
+            'uuid' => ['required', 'string', 'uuid'],
+        ]);
+
+        $reservation = TableReservation::where('uuid', $validated['uuid'])
+            ->where('restaurant_id', $restaurant->id)
+            ->firstOrFail();
+
+        if ($reservation->status === 'confirmed') {
+            return response()->json([
+                'success' => false,
+                'message' => 'الحجز مؤكد مسبقاً ولا يحتاج إلى إعادة إرسال.',
+            ], 422);
+        }
+
+        if ($reservation->status !== 'pending_verification' || $reservation->isExpired()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'انتهت صلاحية هذا الحجز المؤقت. يرجى تقديم طلب حجز جديد.',
+            ], 422);
+        }
+
+        $cooldownKey = "vip_otp_resend_{$reservation->uuid}";
+        if (! Cache::add($cooldownKey, true, now()->addSeconds(25))) {
+            return response()->json([
+                'success' => false,
+                'message' => 'يرجى الانتظار 25 ثانية قبل طلب إعادة إرسال الرمز.',
+            ], 429);
+        }
+
+        $newOtp = (string) random_int(1000, 9999);
+        $msg = "👑 أهلاً بحضرتك {$reservation->guest_name}! كود التحقق الجديد لحجز طاولة VIP في *{$restaurant->name}* هو: *{$newOtp}*\nصالح لمدة 10 دقائق.";
+        $waRes = $this->whatsAppGateway->sendTransactionalWithFallback($restaurant, $reservation->guest_phone, $msg);
+        $otpSentViaWhatsapp = ! empty($waRes['success']);
+
+        if (! $otpSentViaWhatsapp && ! app()->environment(['local', 'testing'])) {
+            Cache::forget($cooldownKey);
+
+            $status = ($waRes['error_code'] ?? null) === 'not_on_whatsapp' ? 422 : 503;
+            if ($status === 503) {
+                $masked = strlen($reservation->guest_phone) >= 7
+                    ? substr($reservation->guest_phone, 0, 4) . '****' . substr($reservation->guest_phone, -3)
+                    : $reservation->guest_phone;
+                $this->recordUnlinkedWhatsappAlertIfNeeded($restaurant, $masked);
+            }
+
+            return response()->json([
+                'success' => false,
+                'whatsapp_unavailable' => $status === 503,
+                'reason_unlinked' => $status === 503 && ! $restaurant->isWhatsappConnected(),
+                'error_code' => $waRes['error_code'] ?? 'whatsapp_unavailable',
+                'restaurant_phone' => $restaurant->phone,
+                'message' => $status === 422
+                    ? 'الرقم المدخل غير مسجل في تطبيق واتساب.'
+                    : 'تعذر إعادة إرسال رمز التحقق عبر واتساب حالياً. يرجى المحاولة بعد قليل.',
+            ], $status);
+        }
+
+        $reservation->update([
+            'otp_code' => $newOtp,
+            'otp_expires_at' => now()->addMinutes(10),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => $otpSentViaWhatsapp
+                ? 'تم إعادة إرسال رمز التحقق بنجاح عبر واتساب.'
+                : 'تم تجديد رمز التحقق.',
+            'expires_in_seconds' => 600,
+            'resend_after_seconds' => 25,
+            'sent_via_whatsapp' => $otpSentViaWhatsapp,
+            'delivery_channel' => $waRes['channel'] ?? null,
+            'dev_otp' => app()->environment('local') ? $newOtp : null,
         ]);
     }
 
@@ -256,6 +393,13 @@ class TableBookingController extends Controller
         $restaurant = Restaurant::where('slug', $slug)
             ->where('status', 'active')
             ->firstOrFail();
+
+        // Normalize Eastern Arabic numerals in OTP before validation
+        if ($request->has('otp_code')) {
+            $request->merge([
+                'otp_code' => trim(PhoneNormalizer::toAsciiDigits((string) $request->input('otp_code'))),
+            ]);
+        }
 
         $validated = $request->validate([
             'uuid' => ['required', 'string', 'uuid'],
@@ -294,11 +438,9 @@ class TableBookingController extends Controller
             'otp_verified_at' => now(),
         ]);
 
-        // Send confirmation WhatsApp message
-        if ($restaurant->isWhatsappConnected()) {
-            $msg = "✨ أهلاً بحضرتك {$reservation->guest_name} 👑\nتم تأكيد حجز طاولة VIP بنجاح في *{$restaurant->name}*!\n\n📅 التاريخ: {$reservation->reservation_date->format('Y-m-d')}\n⏰ التوقيت: {$reservation->time_slot}\n🍽️ الطاولة: {$reservation->table->name} ({$reservation->table->zone})\n👥 عدد الضيوف: {$reservation->guests_count}\n🎫 رمز الحجز: *{$reservation->getFormattedCode()}*\n\nنتطلع لاستقبال حضرتك وتقديم تجربة استثنائية تليق بكم!";
-            $this->whatsAppGateway->sendMessage($restaurant, $reservation->guest_phone, $msg);
-        }
+        // Send confirmation WhatsApp message (with automatic platform fallback)
+        $msg = "✨ أهلاً بحضرتك {$reservation->guest_name} 👑\nتم تأكيد حجز طاولة VIP بنجاح في *{$restaurant->name}*!\n\n📅 التاريخ: {$reservation->reservation_date->format('Y-m-d')}\n⏰ التوقيت: {$reservation->time_slot}\n🍽️ الطاولة: {$reservation->table->name} ({$reservation->table->zone})\n👥 عدد الضيوف: {$reservation->guests_count}\n🎫 رمز الحجز: *{$reservation->getFormattedCode()}*\n\nنتطلع لاستقبال حضرتك وتقديم تجربة استثنائية تليق بكم!";
+        $this->whatsAppGateway->sendTransactionalWithFallback($restaurant, $reservation->guest_phone, $msg);
 
         \App\Services\ActivityLogger::log('vip_reservation_confirmed', "تم تأكيد حجز VIP جديد: {$reservation->getFormattedCode()} للطاولة {$reservation->table->name}");
 
@@ -358,5 +500,34 @@ class TableBookingController extends Controller
                 'created_at' => $reservation->created_at->toIso8601String(),
             ],
         ]);
+    }
+
+    /**
+     * Alert the restaurant manager whenever a VIP OTP fails because the restaurant is not linked to WhatsApp.
+     */
+    private function recordUnlinkedWhatsappAlertIfNeeded(Restaurant $restaurant, string $maskedPhone): void
+    {
+        if ($restaurant->isWhatsappConnected()) {
+            return;
+        }
+
+        $alertMessage = "تعذر إرسال رمز التحقق (OTP) لأحد الزبائن ({$maskedPhone}) عند محاولة حجز طاولة VIP لأن مطعم «{$restaurant->name}» غير مربوط برقم واتساب. يجب ربط المطعم برقم واتساب أولاً.";
+
+        Cache::put("restaurant_whatsapp_otp_alert_{$restaurant->id}", [
+            'message' => $alertMessage,
+            'phone_masked' => $maskedPhone,
+            'at' => now()->toIso8601String(),
+        ], now()->addHours(24));
+
+        try {
+            ActivityLog::create([
+                'restaurant_id' => $restaurant->id,
+                'user_id' => null,
+                'action' => 'vip_otp_whatsapp_unlinked',
+                'description' => mb_substr($alertMessage, 0, 240),
+            ]);
+        } catch (\Throwable $e) {
+            // Do not interrupt booking error response if activity log insert fails
+        }
     }
 }

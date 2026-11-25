@@ -12,20 +12,74 @@ import makeWASocket, {
     fetchLatestBaileysVersion,
 } from '@whiskeysockets/baileys';
 
-dotenv.config();
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Load whatsapp-gateway/.env first, then backfill missing values from parent Laravel .env
+dotenv.config({ path: path.join(__dirname, '.env') });
+dotenv.config({ path: path.resolve(__dirname, '../.env'), override: false });
+
 const PORT = parseInt(process.env.PORT || '8082', 10);
 const HOST = process.env.HOST || '127.0.0.1';
-const GATEWAY_SECRET = process.env.GATEWAY_SECRET || 'tedallal_wa_gateway_2026_secure_key';
-const LARAVEL_WEBHOOK_URL = process.env.LARAVEL_WEBHOOK_URL || 'http://127.0.0.1:8000/api/whatsapp/webhook';
+const GATEWAY_SECRET =
+    process.env.GATEWAY_SECRET ||
+    process.env.WHATSAPP_GATEWAY_SECRET ||
+    'tedallal_wa_gateway_2026_secure_key';
+
+function resolveWebhookUrl() {
+    if (process.env.LARAVEL_WEBHOOK_URL) {
+        return process.env.LARAVEL_WEBHOOK_URL;
+    }
+    const appUrl = (process.env.APP_URL || '').trim().replace(/\/+$/, '');
+    if (appUrl && /^https?:\/\//i.test(appUrl) && !appUrl.includes('localhost')) {
+        return `${appUrl}/api/whatsapp/webhook`;
+    }
+    return 'http://127.0.0.1:8000/api/whatsapp/webhook';
+}
+
+const LARAVEL_WEBHOOK_URL = resolveWebhookUrl();
 
 const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
 const baileysLogger = pino({ level: 'silent' });
 
 const sessions = new Map();
+const startingPromises = new Map();
+
+/**
+ * Convert Arabic-Indic and Eastern Arabic-Indic digits to ASCII and normalize for WhatsApp JID.
+ */
+function normalizeWhatsAppDigits(rawPhone) {
+    const map = {
+        '٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4',
+        '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9',
+        '۰': '0', '۱': '1', '۲': '2', '۳': '3', '۴': '4',
+        '۵': '5', '۶': '6', '۷': '7', '۸': '8', '۹': '9',
+    };
+
+    const ascii = String(rawPhone || '').replace(/[٠-٩۰-۹]/g, (ch) => map[ch] || ch);
+    let digits = ascii.replace(/[^0-9]/g, '');
+    if (!digits) return '';
+
+    while (digits.startsWith('00')) {
+        digits = digits.substring(2);
+    }
+
+    for (const cc of ['963', '966', '971', '962', '964', '965', '974', '973', '968', '961', '20']) {
+        if (digits.startsWith(`${cc}0`) && digits.length >= cc.length + 8) {
+            digits = cc + digits.substring(cc.length + 1);
+            break;
+        }
+    }
+
+    if (digits.startsWith('09') && digits.length === 10) {
+        return '963' + digits.substring(1);
+    }
+    if (digits.startsWith('9') && digits.length === 9) {
+        return '963' + digits;
+    }
+
+    return digits;
+}
 
 /**
  * Normalize session identifier: either 'platform' (for Super Admin / Platform Owner) or numeric restaurant ID
@@ -40,10 +94,19 @@ function normalizeSessionId(id) {
     return isNaN(num) ? str : num;
 }
 
-function getSessionDir(sessionId) {
+function getSessionDirPath(sessionId) {
     const sId = normalizeSessionId(sessionId);
     const folderName = (sId === 'platform') ? 'platform' : `restaurant_${sId}`;
-    const dir = path.join(__dirname, 'storage', 'sessions', folderName);
+    return path.join(__dirname, 'storage', 'sessions', folderName);
+}
+
+function hasStoredCreds(sessionId) {
+    const dir = getSessionDirPath(sessionId);
+    return fs.existsSync(path.join(dir, 'creds.json'));
+}
+
+function getOrCreateSessionDir(sessionId) {
+    const dir = getSessionDirPath(sessionId);
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
     }
@@ -51,15 +114,33 @@ function getSessionDir(sessionId) {
 }
 
 function cleanSessionDir(sessionId) {
-    const sId = normalizeSessionId(sessionId);
-    const folderName = (sId === 'platform') ? 'platform' : `restaurant_${sId}`;
-    const dir = path.join(__dirname, 'storage', 'sessions', folderName);
+    const dir = getSessionDirPath(sessionId);
     if (fs.existsSync(dir)) {
         try {
             fs.rmSync(dir, { recursive: true, force: true });
         } catch (err) {
-            logger.error({ err, sessionId: sId }, 'Failed to remove session directory');
+            logger.error({ err, sessionId }, 'Failed to remove session directory');
         }
+    }
+}
+
+function teardownExistingSocket(sessionData) {
+    if (!sessionData) return;
+    if (sessionData.keepAliveTimer) {
+        clearInterval(sessionData.keepAliveTimer);
+        sessionData.keepAliveTimer = null;
+    }
+    if (sessionData.reconnectTimer) {
+        clearTimeout(sessionData.reconnectTimer);
+        sessionData.reconnectTimer = null;
+    }
+    if (sessionData.sock) {
+        try {
+            sessionData.sock.ev.removeAllListeners();
+            sessionData.sock.ws?.close?.();
+            sessionData.sock.end?.(undefined);
+        } catch (_) {}
+        sessionData.sock = null;
     }
 }
 
@@ -75,16 +156,16 @@ async function notifyLaravel(payload) {
             body: JSON.stringify(payload),
         });
         if (!res.ok) {
-            logger.warn({ status: res.status, payload }, 'Laravel webhook returned non-200');
+            logger.warn({ status: res.status, url: LARAVEL_WEBHOOK_URL, event: payload?.event }, 'Laravel webhook returned non-200');
         }
         return await res.json().catch(() => null);
     } catch (err) {
-        logger.warn({ err: err.message, event: payload?.event }, 'Failed to notify Laravel webhook');
+        logger.warn({ err: err.message, url: LARAVEL_WEBHOOK_URL, event: payload?.event }, 'Failed to notify Laravel webhook');
         return null;
     }
 }
 
-async function startSession(sessionId) {
+async function startSession(sessionId, options = {}) {
     const sId = normalizeSessionId(sessionId);
     const existing = sessions.get(sId);
 
@@ -92,202 +173,252 @@ async function startSession(sessionId) {
         return existing;
     }
 
-    const sessionDir = getSessionDir(sId);
-    const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
-    const { version } = await fetchLatestBaileysVersion().catch(() => ({ version: [2, 3000, 1015901307] }));
+    if (startingPromises.has(sId)) {
+        return startingPromises.get(sId);
+    }
 
-    const sessionData = {
-        id: sId,
-        sock: null,
-        status: 'connecting',
-        qr: null,
-        phone: null,
-        connectedAt: null,
-        reconnectAttempts: 0,
-        keepAliveTimer: null,
-    };
-    sessions.set(sId, sessionData);
+    const startPromise = (async () => {
+        const prevReconnectAttempts = options.preserveAttempts ? (existing?.reconnectAttempts || 0) : 0;
+        teardownExistingSocket(existing);
 
-    const isPlatform = (sId === 'platform');
-    const browserTitle = isPlatform ? 'Tedallal Executive' : 'Tedallal Restaurant';
+        const sessionDir = getOrCreateSessionDir(sId);
+        const { state, saveCreds } = await useMultiFileAuthState(sessionDir);
+        const { version } = await fetchLatestBaileysVersion().catch(() => ({ version: [2, 3000, 1043857760] }));
 
-    const sock = makeWASocket({
-        version,
-        auth: state,
-        logger: baileysLogger,
-        printQRInTerminal: false,
-        browser: [browserTitle, 'Chrome', '124.0.0'],
-        syncFullHistory: false,
-        markOnlineOnConnect: true,
-        connectTimeoutMs: 60000,
-        keepAliveIntervalMs: 25000,
-    });
-
-    sessionData.sock = sock;
-
-    sock.ev.on('creds.update', saveCreds);
-
-    sock.ev.on('connection.update', async (update) => {
-        const { connection, lastDisconnect, qr } = update;
-
-        if (qr) {
-            try {
-                const qrDataUrl = await qrcode.toDataURL(qr, { margin: 2, scale: 7 });
-                sessionData.qr = qrDataUrl;
-                sessionData.status = 'scan_qr';
-                logger.info({ sessionId: sId }, `New QR generated for ${isPlatform ? 'Platform Owner' : 'restaurant'}`);
-            } catch (qrErr) {
-                logger.error({ err: qrErr, sessionId: sId }, 'Failed to generate QR data URL');
-            }
+        const sessionData = {
+            id: sId,
+            sock: null,
+            status: 'connecting',
+            qr: null,
+            phone: null,
+            connectedAt: null,
+            reconnectAttempts: prevReconnectAttempts,
+            keepAliveTimer: null,
+            reconnectTimer: null,
+            superseded: false,
+        };
+        if (existing) {
+            existing.superseded = true;
         }
+        sessions.set(sId, sessionData);
 
-        if (connection === 'open') {
-            sessionData.status = 'connected';
-            sessionData.qr = null;
-            sessionData.connectedAt = new Date().toISOString();
-            sessionData.reconnectAttempts = 0;
+        const isPlatform = (sId === 'platform');
+        const browserTitle = isPlatform ? 'Tedallal Executive' : 'Tedallal Restaurant';
 
-            const userJid = sock.user?.id || '';
-            const phone = userJid.split(':')[0].split('@')[0];
-            sessionData.phone = phone;
+        const sock = makeWASocket({
+            version,
+            auth: state,
+            logger: baileysLogger,
+            printQRInTerminal: false,
+            browser: [browserTitle, 'Chrome', '130.0.0'],
+            syncFullHistory: false,
+            markOnlineOnConnect: true,
+            connectTimeoutMs: 60000,
+            keepAliveIntervalMs: 25000,
+        });
 
-            logger.info({ sessionId: sId, phone }, `${isPlatform ? 'Platform Owner' : 'Restaurant'} WhatsApp session connected successfully`);
+        sessionData.sock = sock;
 
-            // Start periodic keep-alive heartbeat every 10 minutes to prevent idle logout
-            if (sessionData.keepAliveTimer) {
-                clearInterval(sessionData.keepAliveTimer);
-            }
-            sessionData.keepAliveTimer = setInterval(async () => {
-                if (sessionData.status === 'connected' && sessionData.sock) {
-                    try {
-                        await sessionData.sock.sendPresenceUpdate('available');
-                        logger.debug({ sessionId: sId }, 'Dispatched keep-alive presence heartbeat');
-                    } catch (e) {
-                        logger.debug({ sessionId: sId }, 'Heartbeat presence ping warning');
-                    }
+        sock.ev.on('creds.update', saveCreds);
+
+        sock.ev.on('connection.update', async (update) => {
+            if (sessionData.superseded) return;
+            const { connection, lastDisconnect, qr } = update;
+
+            if (qr) {
+                try {
+                    const qrDataUrl = await qrcode.toDataURL(qr, { margin: 2, scale: 7 });
+                    sessionData.qr = qrDataUrl;
+                    sessionData.status = 'scan_qr';
+                    sessionData.reconnectAttempts = 0;
+                    logger.info({ sessionId: sId }, `New QR generated for ${isPlatform ? 'Platform Owner' : 'restaurant'}`);
+                } catch (qrErr) {
+                    logger.error({ err: qrErr, sessionId: sId }, 'Failed to generate QR data URL');
                 }
-            }, 10 * 60 * 1000);
-
-            await notifyLaravel({
-                event: 'session.connected',
-                session_id: isPlatform ? 'platform' : String(sId),
-                restaurant_id: isPlatform ? null : sId,
-                phone,
-                connected_at: sessionData.connectedAt,
-            });
-        }
-
-        if (connection === 'close') {
-            const statusCode = lastDisconnect?.error?.output?.statusCode;
-            const isLoggedOut = statusCode === DisconnectReason.loggedOut;
-
-            logger.warn({ sessionId: sId, statusCode, isLoggedOut }, 'Connection closed');
-
-            if (sessionData.keepAliveTimer) {
-                clearInterval(sessionData.keepAliveTimer);
-                sessionData.keepAliveTimer = null;
             }
 
-            if (isLoggedOut) {
-                sessionData.status = 'disconnected';
+            if (connection === 'open') {
+                sessionData.status = 'connected';
                 sessionData.qr = null;
-                sessionData.phone = null;
-                sessionData.sock = null;
-                cleanSessionDir(sId);
+                sessionData.connectedAt = new Date().toISOString();
+                sessionData.reconnectAttempts = 0;
+
+                const userJid = sock.user?.id || '';
+                const phone = userJid.split(':')[0].split('@')[0];
+                sessionData.phone = phone;
+
+                logger.info({ sessionId: sId, phone }, `${isPlatform ? 'Platform Owner' : 'Restaurant'} WhatsApp session connected successfully`);
+
+                if (sessionData.keepAliveTimer) {
+                    clearInterval(sessionData.keepAliveTimer);
+                }
+                sessionData.keepAliveTimer = setInterval(async () => {
+                    if (sessionData.status === 'connected' && sessionData.sock && !sessionData.superseded) {
+                        try {
+                            await sessionData.sock.sendPresenceUpdate('available');
+                            logger.debug({ sessionId: sId }, 'Dispatched keep-alive presence heartbeat');
+                        } catch (_) {
+                            logger.debug({ sessionId: sId }, 'Heartbeat presence ping warning');
+                        }
+                    }
+                }, 10 * 60 * 1000);
 
                 await notifyLaravel({
-                    event: 'session.disconnected',
+                    event: 'session.connected',
                     session_id: isPlatform ? 'platform' : String(sId),
                     restaurant_id: isPlatform ? null : sId,
+                    phone,
+                    connected_at: sessionData.connectedAt,
                 });
-            } else {
-                sessionData.status = 'connecting';
-                sessionData.reconnectAttempts = (sessionData.reconnectAttempts || 0) + 1;
-                const delayMs = Math.min(1000 * Math.pow(2, sessionData.reconnectAttempts), 30000);
+            }
 
-                setTimeout(() => {
-                    startSession(sId).catch((reconnectErr) => {
+            if (connection === 'close') {
+                const statusCode = lastDisconnect?.error?.output?.statusCode;
+                const isLoggedOut =
+                    statusCode === DisconnectReason.loggedOut ||
+                    statusCode === DisconnectReason.badSession ||
+                    statusCode === 401 ||
+                    statusCode === 403;
+                const isConflict = statusCode === DisconnectReason.connectionReplaced || statusCode === 440;
+
+                logger.warn({ sessionId: sId, statusCode, isLoggedOut, isConflict }, 'Connection closed');
+
+                if (sessionData.keepAliveTimer) {
+                    clearInterval(sessionData.keepAliveTimer);
+                    sessionData.keepAliveTimer = null;
+                }
+
+                if (isLoggedOut) {
+                    sessionData.status = 'disconnected';
+                    sessionData.qr = null;
+                    sessionData.phone = null;
+                    sessionData.sock = null;
+                    cleanSessionDir(sId);
+
+                    await notifyLaravel({
+                        event: 'session.disconnected',
+                        session_id: isPlatform ? 'platform' : String(sId),
+                        restaurant_id: isPlatform ? null : sId,
+                    });
+                    return;
+                }
+
+                if (isConflict) {
+                    // Wait longer before retrying if another device/socket replaced the stream
+                    sessionData.status = 'disconnected';
+                    sessionData.sock = null;
+                    await notifyLaravel({
+                        event: 'session.disconnected',
+                        session_id: isPlatform ? 'platform' : String(sId),
+                        restaurant_id: isPlatform ? null : sId,
+                    });
+                    return;
+                }
+
+                sessionData.reconnectAttempts = (sessionData.reconnectAttempts || 0) + 1;
+                if (sessionData.reconnectAttempts > 12) {
+                    sessionData.status = 'disconnected';
+                    sessionData.sock = null;
+                    logger.error({ sessionId: sId, attempts: sessionData.reconnectAttempts }, 'Max reconnect attempts reached; marking session disconnected');
+                    await notifyLaravel({
+                        event: 'session.disconnected',
+                        session_id: isPlatform ? 'platform' : String(sId),
+                        restaurant_id: isPlatform ? null : sId,
+                    });
+                    return;
+                }
+
+                sessionData.status = 'connecting';
+                const delayMs = Math.min(1500 * Math.pow(2, sessionData.reconnectAttempts - 1), 30000);
+
+                sessionData.reconnectTimer = setTimeout(() => {
+                    if (sessionData.superseded) return;
+                    startSession(sId, { preserveAttempts: true }).catch((reconnectErr) => {
                         logger.error({ err: reconnectErr, sessionId: sId }, 'Auto-reconnect failed');
                     });
                 }, delayMs);
             }
-        }
-    });
+        });
 
-    // Inbound messages handler (Auto-responder, AI Business Consultant & Webhook)
-    sock.ev.on('messages.upsert', async (m) => {
-        if (m.type !== 'notify') return;
+        // Inbound messages handler (Auto-responder, AI Business Consultant & Webhook)
+        sock.ev.on('messages.upsert', async (m) => {
+            if (m.type !== 'notify' || sessionData.superseded) return;
 
-        for (const msg of m.messages) {
-            if (!msg.message) continue;
+            for (const msg of m.messages) {
+                if (!msg.message) continue;
 
-            const senderJid = msg.key.remoteJid;
-            if (!senderJid || senderJid.endsWith('@g.us') || senderJid === 'status@broadcast') continue;
+                const senderJid = msg.key.remoteJid;
+                if (!senderJid || senderJid.endsWith('@g.us') || senderJid === 'status@broadcast') continue;
 
-            const text = msg.message.conversation ||
-                msg.message.extendedTextMessage?.text ||
-                '';
+                const text = msg.message.conversation ||
+                    msg.message.extendedTextMessage?.text ||
+                    '';
 
-            if (!text.trim()) continue;
+                if (!text.trim()) continue;
 
-            const cleanPhone = senderJid.split('@')[0];
+                const cleanPhone = senderJid.split('@')[0];
 
-            // If message was sent by the Platform Owner from their own phone (Human Agent Takeover)
-            if (msg.key.fromMe) {
-                if (isPlatform) {
-                    const trimmedText = text.trim();
-                    const isResumeCommand = /^(#تفعيل|#ذكاء|#تشغيل|\/resume|\/ai)$/i.test(trimmedText);
+                // Platform Owner Human Agent Takeover
+                if (msg.key.fromMe) {
+                    if (isPlatform) {
+                        const trimmedText = text.trim();
+                        const isResumeCommand = /^(#تفعيل|#ذكاء|#تشغيل|\/resume|\/ai)$/i.test(trimmedText);
 
-                    logger.info({ sessionId: sId, to: cleanPhone, isResumeCommand, text: trimmedText.substring(0, 35) }, 'Platform Owner sent message from device (Human Takeover Event)');
+                        logger.info({ sessionId: sId, to: cleanPhone, isResumeCommand, text: trimmedText.substring(0, 35) }, 'Platform Owner sent message from device (Human Takeover Event)');
 
-                    notifyLaravel({
-                        event: isResumeCommand ? 'platform_message.owner_resumed_ai' : 'platform_message.sent_by_owner',
-                        session_id: 'platform',
-                        to: cleanPhone,
-                        text: trimmedText,
-                        timestamp: msg.messageTimestamp,
-                    }).catch(() => {});
+                        notifyLaravel({
+                            event: isResumeCommand ? 'platform_message.owner_resumed_ai' : 'platform_message.sent_by_owner',
+                            session_id: 'platform',
+                            to: cleanPhone,
+                            text: trimmedText,
+                            timestamp: msg.messageTimestamp,
+                        }).catch(() => {});
+                    }
+                    continue;
                 }
-                continue;
-            }
 
-            const senderName = msg.pushName || msg.verifiedBizName || null;
-            logger.info({ sessionId: sId, from: cleanPhone, senderName, text: text.substring(0, 40) }, `Inbound message to ${isPlatform ? 'Platform Owner' : 'restaurant'}`);
+                const senderName = msg.pushName || msg.verifiedBizName || null;
+                logger.info({ sessionId: sId, from: cleanPhone, senderName, text: text.substring(0, 40) }, `Inbound message to ${isPlatform ? 'Platform Owner' : 'restaurant'}`);
 
-            // Forward to Laravel webhook
-            const hookRes = await notifyLaravel({
-                event: isPlatform ? 'platform_message.received' : 'message.received',
-                session_id: isPlatform ? 'platform' : String(sId),
-                restaurant_id: isPlatform ? null : sId,
-                from: cleanPhone,
-                sender_name: senderName,
-                text,
-                timestamp: msg.messageTimestamp,
-            });
+                const hookRes = await notifyLaravel({
+                    event: isPlatform ? 'platform_message.received' : 'message.received',
+                    session_id: isPlatform ? 'platform' : String(sId),
+                    restaurant_id: isPlatform ? null : sId,
+                    from: cleanPhone,
+                    sender_name: senderName,
+                    text,
+                    timestamp: msg.messageTimestamp,
+                });
 
-            // If Laravel returned an auto-reply (e.g. from AI Consultant or Restaurant Auto-reply)
-            if (hookRes && hookRes.auto_reply_text) {
-                try {
-                    await sock.presenceSubscribe(senderJid);
-                    await sock.sendPresenceUpdate('composing', senderJid);
-                    // Realistic typing delay (1.5s - 2.5s)
-                    const typingDelay = Math.floor(Math.random() * 1000) + 1500;
-                    await new Promise((r) => setTimeout(r, typingDelay));
-                    await sock.sendPresenceUpdate('paused', senderJid);
+                if (hookRes && hookRes.auto_reply_text) {
+                    try {
+                        await sock.presenceSubscribe(senderJid);
+                        await sock.sendPresenceUpdate('composing', senderJid);
+                        const typingDelay = Math.floor(Math.random() * 1000) + 1500;
+                        await new Promise((r) => setTimeout(r, typingDelay));
+                        await sock.sendPresenceUpdate('paused', senderJid);
 
-                    await sock.sendMessage(senderJid, { text: hookRes.auto_reply_text });
-                    logger.info({ sessionId: sId, to: cleanPhone }, 'Auto-reply dispatched successfully');
-                } catch (replyErr) {
-                    logger.warn({ err: replyErr.message, sessionId: sId }, 'Failed to dispatch auto-reply');
+                        await sock.sendMessage(senderJid, { text: hookRes.auto_reply_text });
+                        logger.info({ sessionId: sId, to: cleanPhone }, 'Auto-reply dispatched successfully');
+                    } catch (replyErr) {
+                        logger.warn({ err: replyErr.message, sessionId: sId }, 'Failed to dispatch auto-reply');
+                    }
                 }
             }
-        }
-    });
+        });
 
-    return sessionData;
+        return sessionData;
+    })();
+
+    startingPromises.set(sId, startPromise);
+    try {
+        return await startPromise;
+    } finally {
+        startingPromises.delete(sId);
+    }
 }
 
-// Automatically resume existing sessions found on disk upon service startup
+// Automatically resume existing paired sessions found on disk upon service startup
 async function resumePersistedSessions() {
     const baseDir = path.join(__dirname, 'storage', 'sessions');
     if (!fs.existsSync(baseDir)) return;
@@ -296,14 +427,14 @@ async function resumePersistedSessions() {
     for (const entry of entries) {
         if (!entry.isDirectory()) continue;
 
-        if (entry.name === 'platform') {
+        if (entry.name === 'platform' && hasStoredCreds('platform')) {
             logger.info('Found saved Platform Owner WhatsApp session, resuming...');
             startSession('platform').catch((err) => {
                 logger.warn({ err: err.message }, 'Failed to resume Platform session');
             });
         } else if (entry.name.startsWith('restaurant_')) {
             const rId = parseInt(entry.name.replace('restaurant_', ''), 10);
-            if (!isNaN(rId)) {
+            if (!isNaN(rId) && hasStoredCreds(rId)) {
                 logger.info({ restaurantId: rId }, 'Found saved restaurant session, resuming...');
                 startSession(rId).catch((err) => {
                     logger.warn({ err: err.message, restaurantId: rId }, 'Failed to resume saved session');
@@ -311,6 +442,17 @@ async function resumePersistedSessions() {
             }
         }
     }
+}
+
+async function waitForConnectedSession(sId, maxWaitMs = 4500) {
+    const start = Date.now();
+    while (Date.now() - start < maxWaitMs) {
+        const s = sessions.get(sId);
+        if (s?.sock && s.status === 'connected') return s;
+        if (!s || s.status === 'disconnected' || s.status === 'scan_qr') return s;
+        await new Promise((r) => setTimeout(r, 250));
+    }
+    return sessions.get(sId);
 }
 
 // ---------------- Express App Setup ---------------- //
@@ -332,11 +474,21 @@ app.use((req, res, next) => {
 
 // Health check endpoint
 app.get('/health', (req, res) => {
+    const sessionSummaries = [];
+    for (const [id, s] of sessions.entries()) {
+        sessionSummaries.push({
+            id: String(id),
+            status: s.status,
+            connected_at: s.connectedAt,
+        });
+    }
     res.json({
         success: true,
         service: 'tedallal-whatsapp-gateway',
         status: 'UP',
         active_sessions: sessions.size,
+        connected_sessions: sessionSummaries.filter((s) => s.status === 'connected').length,
+        sessions: sessionSummaries,
         uptime_seconds: Math.floor(process.uptime()),
     });
 });
@@ -346,12 +498,9 @@ app.get('/api/session/:id/status', async (req, res) => {
     const sId = normalizeSessionId(req.params.id);
     let session = sessions.get(sId);
 
-    // If session directory exists on disk but not in memory, start it
-    if (!session) {
-        const sessionDir = getSessionDir(sId);
-        if (fs.existsSync(sessionDir)) {
-            session = await startSession(sId);
-        }
+    // Only auto-start if paired credentials (creds.json) actually exist on disk
+    if (!session && hasStoredCreds(sId)) {
+        session = await startSession(sId);
     }
 
     if (!session) {
@@ -400,6 +549,13 @@ app.post('/api/session/:id/logout', async (req, res) => {
         clearInterval(session.keepAliveTimer);
         session.keepAliveTimer = null;
     }
+    if (session?.reconnectTimer) {
+        clearTimeout(session.reconnectTimer);
+        session.reconnectTimer = null;
+    }
+    if (session) {
+        session.superseded = true;
+    }
 
     if (session?.sock) {
         try {
@@ -430,39 +586,71 @@ app.post('/api/messages/send', async (req, res) => {
     const { restaurant_id, session_id, phone, text, simulate_typing } = req.body;
 
     const sId = normalizeSessionId(session_id || restaurant_id);
-    const session = sessions.get(sId);
+    let session = sessions.get(sId);
+
+    // If creds exist on disk but not in memory yet, resume automatically
+    if (!session && hasStoredCreds(sId)) {
+        session = await startSession(sId);
+    }
+
+    // If reconnecting right after restart, wait up to 4.5s for socket open
+    if (session && session.status === 'connecting') {
+        session = await waitForConnectedSession(sId, 4500);
+    }
 
     if (!session?.sock || session.status !== 'connected') {
         return res.status(400).json({
             success: false,
+            error_code: 'session_not_connected',
             message: `WhatsApp session (${sId}) is not connected`,
         });
     }
 
-    // Normalize phone digits
-    let digits = String(phone).replace(/[^0-9]/g, '');
-    if (digits.startsWith('09')) {
-        digits = '963' + digits.substring(1);
-    } else if (digits.startsWith('963')) {
-        // already syrian international
-    } else if (!digits.startsWith('963') && digits.length === 9 && digits.startsWith('9')) {
-        digits = '963' + digits;
+    const digits = normalizeWhatsAppDigits(phone);
+    if (digits.length < 8 || digits.length > 15) {
+        return res.status(422).json({
+            success: false,
+            error_code: 'invalid_phone',
+            message: 'رقم الهاتف المدخل غير صالح للإرسال عبر واتساب',
+        });
     }
 
-    const jid = `${digits}@s.whatsapp.net`;
+    // Verify registration on WhatsApp & resolve canonical JID (supports modern Multi-Device/LID accounts)
+    let targetJid = `${digits}@s.whatsapp.net`;
+    try {
+        const lookupPromise = session.sock.onWhatsApp(digits);
+        const timeoutPromise = new Promise((_, rej) => setTimeout(() => rej(new Error('onWhatsApp timeout')), 5000));
+        const waResults = await Promise.race([lookupPromise, timeoutPromise]);
+
+        if (Array.isArray(waResults) && waResults.length > 0) {
+            if (waResults[0].exists === false) {
+                logger.warn({ sessionId: sId, digits }, 'Recipient number is not registered on WhatsApp');
+                return res.status(422).json({
+                    success: false,
+                    error_code: 'not_on_whatsapp',
+                    message: 'رقم الهاتف المدخل غير مسجل على واتساب',
+                });
+            }
+            if (waResults[0].jid) {
+                targetJid = waResults[0].jid;
+            }
+        }
+    } catch (lookupErr) {
+        logger.debug({ err: lookupErr.message, sessionId: sId, digits }, 'onWhatsApp pre-check skipped, using default JID');
+    }
 
     try {
         if (simulate_typing !== false) {
-            await session.sock.presenceSubscribe(jid).catch(() => {});
-            await session.sock.sendPresenceUpdate('composing', jid).catch(() => {});
+            await session.sock.presenceSubscribe(targetJid).catch(() => {});
+            await session.sock.sendPresenceUpdate('composing', targetJid).catch(() => {});
             const typingDelay = Math.floor(Math.random() * 1200) + 1200; // 1.2s - 2.4s
             await new Promise((r) => setTimeout(r, typingDelay));
-            await session.sock.sendPresenceUpdate('paused', jid).catch(() => {});
+            await session.sock.sendPresenceUpdate('paused', targetJid).catch(() => {});
         }
 
-        const sent = await session.sock.sendMessage(jid, { text });
+        const sent = await session.sock.sendMessage(targetJid, { text });
 
-        logger.info({ sessionId: sId, to: digits, msgId: sent?.key?.id }, 'Message sent successfully');
+        logger.info({ sessionId: sId, to: digits, jid: targetJid, msgId: sent?.key?.id }, 'Message sent successfully');
 
         res.json({
             success: true,
@@ -470,16 +658,17 @@ app.post('/api/messages/send', async (req, res) => {
             to: digits,
         });
     } catch (err) {
-        logger.error({ err: err.message, sessionId: sId, to: digits }, 'Failed to send message');
+        logger.error({ err: err.message, sessionId: sId, to: digits, jid: targetJid }, 'Failed to send message');
         res.status(500).json({
             success: false,
+            error_code: 'send_failed',
             message: err.message || 'Failed to send WhatsApp message',
         });
     }
 });
 
 app.listen(PORT, HOST, () => {
-    logger.info(`Tedallal WhatsApp Gateway running on http://${HOST}:${PORT}`);
+    logger.info({ port: PORT, host: HOST, webhook: LARAVEL_WEBHOOK_URL }, `Tedallal WhatsApp Gateway running on http://${HOST}:${PORT}`);
     resumePersistedSessions().catch((err) => {
         logger.error({ err }, 'Error during session persistence recovery');
     });

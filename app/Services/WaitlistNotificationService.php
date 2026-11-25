@@ -18,8 +18,7 @@ class WaitlistNotificationService
     public function sendJoinedNotification(WaitlistEntry $entry): bool
     {
         $restaurant = $entry->restaurant;
-        if (! $restaurant || ! $restaurant->isWhatsappConnected()) {
-            Log::info("Waitlist WhatsApp skipped: Restaurant {$restaurant?->id} WhatsApp not connected.");
+        if (! $restaurant) {
             return false;
         }
 
@@ -38,8 +37,8 @@ class WaitlistNotificationService
             . "{$trackingUrl}\n\n"
             . "سنرسل لك إشعاراً فور جهوزية طاولتك بإذن الله. نتمنى لحضرتك أوقاتاً ممتعة!";
 
-        $result = $this->whatsAppGateway->sendMessage($restaurant, $phone, $message);
-        return $result['success'] ?? false;
+        $result = $this->whatsAppGateway->sendTransactionalWithFallback($restaurant, $phone, $message);
+        return ! empty($result['success']);
     }
 
     /**
@@ -48,7 +47,7 @@ class WaitlistNotificationService
     public function sendTableReadyNotification(WaitlistEntry $entry, ?RestaurantTable $table = null): bool
     {
         $restaurant = $entry->restaurant;
-        if (! $restaurant || ! $restaurant->isWhatsappConnected()) {
+        if (! $restaurant) {
             return false;
         }
 
@@ -64,22 +63,13 @@ class WaitlistNotificationService
             . "📍 يرجى التوجه إلى قسم الاستقبال خلال *5 دقائق* لتأكيد الجلوس.\n\n"
             . "نتمنى لحضرتك وجبة شهية وأسعد اللحظات! 🍽️✨";
 
-        $result = $this->whatsAppGateway->sendMessage($restaurant, $phone, $message);
-        return $result['success'] ?? false;
+        $result = $this->whatsAppGateway->sendTransactionalWithFallback($restaurant, $phone, $message);
+        return ! empty($result['success']);
     }
 
     private function cleanPhoneNumber(string $phone): ?string
     {
-        $clean = preg_replace('/[^0-9]/', '', $phone);
-        if (empty($clean)) {
-            return null;
-        }
-
-        // Convert Syrian local format 09xxxxxxxx to 9639xxxxxxxx
-        if (str_starts_with($clean, '09') && strlen($clean) === 10) {
-            $clean = '963' . substr($clean, 1);
-        }
-
-        return $clean;
+        $clean = \App\Support\PhoneNormalizer::toWhatsAppDigits($phone);
+        return $clean !== '' ? $clean : null;
     }
 }

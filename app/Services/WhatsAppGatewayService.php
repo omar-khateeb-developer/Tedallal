@@ -3,6 +3,9 @@
 namespace App\Services;
 
 use App\Models\Restaurant;
+use App\Models\Setting;
+use App\Support\PhoneNormalizer;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -36,12 +39,12 @@ class WhatsAppGatewayService
     /**
      * Get the live status and QR code (if scanning) for the restaurant's session.
      *
-     * @return array{status: string, qr_code: ?string, phone: ?string, connected_at: ?string}
+     * @return array{status: string, qr_code: ?string, phone: ?string, connected_at: ?string, gateway_reachable?: bool}
      */
     public function getSessionStatus(Restaurant $restaurant): array
     {
         try {
-            $response = Http::timeout($this->timeout)
+            $response = Http::connectTimeout(2)->timeout(min($this->timeout, 5))
                 ->withHeaders(['X-Gateway-Secret' => $this->secret])
                 ->get("{$this->baseUrl}/api/session/{$restaurant->id}/status");
 
@@ -53,6 +56,7 @@ class WhatsAppGatewayService
                     'qr_code' => $data['qr_code'] ?? null,
                     'phone' => $data['phone'] ?? null,
                     'connected_at' => $data['connected_at'] ?? null,
+                    'gateway_reachable' => true,
                 ];
             }
         } catch (\Throwable $e) {
@@ -64,6 +68,57 @@ class WhatsAppGatewayService
             'qr_code' => null,
             'phone' => $restaurant->whatsapp_phone,
             'connected_at' => $restaurant->whatsapp_connected_at?->toIso8601String(),
+            'gateway_reachable' => false,
+        ];
+    }
+
+    /**
+     * Get and synchronize the live status of the Platform Owner's official WhatsApp session.
+     *
+     * @return array{status: string, qr_code: ?string, phone: ?string, connected_at: ?string, gateway_reachable: bool}
+     */
+    public function getPlatformSessionStatus(): array
+    {
+        try {
+            $response = Http::connectTimeout(2)->timeout(min($this->timeout, 5))
+                ->withHeaders(['X-Gateway-Secret' => $this->secret])
+                ->get("{$this->baseUrl}/api/session/platform/status");
+
+            if ($response->successful()) {
+                $data = $response->json();
+                $status = (string) ($data['status'] ?? 'disconnected');
+                Setting::set('platform_whatsapp_status', $status);
+
+                if ($status === 'connected') {
+                    if (! empty($data['phone'])) {
+                        Setting::set('platform_whatsapp_phone', (string) $data['phone']);
+                    }
+                    if (! empty($data['connected_at'])) {
+                        Setting::set('platform_whatsapp_connected_at', (string) $data['connected_at']);
+                    }
+                } elseif ($status === 'disconnected') {
+                    Setting::set('platform_whatsapp_phone', null);
+                    Setting::set('platform_whatsapp_connected_at', null);
+                }
+
+                return [
+                    'status' => $status,
+                    'qr_code' => $data['qr_code'] ?? null,
+                    'phone' => $data['phone'] ?? Setting::get('platform_whatsapp_phone'),
+                    'connected_at' => $data['connected_at'] ?? Setting::get('platform_whatsapp_connected_at'),
+                    'gateway_reachable' => true,
+                ];
+            }
+        } catch (\Throwable $e) {
+            Log::debug('Failed to fetch platform WhatsApp status: ' . $e->getMessage());
+        }
+
+        return [
+            'status' => (string) Setting::get('platform_whatsapp_status', 'disconnected'),
+            'qr_code' => null,
+            'phone' => Setting::get('platform_whatsapp_phone'),
+            'connected_at' => Setting::get('platform_whatsapp_connected_at'),
+            'gateway_reachable' => false,
         ];
     }
 
@@ -125,9 +180,9 @@ class WhatsAppGatewayService
     }
 
     /**
-     * Send a background text message to a customer's Syrian WhatsApp number.
+     * Send a background text message to a customer's WhatsApp number via the restaurant's session.
      *
-     * @return array{success: bool, message_id?: string, message?: string}
+     * @return array{success: bool, message_id?: ?string, error_code?: ?string, message?: string}
      */
     public function sendMessage(
         Restaurant $restaurant,
@@ -135,19 +190,34 @@ class WhatsAppGatewayService
         string $message,
         bool $simulateTyping = true
     ): array {
-        if (! $restaurant->isWhatsappConnected()) {
+        $normalizedPhone = PhoneNormalizer::toWhatsAppDigits($phone);
+        if ($normalizedPhone === '') {
             return [
                 'success' => false,
-                'message' => 'رقم واتساب المطعم غير متصل بالخدمة.',
+                'error_code' => 'invalid_phone',
+                'message' => 'رقم الهاتف غير صالح للإرسال عبر واتساب.',
             ];
         }
 
+        // Self-heal stale local DB state by consulting live gateway if local says disconnected
+        if (! $restaurant->isWhatsappConnected()) {
+            $live = $this->getSessionStatus($restaurant);
+            $liveStatus = $live['status'] ?? 'disconnected';
+            if (! in_array($liveStatus, ['connected', 'connecting'], true)) {
+                return [
+                    'success' => false,
+                    'error_code' => $live['gateway_reachable'] ? 'session_not_connected' : 'gateway_unreachable',
+                    'message' => 'رقم واتساب المطعم غير متصل بالخدمة.',
+                ];
+            }
+        }
+
         try {
-            $response = Http::timeout($this->timeout)
+            $response = Http::connectTimeout(3)->timeout($this->timeout)
                 ->withHeaders(['X-Gateway-Secret' => $this->secret])
                 ->post("{$this->baseUrl}/api/messages/send", [
                     'restaurant_id' => $restaurant->id,
-                    'phone' => $phone,
+                    'phone' => $normalizedPhone,
                     'text' => $message,
                     'simulate_typing' => $simulateTyping,
                 ]);
@@ -159,35 +229,59 @@ class WhatsAppGatewayService
                 ];
             }
 
+            $errorCode = $response->json('error_code');
             $errMsg = $response->json('message') ?? 'تعذر إرسال الرسالة عبر الواتساب';
-            Log::warning("WhatsApp send failed for restaurant {$restaurant->id}: {$errMsg}");
+
+            // Keep local DB synced if gateway reports this session is not connected
+            if ($response->status() === 400 || $errorCode === 'session_not_connected') {
+                $errorCode = 'session_not_connected';
+                if ($restaurant->whatsapp_status === 'connected') {
+                    $restaurant->update(['whatsapp_status' => 'disconnected']);
+                }
+            }
+
+            Log::warning("WhatsApp send failed for restaurant {$restaurant->id}: {$errMsg}", [
+                'http_status' => $response->status(),
+                'error_code' => $errorCode,
+            ]);
 
             return [
                 'success' => false,
+                'error_code' => $errorCode ?: 'send_failed',
                 'message' => $errMsg,
             ];
         } catch (\Throwable $e) {
             Log::error("Exception in WhatsApp send for restaurant {$restaurant->id}: {$e->getMessage()}");
             return [
                 'success' => false,
+                'error_code' => 'gateway_unreachable',
                 'message' => 'خطأ في الاتصال ببوابة الواتساب.',
             ];
         }
     }
 
     /**
-     * Send an administrative / alert WhatsApp message from the Platform Owner's official session.
+     * Send an administrative / fallback transactional WhatsApp message from the Platform Owner's official session.
      *
-     * @return array{success: bool, message_id?: string, message?: string}
+     * @return array{success: bool, message_id?: ?string, error_code?: ?string, message?: string}
      */
     public function sendPlatformMessage(string $phone, string $message, bool $simulateTyping = true): array
     {
+        $normalizedPhone = PhoneNormalizer::toWhatsAppDigits($phone);
+        if ($normalizedPhone === '') {
+            return [
+                'success' => false,
+                'error_code' => 'invalid_phone',
+                'message' => 'رقم الهاتف غير صالح للإرسال عبر واتساب.',
+            ];
+        }
+
         try {
-            $response = Http::timeout($this->timeout)
+            $response = Http::connectTimeout(3)->timeout($this->timeout)
                 ->withHeaders(['X-Gateway-Secret' => $this->secret])
                 ->post("{$this->baseUrl}/api/messages/send", [
                     'session_id' => 'platform',
-                    'phone' => $phone,
+                    'phone' => $normalizedPhone,
                     'text' => $message,
                     'simulate_typing' => $simulateTyping,
                 ]);
@@ -199,20 +293,125 @@ class WhatsAppGatewayService
                 ];
             }
 
+            $errorCode = $response->json('error_code');
             $errMsg = $response->json('message') ?? 'تعذر إرسال رسالة منصة تدلّل عبر الواتساب';
-            Log::warning("Platform WhatsApp send failed to {$phone}: {$errMsg}");
+
+            if ($response->status() === 400 || $errorCode === 'session_not_connected') {
+                $errorCode = 'session_not_connected';
+                Setting::set('platform_whatsapp_status', 'disconnected');
+            }
+
+            Log::warning("Platform WhatsApp send failed to {$normalizedPhone}: {$errMsg}", [
+                'http_status' => $response->status(),
+                'error_code' => $errorCode,
+            ]);
 
             return [
                 'success' => false,
+                'error_code' => $errorCode ?: 'send_failed',
                 'message' => $errMsg,
             ];
         } catch (\Throwable $e) {
-            Log::error("Exception in Platform WhatsApp send to {$phone}: {$e->getMessage()}");
+            Log::error("Exception in Platform WhatsApp send to {$normalizedPhone}: {$e->getMessage()}");
             return [
                 'success' => false,
+                'error_code' => 'gateway_unreachable',
                 'message' => 'خطأ في الاتصال ببوابة الواتساب للمنصة.',
             ];
         }
+    }
+
+    /**
+     * Send high-priority transactional messages (OTP, VIP ticket, waitlist) cleanly:
+     * 1) Tries the restaurant's own WhatsApp session first (syncing live state if needed, zero typing delay).
+     * 2) Automatically falls back to the Platform Owner's official WhatsApp session if the restaurant session is down/disconnected.
+     *
+     * @return array{success: bool, channel: ?string, message_id?: ?string, error_code?: ?string, message?: ?string}
+     */
+    public function sendTransactionalWithFallback(Restaurant $restaurant, string $phone, string $message): array
+    {
+        $normalizedPhone = PhoneNormalizer::toWhatsAppDigits($phone);
+        if ($normalizedPhone === '') {
+            return [
+                'success' => false,
+                'channel' => null,
+                'error_code' => 'invalid_phone',
+                'message' => 'رقم الهاتف غير صالح للإرسال عبر واتساب.',
+            ];
+        }
+
+        // Tier 1: Try the restaurant's own WhatsApp session
+        $restaurantRes = $this->sendMessage($restaurant, $normalizedPhone, $message, false);
+        if (! empty($restaurantRes['success'])) {
+            return [
+                'success' => true,
+                'channel' => 'restaurant',
+                'message_id' => $restaurantRes['message_id'] ?? null,
+                'error_code' => null,
+                'message' => null,
+            ];
+        }
+
+        // Do not retry platform fallback if gateway explicitly verified the recipient has no WhatsApp account
+        if (($restaurantRes['error_code'] ?? null) === 'not_on_whatsapp') {
+            return [
+                'success' => false,
+                'channel' => null,
+                'error_code' => 'not_on_whatsapp',
+                'message' => $restaurantRes['message'] ?? 'الرقم المدخل غير مسجل في تطبيق واتساب.',
+            ];
+        }
+
+        // Skip redundant network hit if the gateway microservice itself is unreachable
+        if (($restaurantRes['error_code'] ?? null) === 'gateway_unreachable') {
+            Log::warning("Transactional WhatsApp aborted: gateway unreachable for restaurant {$restaurant->id}");
+            return [
+                'success' => false,
+                'channel' => null,
+                'error_code' => 'gateway_unreachable',
+                'message' => 'خدمة بوابة الواتساب غير متاحة حالياً.',
+            ];
+        }
+
+        // Tier 2: Automatic fallback to Platform Owner's official WhatsApp session
+        $platformLive = $this->getPlatformSessionStatus();
+        $platformStatus = $platformLive['status'] ?? 'disconnected';
+
+        if (in_array($platformStatus, ['connected', 'connecting'], true)) {
+            $platformRes = $this->sendPlatformMessage($normalizedPhone, $message, false);
+            if (! empty($platformRes['success'])) {
+                Log::info("Transactional WhatsApp delivered via platform fallback for restaurant {$restaurant->id}");
+                return [
+                    'success' => true,
+                    'channel' => 'platform',
+                    'message_id' => $platformRes['message_id'] ?? null,
+                    'error_code' => null,
+                    'message' => null,
+                ];
+            }
+
+            if (($platformRes['error_code'] ?? null) === 'not_on_whatsapp') {
+                return [
+                    'success' => false,
+                    'channel' => null,
+                    'error_code' => 'not_on_whatsapp',
+                    'message' => $platformRes['message'] ?? 'الرقم المدخل غير مسجل في تطبيق واتساب.',
+                ];
+            }
+        }
+
+        Log::warning("Transactional WhatsApp failed on both restaurant ({$restaurant->id}) and platform channels", [
+            'restaurant_status' => $restaurant->whatsapp_status,
+            'restaurant_error' => $restaurantRes['error_code'] ?? null,
+            'platform_status' => $platformStatus,
+        ]);
+
+        return [
+            'success' => false,
+            'channel' => null,
+            'error_code' => 'whatsapp_disconnected',
+            'message' => 'جلسات الواتساب غير متصلة حالياً لإرسال رمز التحقق.',
+        ];
     }
 
     /**
@@ -225,6 +424,7 @@ class WhatsAppGatewayService
 
         $updates = [];
         if ($status === 'connected') {
+            Cache::forget("restaurant_whatsapp_otp_alert_{$restaurant->id}");
             if ($restaurant->whatsapp_status !== 'connected') {
                 $updates['whatsapp_status'] = 'connected';
                 $updates['whatsapp_phone'] = $data['phone'] ?? $restaurant->whatsapp_phone;
@@ -247,4 +447,3 @@ class WhatsAppGatewayService
         }
     }
 }
-

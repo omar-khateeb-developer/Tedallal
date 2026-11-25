@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AdminNav from '@/Components/Admin/AdminNav.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import axios from 'axios';
 import { soundAlerts } from '@/utils/soundAlerts';
@@ -85,31 +85,31 @@ const props = defineProps<{
     isFeatureLocked: boolean;
 }>();
 
-// State — automatically stagger any unpositioned or colliding tables so they never pile at (80,80)
-const occupiedFloorCoords = new Set<string>();
+// State — automatically stagger any unpositioned or physically overlapping tables (>=135x130 clear gap)
+const placedCoords: Array<{ x: number; y: number }> = [];
+const hasPhysicalOverlap = (x: number, y: number) =>
+    placedCoords.some((c) => Math.abs(c.x - x) < 135 && Math.abs(c.y - y) < 130);
+
 const tables = ref<TableItem[]>(props.tables.map((t, idx) => {
     let px = Number(t.pos_x) || 0;
     let py = Number(t.pos_y) || 0;
     const isUnpositioned = px <= 0 && py <= 0;
-    let key = `${Math.round(px / 20)}:${Math.round(py / 20)}`;
-    if (isUnpositioned || occupiedFloorCoords.has(key)) {
+    if (isUnpositioned || hasPhysicalOverlap(px, py)) {
         let slot = idx;
         while (slot < 100) {
             const col = slot % 4;
             const row = Math.floor(slot / 4);
-            const candidateX = 60 + col * 170;
-            const candidateY = 70 + row * 145;
-            const candidateKey = `${Math.round(candidateX / 20)}:${Math.round(candidateY / 20)}`;
-            if (!occupiedFloorCoords.has(candidateKey)) {
+            const candidateX = 65 + col * 185;
+            const candidateY = 82 + row * 168;
+            if (!hasPhysicalOverlap(candidateX, candidateY)) {
                 px = candidateX;
                 py = candidateY;
-                key = candidateKey;
                 break;
             }
             slot++;
         }
     }
-    occupiedFloorCoords.add(key);
+    placedCoords.push({ x: px, y: py });
 
     return {
         ...t,
@@ -135,6 +135,8 @@ const selectedTable = ref<TableItem | null>(null);
 const activeTableId = ref<number | null>(null);
 const activeTable = computed(() => tables.value.find(t => t.id === activeTableId.value));
 const editorMode = ref<'monitor' | 'designer'>('monitor'); // monitor mode prevents accidental drag
+const displayMode = ref<'canvas' | 'grid'>('canvas');
+const stageFilter = ref<'all' | 'available' | 'busy' | 'alerts'>('all');
 const zoomLevel = ref<number>(1);
 const isSaving = ref(false);
 const saveSuccess = ref(false);
@@ -178,18 +180,77 @@ const newTableForm = ref({
     iot_device_id: '',
 });
 
-// Filtered tables by zone
+// Filtered tables by zone + quick status pill
 const visibleTables = computed(() => {
-    if (activeZone.value === 'all') return tables.value;
-    return tables.value.filter(t => t.zone === activeZone.value);
+    return tables.value.filter(t => {
+        if (activeZone.value !== 'all' && t.zone !== activeZone.value) return false;
+        if (stageFilter.value === 'available') {
+            return !t.active_session && (!t.operational_stage || t.operational_stage === 'available');
+        }
+        if (stageFilter.value === 'busy') {
+            return Boolean(t.active_session) || (t.operational_stage && t.operational_stage !== 'available');
+        }
+        if (stageFilter.value === 'alerts') {
+            return Boolean(t.has_waiter_call || t.operational_stage === 'bill_requested' || t.service_call);
+        }
+        return true;
+    });
 });
+
+const floorStats = computed(() => {
+    let available = 0;
+    let busy = 0;
+    let alerts = 0;
+    for (const t of tables.value) {
+        if (t.has_waiter_call || t.operational_stage === 'bill_requested' || t.service_call) alerts++;
+        if (t.active_session || (t.operational_stage && t.operational_stage !== 'available')) {
+            busy++;
+        } else {
+            available++;
+        }
+    }
+    return { total: tables.value.length, available, busy, alerts };
+});
+
+function formatTurnDuration(minutes?: number): string {
+    const m = Math.max(0, Math.round(Number(minutes) || 0));
+    if (m <= 0) return '';
+    if (m < 60) return `${m} د`;
+    const hours = Math.floor(m / 60);
+    if (hours < 24) return `${hours} س`;
+    const days = Math.floor(hours / 24);
+    const remHours = hours % 24;
+    return remHours > 0 ? `${days}ي ${remHours}س` : `${days} ي`;
+}
+
+function autoArrangeTablesLayout() {
+    const mainTables = tables.value.filter(t => t.zone !== 'vip');
+    const vipTables = tables.value.filter(t => t.zone === 'vip');
+
+    mainTables.forEach((t, i) => {
+        const col = i % 4;
+        const row = Math.floor(i / 4);
+        t.pos_x = 65 + col * 195;
+        t.pos_y = 82 + row * 170;
+    });
+
+    vipTables.forEach((t, i) => {
+        const row = i % 3;
+        const col = Math.floor(i / 3);
+        t.pos_x = 890 + col * 130;
+        t.pos_y = 95 + row * 170;
+    });
+
+    saveSuccess.value = true;
+    setTimeout(() => { saveSuccess.value = false; }, 3500);
+}
 
 // Zone labels dictionary
 const zoneLabels: Record<string, string> = {
-    all: 'كامل الصالة المعمارية',
+    all: 'كامل الصالة',
     main: 'الصالة الرئيسية',
-    vip: 'جناح النخبة (VIP Lounge)',
-    terrace: 'التراس الخارجي',
+    vip: 'جناح النخبة (VIP)',
+    terrace: 'الشرفة الخارجية',
     family: 'القسم العائلي',
 };
 
@@ -318,10 +379,21 @@ function resetZoom() {
 }
 
 // Copy Public VIP Booking Link
+const page = usePage();
+const isRestaurantWhatsappConnected = computed(() => {
+    const status = props.restaurant.whatsapp_status || (page.props.auth as any)?.restaurant?.whatsapp_status;
+    return status === 'connected';
+});
+const vipWhatsappWarningToast = ref(false);
+
 function copyPublicVipBookingLink() {
     const url = `${window.location.origin}/r/${props.restaurant.slug}/vip-booking`;
     navigator.clipboard.writeText(url).then(() => {
         isCopiedLink.value = true;
+        if (!isRestaurantWhatsappConnected.value) {
+            vipWhatsappWarningToast.value = true;
+            setTimeout(() => { vipWhatsappWarningToast.value = false; }, 6500);
+        }
         setTimeout(() => { isCopiedLink.value = false; }, 3000);
     });
 }
@@ -414,11 +486,22 @@ async function closeSessionForTable(targetTable?: TableItem) {
     try {
         await axios.post(`/api/admin/tables/${table.id}/close-session`);
         table.active_session = null;
+        table.operational_stage = 'available';
+        table.turn_minutes = 0;
+        table.has_waiter_call = false;
         if (selectedTable.value && selectedTable.value.id === table.id) {
             selectedTable.value.active_session = null;
+            selectedTable.value.operational_stage = 'available';
+            selectedTable.value.turn_minutes = 0;
+            selectedTable.value.has_waiter_call = false;
         }
         const t = tables.value.find(item => item.id === table.id);
-        if (t) t.active_session = null;
+        if (t) {
+            t.active_session = null;
+            t.operational_stage = 'available';
+            t.turn_minutes = 0;
+            t.has_waiter_call = false;
+        }
         saveSuccess.value = true;
         setTimeout(() => { saveSuccess.value = false; }, 3000);
     } catch (e: any) {
@@ -680,6 +763,9 @@ async function attendTableServiceCall(tbl: TableItem) {
 }
 
 onMounted(() => {
+    if (window.innerWidth < 768) {
+        displayMode.value = 'grid';
+    }
     loadFloorServiceCalls();
 
     if (props.restaurant?.id && (window as any).Echo) {
@@ -739,6 +825,17 @@ onUnmounted(() => {
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <!-- Navigation -->
                 <AdminNav />
+
+                <!-- Manager Toast if VIP link copied before connecting restaurant WhatsApp -->
+                <div
+                    v-if="vipWhatsappWarningToast"
+                    class="mt-4 rounded-2xl border border-amber-500/40 bg-amber-50 dark:bg-amber-950/60 px-4 py-3 text-amber-950 dark:text-amber-100 text-xs sm:text-sm font-bold flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-sm"
+                >
+                    <span>⚠️ تم نسخ رابط حجز VIP، لكن مطعم «{{ restaurant.name }}» غير مربوط برقم واتساب! يجب ربط المطعم برقم واتساب أولاً قبل مشاركة الرابط حتى تصل رموز التحقق (OTP) للزبائن.</span>
+                    <Link href="/admin/customers?connect_whatsapp=1" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 text-xs font-black whitespace-nowrap shrink-0">
+                        ربط الواتساب الآن ←
+                    </Link>
+                </div>
 
                 <!-- Locked Feature Screen -->
                 <div v-if="isFeatureLocked" class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 border border-amber-500/30 p-8 sm:p-12 text-white shadow-2xl text-center my-6">
@@ -807,38 +904,118 @@ onUnmounted(() => {
 
                 <!-- Unlocked Active Floor Plan Canvas -->
                 <div v-else class="space-y-4">
+                    <!-- Quick KPI Summary & View Switcher Strip -->
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 shadow-xs flex flex-wrap items-center justify-between gap-3">
+                        <!-- Clickable Status Filter Counters -->
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button
+                                type="button"
+                                @click="stageFilter = 'all'"
+                                class="px-3 py-1.5 rounded-xl text-xs font-extrabold border transition flex items-center gap-1.5"
+                                :class="stageFilter === 'all'
+                                    ? 'bg-slate-900 text-white border-slate-900 dark:bg-amber-500 dark:text-stone-950 dark:border-amber-500 shadow-xs'
+                                    : 'bg-slate-50 dark:bg-slate-800/70 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100'"
+                            >
+                                <span>الكل</span>
+                                <span class="font-mono opacity-80">({{ floorStats.total }})</span>
+                            </button>
+                            <button
+                                type="button"
+                                @click="stageFilter = 'available'"
+                                class="px-3 py-1.5 rounded-xl text-xs font-extrabold border transition flex items-center gap-1.5"
+                                :class="stageFilter === 'available'
+                                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                                    : 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60 hover:bg-emerald-100'"
+                            >
+                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                <span>شاغرة ({{ floorStats.available }})</span>
+                            </button>
+                            <button
+                                type="button"
+                                @click="stageFilter = 'busy'"
+                                class="px-3 py-1.5 rounded-xl text-xs font-extrabold border transition flex items-center gap-1.5"
+                                :class="stageFilter === 'busy'
+                                    ? 'bg-amber-600 text-white border-amber-600 shadow-xs'
+                                    : 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800/60 hover:bg-amber-100'"
+                            >
+                                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                                <span>مشغولة ({{ floorStats.busy }})</span>
+                            </button>
+                            <button
+                                v-if="floorStats.alerts > 0 || stageFilter === 'alerts'"
+                                type="button"
+                                @click="stageFilter = 'alerts'"
+                                class="px-3 py-1.5 rounded-xl text-xs font-black border transition flex items-center gap-1.5 animate-pulse"
+                                :class="stageFilter === 'alerts'
+                                    ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
+                                    : 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-700'"
+                            >
+                                <span>🔔</span>
+                                <span>نداءات وحساب ({{ floorStats.alerts }})</span>
+                            </button>
+                        </div>
+
+                        <!-- Clear Display Switcher (Map vs Clean Grid Cards) -->
+                        <div class="flex items-center gap-2 ms-auto">
+                            <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+                                <button
+                                    type="button"
+                                    @click="displayMode = 'canvas'"
+                                    class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition flex items-center gap-1.5"
+                                    :class="displayMode === 'canvas'
+                                        ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs'
+                                        : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'"
+                                >
+                                    <span>🗺️</span>
+                                    <span>المخطط المرئي</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    @click="displayMode = 'grid'"
+                                    class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition flex items-center gap-1.5"
+                                    :class="displayMode === 'grid'
+                                        ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs'
+                                        : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'"
+                                >
+                                    <span>⊞</span>
+                                    <span>بطاقات واضحة</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Control Toolbar -->
-                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-4 shadow-sm flex flex-wrap items-center justify-between gap-4">
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 shadow-xs flex flex-wrap items-center justify-between gap-3">
                         <!-- Mode Switcher & Zone Tabs -->
-                        <div class="flex flex-wrap items-center gap-3">
+                        <div class="flex flex-wrap items-center gap-2.5">
                             <!-- Mode Switcher (Monitor vs Designer) -->
-                            <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl border border-slate-200 dark:border-slate-700">
+                            <div v-if="displayMode === 'canvas'" class="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
                                 <button
                                     type="button"
                                     @click="editorMode = 'monitor'"
-                                    class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5"
+                                    class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all flex items-center gap-1.5"
                                     :class="editorMode === 'monitor'
                                         ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
                                         : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'"
                                 >
                                     <span>👁️</span>
-                                    <span>المراقبة الحية والتشغيل</span>
+                                    <span>تشغيل حي</span>
                                 </button>
                                 <button
                                     type="button"
                                     @click="editorMode = 'designer'"
-                                    class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5"
+                                    class="px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all flex items-center gap-1.5"
                                     :class="editorMode === 'designer'
                                         ? 'bg-amber-500 text-stone-950 shadow-sm'
                                         : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'"
                                 >
                                     <span>📐</span>
-                                    <span>المحرر المعماري (CAD)</span>
+                                    <span>ترتيب وتعديل</span>
                                 </button>
                             </div>
 
                             <!-- Zone Filter Tabs -->
-                            <div class="hidden sm:flex items-center gap-1.5 overflow-x-auto">
+                            <div class="flex items-center gap-1.5 overflow-x-auto">
                                 <button
                                     v-for="z in ['all', 'main', 'vip', 'terrace']"
                                     :key="z"
@@ -854,36 +1031,8 @@ onUnmounted(() => {
                             </div>
                         </div>
 
-                        <!-- Status Indicators Legend (Toast POS Operational Stages) -->
-                        <div class="hidden xl:flex items-center gap-3 text-[11px] font-semibold">
-                            <span class="inline-flex items-center gap-1 text-slate-400">
-                                <span class="w-2 h-2 rounded-full bg-slate-500"></span>
-                                <span>شاغرة</span>
-                            </span>
-                            <span class="inline-flex items-center gap-1 text-emerald-400">
-                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                <span>جلوس</span>
-                            </span>
-                            <span class="inline-flex items-center gap-1 text-amber-400">
-                                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                                <span>تحضير بالمطبخ</span>
-                            </span>
-                            <span class="inline-flex items-center gap-1 text-sky-400">
-                                <span class="w-2 h-2 rounded-full bg-sky-500"></span>
-                                <span>تم التقديم</span>
-                            </span>
-                            <span class="inline-flex items-center gap-1 text-purple-400">
-                                <span class="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></span>
-                                <span>طلب الحساب</span>
-                            </span>
-                            <span class="inline-flex items-center gap-1 text-stone-400">
-                                <span class="w-2 h-2 rounded-full bg-stone-500"></span>
-                                <span>تنظيف</span>
-                            </span>
-                        </div>
-
                         <!-- Right Actions -->
-                        <div class="flex items-center gap-2">
+                        <div class="flex flex-wrap items-center gap-2">
                             <!-- Digital Waitlist Button (WhatsApp Powered) -->
                             <button
                                 type="button"
@@ -935,16 +1084,28 @@ onUnmounted(() => {
                                 <span>{{ isCopiedLink ? 'تم النسخ!' : 'رابط الحجز' }}</span>
                             </button>
 
-                            <!-- Zoom Controls -->
-                            <div class="flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl px-1 py-0.5 text-xs font-mono">
+                            <!-- Zoom Controls (Canvas Only) -->
+                            <div v-if="displayMode === 'canvas'" class="flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl px-1 py-0.5 text-xs font-mono">
                                 <button @click="zoomOut" class="px-2 py-1 hover:text-amber-500 font-bold" title="تصغير">-</button>
                                 <span @click="resetZoom" class="px-1.5 cursor-pointer select-none font-bold text-slate-600 dark:text-slate-300">{{ Math.round(zoomLevel * 100) }}%</span>
                                 <button @click="zoomIn" class="px-2 py-1 hover:text-amber-500 font-bold" title="تكبير">+</button>
                             </div>
 
+                            <!-- Auto-Arrange Grid (Designer Mode) -->
+                            <button
+                                v-if="displayMode === 'canvas' && editorMode === 'designer'"
+                                type="button"
+                                @click="autoArrangeTablesLayout"
+                                class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-700 dark:text-amber-300 text-xs font-bold transition-all"
+                                title="توزيع الطاولات تلقائياً بمسافات متساوية دون أي تداخل"
+                            >
+                                <span>✨</span>
+                                <span>ترتيب تلقائي</span>
+                            </button>
+
                             <!-- Add Table Button (Designer Mode) -->
                             <button
-                                v-if="editorMode === 'designer'"
+                                v-if="displayMode === 'canvas' && editorMode === 'designer'"
                                 type="button"
                                 @click="isAddModalOpen = true"
                                 class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 text-xs sm:text-sm font-bold transition-all"
@@ -955,7 +1116,7 @@ onUnmounted(() => {
 
                             <!-- Save Button (Designer Mode) -->
                             <button
-                                v-if="editorMode === 'designer'"
+                                v-if="displayMode === 'canvas' && editorMode === 'designer'"
                                 type="button"
                                 @click="saveLayout"
                                 :disabled="isSaving"
@@ -977,20 +1138,99 @@ onUnmounted(() => {
                         <button @click="saveSuccess = false" class="opacity-70 hover:opacity-100">✕</button>
                     </div>
 
+                    <!-- CLEAN & SCANNABLE GRID CARDS VIEW -->
+                    <div v-if="displayMode === 'grid'" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        <div
+                            v-for="table in visibleTables"
+                            :key="table.id"
+                            class="rounded-2xl bg-white dark:bg-slate-900 border p-4 shadow-xs transition-all hover:shadow-md flex flex-col justify-between gap-4"
+                            :class="table.has_waiter_call || table.operational_stage === 'bill_requested'
+                                ? 'border-amber-400 dark:border-amber-500/80 ring-2 ring-amber-400/30'
+                                : (table.active_session
+                                    ? 'border-emerald-300 dark:border-emerald-700/60'
+                                    : 'border-slate-200 dark:border-slate-800')"
+                        >
+                            <!-- Card Top Header -->
+                            <div class="flex items-start justify-between gap-2">
+                                <div>
+                                    <h3 class="text-base font-black text-slate-900 dark:text-white leading-snug">{{ table.name }}</h3>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                        {{ getZoneLabel(table.zone) }} • {{ table.capacity }} مقاعد
+                                    </p>
+                                </div>
+                                <span
+                                    class="px-2.5 py-1 rounded-full text-[11px] font-black shrink-0"
+                                    :class="getTableBadgeClass(table)"
+                                >
+                                    {{ table.has_waiter_call ? '🛎️ نداء نادل' : getTableStageLabel(table) }}
+                                </span>
+                            </div>
+
+                            <!-- Card Meta (Session Duration / Guest / Order) -->
+                            <div class="space-y-1.5 text-xs">
+                                <div v-if="table.turn_minutes && table.turn_minutes > 0" class="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-100 dark:border-slate-800">
+                                    <span class="text-slate-500 dark:text-slate-400">مدة الجلسة:</span>
+                                    <span class="font-bold font-mono" :class="table.turn_minutes > 240 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'">
+                                        ⏱️ {{ formatTurnDuration(table.turn_minutes) }}
+                                    </span>
+                                </div>
+                                <div v-if="table.active_order" class="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-100 dark:border-slate-800">
+                                    <span class="text-slate-500 dark:text-slate-400">طلب نشط #{{ table.active_order.order_number }}</span>
+                                    <span class="font-black font-mono text-emerald-600 dark:text-emerald-400">{{ table.active_order.total }} {{ restaurant.currency || 'ل.س' }}</span>
+                                </div>
+                                <div v-else-if="getTableReservation(table.id)" class="px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 text-amber-800 dark:text-amber-300 font-semibold">
+                                    👑 محجوزة: {{ getTableReservation(table.id)?.guest_name }} ({{ getTableReservation(table.id)?.time_slot }})
+                                </div>
+                            </div>
+
+                            <!-- Card One-Tap Actions -->
+                            <div class="flex items-center gap-2 pt-1">
+                                <button
+                                    v-if="table.has_waiter_call || table.operational_stage === 'bill_requested' || table.service_call"
+                                    type="button"
+                                    @click="attendTableServiceCall(table)"
+                                    class="flex-1 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black transition cursor-pointer"
+                                >
+                                    ✓ تمت التلبية
+                                </button>
+                                <button
+                                    v-if="table.active_session"
+                                    type="button"
+                                    @click="closeSessionForTable(table)"
+                                    class="flex-1 py-2 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/50 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 text-xs font-bold transition cursor-pointer"
+                                >
+                                    🧹 إخلاء
+                                </button>
+                                <button
+                                    type="button"
+                                    @click="openTableDrawer(table)"
+                                    class="py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition cursor-pointer"
+                                    :class="!table.active_session && !table.has_waiter_call && table.operational_stage !== 'bill_requested' ? 'flex-1' : ''"
+                                >
+                                    ⚙️ إدارة
+                                </button>
+                            </div>
+                        </div>
+
+                        <div v-if="visibleTables.length === 0" class="col-span-full text-center py-12 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 text-sm font-bold">
+                            لا توجد طاولات مطابقة للتصفية الحالية.
+                        </div>
+                    </div>
+
                     <!-- Master Architectural CAD Blueprint Viewport -->
-                    <div class="relative w-full rounded-3xl bg-[#070b14] border-2 border-slate-800/90 shadow-2xl overflow-hidden min-h-[660px] select-none">
+                    <div v-show="displayMode === 'canvas'" class="relative w-full rounded-3xl bg-[#070b14] border-2 border-slate-800/90 shadow-2xl overflow-auto min-h-[660px] select-none">
                         <!-- CAD Grid Background -->
                         <div
-                            class="absolute inset-0 pointer-events-none opacity-25"
+                            class="absolute inset-0 pointer-events-none opacity-20"
                             style="background-size: 30px 30px; background-image: linear-gradient(to right, #1e293b 1px, transparent 1px), linear-gradient(to bottom, #1e293b 1px, transparent 1px);"
                         ></div>
 
                         <!-- Architectural Blueprint Frame Lines -->
                         <div class="absolute inset-3 border border-slate-800/60 pointer-events-none rounded-2xl"></div>
 
-                        <!-- Dimension Markings (CAD Style) -->
-                        <div class="absolute top-2 left-10 text-[9px] font-mono text-slate-700 pointer-events-none tracking-widest">
-                            [ SCALE 1:50 • ARCHITECTURAL FLOOR BLUEPRINT • TEDALLAL ENGINE ]
+                        <!-- Clean Arabic Blueprint Watermark -->
+                        <div class="absolute top-2.5 left-8 text-[10px] font-bold text-slate-600 pointer-events-none">
+                            مخطط الصالة التفاعلي • تدلّل
                         </div>
 
                         <!-- Canvas Scalable Container -->
@@ -1000,73 +1240,38 @@ onUnmounted(() => {
                             :style="{ transform: `scale(${zoomLevel})` }"
                             @click="selectedTable = null; activeTableId = null"
                         >
-                            <!-- ================= ARCHITECTURAL WALLS & STRUCTURE ================= -->
+                            <!-- ================= ARCHITECTURAL WALLS & STRUCTURE (Localized Clean Arabic) ================= -->
                             <template v-if="showArchitecturalElements">
-                                <!-- Outer Perimeter Double Wall (CAD Architecture) -->
-                                <div class="absolute top-6 left-6 right-6 bottom-6 border-2 border-slate-700/80 rounded-2xl pointer-events-none">
-                                    <div class="absolute inset-1 border border-slate-800/60 rounded-xl"></div>
-                                </div>
+                                <!-- Outer Perimeter Double Wall -->
+                                <div class="absolute top-6 left-6 right-6 bottom-6 border border-slate-800 rounded-2xl pointer-events-none"></div>
 
-                                <!-- Left Main Entrance with Inward Swing Door Arc -->
-                                <div class="absolute top-1/2 left-4 -translate-y-1/2 w-8 h-28 bg-[#070b14] border-y-2 border-slate-600 pointer-events-none flex flex-col items-center justify-center z-10">
-                                    <div class="w-1.5 h-12 bg-emerald-500/80 rounded-full animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.8)]"></div>
-                                    <span class="text-[8px] font-mono text-emerald-400 rotate-90 whitespace-nowrap mt-2 tracking-wider">ENTRANCE</span>
+                                <!-- Left Main Entrance -->
+                                <div class="absolute top-1/2 left-4 -translate-y-1/2 w-7 h-24 bg-[#070b14] border-y-2 border-slate-600 pointer-events-none flex flex-col items-center justify-center z-10">
+                                    <div class="w-1.5 h-10 bg-emerald-500/80 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.8)]"></div>
+                                    <span class="text-[9px] font-bold text-emerald-400 rotate-90 whitespace-nowrap mt-2">المدخل</span>
                                 </div>
 
                                 <!-- Host / Reception Counter Desk -->
-                                <div class="absolute top-[180px] left-[75px] w-24 h-12 bg-stone-900 border border-stone-700/80 rounded-lg pointer-events-none flex flex-col items-center justify-center shadow-lg">
-                                    <span class="text-[9px] font-bold text-amber-400/90 font-mono">HOST DESK</span>
-                                    <span class="text-[8px] text-stone-500 font-mono">Reception</span>
+                                <div class="absolute bottom-7 left-10 px-3 py-1 bg-stone-900/90 border border-stone-700/80 rounded-lg pointer-events-none flex items-center gap-1.5 shadow-sm">
+                                    <span class="text-[10px] font-bold text-amber-400/90">🛎️ الاستقبال</span>
                                 </div>
 
-                                <!-- Bottom Patio / Terrace Glass Sliding Exit -->
-                                <div class="absolute bottom-4 left-1/2 -translate-x-1/2 w-44 h-5 bg-[#070b14] border-x-2 border-cyan-500/40 pointer-events-none flex items-center justify-center z-10">
-                                    <span class="text-[8px] font-mono text-cyan-400/80 tracking-widest uppercase">Patio Terrace Exit</span>
+                                <!-- Bottom Patio / Terrace Exit -->
+                                <div class="absolute bottom-4 left-1/2 -translate-x-1/2 w-36 h-5 bg-[#070b14] border-x-2 border-cyan-500/40 pointer-events-none flex items-center justify-center z-10">
+                                    <span class="text-[9px] font-bold text-cyan-400/80">مخرج التراس</span>
                                 </div>
 
-                                <!-- Central Corridor Guideline (Dashed Lines) -->
-                                <div class="absolute top-1/2 left-28 right-[360px] -translate-y-1/2 h-[130px] border-y border-dashed border-slate-800/80 pointer-events-none flex items-center justify-center">
-                                    <span class="text-[10px] uppercase font-mono tracking-widest text-slate-700/60">M a i n &nbsp; D i n i n g &nbsp; H a l l</span>
+                                <!-- Subtle Main Hall Watermark -->
+                                <div class="absolute top-1/2 left-28 right-[270px] -translate-y-1/2 flex items-center justify-center pointer-events-none">
+                                    <span class="text-sm font-black tracking-wide text-slate-800/70">الصالة الرئيسية</span>
                                 </div>
 
-                                <!-- ================= VIP PRIVATE LOUNGE SALON (Right Wing) ================= -->
-                                <!-- VIP Enclosing Wall with Golden Ambient Halo matching reference image -->
-                                <div class="absolute top-8 right-8 bottom-8 w-[310px] border-2 border-amber-500/90 rounded-2xl bg-slate-950/70 shadow-[0_0_35px_rgba(245,158,11,0.22)] pointer-events-none p-4 flex flex-col justify-between">
-                                    <!-- VIP Room Header Badge matching image -->
-                                    <div class="bg-black/85 backdrop-blur-md border border-amber-500/40 px-3.5 py-2 rounded-xl self-start shadow-xl">
-                                        <div class="flex items-center gap-1.5 text-xs font-black text-amber-300">
-                                            <span>👑</span>
-                                            <span>VIP Lounge</span>
-                                        </div>
-                                        <div class="text-[9px] text-slate-400 font-mono mt-0.5">Private dining salon</div>
+                                <!-- Compact VIP Wing Frame (No Cluttered Placeholder Sofas) -->
+                                <div class="absolute top-8 right-8 bottom-8 w-[225px] border border-dashed border-amber-500/45 rounded-2xl bg-amber-950/[0.06] pointer-events-none p-3.5 flex flex-col justify-start">
+                                    <div class="inline-flex items-center gap-1.5 bg-amber-950/70 border border-amber-500/35 px-3 py-1 rounded-lg self-start">
+                                        <span class="text-xs">👑</span>
+                                        <span class="text-[11px] font-black text-amber-300">جناح النخبة VIP</span>
                                     </div>
-
-                                    <!-- Top VIP Luxury Sofa Suite with Coffee Table & Floor Lamp -->
-                                    <div class="relative w-full h-16 bg-stone-900/90 border border-stone-700/80 rounded-xl flex items-center justify-between px-3 shadow-inner">
-                                        <!-- Floor Lamp -->
-                                        <div class="w-4 h-4 rounded-full bg-amber-400/80 shadow-[0_0_12px_rgba(245,158,11,0.9)] flex items-center justify-center text-[8px]">💡</div>
-                                        <div class="text-[10px] font-bold text-stone-400 font-mono">🛋️ Luxury Sofa Suite</div>
-                                        <div class="w-8 h-8 rounded-md bg-stone-950 border border-stone-800 flex items-center justify-center text-[8px] text-stone-500">Table</div>
-                                    </div>
-
-                                    <!-- Partition Divider between Salons -->
-                                    <div class="w-full border-t border-dashed border-amber-500/30 my-1"></div>
-
-                                    <!-- Bottom VIP Luxury Sofa Suite with Coffee Table & Floor Lamp -->
-                                    <div class="relative w-full h-16 bg-stone-900/90 border border-stone-700/80 rounded-xl flex items-center justify-between px-3 shadow-inner">
-                                        <!-- Floor Lamp -->
-                                        <div class="w-4 h-4 rounded-full bg-amber-400/80 shadow-[0_0_12px_rgba(245,158,11,0.9)] flex items-center justify-center text-[8px]">💡</div>
-                                        <div class="text-[10px] font-bold text-stone-400 font-mono">🛋️ Luxury Sofa Suite</div>
-                                        <div class="w-8 h-8 rounded-md bg-stone-950 border border-stone-800 flex items-center justify-center text-[8px] text-stone-500">Table</div>
-                                    </div>
-                                </div>
-
-                                <!-- VIP Door Openings (CAD Arch Swing Style) -->
-                                <div class="absolute top-[260px] right-[316px] w-3 h-14 bg-[#070b14] border-y border-amber-500/60 pointer-events-none z-10 flex items-center justify-center">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>
-                                </div>
-                                <div class="absolute top-[370px] right-[316px] w-3 h-14 bg-[#070b14] border-y border-amber-500/60 pointer-events-none z-10 flex items-center justify-center">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span>
                                 </div>
                             </template>
 
@@ -1083,7 +1288,7 @@ onUnmounted(() => {
                                 ]"
                                 :style="{
                                     left: table.pos_x + 'px',
-                                    top: table.pos_y + 'px',
+                                    top: Math.max(54, table.pos_y) + 'px',
                                     width: (table.shape === 'vip' ? 140 : (table.shape === 'rectangle' ? 130 : 90)) + 'px',
                                     height: (table.shape === 'rectangle' ? 80 : 90) + 'px',
                                     transform: `rotate(${table.rotation || 0}deg)`,
@@ -1091,11 +1296,12 @@ onUnmounted(() => {
                                 @mousedown.stop="onMouseDown($event, table)"
                                 @click.stop="selectTable(table)"
                             >
-                                <!-- 3-Dots Action Button to Open Drawer / Settings -->
+                                <!-- Settings Action Button (Hover / Selected only — prevents clutter) -->
                                 <button
                                     type="button"
                                     @click.stop="openTableDrawer(table)"
-                                    class="absolute -top-2.5 -right-2.5 z-40 w-7 h-7 rounded-full bg-slate-900/95 border-2 border-slate-700 hover:border-amber-400 text-slate-300 hover:text-amber-300 flex items-center justify-center text-xs font-black shadow-xl hover:scale-115 active:scale-95 transition-all group-hover:border-slate-500"
+                                    class="absolute -top-2 -left-2 z-40 w-6 h-6 rounded-full bg-slate-900/95 border border-slate-600 hover:border-amber-400 text-slate-300 hover:text-amber-300 flex items-center justify-center text-xs font-black shadow-md transition-opacity opacity-0 group-hover:opacity-100"
+                                    :class="activeTableId === table.id || selectedTable?.id === table.id || editorMode === 'designer' ? '!opacity-100' : ''"
                                     :style="{ transform: `rotate(${-(table.rotation || 0)}deg)` }"
                                     title="خيارات وإعدادات الطاولة"
                                 >
@@ -1105,22 +1311,20 @@ onUnmounted(() => {
                                 <!-- ================= CHAIRS RENDERING AROUND TABLES ================= -->
                                 <!-- 4 Chairs for Circular Table -->
                                 <template v-if="table.shape === 'circle'">
-                                    <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 w-6 h-2.5 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none shadow-xs"></div>
-                                    <div class="absolute -bottom-3.5 left-1/2 -translate-x-1/2 w-6 h-2.5 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none shadow-xs"></div>
-                                    <div class="absolute top-1/2 -left-3.5 -translate-y-1/2 w-2.5 h-6 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none shadow-xs"></div>
-                                    <div class="absolute top-1/2 -right-3.5 -translate-y-1/2 w-2.5 h-6 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none shadow-xs"></div>
+                                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-5 h-2 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none"></div>
+                                    <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 w-5 h-2 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none"></div>
+                                    <div class="absolute top-1/2 -left-3 -translate-y-1/2 w-2 h-5 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none"></div>
+                                    <div class="absolute top-1/2 -right-3 -translate-y-1/2 w-2 h-5 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none"></div>
                                 </template>
 
-                                <!-- 6/8 Chairs for Rectangular Banquet Table -->
+                                <!-- 6 Chairs for Rectangular Banquet Table -->
                                 <template v-else-if="table.shape === 'rectangle'">
-                                    <!-- Top 3 Chairs -->
-                                    <div class="absolute -top-3.5 left-3 w-6 h-2.5 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none shadow-xs"></div>
-                                    <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 w-6 h-2.5 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none shadow-xs"></div>
-                                    <div class="absolute -top-3.5 right-3 w-6 h-2.5 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none shadow-xs"></div>
-                                    <!-- Bottom 3 Chairs -->
-                                    <div class="absolute -bottom-3.5 left-3 w-6 h-2.5 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none shadow-xs"></div>
-                                    <div class="absolute -bottom-3.5 left-1/2 -translate-x-1/2 w-6 h-2.5 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none shadow-xs"></div>
-                                    <div class="absolute -bottom-3.5 right-3 w-6 h-2.5 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none shadow-xs"></div>
+                                    <div class="absolute -top-3 left-3 w-5 h-2 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none"></div>
+                                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-5 h-2 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none"></div>
+                                    <div class="absolute -top-3 right-3 w-5 h-2 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none"></div>
+                                    <div class="absolute -bottom-3 left-3 w-5 h-2 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none"></div>
+                                    <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 w-5 h-2 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none"></div>
+                                    <div class="absolute -bottom-3 right-3 w-5 h-2 rounded-full bg-stone-800 border border-stone-600/80 pointer-events-none"></div>
                                 </template>
 
                                 <!-- ================= TABLE CORE & NEON HALO RING ================= -->
@@ -1131,7 +1335,7 @@ onUnmounted(() => {
                                         getTableRingClass(table)
                                     ]"
                                 >
-                                    <!-- Neon Breathing Pulse for Active Session or Urgent Stages -->
+                                    <!-- Neon Breathing Pulse for Urgent Calls Only -->
                                     <div
                                         v-if="table.has_waiter_call"
                                         class="absolute inset-0 rounded-full animate-ping opacity-45 bg-amber-400 pointer-events-none"
@@ -1140,57 +1344,43 @@ onUnmounted(() => {
                                         v-else-if="table.operational_stage === 'bill_requested'"
                                         class="absolute inset-0 rounded-full animate-ping opacity-30 bg-purple-400 pointer-events-none"
                                     ></div>
-                                    <div
-                                        v-else-if="table.active_session || table.operational_stage === 'seated'"
-                                        class="absolute inset-0 rounded-full animate-ping opacity-20 bg-emerald-400 pointer-events-none"
-                                    ></div>
 
-                                    <!-- Table Label Badge (Toast POS Stage & Timer Tooltip) -->
+                                    <!-- Top Compact Name Pill (Truncated to prevent neighbor collisions) -->
                                     <div
-                                        class="absolute -top-7 whitespace-nowrap px-2.5 py-0.5 rounded-md text-[10px] font-black flex items-center gap-1.5 shadow-xl pointer-events-none transition-all z-30"
+                                        class="absolute -top-7 max-w-[126px] truncate px-2.5 py-0.5 rounded-full text-[10px] font-black shadow-md pointer-events-none z-30 bg-slate-900/95 text-slate-100 border border-slate-700/90"
                                         :style="{ transform: `rotate(${-(table.rotation || 0)}deg)` }"
-                                        :class="getTableBadgeClass(table)"
+                                        :title="table.name"
                                     >
-                                        <span>{{ table.name }}</span>
-                                        <span class="opacity-80">• {{ getTableStageLabel(table) }}</span>
-                                        <span
-                                            v-if="table.has_waiter_call"
-                                            class="font-mono bg-amber-400 text-stone-950 px-1 py-0.2 rounded font-black animate-pulse"
-                                        >
-                                            🛎️ نداء نادل
-                                        </span>
-                                        <span
-                                            v-if="table.turn_minutes && table.turn_minutes > 0"
-                                            class="font-mono bg-black/40 px-1 py-0.2 rounded"
-                                            :class="table.turn_minutes > 75 ? 'text-rose-300 font-bold animate-pulse' : (table.turn_minutes > 45 ? 'text-amber-300' : 'text-emerald-300')"
-                                        >
-                                            ⏱️ {{ table.turn_minutes }}m
-                                        </span>
-                                        <span
-                                            v-if="table.operational_stage === 'bill_requested' && table.bill_wait_minutes !== null"
-                                            class="font-mono bg-rose-950 text-rose-200 px-1 py-0.2 rounded font-bold animate-pulse"
-                                        >
-                                            🧾 {{ table.bill_wait_minutes }}د
-                                        </span>
+                                        {{ table.name }}
                                     </div>
 
                                     <!-- Table Number Inside -->
-                                    <span class="font-black text-sm text-white drop-shadow-md tracking-tight">
+                                    <span class="font-black text-sm text-white drop-shadow-md tracking-tight leading-none">
                                         {{ table.name.replace(/[^0-9]/g, '') ? '#' + table.name.replace(/[^0-9]/g, '') : table.name }}
                                     </span>
 
-                                    <!-- Seat Capacity & Turn Time Inner Indicator -->
-                                    <div class="flex items-center gap-1 mt-0.5">
-                                        <span class="text-[9px] text-slate-400 font-mono">
-                                            {{ table.capacity }}S
+                                    <!-- Seat Capacity (Arabic) & Humanized Duration -->
+                                    <div class="flex items-center gap-1 mt-1">
+                                        <span class="text-[9px] text-slate-300 font-bold">
+                                            {{ table.capacity }} مقاعد
                                         </span>
-                                        <span
-                                            v-if="table.turn_minutes && table.turn_minutes > 0"
-                                            class="text-[9px] font-mono px-1 rounded bg-black/50"
-                                            :class="table.turn_minutes > 75 ? 'text-rose-400 font-black' : (table.turn_minutes > 45 ? 'text-amber-400' : 'text-emerald-400')"
-                                        >
-                                            {{ table.turn_minutes }}m
-                                        </span>
+                                    </div>
+
+                                    <span
+                                        v-if="table.turn_minutes && table.turn_minutes > 0"
+                                        class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-black/55 mt-0.5"
+                                        :class="table.turn_minutes > 240 ? 'text-amber-300 font-black' : 'text-emerald-300'"
+                                    >
+                                        ⏱️ {{ formatTurnDuration(table.turn_minutes) }}
+                                    </span>
+
+                                    <!-- Bottom Compact Stage Badge (No Horizontal Overflow) -->
+                                    <div
+                                        class="absolute -bottom-7 whitespace-nowrap px-2 py-0.5 rounded-full text-[9px] font-black shadow-md pointer-events-none z-30"
+                                        :style="{ transform: `rotate(${-(table.rotation || 0)}deg)` }"
+                                        :class="getTableBadgeClass(table)"
+                                    >
+                                        {{ table.has_waiter_call ? '🛎️ نداء نادل' : getTableStageLabel(table) }}
                                     </div>
 
                                     <!-- IoT Connected ESP32 Cyan Dot -->
@@ -1228,8 +1418,8 @@ onUnmounted(() => {
                                             <span class="text-[10px] px-2 py-0.5 rounded-full font-mono" :class="getTableBadgeClass(activeTable)">
                                                 {{ getTableStageLabel(activeTable) }}
                                             </span>
-                                            <span v-if="activeTable.turn_minutes && activeTable.turn_minutes > 0" class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800" :class="activeTable.turn_minutes > 75 ? 'text-rose-400 font-bold' : (activeTable.turn_minutes > 45 ? 'text-amber-400' : 'text-emerald-400')">
-                                                ⏱️ {{ activeTable.turn_minutes }} دقيقة
+                                            <span v-if="activeTable.turn_minutes && activeTable.turn_minutes > 0" class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800" :class="activeTable.turn_minutes > 240 ? 'text-amber-300 font-bold' : 'text-emerald-400'">
+                                                ⏱️ {{ formatTurnDuration(activeTable.turn_minutes) }}
                                             </span>
                                         </h4>
                                         <p class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-2">
@@ -1285,6 +1475,15 @@ onUnmounted(() => {
                                         title="تسجيل تلبية نداء الزبون"
                                     >
                                         <span>✓ تمت التلبية</span>
+                                    </button>
+                                    <button
+                                        v-if="activeTable.active_session"
+                                        type="button"
+                                        @click="closeSessionForTable(activeTable)"
+                                        class="px-3 py-1.5 rounded-xl bg-rose-600/90 hover:bg-rose-500 text-white text-xs font-bold transition shadow-xs flex items-center gap-1 cursor-pointer"
+                                        title="إنهاء الجلسة وإخلاء الطاولة"
+                                    >
+                                        <span>🧹 إخلاء</span>
                                     </button>
                                     <button
                                         type="button"
@@ -1615,7 +1814,20 @@ onUnmounted(() => {
                     </div>
 
                     <!-- Footer -->
-                    <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <div class="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                        <div
+                            v-if="!isRestaurantWhatsappConnected"
+                            class="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-amber-500/40 text-amber-900 dark:text-amber-200 text-xs font-semibold space-y-2"
+                        >
+                            <div>⚠️ تنبيه: يجب ربط مطعم «{{ restaurant.name }}» برقم واتساب أولاً قبل مشاركة رابط الحجز المسبق ليتمكن الزبائن من استلام رمز التحقق (OTP).</div>
+                            <Link
+                                href="/admin/customers?connect_whatsapp=1"
+                                class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-stone-950 text-[11px] font-black transition"
+                            >
+                                <span>ربط رقم الواتساب الآن</span>
+                                <span>←</span>
+                            </Link>
+                        </div>
                         <button
                             type="button"
                             @click="copyPublicVipBookingLink"

@@ -36,6 +36,7 @@ Route::prefix('public')->middleware('throttle:public-api')->group(function () {
     // VIP Table Reservation APIs (Public Engine)
     Route::get('restaurants/{slug}/booking-availability', [\App\Http\Controllers\Web\Public\TableBookingController::class, 'getAvailability']);
     Route::post('restaurants/{slug}/reservations/hold', [\App\Http\Controllers\Web\Public\TableBookingController::class, 'requestHold'])->middleware('throttle:10,5');
+    Route::post('restaurants/{slug}/reservations/resend-otp', [\App\Http\Controllers\Web\Public\TableBookingController::class, 'resendOtp'])->middleware('throttle:6,5');
     Route::post('restaurants/{slug}/reservations/verify-otp', [\App\Http\Controllers\Web\Public\TableBookingController::class, 'verifyOtp'])->middleware('throttle:15,5');
 
     // Smart Digital Waitlist APIs (Public Engine)

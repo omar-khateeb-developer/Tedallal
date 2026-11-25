@@ -14,9 +14,15 @@ echo "🎨 [2.5/5] بناء وتجميع ملفات الواجهات والأص�
 export NODE_OPTIONS="--max-old-space-size=1024"
 npm run build
 
+echo "📲 [2.7/5] تحديث اعتماديات بوابة الواتساب..."
+if [ -d "/var/www/tedallal/whatsapp-gateway" ]; then
+    npm --prefix /var/www/tedallal/whatsapp-gateway install --omit=dev --no-audit --no-fund || true
+fi
+
 echo "🗄️ [3/5] تشغيل المايجريشن وإعداد التخزين..."
 php artisan migrate --force
 php artisan db:seed --class=PlatformSuperAdminsSeeder --force || true
+php artisan db:seed --class=FlagshipRestaurantsSeeder --force || true
 php artisan storage:link || true
 chmod -R 777 /var/www/tedallal/storage/app/public/qr 2>/dev/null || true
 chmod 777 /var/www/tedallal/storage/logs/laravel.log 2>/dev/null || true
@@ -37,6 +43,8 @@ sudo systemctl reload php8.4-fpm
 php artisan queue:restart
 sudo supervisorctl restart tedallal-queue tedallal-reverb
 sudo systemctl restart tedallal-whatsapp 2>/dev/null || true
+sleep 2
+curl -sf http://127.0.0.1:8082/health > /dev/null && echo "✅ بوابة الواتساب تعمل على المنفذ 8082" || echo "⚠️ تحذير: تعذر الوصول لفحص بوابة الواتساب على المنفذ 8082"
 
 echo "✅ تم اكتمال النشر فائق السرعة بنجاح وبدون توقف!"
 

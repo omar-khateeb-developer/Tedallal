@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Enums\UserRole;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -63,6 +64,9 @@ class HandleInertiaRequests extends Middleware
                     'subscription_expires_at' => $request->user()->restaurant->subscription_expires_at?->format('Y-m-d'),
                     'days_remaining' => $request->user()->restaurant->daysRemaining(),
                     'is_expired' => $request->user()->restaurant->isExpired(),
+                    'whatsapp_status' => $request->user()->restaurant->whatsapp_status ?? 'disconnected',
+                    'whatsapp_phone' => $request->user()->restaurant->whatsapp_phone,
+                    'whatsapp_otp_alert' => Cache::get("restaurant_whatsapp_otp_alert_{$request->user()->restaurant->id}"),
                 ] : null,
             ],
             'restaurantId' => $request->user()?->restaurant_id,

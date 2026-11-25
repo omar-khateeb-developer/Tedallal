@@ -58,7 +58,10 @@ class DatabaseSeeder extends Seeder
         // 6. المطعم الثالث: قلعة حلب (Prepaid - دفع مسبق مع 3 نوافذ)
         $this->seedRestaurantAleppoCitadel();
 
-        $this->command?->info('✅ تم تنفيذ السيدر بنجاح مع 3 مطاعم (2 Prepaid و 1 Postpaid) وكامل بياناتهم وصورهم بدون أي تعارض.');
+        // 7. المطعمان المتكاملان الجديدان (جمرة آند كرافت Prepaid + دار الياسمين Postpaid VIP)
+        $this->call(FlagshipRestaurantsSeeder::class);
+
+        $this->command?->info('✅ تم تنفيذ السيدر بنجاح مع 5 مطاعم وكامل بياناتهم وصورهم بدون أي تعارض.');
     }
 
     /**

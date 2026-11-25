@@ -463,16 +463,14 @@ class WheelController extends Controller
             $discountLabel
         );
 
-        // Auto-send via restaurant's connected WhatsApp gateway if active
-        $autoSent = false;
-        if ($restaurant->isWhatsappConnected()) {
-            $sendRes = $whatsappGateway->sendMessage(
-                $restaurant,
-                $result['customer']['phone'],
-                $result['whatsapp_message']
-            );
-            $autoSent = ! empty($sendRes['success']);
-        }
+        // Auto-send via connected restaurant gateway (self-healing status sync inside sendMessage)
+        $sendRes = $whatsappGateway->sendMessage(
+            $restaurant,
+            $result['customer']['phone'],
+            $result['whatsapp_message'],
+            false
+        );
+        $autoSent = ! empty($sendRes['success']);
 
         $revealCode = $restaurant->shouldRevealWheelCodeAfterSave() || ! $restaurant->shouldRequireWheelWhatsapp() || ! $autoSent;
 
