@@ -99,6 +99,27 @@ class Order extends Model
         return $this->hasOne(OrderWheelToken::class);
     }
 
+    public function scopeRecognizedRevenue($query)
+    {
+        return $query->where(function ($q) {
+            $q->where('status', OrderStatus::Served->value)
+                ->orWhere(function ($q2) {
+                    $q2->whereNotNull('paid_at')
+                        ->where('status', '!=', OrderStatus::Cancelled->value);
+                });
+        });
+    }
+
+    public function isRecognizedRevenue(): bool
+    {
+        $statusVal = $this->status?->value ?? (string) $this->status;
+        if ($statusVal === OrderStatus::Cancelled->value) {
+            return false;
+        }
+
+        return $statusVal === OrderStatus::Served->value || $this->paid_at !== null;
+    }
+
     /**
      * الحصول على رقم الطلب اليومي المختصر المميز (مثل 24 من ORD-20261108-0024)
      */

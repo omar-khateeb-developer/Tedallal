@@ -2,6 +2,7 @@
 import { ref, toRef, computed, watch, onUnmounted } from 'vue';
 import axios from 'axios';
 import { useVisualViewportModal } from '@/composables/useVisualViewport';
+import { formatAmount, normalizeCurrency, subtractMoney } from '@/utils/money';
 
 export interface CartLine {
     id: number;
@@ -25,13 +26,8 @@ const props = withDefaults(defineProps<{
 });
 
 const { viewportBackdropStyle } = useVisualViewportModal(toRef(props, 'open'));
-
-function formatPriceValue(val: string | number): string {
-    const clean = String(val ?? '0').replace(/,/g, '');
-    const num = parseFloat(clean);
-    if (isNaN(num)) return '0';
-    return Number.isInteger(num) ? num.toLocaleString() : parseFloat(num.toFixed(2)).toLocaleString();
-}
+const formatPriceValue = formatAmount;
+const displayCurrency = computed(() => normalizeCurrency(props.currency));
 
 const emit = defineEmits<{
     'update:open': [value: boolean];
@@ -61,11 +57,7 @@ const validatingPromo = ref(false);
 const promoError = ref('');
 const showPromoInput = ref(false);
 
-const finalTotal = computed(() => {
-    const sub = parseFloat(subtotal.value) || 0;
-    const disc = parseFloat(discountAmount.value) || 0;
-    return Math.max(0, sub - disc).toFixed(2);
-});
+const finalTotal = computed(() => subtractMoney(subtotal.value, discountAmount.value));
 
 const appliedDiscountType = ref<'percentage' | 'fixed' | ''>('');
 const appliedDiscountValue = ref<number>(0);
@@ -256,7 +248,7 @@ defineExpose({ load, count, subtotal, finalTotal, serviceType, generalNote, appl
                             <div class="flex-1 min-w-0">
                                 <h3 class="font-bold text-stone-900 dark:text-white text-sm truncate">{{ item.menu_item.name }}</h3>
                                 <p class="text-xs font-black text-amber-700 dark:text-amber-400 mt-0.5">
-                                    {{ formatPriceValue(item.menu_item.price) }} {{ currency }}
+                                    {{ formatPriceValue(item.menu_item.price) }} {{ displayCurrency }}
                                 </p>
                             </div>
                             <div class="flex items-center gap-1.5 bg-white dark:bg-slate-800/80 border border-stone-200 dark:border-slate-700 rounded-full p-0.5 shadow-2xs shrink-0">
@@ -349,10 +341,10 @@ defineExpose({ load, count, subtotal, finalTotal, serviceType, generalNote, appl
                             <span>
                                 تم تطبيق الكوبون ({{ appliedCode }}) —
                                 <template v-if="appliedDiscountType === 'percentage' && appliedDiscountValue > 0">
-                                    خصم {{ appliedDiscountValue }}% ({{ discountFormatted }} {{ currency }})
+                                    خصم {{ appliedDiscountValue }}% ({{ discountFormatted }} {{ displayCurrency }})
                                 </template>
                                 <template v-else>
-                                    خصم {{ discountFormatted }} {{ currency }}
+                                    خصم {{ discountFormatted }} {{ displayCurrency }}
                                 </template>
                             </span>
                         </div>
@@ -420,17 +412,17 @@ defineExpose({ load, count, subtotal, finalTotal, serviceType, generalNote, appl
                 <div class="space-y-1 text-xs">
                     <div v-if="parseFloat(discountAmount) > 0" class="flex justify-between text-stone-500 dark:text-slate-400">
                         <span>المجموع قبل الخصم:</span>
-                        <span>{{ subtotalFormatted }} {{ currency }}</span>
+                        <span>{{ subtotalFormatted }} {{ displayCurrency }}</span>
                     </div>
                     <div v-if="parseFloat(discountAmount) > 0" class="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
                         <span>
-                            خصم الكوبون (<span dir="ltr" class="font-mono">{{ appliedCode }}</span><template v-if="appliedDiscountType === 'percentage' && appliedDiscountValue > 0"> · {{ appliedDiscountValue }}%</template><template v-else-if="appliedDiscountType === 'fixed' && appliedDiscountValue > 0"> · {{ appliedDiscountValue }} {{ currency }}</template>):
+                            خصم الكوبون (<span dir="ltr" class="font-mono">{{ appliedCode }}</span><template v-if="appliedDiscountType === 'percentage' && appliedDiscountValue > 0"> · {{ appliedDiscountValue }}%</template><template v-else-if="appliedDiscountType === 'fixed' && appliedDiscountValue > 0"> · {{ appliedDiscountValue }} {{ displayCurrency }}</template>):
                         </span>
-                        <span>-{{ discountFormatted }} {{ currency }}</span>
+                        <span>-{{ discountFormatted }} {{ displayCurrency }}</span>
                     </div>
                     <div class="flex justify-between text-base font-black text-stone-900 dark:text-white pt-0.5">
                         <span>المبلغ الإجمالي:</span>
-                        <span class="text-amber-600 dark:text-amber-400 text-lg">{{ finalTotalFormatted }} {{ currency }}</span>
+                        <span class="text-amber-600 dark:text-amber-400 text-lg">{{ finalTotalFormatted }} {{ displayCurrency }}</span>
                     </div>
                 </div>
 
@@ -444,7 +436,7 @@ defineExpose({ load, count, subtotal, finalTotal, serviceType, generalNote, appl
                     <span v-if="submitting || isSubmittingLocal" class="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
                     <span>{{ (submitting || isSubmittingLocal) ? 'جاري إرسال الطلب للمطبخ...' : 'إرسال الطلب الآن ⚡' }}</span>
                     <span v-if="!submitting" class="text-xs bg-black/20 px-2.5 py-0.5 rounded-full font-black">
-                        {{ finalTotalFormatted }} {{ currency }}
+                        {{ finalTotalFormatted }} {{ displayCurrency }}
                     </span>
                 </button>
             </div>

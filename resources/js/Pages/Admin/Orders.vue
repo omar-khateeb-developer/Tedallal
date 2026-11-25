@@ -8,6 +8,7 @@ import { useToast } from '@/composables/useToast';
 import { useWakeLock } from '@/composables/useWakeLock';
 import { useLiveConnection } from '@/composables/useLiveConnection';
 import { soundAlerts } from '@/utils/soundAlerts';
+import { formatMoney, normalizeCurrency } from '@/utils/money';
 import { Head, usePage } from '@inertiajs/vue3';
 import { computed, ref, onMounted, onUnmounted } from 'vue';
 import axios from 'axios';
@@ -124,7 +125,7 @@ const { isOnline, isSocketConnected, showReconnectedBanner, reconnectNow } = use
 function shareOnWhatsApp(order: Order) {
     const origin = window.location.origin;
     const printUrl = `${origin}/admin/orders/${order.id}/print`;
-    const currency = (page.props.auth as any)?.restaurant?.currency ?? 'ر.س';
+    const currency = normalizeCurrency((page.props.auth as any)?.restaurant?.currency);
     const restName = (page.props.auth as any)?.restaurant?.name ?? 'المطعم';
     const tableInfo = order.table?.name ? ` (طاولة ${order.table.name})` : (order.service_type === 'takeaway' ? ' (سفري)' : '');
     const itemsText = order.items && order.items.length > 0
@@ -463,7 +464,7 @@ useRestaurantOrders(restaurantId.value, {
                                 </span>
                             </div>
                             <p class="text-sm font-semibold text-stone-600 dark:text-stone-300 mt-1">
-                                القيمة: <span class="font-extrabold text-amber-600 dark:text-amber-400">{{ order.total }} {{ $page.props.auth.restaurant?.currency }}</span>
+                                القيمة: <span class="font-extrabold text-amber-600 dark:text-amber-400">{{ formatMoney(order.total, authRestaurant?.currency) }}</span>
                             </p>
                         </div>
                         <div class="flex items-center gap-2 flex-wrap">
@@ -672,7 +673,7 @@ useRestaurantOrders(restaurantId.value, {
                                             <span class="font-semibold text-stone-800">{{ item.item_name_snapshot }}</span>
                                         </div>
                                         <span class="font-black text-stone-900 shrink-0">
-                                            {{ item.subtotal }} {{ authRestaurant?.currency || 'ل.س' }}
+                                            {{ formatMoney(item.subtotal, authRestaurant?.currency) }}
                                         </span>
                                     </div>
                                     <div v-if="item.note" class="text-[10px] text-stone-500 mt-0.5 pr-4 italic">
@@ -686,19 +687,19 @@ useRestaurantOrders(restaurantId.value, {
                         <div class="py-3 border-b-2 border-dashed border-stone-400 space-y-1.5">
                             <div v-if="receiptOrder.subtotal" class="flex justify-between text-stone-600 text-[11px]">
                                 <span>المجموع الفرعي:</span>
-                                <span>{{ parseFloat(String(receiptOrder.subtotal)).toLocaleString(undefined, { maximumFractionDigits: 2 }) }} {{ (!authRestaurant?.currency || authRestaurant.currency.toUpperCase() === 'SYP') ? 'ل.س' : authRestaurant.currency }}</span>
+                                <span>{{ formatMoney(receiptOrder.subtotal, authRestaurant?.currency) }}</span>
                             </div>
                             <div v-if="parseFloat(String(receiptOrder.discount_amount || '0')) > 0" class="flex justify-between text-emerald-700 font-bold text-[11px]">
                                 <span>
                                     خصم الكوبون
                                     <span v-if="receiptOrder.promo_code" dir="ltr" class="font-mono">({{ receiptOrder.promo_code }})</span>:
                                 </span>
-                                <span dir="ltr">-{{ parseFloat(String(receiptOrder.discount_amount)).toLocaleString(undefined, { maximumFractionDigits: 2 }) }} {{ (!authRestaurant?.currency || authRestaurant.currency.toUpperCase() === 'SYP') ? 'ل.س' : authRestaurant.currency }}</span>
+                                <span dir="ltr">-{{ formatMoney(receiptOrder.discount_amount, authRestaurant?.currency) }}</span>
                             </div>
                             <div class="flex justify-between items-center text-sm font-black text-stone-950 pt-1">
                                 <span class="text-base">المجموع النهائي:</span>
                                 <span class="text-lg bg-stone-100 px-2 py-0.5 rounded border border-stone-300">
-                                    {{ parseFloat(String(receiptOrder.total)).toLocaleString(undefined, { maximumFractionDigits: 2 }) }} {{ (!authRestaurant?.currency || authRestaurant.currency.toUpperCase() === 'SYP') ? 'ل.س' : authRestaurant.currency }}
+                                    {{ formatMoney(receiptOrder.total, authRestaurant?.currency) }}
                                 </span>
                             </div>
                         </div>

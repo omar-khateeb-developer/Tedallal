@@ -2,6 +2,7 @@
 import { ref, toRef, computed, watch, onUnmounted } from 'vue';
 import axios from 'axios';
 import { useVisualViewportModal } from '@/composables/useVisualViewport';
+import { formatAmount, normalizeCurrency, subtractMoney } from '@/utils/money';
 
 const props = defineProps<{
     open: boolean;
@@ -14,13 +15,8 @@ const props = defineProps<{
 }>();
 
 const { viewportBackdropStyle } = useVisualViewportModal(toRef(props, 'open'));
-
-function formatNum(val: string | number): string {
-    const clean = String(val ?? '0').replace(/,/g, '');
-    const num = parseFloat(clean);
-    if (isNaN(num)) return '0';
-    return Number.isInteger(num) ? num.toLocaleString() : parseFloat(num.toFixed(2)).toLocaleString();
-}
+const formatNum = formatAmount;
+const displayCurrency = computed(() => normalizeCurrency(props.currency));
 
 const customerNote = defineModel<string>('customerNote', { default: '' });
 const serviceType = defineModel<string>('serviceType', { default: 'dine_in' });
@@ -42,11 +38,7 @@ const promoError = ref('');
 const promoDebug = ref<any>(null);
 const activatingFast = ref(false);
 
-const finalTotal = computed(() => {
-    const sub = parseFloat(props.subtotal) || 0;
-    const disc = parseFloat(discountAmount.value) || 0;
-    return Math.max(0, sub - disc).toFixed(2);
-});
+const finalTotal = computed(() => subtractMoney(props.subtotal, discountAmount.value));
 
 async function applyPromo() {
     if (!promoInput.value.trim()) return;
@@ -279,10 +271,10 @@ const emit = defineEmits<{
                         <span>
                             تم تطبيق كود الخصم ({{ appliedCode }}) —
                             <template v-if="appliedDiscountType === 'percentage' && appliedDiscountValue > 0">
-                                خصم {{ appliedDiscountValue }}% ({{ formatNum(discountAmount) }} {{ currency }})
+                                خصم {{ appliedDiscountValue }}% ({{ formatNum(discountAmount) }} {{ displayCurrency }})
                             </template>
                             <template v-else>
-                                خصم {{ formatNum(discountAmount) }} {{ currency }}
+                                خصم {{ formatNum(discountAmount) }} {{ displayCurrency }}
                             </template>
                         </span>
                     </p>
@@ -305,17 +297,17 @@ const emit = defineEmits<{
                     <div class="rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/60 p-3 space-y-1">
                         <div class="flex justify-between text-xs text-stone-600 dark:text-slate-300 font-medium">
                             <span>المجموع الفرعي:</span>
-                            <span>{{ formatNum(subtotal) }} {{ currency }}</span>
+                            <span>{{ formatNum(subtotal) }} {{ displayCurrency }}</span>
                         </div>
                         <div v-if="appliedCode" class="flex justify-between text-xs text-emerald-600 dark:text-emerald-400 font-bold">
                             <span>
                                 قيمة الخصم ({{ appliedCode }}<template v-if="appliedDiscountType === 'percentage' && appliedDiscountValue > 0"> · {{ appliedDiscountValue }}%</template>):
                             </span>
-                            <span>- {{ formatNum(discountAmount) }} {{ currency }}</span>
+                            <span>- {{ formatNum(discountAmount) }} {{ displayCurrency }}</span>
                         </div>
                         <div class="flex justify-between text-base font-black text-stone-900 dark:text-white pt-1 border-t border-amber-200/60 dark:border-amber-800/60">
                             <span>الإجمالي المطلوب:</span>
-                            <span class="text-amber-600 dark:text-amber-400">{{ formatNum(finalTotal) }} {{ currency }}</span>
+                            <span class="text-amber-600 dark:text-amber-400">{{ formatNum(finalTotal) }} {{ displayCurrency }}</span>
                         </div>
                     </div>
 

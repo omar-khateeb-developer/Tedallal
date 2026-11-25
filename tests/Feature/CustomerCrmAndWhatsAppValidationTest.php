@@ -286,6 +286,10 @@ class CustomerCrmAndWhatsAppValidationTest extends TestCase
 
     public function test_whatsapp_settings_updates_and_validates_successfully(): void
     {
+        $this->restaurant->update([
+            'features' => array_merge($this->restaurant->features ?? [], ['whatsapp_ai_reply' => true]),
+        ]);
+
         $response = $this->actingAs($this->adminUser)
             ->postJson('/api/admin/whatsapp/settings', [
                 'whatsapp_auto_reply_enabled' => true,
@@ -297,6 +301,7 @@ class CustomerCrmAndWhatsAppValidationTest extends TestCase
             ->assertJson([
                 'success' => true,
                 'data' => [
+                    'has_ai_reply_feature' => true,
                     'auto_reply_enabled' => true,
                     'auto_reply_message' => 'أهلاً بك في مطعمنا! تصفح المنيو من هنا: {menu_url}',
                     'expiring_reminders_enabled' => true,
@@ -307,6 +312,27 @@ class CustomerCrmAndWhatsAppValidationTest extends TestCase
         $this->assertTrue((bool) $this->restaurant->whatsapp_auto_reply_enabled);
         $this->assertEquals('أهلاً بك في مطعمنا! تصفح المنيو من هنا: {menu_url}', $this->restaurant->whatsapp_auto_reply_message);
         $this->assertTrue((bool) $this->restaurant->whatsapp_expiring_reminders_enabled);
+    }
+
+    public function test_whatsapp_auto_reply_remains_disabled_when_ai_reply_feature_is_off(): void
+    {
+        $response = $this->actingAs($this->adminUser)
+            ->postJson('/api/admin/whatsapp/settings', [
+                'whatsapp_auto_reply_enabled' => true,
+                'whatsapp_auto_reply_message' => 'رسالة غير مفعلة',
+                'whatsapp_expiring_reminders_enabled' => true,
+            ]);
+
+        $response->assertOk()
+            ->assertJson([
+                'success' => true,
+                'data' => [
+                    'has_ai_reply_feature' => false,
+                    'auto_reply_enabled' => false,
+                    'auto_reply_message' => null,
+                    'expiring_reminders_enabled' => true,
+                ],
+            ]);
     }
 
     // =========================================================================
@@ -385,6 +411,7 @@ class CustomerCrmAndWhatsAppValidationTest extends TestCase
         $secret = config('whatsapp.gateway_secret', 'tedallal_wa_gateway_2026_secure_key');
 
         $this->restaurant->update([
+            'features' => array_merge($this->restaurant->features ?? [], ['whatsapp_ai_reply' => true]),
             'whatsapp_auto_reply_enabled' => true,
             'whatsapp_auto_reply_message' => 'مرحباً بك في {restaurant_name}! رابط المنيو: {menu_url}',
         ]);

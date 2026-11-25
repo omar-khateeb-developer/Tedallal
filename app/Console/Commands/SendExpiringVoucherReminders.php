@@ -7,6 +7,7 @@ use App\Services\CustomerCrmService;
 use App\Services\WhatsAppGatewayService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Sleep;
 
 class SendExpiringVoucherReminders extends Command
 {
@@ -66,7 +67,7 @@ class SendExpiringVoucherReminders extends Command
 
                 // Anti-ban humanized delay between messages (5-10 seconds)
                 $delay = random_int(5, 10);
-                sleep($delay);
+                Sleep::sleep($delay);
             } else {
                 $this->warn("Failed sending to {$customer->phone}: " . ($res['message'] ?? 'Unknown error'));
             }

@@ -235,6 +235,7 @@
 
         @php
             $fmtMoney = fn ($v) => rtrim(rtrim(number_format((float) $v, 2, '.', ''), '0'), '.') ?: '0';
+            $currencyLabel = \App\Support\MoneyCalculator::displayCurrency($restaurant->currency ?? null);
         @endphp
 
         <table>
@@ -267,16 +268,16 @@
             @if((float) $order->discount_amount > 0)
             <div style="display: flex; justify-content: space-between; font-weight: 600; font-size: 11px; margin-bottom: 0.8mm; color: #444;">
                 <span>المجموع الفرعي:</span>
-                <span dir="ltr">{{ $fmtMoney($order->subtotal) }} {{ $restaurant->currency ?? 'ل.س' }}</span>
+                <span dir="ltr">{{ $fmtMoney($order->subtotal) }} {{ $currencyLabel }}</span>
             </div>
             <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 11px; color: #b91c1c; margin-bottom: 0.8mm;">
                 <span>قيمة الحسم{{ $order->promoCode?->code ? ' (' . $order->promoCode->code . ')' : '' }}:</span>
-                <span dir="ltr">-{{ $fmtMoney($order->discount_amount) }} {{ $restaurant->currency ?? 'ل.س' }}</span>
+                <span dir="ltr">-{{ $fmtMoney($order->discount_amount) }} {{ $currencyLabel }}</span>
             </div>
             @endif
             <div class="total-row" style="{{ (float) $order->discount_amount > 0 ? 'border-top: 1px dashed #666; padding-top: 1mm; margin-top: 0.8mm;' : '' }}">
                 <span>الإجمالي:</span>
-                <span dir="ltr">{{ $fmtMoney($order->total) }} {{ $restaurant->currency ?? 'ل.س' }}</span>
+                <span dir="ltr">{{ $fmtMoney($order->total) }} {{ $currencyLabel }}</span>
             </div>
         </div>
 

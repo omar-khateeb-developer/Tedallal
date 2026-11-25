@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import CustomerLayout from '@/Layouts/CustomerLayout.vue';
 import { Link, router } from '@inertiajs/vue3';
+import { formatMoney, subtractMoney } from '@/utils/money';
 import { onMounted, ref } from 'vue';
 import axios from 'axios';
 
@@ -29,12 +30,7 @@ const validatingPromo = ref(false);
 const promoError = ref('');
 
 function formatPrice(price: string | number) {
-    if (price === null || price === undefined) return '0 ل.س';
-    const cleanStr = String(price).replace(/,/g, '');
-    const num = parseFloat(cleanStr);
-    const formatted = isNaN(num) ? '0' : (Number.isInteger(num) ? num.toLocaleString() : parseFloat(num.toFixed(2)).toLocaleString());
-    const curr = (!props.restaurant.currency || props.restaurant.currency.toUpperCase() === 'SYP') ? 'ل.س' : props.restaurant.currency;
-    return `${formatted} ${curr}`;
+    return formatMoney(price, props.restaurant.currency);
 }
 
 async function loadCart() {
@@ -210,7 +206,7 @@ onMounted(loadCart);
                 </div>
                 <div class="flex justify-between text-lg font-bold border-t border-amber-200/50 dark:border-amber-800/50 pt-2 text-stone-900 dark:text-white" :class="{'mt-2': appliedPromoCode}">
                     <span>الإجمالي</span>
-                    <span class="text-amber-600 dark:text-amber-400 font-black">{{ formatPrice(Math.max(0, parseFloat(subtotal) - parseFloat(discountAmount))) }}</span>
+                    <span class="text-amber-600 dark:text-amber-400 font-black">{{ formatPrice(subtractMoney(subtotal, discountAmount)) }}</span>
                 </div>
             </div>
 

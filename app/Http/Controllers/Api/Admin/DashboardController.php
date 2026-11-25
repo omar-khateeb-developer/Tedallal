@@ -34,18 +34,12 @@ class DashboardController extends ApiController
         $recognizedTotals = Order::withoutGlobalScopes()
             ->where('restaurant_id', $restaurantId)
             ->where('created_at', '>=', $today)
-            ->where(function ($q) {
-                $q->where('status', OrderStatus::Served->value)
-                  ->orWhere(function ($q2) {
-                      $q2->whereNotNull('paid_at')
-                         ->where('status', '!=', OrderStatus::Cancelled->value);
-                  });
-            })
+            ->recognizedRevenue()
             ->pluck('total');
 
         $todayRevenue = '0.00';
         foreach ($recognizedTotals as $amt) {
-            $todayRevenue = MoneyCalculator::add($todayRevenue, number_format((float) $amt, 2, '.', ''));
+            $todayRevenue = MoneyCalculator::add($todayRevenue, MoneyCalculator::normalize((string) $amt));
         }
 
         return response()->json([

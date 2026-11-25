@@ -62,11 +62,15 @@ class SecurityTest extends TestCase
 
     public function test_primary_super_admin_cannot_be_deleted(): void
     {
-        $super = User::factory()->create([
-            'email' => 'super@tedallal.test',
-            'status' => UserStatus::Active,
-        ]);
-        $super->assignRole(UserRole::SuperAdmin->value);
+        $super = User::firstOrCreate(
+            ['email' => 'super@tedallal.test'],
+            [
+                'name' => 'مدير النظام الرئيسي',
+                'password' => bcrypt('password'),
+                'status' => UserStatus::Active,
+            ]
+        );
+        $super->syncRoles([UserRole::SuperAdmin->value]);
 
         // Attempt deletion via ProfileController
         $response = $this->actingAs($super)->delete('/profile', [

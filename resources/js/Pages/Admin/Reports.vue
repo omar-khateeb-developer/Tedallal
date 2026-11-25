@@ -4,6 +4,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, usePage } from '@inertiajs/vue3';
 import { ref, onMounted, computed, watch } from 'vue';
 import axios from 'axios';
+import { normalizeCurrency } from '@/utils/money';
 import {
   Chart as ChartJS,
   Title,
@@ -68,6 +69,7 @@ const monthsList = [
 ];
 
 const reportData = ref<any>(null);
+const displayCurrency = computed(() => normalizeCurrency(reportData.value?.currency));
 const loading = ref(true);
 
 async function fetchReport() {
@@ -128,7 +130,7 @@ const chartData = computed(() => {
         labels,
         datasets: [
             {
-                label: 'صافي المبيعات (' + (reportData.value?.currency || 'SYP') + ')',
+                label: 'صافي المبيعات (' + displayCurrency.value + ')',
                 data: netSales,
                 backgroundColor: 'rgba(245, 158, 11, 0.85)',
                 borderRadius: 8,
@@ -161,7 +163,7 @@ const chartOptions = {
             bodyFont: { family: 'inherit' },
             callbacks: {
                 label: function(context: any) {
-                    return ` ${context.dataset.label}: ${context.raw.toLocaleString('en-US', { minimumFractionDigits: 2 })} ${reportData.value?.currency || 'SYP'}`;
+                    return ` ${context.dataset.label}: ${context.raw.toLocaleString('en-US', { minimumFractionDigits: 2 })} ${displayCurrency.value}`;
                 }
             }
         }
@@ -200,6 +202,7 @@ const showZReportModal = ref(false);
 const showAccountingVoucherModal = ref(false);
 const voucherDate = ref(new Date().toISOString().split('T')[0]);
 const voucherData = ref<any>(null);
+const voucherCurrencyLabel = computed(() => normalizeCurrency(voucherData.value?.currency));
 const voucherLoading = ref(false);
 const copySuccess = ref(false);
 
@@ -232,7 +235,7 @@ async function copyVoucherText() {
     let text = `سند قيد مبيعات يومي - ${v.restaurant_name || ''}\n`;
     text += `رقم السند: ${v.voucher_number} | التاريخ: ${v.date}\n`;
     text += `حالة التوازن: ${v.is_balanced ? 'متوازن محاسبياً (0% فرق) ✓' : 'غير متوازن'}\n`;
-    text += `العملة: ${v.currency}\n`;
+    text += `العملة: ${normalizeCurrency(v.currency)}\n`;
     text += `--------------------------------------------------\n`;
     text += `رمز الحساب\tاسم الحساب\tمدين\tدائن\tالبيان\n`;
     for (const l of lines) {
@@ -331,7 +334,7 @@ function exportVoucher(format: 'al_ameen' | 'al_bayan' | 'universal_excel') {
                     <div class="text-left text-xs text-slate-600">
                         <p>تاريخ استخراج التقرير: {{ new Date().toLocaleString('ar-SA-u-nu-latn') }}</p>
                         <p>الفترة المحاسبية: {{ activeView === 'daily' ? `${selectedMonth} / ${selectedYear}` : (activeView === 'monthly' ? `سنة ${selectedYear}` : 'تقرير مالي') }}</p>
-                        <p class="font-bold text-slate-900">العملة: {{ reportData?.currency || 'SYP' }}</p>
+                        <p class="font-bold text-slate-900">العملة: {{ displayCurrency }}</p>
                     </div>
                 </div>
             </div>
@@ -447,7 +450,7 @@ function exportVoucher(format: 'al_ameen' | 'al_bayan' | 'universal_excel') {
                             <span class="text-lg">💰</span>
                         </div>
                         <div class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-2 font-mono">
-                            {{ formatNumber(reportData.summary.net_sales) }} <span class="text-xs font-sans text-amber-600">{{ reportData.currency }}</span>
+                            {{ formatNumber(reportData.summary.net_sales) }} <span class="text-xs font-sans text-amber-600">{{ displayCurrency }}</span>
                         </div>
                         <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">بعد استبعاد كافة الخصومات والكوبونات</p>
                     </div>
@@ -459,7 +462,7 @@ function exportVoucher(format: 'al_ameen' | 'al_bayan' | 'universal_excel') {
                             <span class="text-lg">🧾</span>
                         </div>
                         <div class="text-xl sm:text-2xl font-black text-slate-800 dark:text-slate-200 mt-2 font-mono">
-                            {{ formatNumber(reportData.summary.gross_sales) }} <span class="text-xs font-sans text-slate-400">{{ reportData.currency }}</span>
+                            {{ formatNumber(reportData.summary.gross_sales) }} <span class="text-xs font-sans text-slate-400">{{ displayCurrency }}</span>
                         </div>
                         <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">القيمة الإجمالية قبل تطبيق أي خصم</p>
                     </div>
@@ -471,16 +474,16 @@ function exportVoucher(format: 'al_ameen' | 'al_bayan' | 'universal_excel') {
                             <span class="text-lg">🏷️</span>
                         </div>
                         <div class="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400 mt-2 font-mono">
-                            -{{ formatNumber(reportData.summary.total_discounts) }} <span class="text-xs font-sans">{{ reportData.currency }}</span>
+                            -{{ formatNumber(reportData.summary.total_discounts) }} <span class="text-xs font-sans">{{ displayCurrency }}</span>
                         </div>
                         <div v-if="(parseFloat(reportData.summary.loyalty_discounts || 0) > 0) || (parseFloat(reportData.summary.wheel_discounts || 0) > 0)" class="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/80 space-y-0.5 text-[10px]">
                             <div class="flex justify-between text-purple-600 dark:text-purple-400 font-bold">
                                 <span>🏆 جوائز الولاء ({{ reportData.summary.loyalty_orders_count || 0 }}):</span>
-                                <span class="font-mono">-{{ formatNumber(reportData.summary.loyalty_discounts || 0) }} {{ reportData.currency }}</span>
+                                <span class="font-mono">-{{ formatNumber(reportData.summary.loyalty_discounts || 0) }} {{ displayCurrency }}</span>
                             </div>
                             <div class="flex justify-between text-amber-600 dark:text-amber-400 font-bold">
                                 <span>🎡 عجلة الحظ ({{ reportData.summary.wheel_orders_count || 0 }}):</span>
-                                <span class="font-mono">-{{ formatNumber(reportData.summary.wheel_discounts || 0) }} {{ reportData.currency }}</span>
+                                <span class="font-mono">-{{ formatNumber(reportData.summary.wheel_discounts || 0) }} {{ displayCurrency }}</span>
                             </div>
                         </div>
                         <p v-else class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">تكلفة الحملات الترويجية المخصومة</p>
@@ -496,7 +499,7 @@ function exportVoucher(format: 'al_ameen' | 'al_bayan' | 'universal_excel') {
                             {{ reportData.summary.total_orders }} <span class="text-xs font-sans text-slate-400">طلب</span>
                         </div>
                         <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                            متوسط الفاتورة (AOV): <span class="font-mono font-bold text-amber-500">{{ formatNumber(reportData.summary.aov) }} {{ reportData.currency }}</span>
+                            متوسط الفاتورة (AOV): <span class="font-mono font-bold text-amber-500">{{ formatNumber(reportData.summary.aov) }} {{ displayCurrency }}</span>
                         </p>
                     </div>
                 </div>
@@ -512,7 +515,7 @@ function exportVoucher(format: 'al_ameen' | 'al_bayan' | 'universal_excel') {
                             </div>
                         </div>
                         <div class="text-sm font-black font-mono text-slate-900 dark:text-white">
-                            {{ formatNumber(reportData.summary.dine_in_revenue || 0) }} {{ reportData.currency }}
+                            {{ formatNumber(reportData.summary.dine_in_revenue || 0) }} {{ displayCurrency }}
                         </div>
                     </div>
 
@@ -525,7 +528,7 @@ function exportVoucher(format: 'al_ameen' | 'al_bayan' | 'universal_excel') {
                             </div>
                         </div>
                         <div class="text-sm font-black font-mono text-slate-900 dark:text-white">
-                            {{ formatNumber(reportData.summary.takeaway_revenue || 0) }} {{ reportData.currency }}
+                            {{ formatNumber(reportData.summary.takeaway_revenue || 0) }} {{ displayCurrency }}
                         </div>
                     </div>
 
@@ -538,7 +541,7 @@ function exportVoucher(format: 'al_ameen' | 'al_bayan' | 'universal_excel') {
                             </div>
                         </div>
                         <div class="text-sm font-black font-mono text-rose-700 dark:text-rose-300">
-                            {{ formatNumber(reportData.summary.cancelled_lost || 0) }} {{ reportData.currency }}
+                            {{ formatNumber(reportData.summary.cancelled_lost || 0) }} {{ displayCurrency }}
                         </div>
                     </div>
                 </div>
@@ -550,7 +553,7 @@ function exportVoucher(format: 'al_ameen' | 'al_bayan' | 'universal_excel') {
                             <span>📈</span>
                             <span>المنحنى البياني للمبيعات</span>
                         </h4>
-                        <span class="text-xs text-slate-400 font-mono">{{ reportData.currency }}</span>
+                        <span class="text-xs text-slate-400 font-mono">{{ displayCurrency }}</span>
                     </div>
                     <div class="h-72">
                         <Bar :data="chartData" :options="chartOptions" />
@@ -583,7 +586,7 @@ function exportVoucher(format: 'al_ameen' | 'al_bayan' | 'universal_excel') {
                                 class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 text-center"
                             >
                                 <span class="text-xs font-black font-mono text-amber-600 dark:text-amber-400 block">{{ h.label }}</span>
-                                <span class="text-xs font-bold text-slate-800 dark:text-slate-200 mt-1 block">{{ formatNumber(h.net_sales) }} {{ reportData.currency }}</span>
+                                <span class="text-xs font-bold text-slate-800 dark:text-slate-200 mt-1 block">{{ formatNumber(h.net_sales) }} {{ displayCurrency }}</span>
                                 <span class="text-[10px] text-slate-400 block">{{ h.orders_count }} طلب</span>
                             </div>
                         </div>
@@ -617,7 +620,7 @@ function exportVoucher(format: 'al_ameen' | 'al_bayan' | 'universal_excel') {
                                         <span>{{ dish.name }}</span>
                                     </span>
                                     <span class="font-mono font-bold text-slate-800 dark:text-slate-200">
-                                        {{ formatNumber(dish.revenue) }} {{ reportData.currency }}
+                                        {{ formatNumber(dish.revenue) }} {{ displayCurrency }}
                                         <span class="text-[10px] text-slate-400 font-sans">({{ dish.quantity }} قطعة)</span>
                                     </span>
                                 </div>
@@ -690,7 +693,7 @@ function exportVoucher(format: 'al_ameen' | 'al_bayan' | 'universal_excel') {
                                     <td class="p-3.5 font-mono text-slate-600 dark:text-slate-400">{{ formatNumber(row.gross_sales) }}</td>
                                     <td class="p-3.5 font-mono text-rose-500">-{{ formatNumber(row.discounts) }}</td>
                                     <td class="p-3.5 font-mono font-black text-slate-900 dark:text-white text-sm">
-                                        {{ formatNumber(row.net_sales) }} {{ reportData.currency }}
+                                        {{ formatNumber(row.net_sales) }} {{ displayCurrency }}
                                     </td>
                                     <td class="p-3.5 font-mono text-slate-600 dark:text-slate-400">{{ formatNumber(row.aov) }}</td>
                                     <td v-if="activeView === 'monthly'" class="p-3.5 font-mono font-bold">
@@ -709,7 +712,7 @@ function exportVoucher(format: 'al_ameen' | 'al_bayan' | 'universal_excel') {
                                     <td class="p-4 font-mono">{{ formatNumber(reportData.summary.gross_sales) }}</td>
                                     <td class="p-4 font-mono text-rose-500">-{{ formatNumber(reportData.summary.total_discounts) }}</td>
                                     <td class="p-4 font-mono font-black text-amber-600 dark:text-amber-400 text-base">
-                                        {{ formatNumber(reportData.summary.net_sales) }} {{ reportData.currency }}
+                                        {{ formatNumber(reportData.summary.net_sales) }} {{ displayCurrency }}
                                     </td>
                                     <td class="p-4 font-mono">{{ formatNumber(reportData.summary.aov) }}</td>
                                     <td v-if="activeView === 'monthly'" class="p-4 font-mono text-slate-400">-</td>
@@ -771,25 +774,25 @@ function exportVoucher(format: 'al_ameen' | 'al_bayan' | 'universal_excel') {
                     <div class="space-y-1.5 text-slate-700 dark:text-slate-300">
                         <div class="flex justify-between">
                             <span class="font-sans">إجمالي المبيعات (Gross):</span>
-                            <span class="font-bold">{{ formatNumber(reportData.summary.gross_sales) }} {{ reportData.currency }}</span>
+                            <span class="font-bold">{{ formatNumber(reportData.summary.gross_sales) }} {{ displayCurrency }}</span>
                         </div>
                         <div class="flex justify-between text-rose-500">
                             <span class="font-sans">إجمالي الخصومات:</span>
-                            <span class="font-bold">-{{ formatNumber(reportData.summary.total_discounts) }} {{ reportData.currency }}</span>
+                            <span class="font-bold">-{{ formatNumber(reportData.summary.total_discounts) }} {{ displayCurrency }}</span>
                         </div>
                         <div v-if="parseFloat(reportData.summary.wheel_discounts || 0) > 0" class="flex justify-between text-[11px] text-amber-500 pr-3">
                             <span class="font-sans">منها خصومات العجلة:</span>
-                            <span>-{{ formatNumber(reportData.summary.wheel_discounts) }} {{ reportData.currency }}</span>
+                            <span>-{{ formatNumber(reportData.summary.wheel_discounts) }} {{ displayCurrency }}</span>
                         </div>
                         <div v-if="parseFloat(reportData.summary.loyalty_discounts || 0) > 0" class="flex justify-between text-[11px] text-purple-400 pr-3">
                             <span class="font-sans">منها جوائز الولاء:</span>
-                            <span>-{{ formatNumber(reportData.summary.loyalty_discounts) }} {{ reportData.currency }}</span>
+                            <span>-{{ formatNumber(reportData.summary.loyalty_discounts) }} {{ displayCurrency }}</span>
                         </div>
                     </div>
 
                     <div class="pt-2 border-t-2 border-dashed border-slate-300 dark:border-slate-700 flex justify-between items-center text-sm font-black text-amber-600 dark:text-amber-400">
                         <span class="font-sans">صافي الصندوق النهائي:</span>
-                        <span>{{ formatNumber(reportData.summary.net_sales) }} {{ reportData.currency }}</span>
+                        <span>{{ formatNumber(reportData.summary.net_sales) }} {{ displayCurrency }}</span>
                     </div>
 
                     <div class="pt-2 border-t border-dashed border-slate-300 dark:border-slate-700 space-y-1 text-[11px] text-slate-500 dark:text-slate-400">
@@ -799,7 +802,7 @@ function exportVoucher(format: 'al_ameen' | 'al_bayan' | 'universal_excel') {
                         </div>
                         <div class="flex justify-between">
                             <span class="font-sans">متوسط الفاتورة (AOV):</span>
-                            <span class="font-bold font-mono">{{ formatNumber(reportData.summary.aov) }} {{ reportData.currency }}</span>
+                            <span class="font-bold font-mono">{{ formatNumber(reportData.summary.aov) }} {{ displayCurrency }}</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="font-sans">طلبات الصالة / سفري:</span>
@@ -807,7 +810,7 @@ function exportVoucher(format: 'al_ameen' | 'al_bayan' | 'universal_excel') {
                         </div>
                         <div class="flex justify-between text-rose-500">
                             <span class="font-sans">الفاقد من الإلغاءات:</span>
-                            <span class="font-mono">{{ reportData.summary.cancelled_orders || 0 }} طلب ({{ formatNumber(reportData.summary.cancelled_lost) }} {{ reportData.currency }})</span>
+                            <span class="font-mono">{{ reportData.summary.cancelled_orders || 0 }} طلب ({{ formatNumber(reportData.summary.cancelled_lost) }} {{ displayCurrency }})</span>
                         </div>
                     </div>
                 </div>
@@ -978,15 +981,15 @@ function exportVoucher(format: 'al_ameen' | 'al_bayan' | 'universal_excel') {
                                         <div class="flex items-center gap-2">
                                             <span>المجموع المتوازن:</span>
                                             <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-bold">
-                                                فرق التوازن: {{ voucherData.difference }} {{ voucherData.currency }} ✓
+                                                فرق التوازن: {{ voucherData.difference }} {{ voucherCurrencyLabel }} ✓
                                             </span>
                                         </div>
                                     </td>
                                     <td class="p-3.5 font-mono text-emerald-600 dark:text-emerald-400 text-sm">
-                                        {{ formatNumber(voucherData.total_debit) }} {{ voucherData.currency }}
+                                        {{ formatNumber(voucherData.total_debit) }} {{ voucherCurrencyLabel }}
                                     </td>
                                     <td class="p-3.5 font-mono text-amber-600 dark:text-amber-400 text-sm">
-                                        {{ formatNumber(voucherData.total_credit) }} {{ voucherData.currency }}
+                                        {{ formatNumber(voucherData.total_credit) }} {{ voucherCurrencyLabel }}
                                     </td>
                                     <td class="p-3.5 text-xs text-slate-500 dark:text-slate-400">سند معتمد ومتوازن</td>
                                 </tr>

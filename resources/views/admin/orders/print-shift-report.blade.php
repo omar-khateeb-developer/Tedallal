@@ -169,21 +169,24 @@
 
         <div class="divider"></div>
 
+        @php
+            $currencyLabel = \App\Support\MoneyCalculator::displayCurrency($restaurant->currency ?? null);
+        @endphp
         <div style="font-weight: 800; font-size: 12px; margin-bottom: 1mm;">💰 الحسابات المالية:</div>
         <div class="stat-row">
             <span>المجموع الفرعي (Subtotal):</span>
-            <span>{{ $totalSubtotal }} {{ $restaurant->currency ?? 'ل.س' }}</span>
+            <span>{{ $totalSubtotal }} {{ $currencyLabel }}</span>
         </div>
         <div class="stat-row">
             <span>إجمالي الخصومات (كوبونات وعجلة الحظ):</span>
-            <span style="color: #b91c1c;">- {{ $totalDiscount }} {{ $restaurant->currency ?? 'ل.س' }}</span>
+            <span style="color: #b91c1c;">- {{ $totalDiscount }} {{ $currencyLabel }}</span>
         </div>
 
         <div class="double-divider"></div>
 
         <div class="stat-row highlight">
             <span>صافي المبيعات (المحصل بالصندوق):</span>
-            <span>{{ $totalSales }} {{ $restaurant->currency ?? 'ل.س' }}</span>
+            <span>{{ $totalSales }} {{ $currencyLabel }}</span>
         </div>
 
         <div class="divider"></div>

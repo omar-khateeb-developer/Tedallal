@@ -33,30 +33,30 @@ class SendDailyRevenueDigestCommand extends Command
         $sentCount = 0;
 
         foreach ($restaurants as $restaurant) {
-            $phone = $this->option('phone') ?: ($restaurant->phone ?: $restaurant->users()->whereHas('roles', fn($r) => $r->where('name', 'admin'))->first()?->phone);
+            $phone = $this->option('phone') ?: ($restaurant->phone ?: $restaurant->whatsapp_phone);
 
             if (! $phone) {
                 $this->warn("Skipping restaurant {$restaurant->name} (ID: {$restaurant->id}): No contact phone found.");
                 continue;
             }
 
-            $orders = Order::withoutGlobalScopes()
+            $todayOrders = Order::withoutGlobalScopes()
                 ->where('restaurant_id', $restaurant->id)
-                ->where('created_at', '>=', now()->startOfDay())
-                ->get();
+                ->where('created_at', '>=', now()->startOfDay());
 
-            // القاعدة المحاسبية الموحدة: الطلبات المكتملة (served) أو المسددة غير الملغاة
-            $completedOrders = $orders->filter(function ($o) {
-                return $o->status === OrderStatus::Served
-                    || ($o->paid_at !== null && $o->status !== OrderStatus::Cancelled);
-            });
+            // القاعدة المحاسبية الموحدة عبر النطاق المعياري المعتمد
+            $completedOrders = (clone $todayOrders)
+                ->recognizedRevenue()
+                ->get(['id', 'total', 'created_at', 'ready_at']);
+
             $totalSalesStr = '0.00';
             foreach ($completedOrders as $o) {
-                $totalSalesStr = MoneyCalculator::add($totalSalesStr, number_format((float) $o->total, 2, '.', ''));
+                $totalSalesStr = MoneyCalculator::add($totalSalesStr, MoneyCalculator::normalize((string) $o->total));
             }
-            $totalSales = (float) $totalSalesStr;
             $ordersCount = $completedOrders->count();
-            $cancelledCount = $orders->filter(fn($o) => $o->status === OrderStatus::Cancelled)->count();
+            $cancelledCount = (clone $todayOrders)
+                ->where('status', OrderStatus::Cancelled)
+                ->count();
 
             // Top selling item
             $topItemText = 'لا توجد طلبات مسجلة اليوم';
@@ -72,11 +72,13 @@ class SendDailyRevenueDigestCommand extends Command
                 }
             }
 
-            // Average prep time
+            // Average prep time (no synthetic fallback when no ready orders exist)
             $prepTimes = $completedOrders
                 ->filter(fn($o) => $o->ready_at && $o->created_at)
                 ->map(fn($o) => $o->created_at->diffInMinutes($o->ready_at));
-            $avgPrepTime = $prepTimes->count() ? round($prepTimes->average()) : 12;
+            $avgPrepText = $prepTimes->isNotEmpty()
+                ? round($prepTimes->average()) . ' دقيقة'
+                : 'لا توجد بيانات كافية';
 
             // New CRM loyalty customers
             $newCustomers = RestaurantCustomer::where('restaurant_id', $restaurant->id)
@@ -85,23 +87,24 @@ class SendDailyRevenueDigestCommand extends Command
 
             // If test mode and no sales today, provide realistic demonstration numbers
             if ($this->option('test') && $ordersCount === 0) {
-                $totalSales = 4850000;
+                $totalSalesStr = '4850000.00';
                 $ordersCount = 38;
                 $topItemText = 'شاورما عربي دبل اكسترا (24 طلب)';
-                $avgPrepTime = 11;
+                $avgPrepText = '11 دقيقة';
                 $cancelledCount = 0;
                 $newCustomers = 14;
             }
 
-            $currency = ($restaurant->currency === 'SYP' || strtoupper((string)$restaurant->currency) === 'SYP') ? 'ل.س' : ($restaurant->currency ?: 'ل.س');
-            $formattedSales = number_format($totalSales);
+            $currency = MoneyCalculator::displayCurrency($restaurant->currency);
+            $hasFraction = ! str_ends_with($totalSalesStr, '.00');
+            $formattedSales = number_format((float) $totalSalesStr, $hasFraction ? 2 : 0);
             $cleanDate = now()->format('Y-m-d');
 
             $message = "🌙 *ملخص الإيرادات اليومي — مطعم {$restaurant->name}*\n"
                 . "📅 التاريخ: {$cleanDate}\n\n"
                 . "💰 *إجمالي المبيعات:* {$formattedSales} {$currency} ({$ordersCount} فاتورة)\n"
                 . "🏆 *الطبق الأفضل مبيعاً:* {$topItemText}\n"
-                . "⏱️ *متوسط سرعة إنجاز المطبخ:* {$avgPrepTime} دقيقة\n"
+                . "⏱️ *متوسط سرعة إنجاز المطبخ:* {$avgPrepText}\n"
                 . "🔒 *مطابقة الصندوق:* " . ($cancelledCount === 0 ? "مطابق تماماً (صفر فواتير ملغاة ✨)" : "{$cancelledCount} فواتير ملغاة") . "\n"
                 . "👥 *زبائن جدد في الـ CRM:* {$newCustomers} عميل\n\n"
                 . "✨ منظومة «تَدلّل» تتمنى لكم نوماً هانئاً وموسماً زاخراً بالأرباح غداً!";

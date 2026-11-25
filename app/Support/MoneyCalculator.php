@@ -79,4 +79,51 @@ final class MoneyCalculator
             ->toScale(self::SCALE, RoundingMode::HalfUp)
             ->__toString();
     }
+
+    public static function normalize(?string $amount): string
+    {
+        $clean = trim((string) ($amount ?? '0'));
+        if ($clean === '') {
+            $clean = '0';
+        }
+
+        return BigDecimal::of($clean)
+            ->toScale(self::SCALE, RoundingMode::HalfUp)
+            ->__toString();
+    }
+
+    public static function divideByCount(string $total, int $count): string
+    {
+        if ($count <= 0) {
+            return '0.00';
+        }
+
+        return BigDecimal::of($total)
+            ->dividedBy($count, self::SCALE, RoundingMode::HalfUp)
+            ->__toString();
+    }
+
+    public static function absDiff(string $a, string $b): string
+    {
+        return BigDecimal::of($a)
+            ->minus(BigDecimal::of($b))
+            ->abs()
+            ->toScale(self::SCALE, RoundingMode::HalfUp)
+            ->__toString();
+    }
+
+    public static function isZero(string $amount): bool
+    {
+        return BigDecimal::of($amount)->isZero();
+    }
+
+    public static function displayCurrency(?string $currency): string
+    {
+        $trimmed = trim((string) ($currency ?? ''));
+        if ($trimmed === '' || strtoupper($trimmed) === 'SYP') {
+            return 'ل.س';
+        }
+
+        return $trimmed;
+    }
 }

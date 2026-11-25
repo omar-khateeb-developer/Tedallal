@@ -6,6 +6,7 @@ import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import TextInput from '@/Components/TextInput.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
+import { normalizeCurrency } from '@/utils/money';
 
 const isLocked = ref(false);
 const loading = ref(true);
@@ -31,8 +32,7 @@ function formatDiscountVal(val: number | string): string {
 }
 
 function formatCurr(curr?: string): string {
-    if (!curr || curr.toUpperCase() === 'SYP') return 'ل.س';
-    return curr;
+    return normalizeCurrency(curr);
 }
 
 const loadOffers = async () => {

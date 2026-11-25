@@ -3,6 +3,7 @@ import CustomerLayout from '@/Layouts/CustomerLayout.vue';
 import { Link } from '@inertiajs/vue3';
 import { onMounted, onUnmounted, ref, computed } from 'vue';
 import axios from 'axios';
+import { formatMoney } from '@/utils/money';
 import { soundAlerts } from '@/utils/soundAlerts';
 
 const props = defineProps<{
@@ -83,15 +84,7 @@ function shareOrderOnWhatsApp() {
 }
 
 function formatPrice(price: string | number | null | undefined) {
-    const curr = (!props.restaurant.currency || props.restaurant.currency.toUpperCase().trim() === 'SYP') ? 'ل.س' : props.restaurant.currency;
-    if (price === null || price === undefined || price === '') return `0 ${curr}`;
-    const cleanStr = String(price).replace(/,/g, '').trim();
-    const num = parseFloat(cleanStr);
-    const safeVal = isNaN(num) ? 0 : Math.round((num + Number.EPSILON) * 100) / 100;
-    const formatted = Number.isInteger(safeVal)
-        ? safeVal.toLocaleString()
-        : parseFloat(safeVal.toFixed(2)).toLocaleString();
-    return `${formatted} ${curr}`;
+    return formatMoney(price, props.restaurant.currency);
 }
 
 function notifyStatusChange(oldStatus?: string, newStatus?: string) {

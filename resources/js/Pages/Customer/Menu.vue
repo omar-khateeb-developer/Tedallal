@@ -8,6 +8,7 @@ import CustomerLayout from '@/Layouts/CustomerLayout.vue';
 import { router } from '@inertiajs/vue3';
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { normalizeVisualViewport } from '@/composables/useVisualViewport';
+import { formatMoney } from '@/utils/money';
 import axios from 'axios';
 
 interface MenuItem {
@@ -410,12 +411,7 @@ async function submitOrder() {
 }
 
 function formatPrice(price: string | number) {
-    if (price === null || price === undefined) return '0 ل.س';
-    const cleanStr = String(price).replace(/,/g, '');
-    const num = parseFloat(cleanStr);
-    const formatted = isNaN(num) ? '0' : (Number.isInteger(num) ? num.toLocaleString() : parseFloat(num.toFixed(2)).toLocaleString());
-    const curr = (!props.restaurant.currency || props.restaurant.currency.toUpperCase() === 'SYP') ? 'ل.س' : props.restaurant.currency;
-    return `${formatted} ${curr}`;
+    return formatMoney(price, props.restaurant.currency);
 }
 
 watch(cartOpen, (isOpen) => {

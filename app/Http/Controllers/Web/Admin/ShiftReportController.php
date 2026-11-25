@@ -29,13 +29,7 @@ class ShiftReportController extends Controller
             ->get();
 
         // استبعاد الطلبات الملغاة نهائياً حتى لو سبق دفعها، والاعتراف فقط بالمكتمل (served) أو المسدد غير الملغى
-        $paidOrders = $orders->filter(function ($o) {
-            $statusVal = $o->status?->value ?? (string) $o->status;
-            if ($statusVal === 'cancelled') {
-                return false;
-            }
-            return $statusVal === 'served' || !empty($o->paid_at);
-        });
+        $paidOrders = $orders->filter(fn (Order $o) => $o->isRecognizedRevenue());
 
         $cancelledOrders = $orders->filter(function ($o) {
             $statusVal = $o->status?->value ?? (string) $o->status;
@@ -43,8 +37,7 @@ class ShiftReportController extends Controller
         });
 
         $pendingOrders = $orders->filter(function ($o) {
-            $statusVal = $o->status?->value ?? (string) $o->status;
-            return !in_array($statusVal, ['served', 'cancelled'], true) && empty($o->paid_at);
+            return ! $o->isRecognizedRevenue() && (($o->status?->value ?? (string) $o->status) !== 'cancelled');
         });
 
         $totalSales = '0.00';
@@ -52,9 +45,9 @@ class ShiftReportController extends Controller
         $totalDiscount = '0.00';
 
         foreach ($paidOrders as $order) {
-            $totalSubtotal = MoneyCalculator::add($totalSubtotal, number_format((float) $order->subtotal, 2, '.', ''));
-            $totalDiscount = MoneyCalculator::add($totalDiscount, number_format((float) ($order->discount_amount ?? 0), 2, '.', ''));
-            $totalSales = MoneyCalculator::add($totalSales, number_format((float) $order->total, 2, '.', ''));
+            $totalSubtotal = MoneyCalculator::add($totalSubtotal, MoneyCalculator::normalize((string) $order->subtotal));
+            $totalDiscount = MoneyCalculator::add($totalDiscount, MoneyCalculator::normalize((string) ($order->discount_amount ?? '0')));
+            $totalSales = MoneyCalculator::add($totalSales, MoneyCalculator::normalize((string) $order->total));
         }
 
         $takeawayCount = $paidOrders->where('service_type', 'takeaway')->count();

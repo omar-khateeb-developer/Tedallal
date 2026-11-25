@@ -4,10 +4,53 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
+  verify:
+    name: Verify Build & Test Suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: 1. Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 2. Setup PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, sqlite3, gd, curl, zip
+          coverage: none
+
+      - name: 3. Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: 4. Install Dependencies
+        run: |
+          composer install --no-interaction --prefer-dist --no-progress
+          cp .env.example .env
+          php artisan key:generate
+          npm ci
+
+      - name: 5. Typecheck, Vite Build & Gateway Syntax
+        run: |
+          npx vue-tsc --noEmit
+          npm run build
+          node --check whatsapp-gateway/server.js
+
+      - name: 6. Run Full PHPUnit Suite
+        run: php artisan test
+
   deploy:
     name: Deploy to VPS
+    needs: verify
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
