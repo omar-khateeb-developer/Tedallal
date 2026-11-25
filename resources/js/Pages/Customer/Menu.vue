@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import AddItemModal from '@/Components/Customer/AddItemModal.vue';
-import AiWaiterModal from '@/Components/Customer/AiWaiterModal.vue';
 import CartDrawer from '@/Components/Customer/CartDrawer.vue';
-import CheckoutModal from '@/Components/Customer/CheckoutModal.vue';
-import ServiceCallModal from '@/Components/Customer/ServiceCallModal.vue';
 import CustomerLayout from '@/Layouts/CustomerLayout.vue';
 import { router } from '@inertiajs/vue3';
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, defineAsyncComponent, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { normalizeVisualViewport } from '@/composables/useVisualViewport';
 import { formatMoney } from '@/utils/money';
 import axios from 'axios';
+
+const AddItemModal = defineAsyncComponent(() => import('@/Components/Customer/AddItemModal.vue'));
+const AiWaiterModal = defineAsyncComponent(() => import('@/Components/Customer/AiWaiterModal.vue'));
+const CheckoutModal = defineAsyncComponent(() => import('@/Components/Customer/CheckoutModal.vue'));
+const ServiceCallModal = defineAsyncComponent(() => import('@/Components/Customer/ServiceCallModal.vue'));
 
 interface MenuItem {
     id: number;

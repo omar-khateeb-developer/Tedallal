@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, defineAsyncComponent, onMounted, onUnmounted } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { translations, type Locale } from '@/locales/landing';
 import { useTheme } from '@/composables/useTheme';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
-import AiBusinessConsultant from '@/Components/AiBusinessConsultant.vue';
 import CountryFlag from '@/Components/CountryFlag.vue';
 import PwaInstallButton from '@/Components/PwaInstallButton.vue';
-import RoiCalculator from '@/Components/RoiCalculator.vue';
+
+const AiBusinessConsultant = defineAsyncComponent(() => import('@/Components/AiBusinessConsultant.vue'));
+const RoiCalculator = defineAsyncComponent(() => import('@/Components/RoiCalculator.vue'));
 
 interface Props {
     canLogin?: boolean;
