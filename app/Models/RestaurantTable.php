@@ -154,8 +154,8 @@ class RestaurantTable extends Model
             return rtrim($baseUrl, '/') . '/t/' . $this->public_token;
         }
 
-        // Priority 1: Configured QR base URL from config or env
-        if ($configured = config('tedallal.qr_base_url') ?? env('QR_BASE_URL')) {
+        // Priority 1: Configured QR base URL from config (safe when config:cache is active)
+        if ($configured = config('tedallal.qr_base_url')) {
             return rtrim($configured, '/') . '/t/' . $this->public_token;
         }
 

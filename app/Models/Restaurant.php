@@ -309,9 +309,7 @@ class Restaurant extends Model
         $rewardValue = (float) ($f['loyalty_reward_value'] ?? 50);
         $menuItemId = ! empty($f['loyalty_menu_item_id']) ? (int) $f['loyalty_menu_item_id'] : null;
 
-        $currency = ($this->currency === 'SYP' || strtoupper((string) $this->currency) === 'SYP')
-            ? 'ل.س'
-            : ($this->currency ?? 'ل.س');
+        $currency = \App\Support\MoneyCalculator::displayCurrency($this->currency);
 
         $rewardLabel = '';
         $monetaryValue = $rewardValue;

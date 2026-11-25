@@ -2,6 +2,7 @@
 import { Head, router } from '@inertiajs/vue3';
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import axios from 'axios';
+import { normalizeCurrency } from '@/utils/money';
 
 interface Slice {
     id: number;
@@ -697,11 +698,6 @@ function formatNumber(num: number | string): string {
     const val = parseFloat(String(num));
     if (isNaN(val)) return '0';
     return val % 1 === 0 ? String(Math.round(val)) : val.toFixed(2).replace(/\.00$/, '');
-}
-
-function normalizeCurrency(curr?: string): string {
-    if (!curr || curr.toUpperCase() === 'SYP') return 'ل.س';
-    return curr;
 }
 
 // Share via WhatsApp

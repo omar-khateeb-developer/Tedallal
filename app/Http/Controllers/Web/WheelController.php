@@ -9,6 +9,7 @@ use App\Models\Restaurant;
 use App\Models\RestaurantTable;
 use App\Services\CustomerCrmService;
 use App\Services\WhatsAppGatewayService;
+use App\Support\MoneyCalculator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -717,9 +718,6 @@ class WheelController extends Controller
 
     private function normalizeCurrency(?string $currency): string
     {
-        if (!$currency || strtoupper(trim($currency)) === 'SYP') {
-            return 'ل.س';
-        }
-        return $currency;
+        return MoneyCalculator::displayCurrency($currency);
     }
 }

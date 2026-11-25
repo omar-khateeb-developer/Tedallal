@@ -11,6 +11,7 @@ use App\Models\RestaurantTable;
 use App\Services\CustomerCrmService;
 use App\Services\TableSessionService;
 use App\Services\TokenGenerator;
+use App\Support\MoneyCalculator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -159,7 +160,7 @@ class CustomerController extends Controller
             ->select('id', 'order_number', 'status', 'total')
             ->get();
 
-        $cleanCurrency = (!$table->restaurant->currency || strtoupper($table->restaurant->currency) === 'SYP') ? 'ل.س' : $table->restaurant->currency;
+        $cleanCurrency = MoneyCalculator::displayCurrency($table->restaurant->currency);
 
         $restaurantData = array_merge($table->restaurant->toArray(), [
             'currency' => $cleanCurrency,
@@ -256,7 +257,7 @@ class CustomerController extends Controller
             ]);
         }
 
-        $cleanCurrency = (!$table->restaurant->currency || strtoupper($table->restaurant->currency) === 'SYP') ? 'ل.س' : $table->restaurant->currency;
+        $cleanCurrency = MoneyCalculator::displayCurrency($table->restaurant->currency);
         $restaurantData = array_merge($table->restaurant->toArray(), [
             'currency' => $cleanCurrency,
         ]);

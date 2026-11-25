@@ -160,7 +160,7 @@ class PromoCode extends Model
             $cleanMin = ((float)$this->min_order_value == (int)$this->min_order_value) ? (int)$this->min_order_value : $this->min_order_value;
             $cleanTotal = ($orderTotal == (int)$orderTotal) ? (int)$orderTotal : $orderTotal;
             $cleanDiff = ($diff == (int)$diff) ? (int)$diff : $diff;
-            $cleanCurrency = ($currency === 'SYP' || strtoupper($currency) === 'SYP') ? 'ل.س' : $currency;
+            $cleanCurrency = \App\Support\MoneyCalculator::displayCurrency($currency);
             $reasonMessage = "🏷️ الحد الأدنى لتطبيق هذا الخصم هو {$cleanMin} {$cleanCurrency} ومجموع طلبك الحالي {$cleanTotal} {$cleanCurrency}. أضف أصنافاً بقيمة {$cleanDiff} {$cleanCurrency} لتفعيل الخصم!";
         }
 

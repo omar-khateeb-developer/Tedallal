@@ -6,6 +6,7 @@ use App\Models\OrderWheelToken;
 use App\Models\PromoCode;
 use App\Models\Restaurant;
 use App\Models\RestaurantCustomer;
+use App\Support\MoneyCalculator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -135,11 +136,7 @@ final class CustomerCrmService
 
     public function normalizeCurrency(?string $currency): string
     {
-        if (! $currency || strtoupper(trim($currency)) === 'SYP') {
-            return 'ل.س';
-        }
-
-        return $currency;
+        return MoneyCalculator::displayCurrency($currency);
     }
 
     /**
