@@ -13,7 +13,7 @@ function syncCustomerDesktopModeGuard() {
     if (typeof window === 'undefined') return;
     try {
         const path = window.location.pathname || '';
-        const isCustomerRoute = /^\/(t|wheel|wheel-demo|w|r)(\/|$)/.test(path);
+        const isCustomerRoute = /^\/(t|m|wheel|wheel-demo|w|r|book)(\/|$)/.test(path);
         const minScreen = Math.min(window.screen.width || 9999, window.screen.height || 9999);
         const isCoarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
         const hasTouch = (navigator.maxTouchPoints || 0) > 0 || isCoarse;

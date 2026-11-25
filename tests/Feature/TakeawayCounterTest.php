@@ -259,4 +259,72 @@ class TakeawayCounterTest extends TestCase
         // رابط لمطعم غير موجود يرد 404
         $this->get('/m/unknown-restaurant-slug')->assertNotFound();
     }
+
+    public function test_vip_booking_demo_wheel_and_promo_testing_link_to_public_restaurant_menu(): void
+    {
+        $restaurant = Restaurant::factory()->create([
+            'name' => 'مطعم الشهباء',
+            'slug' => 'al-shahba-links',
+            'status' => 'active',
+            'plan' => 'max',
+        ]);
+
+        $dineInTable = RestaurantTable::factory()->create([
+            'restaurant_id' => $restaurant->id,
+            'name' => 'طاولة صالة 3',
+            'status' => 'active',
+            'table_type' => RestaurantTable::TYPE_DINE_IN,
+        ]);
+
+        $bookingRes = $this->get("/r/{$restaurant->slug}/vip-booking");
+        $bookingRes->assertOk();
+        $bookingProps = $bookingRes->viewData('page')['props'];
+        $expectedMenuUrl = route('customer.restaurant_menu', ['slug' => $restaurant->slug]);
+
+        $this->assertSame($expectedMenuUrl, $bookingProps['restaurant']['menu_url']);
+        $this->assertStringEndsWith("/m/{$restaurant->slug}", $bookingProps['restaurant']['menu_url']);
+        $this->get($bookingProps['restaurant']['menu_url'])->assertOk();
+
+        // /wheel/demo يجب أن يوجه إلى /m/{slug} وليس إلى طاولة صالة فعلية
+        $wheelRes = $this->get("/wheel/demo?restaurant_id={$restaurant->id}");
+        $wheelRes->assertOk();
+        $wheelProps = $wheelRes->viewData('page')['props'];
+        $this->assertSame($expectedMenuUrl, $wheelProps['restaurant']['menu_url']);
+        $this->assertStringNotContainsString($dineInTable->public_token, $wheelProps['restaurant']['menu_url']);
+
+        // تشخيص الكوبون لدى السوبر أدمن يجب أن يتجاوز TenantScope ويوجه لسلة /m/{slug} معزولة
+        \App\Models\PromoCode::withoutGlobalScopes()->create([
+            'restaurant_id' => $restaurant->id,
+            'code' => 'VIP-MENU-10',
+            'source' => 'admin',
+            'discount_type' => 'percentage',
+            'discount_value' => 10,
+            'min_order_value' => 0,
+            'is_active' => true,
+            'starts_at' => now()->subDay(),
+            'expires_at' => now()->addDays(7),
+            'is_single_use' => false,
+            'times_used' => 0,
+        ]);
+
+        $superAdmin = User::factory()->create([
+            'restaurant_id' => null,
+            'status' => UserStatus::Active,
+        ]);
+        $superAdmin->assignRole(UserRole::SuperAdmin->value);
+
+        Sanctum::actingAs($superAdmin);
+
+        $diagRes = $this->postJson('/api/super-admin/promo-testing/diagnose', [
+            'restaurant_id' => $restaurant->id,
+            'code' => 'VIP-MENU-10',
+            'cart_total' => 100,
+        ]);
+
+        $diagRes->assertOk()
+            ->assertJsonPath('data.exists', true)
+            ->assertJsonPath('data.diagnostics.valid', true);
+        $this->assertStringContainsString("/m/{$restaurant->slug}?cart=1&coupon=VIP-MENU-10", $diagRes->json('data.test_url'));
+        $this->assertStringNotContainsString($dineInTable->public_token, $diagRes->json('data.test_url'));
+    }
 }

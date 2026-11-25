@@ -90,10 +90,10 @@ onMounted(() => {
                                             {{ restaurant.name }}
                                         </span>
                                         
-                                        <!-- Badges: Visible ONLY on wide desktop (xl: 1280px+) to avoid any header collision on tablets/laptops/mobile -->
+                                        <!-- Badges: Visible ONLY on 2xl desktop (1536px+) to guarantee zero header collision at 1280px-1440px -->
                                         <span
                                             v-if="restaurant.type === 'prepaid'"
-                                            class="hidden xl:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-xl text-xs font-bold bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 shadow-2xs whitespace-nowrap"
+                                            class="hidden 2xl:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-xl text-xs font-bold bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 shadow-2xs whitespace-nowrap"
                                             title="نظام دفع مسبق ونوافذ استلام ذاتية"
                                         >
                                             <span class="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse"></span>
@@ -102,7 +102,7 @@ onMounted(() => {
                                         </span>
                                         <span
                                             v-else
-                                            class="hidden xl:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-xl text-xs font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 shadow-2xs whitespace-nowrap"
+                                            class="hidden 2xl:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-xl text-xs font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 shadow-2xs whitespace-nowrap"
                                             title="نظام خدمة طاولات ودفع لاحق"
                                         >
                                             <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
@@ -144,10 +144,10 @@ onMounted(() => {
                             </div>
 
                             <!-- Desktop Quick Nav Links: Visible ONLY on xl:flex (1280px+) -->
-                            <div class="hidden xl:flex items-center gap-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-2xl shadow-xs border border-white/50 dark:border-slate-700/80 shrink-0">
+                            <div class="hidden xl:flex items-center gap-1 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-2.5 py-1.5 rounded-2xl shadow-xs border border-white/50 dark:border-slate-700/80 shrink-0 whitespace-nowrap">
                                 <Link
                                     :href="route('dashboard')"
-                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200"
+                                    class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-200 whitespace-nowrap"
                                     :class="route().current('dashboard') || route().current('admin.dashboard') || route().current('super_admin.dashboard')
                                         ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 font-bold'
                                         : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'"
@@ -257,10 +257,10 @@ onMounted(() => {
                                         >
                                             <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
                                                 <span class="font-bold text-slate-800 dark:text-slate-100 max-w-[90px] sm:max-w-[120px] lg:max-w-[160px] xl:max-w-[200px] truncate">{{ user?.name }}</span>
-                                                <!-- Role Badge: hidden on small tablet, shown on lg+ -->
+                                                <!-- Role Badge: shown on 2xl+ to prevent header crowding at 1280px-1440px (always visible inside dropdown) -->
                                                 <span
                                                     v-if="roleLabel"
-                                                    class="hidden lg:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-xs font-bold shadow-2xs whitespace-nowrap"
+                                                    class="hidden 2xl:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-xs font-bold shadow-2xs whitespace-nowrap"
                                                     :class="userRoleBadgeClass"
                                                 >
                                                     <span class="h-1.5 w-1.5 rounded-full" :class="userRoleDotClass"></span>

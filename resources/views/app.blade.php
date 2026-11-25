@@ -68,7 +68,7 @@
                 } catch (e) {}
                 try {
                     var path = window.location.pathname || '';
-                    var isCustomerRoute = /^\/(t|wheel|wheel-demo|w|r)(\/|$)/.test(path);
+                    var isCustomerRoute = /^\/(t|m|wheel|wheel-demo|w|r|book)(\/|$)/.test(path);
                     var minScreen = Math.min(window.screen.width || 9999, window.screen.height || 9999);
                     var isCoarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
                     var hasTouch = (navigator.maxTouchPoints || 0) > 0 || isCoarse;

@@ -247,8 +247,8 @@ onUnmounted(() => {
         </header>
 
         <!-- Instructions Banner -->
-        <div class="bg-gradient-to-r from-amber-950/40 via-amber-900/20 to-amber-950/40 border-b border-amber-500/20 px-4 py-2 text-center text-xs text-amber-200 font-medium">
-            <span>💡 <strong>كيف يعمل المحاكي؟</strong> اضف أطباقك من منيو الزبون على اليمين واضغط «إرسال الطلب»، لتشهد بنفسك كيف يظهر فوراً في شاشة المطبخ KDS والكاشير على اليسار مع صوت التنبيه وتوليد الفاتورة دون أي تأخير!</span>
+        <div class="bg-gradient-to-r from-amber-950/40 via-amber-900/20 to-amber-950/40 border-b border-amber-500/20 px-4 py-2 text-center text-xs text-amber-200 font-medium leading-relaxed">
+            <span>💡 <strong>كيف يعمل المحاكي؟</strong> أضف أطباقك من منيو الزبون على اليمين واضغط «إرسال الطلب»، لتشهد بنفسك كيف يظهر فوراً في شاشة المطبخ <span dir="ltr" class="font-mono font-bold">KDS</span> والكاشير على اليسار مع صوت التنبيه وتوليد الفاتورة دون أي تأخير!</span>
         </div>
 
         <!-- Mobile Tab Switcher (visible on mobile only) -->
@@ -256,7 +256,7 @@ onUnmounted(() => {
             <button
                 type="button"
                 @click="activeTab = 'menu'"
-                class="flex-1 py-3 text-xs font-bold text-center border-b-2 transition"
+                class="flex-1 py-3 px-2 text-xs font-bold text-center border-b-2 transition whitespace-nowrap"
                 :class="activeTab === 'menu' ? 'border-amber-500 text-amber-400 bg-amber-500/5' : 'border-transparent text-stone-400'"
             >
                 📱 منيو الزبون (طاولة {{ tableNumber }})
@@ -267,10 +267,10 @@ onUnmounted(() => {
             <button
                 type="button"
                 @click="activeTab = 'kds'"
-                class="flex-1 py-3 text-xs font-bold text-center border-b-2 transition flex items-center justify-center gap-1.5"
+                class="flex-1 py-3 px-2 text-xs font-bold text-center border-b-2 transition flex items-center justify-center gap-1.5 whitespace-nowrap"
                 :class="activeTab === 'kds' ? 'border-emerald-500 text-emerald-400 bg-emerald-500/5' : 'border-transparent text-stone-400'"
             >
-                <span>🍳 شاشة المطبخ KDS والكاشير</span>
+                <span>🍳 شاشة المطبخ <span dir="ltr">KDS</span> والكاشير</span>
                 <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
             </button>
         </div>
@@ -287,7 +287,7 @@ onUnmounted(() => {
                     <div class="flex items-center gap-2">
                         <span class="p-2 rounded-xl bg-amber-500/10 text-amber-400 text-lg">📱</span>
                         <div>
-                            <h3 class="font-black text-sm sm:text-base text-white">منيو الزبون الذكي بالـ QR</h3>
+                            <h3 class="font-black text-sm sm:text-base text-white">منيو الزبون الذكي بالـ <span dir="ltr">QR</span></h3>
                             <p class="text-[11px] text-stone-400">ما يراه زبونك على هاتفه في الصالة فور مسح الكود</p>
                         </div>
                     </div>

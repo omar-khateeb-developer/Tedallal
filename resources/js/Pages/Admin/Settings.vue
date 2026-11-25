@@ -375,9 +375,10 @@ onUnmounted(stopWaPolling);
             <h2 class="text-xl font-semibold text-gray-800 dark:text-white">إعدادات المطعم</h2>
         </template>
 
-        <div class="mx-auto max-w-2xl p-6" dir="rtl">
+        <div class="mx-auto max-w-7xl p-6" dir="rtl">
             <AdminNav />
 
+            <div class="mx-auto max-w-3xl">
             <form v-if="restaurant" class="space-y-4 rounded-2xl bg-white dark:bg-[#0a0f1d] p-6 shadow-xs border border-slate-100 dark:border-slate-800" @submit.prevent="save">
                 <!-- بطاقة توضيح نوع نظام المطعم -->
                 <div v-if="restaurant.type === 'prepaid'" class="rounded-xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 p-4">
@@ -923,6 +924,7 @@ onUnmounted(stopWaPolling);
                         </button>
                     </div>
                 </div>
+            </div>
             </div>
         </div>
     </AuthenticatedLayout>

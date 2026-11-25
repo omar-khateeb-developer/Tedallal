@@ -72,7 +72,7 @@ async function cancelMyTurn() {
 }
 
 function openMenu() {
-    window.location.href = `/r/${props.restaurant.slug}`;
+    window.location.href = `/m/${props.restaurant.slug}`;
 }
 
 onMounted(() => {

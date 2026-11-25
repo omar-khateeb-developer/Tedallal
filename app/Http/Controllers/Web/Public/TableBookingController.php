@@ -67,6 +67,7 @@ class TableBookingController extends Controller
                 'phone' => $restaurant->phone,
                 'address' => $restaurant->address,
                 'currency' => $restaurant->currency,
+                'menu_url' => route('customer.restaurant_menu', ['slug' => $restaurant->slug]),
             ],
             'tables' => $tables,
             'timeSlots' => $timeSlots,
@@ -339,6 +340,7 @@ class TableBookingController extends Controller
                 'logo' => $restaurant->logo,
                 'phone' => $restaurant->phone,
                 'address' => $restaurant->address,
+                'menu_url' => route('customer.restaurant_menu', ['slug' => $restaurant->slug]),
             ],
             'reservation' => [
                 'uuid' => $reservation->uuid,

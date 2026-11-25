@@ -5,6 +5,7 @@ import { translations, type Locale } from '@/locales/landing';
 import { useTheme } from '@/composables/useTheme';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import AiBusinessConsultant from '@/Components/AiBusinessConsultant.vue';
+import CountryFlag from '@/Components/CountryFlag.vue';
 import PwaInstallButton from '@/Components/PwaInstallButton.vue';
 import RoiCalculator from '@/Components/RoiCalculator.vue';
 
@@ -61,7 +62,7 @@ const supportedArabCurrencies: Record<string, CountryCurrencyConfig> = {
         countryName: { ar: 'الجمهورية العربية السورية', en: 'Syria' },
         currencyName: { ar: 'ليرة سورية', en: 'Syrian Pound' },
         symbol: { ar: 'ل.س', en: 'SYP' },
-        flag: '🇸🇾',
+        flag: 'SY',
         rate: 1.0,
         decimals: 0,
     },
@@ -565,8 +566,8 @@ onUnmounted(() => {
                         : 'bg-[#FAF8F5]/88 backdrop-blur-xl border-b border-[#C5A059]/25 shadow-[0_4px_15px_rgba(180,140,60,0.06)]')
             ]"
         >
-            <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-                <div class="flex items-center justify-between transition-all duration-300" :class="isScrolled ? 'h-14 sm:h-15' : 'h-16 sm:h-20'">
+            <div class="max-w-7xl mx-auto px-3 sm:px-5 lg:px-6">
+                <div class="flex items-center justify-between gap-2 transition-all duration-300" :class="isScrolled ? 'h-14 sm:h-15' : 'h-16 sm:h-20'">
                     <!-- Brand Identity (Animated Royal Emblem + Tedallal Luxury Typography) -->
                     <Link href="/" class="flex items-center gap-2 sm:gap-3 group shrink-0">
                         <!-- Pristine Borderless Floating Royal Emblem -->
@@ -587,7 +588,7 @@ onUnmounted(() => {
                                 >
                                     {{ currentLocale === 'ar' ? 'تَدلَّـل' : 'Tedallal' }}
                                 </span>
-                                <span class="hidden sm:inline-block text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                                <span class="hidden sm:inline-block xl:hidden 2xl:inline-block text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-400 border border-amber-500/30">
                                     ROYAL
                                 </span>
                             </div>
@@ -598,63 +599,66 @@ onUnmounted(() => {
                     </Link>
 
                     <!-- Navigation Links -->
-                    <nav class="hidden lg:flex items-center gap-7 text-xs xl:text-sm font-bold" :class="isDark ? 'text-stone-300' : 'text-stone-700'">
-                        <a href="#platform-mockups" class="hover:text-amber-400 transition-colors">
+                    <nav class="hidden xl:flex items-center gap-2 2xl:gap-4 text-[11px] 2xl:text-xs font-bold whitespace-nowrap" :class="isDark ? 'text-stone-300' : 'text-stone-700'">
+                        <a href="#platform-mockups" class="hover:text-amber-400 transition-colors whitespace-nowrap">
                             {{ currentLocale === 'ar' ? 'للمطاعم' : 'For Restaurants' }}
                         </a>
-                        <a href="#platform-mockups" class="hover:text-amber-400 transition-colors">
+                        <a href="#platform-mockups" class="hover:text-amber-400 transition-colors whitespace-nowrap">
                             {{ currentLocale === 'ar' ? 'المزايا' : 'Features' }}
                         </a>
-                        <a href="#showcase" class="hover:text-amber-400 transition-colors">
+                        <a href="#showcase" class="hover:text-amber-400 transition-colors whitespace-nowrap">
                             {{ currentLocale === 'ar' ? 'القوائم الذكية' : 'Digital Menus' }}
                         </a>
-                        <a href="#floor-to-kitchen" class="hover:text-amber-400 transition-colors flex items-center gap-1.5">
-                            <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                        <a href="#floor-to-kitchen" class="hover:text-amber-400 transition-colors flex items-center gap-1.5 whitespace-nowrap">
+                            <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping shrink-0"></span>
                             {{ currentLocale === 'ar' ? 'من الصالة للمطبخ' : 'Floor to Kitchen' }}
                         </a>
-                        <a href="#bento" class="hover:text-amber-400 transition-colors">
-                            {{ currentLocale === 'ar' ? 'رؤوس الخدمة' : 'Operations' }}
+                        <a href="#bento" class="hover:text-amber-400 transition-colors whitespace-nowrap">
+                            {{ currentLocale === 'ar' ? 'التشغيل الذكي' : 'Operations' }}
                         </a>
-                        <a href="#roi" class="hover:text-amber-400 transition-colors">
-                            {{ currentLocale === 'ar' ? 'الضرائب والعمولات' : 'ROI & Profit' }}
+                        <a href="#roi" class="hover:text-amber-400 transition-colors whitespace-nowrap">
+                            {{ currentLocale === 'ar' ? 'العائد والوفورات' : 'ROI & Profit' }}
                         </a>
-                        <a href="#faqs" class="hover:text-amber-400 transition-colors">
+                        <a href="#faqs" class="hover:text-amber-400 transition-colors whitespace-nowrap">
                             {{ currentLocale === 'ar' ? 'الأسئلة الشائعة' : 'FAQs' }}
                         </a>
                         <a
                             href="/presentation"
                             target="_blank"
                             rel="noopener noreferrer"
-                            class="hover:text-amber-400 transition-colors flex items-center gap-1.5 font-bold"
+                            class="hover:text-amber-400 transition-colors flex items-center gap-1.5 font-bold whitespace-nowrap"
                             :class="isDark ? 'text-amber-300' : 'text-[#8C6010]'"
                             :title="currentLocale === 'ar' ? 'عرض الملف التَعريفي لمُلَّاك المطاعِم' : 'Executive Pitch Deck'"
                         >
-                            <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"></span>
                             <span>{{ currentLocale === 'ar' ? 'الملف التعريفي' : 'Pitch Deck' }}</span>
-                            <span class="text-[10px] opacity-70">↗</span>
+                            <svg class="w-3 h-3 opacity-75 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 17L17 7M7 7h10v10" />
+                            </svg>
                         </a>
                     </nav>
 
                     <!-- Header Utility Tools -->
-                    <div class="flex items-center gap-1.5 sm:gap-2.5">
+                    <div class="flex items-center gap-1 sm:gap-2 shrink-0">
                         <!-- Arab Currency Selector -->
                         <div class="relative" data-currency-dropdown>
                             <button
                                 type="button"
-                                class="flex items-center gap-1 px-2 py-1.5 sm:px-3 sm:py-1.5 rounded-xl text-xs font-bold border transition-colors shadow-2xs"
+                                class="flex items-center gap-1.5 px-2 py-1.5 sm:px-2.5 sm:py-1.5 rounded-xl text-xs font-bold border transition-colors shadow-2xs whitespace-nowrap"
                                 :class="isDark ? 'glass-ultra text-stone-200 hover:border-amber-500/50' : 'bg-white border-stone-200 text-stone-700 hover:border-amber-400'"
                                 @click="isCurrencyMenuOpen = !isCurrencyMenuOpen"
                             >
-                                <span>{{ currentCurrency.flag }}</span>
-                                <span class="font-black text-[11px] sm:text-xs">{{ currentCountryCode }}</span>
-                                <svg class="w-3 h-3 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <CountryFlag :code="currentCountryCode" size="sm" />
+                                <span class="text-amber-400 font-bold text-[11px]">{{ currentCurrencySymbol }}</span>
+                                <span class="font-black text-[11px] opacity-70">{{ currentCountryCode }}</span>
+                                <svg class="w-3 h-3 opacity-60 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                 </svg>
                             </button>
 
                             <div
                                 v-if="isCurrencyMenuOpen"
-                                class="absolute end-0 mt-2 w-56 rounded-2xl border shadow-2xl py-2 z-50 backdrop-blur-2xl max-h-72 overflow-y-auto"
+                                class="absolute end-0 mt-2 w-60 rounded-2xl border shadow-2xl py-2 z-50 backdrop-blur-2xl max-h-72 overflow-y-auto"
                                 :class="isDark ? 'bg-[#0c1222] border-[rgba(226,196,133,0.18)] text-stone-200' : 'bg-white border-stone-200 text-stone-800'"
                             >
                                 <div class="px-3 py-1.5 text-[11px] font-black uppercase tracking-wider text-amber-500 border-b border-stone-700/30">
@@ -669,7 +673,7 @@ onUnmounted(() => {
                                     @click="setCurrency(curr.code)"
                                 >
                                     <span class="flex items-center gap-2">
-                                        <span>{{ curr.flag }}</span>
+                                        <CountryFlag :code="curr.code" size="md" />
                                         <span>{{ curr.countryName[currentLocale] }}</span>
                                     </span>
                                     <span class="text-stone-400 font-bold">{{ curr.symbol[currentLocale] }}</span>
@@ -707,7 +711,7 @@ onUnmounted(() => {
                         <!-- Primary VIP Booking CTA (Pill Button, Refined Luxury without Glare) -->
                         <button
                             type="button"
-                            class="hidden sm:inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-gradient-to-r from-[#BF953F] via-[#E8C265] to-[#B38728] text-stone-950 font-black text-xs sm:text-sm shadow-sm hover:shadow-md hover:shadow-amber-500/15 hover:scale-105 active:scale-95 transition-all"
+                            class="hidden sm:inline-flex items-center gap-1.5 px-3 2xl:px-4 py-2 rounded-full bg-gradient-to-r from-[#BF953F] via-[#E8C265] to-[#B38728] text-stone-950 font-black text-xs shadow-sm hover:shadow-md hover:shadow-amber-500/15 hover:scale-105 active:scale-95 transition-all whitespace-nowrap shrink-0"
                             @click="isDemoModalOpen = true"
                         >
                             <span>{{ currentLocale === 'ar' ? 'جرّب الآن' : 'Get Started' }}</span>
@@ -715,16 +719,16 @@ onUnmounted(() => {
                         </button>
 
                         <!-- PWA Install Button -->
-                        <PwaInstallButton variant="compact" />
+                        <PwaInstallButton variant="compact" class="hidden sm:inline-flex" />
 
                         <!-- Login Link -->
                         <Link
                             v-if="canLogin"
                             href="/login"
-                            class="px-2.5 py-1.5 sm:px-3.5 sm:py-1.5 rounded-xl font-bold text-xs sm:text-sm border transition-all"
+                            class="px-2.5 py-1.5 sm:px-3 2xl:px-3.5 sm:py-1.5 rounded-xl font-bold text-xs border transition-all whitespace-nowrap shrink-0"
                             :class="isDark ? 'border-amber-500/40 text-amber-400 hover:bg-amber-500/10' : 'border-stone-300 text-stone-800 hover:bg-stone-100'"
                         >
-                            {{ currentLocale === 'ar' ? 'تسجيل الدخول' : 'Sign In' }}
+                            {{ currentLocale === 'ar' ? 'دخول' : 'Sign In' }}
                         </Link>
                     </div>
                 </div>

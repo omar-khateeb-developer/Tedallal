@@ -29,7 +29,7 @@ interface TableItem {
     current_guest_name?: string;
     turn_minutes?: number;
     stage_minutes?: number;
-    bill_wait_minutes?: number;
+    bill_wait_minutes?: number | null;
     has_waiter_call?: boolean;
     service_call?: any;
     active_session?: any;
@@ -85,22 +85,48 @@ const props = defineProps<{
     isFeatureLocked: boolean;
 }>();
 
-// State
-const tables = ref<TableItem[]>(props.tables.map(t => ({
-    ...t,
-    pos_x: Number(t.pos_x) || 80,
-    pos_y: Number(t.pos_y) || 80,
-    shape: t.shape || 'circle',
-    rotation: Number(t.rotation) || 0,
-    capacity: Number(t.capacity) || 4,
-    zone: t.zone || 'main',
-    width: Number(t.width) || (t.shape === 'vip' ? 140 : (t.shape === 'rectangle' ? 130 : 90)),
-    height: Number(t.height) || (t.shape === 'rectangle' ? 80 : 90),
-    operational_stage: t.operational_stage || (t.active_session ? 'seated' : 'available'),
-    turn_minutes: Number(t.turn_minutes) || 0,
-    stage_minutes: Number(t.stage_minutes) || 0,
-    bill_wait_minutes: t.bill_wait_minutes ?? null,
-})));
+// State — automatically stagger any unpositioned or colliding tables so they never pile at (80,80)
+const occupiedFloorCoords = new Set<string>();
+const tables = ref<TableItem[]>(props.tables.map((t, idx) => {
+    let px = Number(t.pos_x) || 0;
+    let py = Number(t.pos_y) || 0;
+    const isUnpositioned = px <= 0 && py <= 0;
+    let key = `${Math.round(px / 20)}:${Math.round(py / 20)}`;
+    if (isUnpositioned || occupiedFloorCoords.has(key)) {
+        let slot = idx;
+        while (slot < 100) {
+            const col = slot % 4;
+            const row = Math.floor(slot / 4);
+            const candidateX = 60 + col * 170;
+            const candidateY = 70 + row * 145;
+            const candidateKey = `${Math.round(candidateX / 20)}:${Math.round(candidateY / 20)}`;
+            if (!occupiedFloorCoords.has(candidateKey)) {
+                px = candidateX;
+                py = candidateY;
+                key = candidateKey;
+                break;
+            }
+            slot++;
+        }
+    }
+    occupiedFloorCoords.add(key);
+
+    return {
+        ...t,
+        pos_x: px,
+        pos_y: py,
+        shape: t.shape || 'circle',
+        rotation: Number(t.rotation) || 0,
+        capacity: Number(t.capacity) || 4,
+        zone: t.zone || 'main',
+        width: Number(t.width) || (t.shape === 'vip' ? 140 : (t.shape === 'rectangle' ? 130 : 90)),
+        height: Number(t.height) || (t.shape === 'rectangle' ? 80 : 90),
+        operational_stage: t.operational_stage || (t.active_session ? 'seated' : 'available'),
+        turn_minutes: Number(t.turn_minutes) || 0,
+        stage_minutes: Number(t.stage_minutes) || 0,
+        bill_wait_minutes: t.bill_wait_minutes ?? null,
+    };
+}));
 
 const reservations = ref<ReservationItem[]>(props.todayReservations || []);
 const waitlist = ref<WaitlistItem[]>(props.todayWaitlist || []);
@@ -1456,7 +1482,7 @@ onUnmounted(() => {
                                 </div>
                                 <button
                                     type="button"
-                                    @click="closeSessionForTable"
+                                    @click="closeSessionForTable()"
                                     class="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-xs transition"
                                 >
                                     🧹 إخلاء الطاولة وإنهاء الجلسة

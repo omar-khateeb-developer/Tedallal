@@ -27,7 +27,7 @@ const showModal = ref(false);
             type="button"
             @click="showModal = true"
             :class="[
-                'group flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/15 to-yellow-500/15 hover:from-amber-500/25 hover:to-yellow-500/25 border border-amber-500/30 hover:border-amber-500/50 text-amber-300 text-xs font-bold transition shadow-sm font-cairo active:scale-95',
+                'group flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/15 to-yellow-500/15 hover:from-amber-500/25 hover:to-yellow-500/25 border border-amber-500/30 hover:border-amber-500/50 text-amber-300 text-xs font-bold transition shadow-sm font-cairo active:scale-95 whitespace-nowrap shrink-0',
                 className
             ]"
             title="تثبيت منصة تدلّل كتطبيق أصلي على جهازك"

@@ -29,70 +29,76 @@ const submit = () => {
 
 <template>
     <GuestLayout>
-        <Head title="Log in" />
+        <Head title="تسجيل الدخول" />
 
-        <div v-if="status" class="mb-4 text-sm font-medium text-green-600">
-            {{ status }}
-        </div>
-
-        <form @submit.prevent="submit">
-            <div>
-                <InputLabel for="email" value="Email" />
-
-                <TextInput
-                    id="email"
-                    type="email"
-                    class="mt-1 block w-full"
-                    v-model="form.email"
-                    required
-                    autofocus
-                    autocomplete="username"
-                />
-
-                <InputError class="mt-2" :message="form.errors.email" />
+        <div dir="rtl" class="space-y-4">
+            <div v-if="status" class="mb-4 text-sm font-medium text-emerald-500">
+                {{ status }}
             </div>
 
-            <div class="mt-4">
-                <InputLabel for="password" value="Password" />
+            <form @submit.prevent="submit">
+                <div>
+                    <InputLabel for="email" value="البريد الإلكتروني" class="text-right font-bold" />
 
-                <TextInput
-                    id="password"
-                    type="password"
-                    class="mt-1 block w-full"
-                    v-model="form.password"
-                    required
-                    autocomplete="current-password"
-                />
+                    <TextInput
+                        id="email"
+                        type="email"
+                        dir="ltr"
+                        class="mt-1.5 block w-full text-left focus:border-amber-500 focus:ring-amber-500"
+                        v-model="form.email"
+                        required
+                        autofocus
+                        autocomplete="username"
+                        placeholder="admin@restaurant.com"
+                    />
 
-                <InputError class="mt-2" :message="form.errors.password" />
-            </div>
+                    <InputError class="mt-2" :message="form.errors.email" />
+                </div>
 
-            <div class="mt-4 block">
-                <label class="flex items-center">
-                    <Checkbox name="remember" v-model:checked="form.remember" />
-                    <span class="ms-2 text-sm text-gray-600 dark:text-gray-400"
-                        >Remember me</span
+                <div class="mt-4">
+                    <InputLabel for="password" value="كلمة المرور" class="text-right font-bold" />
+
+                    <TextInput
+                        id="password"
+                        type="password"
+                        dir="ltr"
+                        class="mt-1.5 block w-full text-left focus:border-amber-500 focus:ring-amber-500"
+                        v-model="form.password"
+                        required
+                        autocomplete="current-password"
+                    />
+
+                    <InputError class="mt-2" :message="form.errors.password" />
+                </div>
+
+                <div class="mt-4 flex items-center justify-between">
+                    <label class="flex items-center cursor-pointer select-none">
+                        <Checkbox name="remember" v-model:checked="form.remember" class="text-amber-500 focus:ring-amber-500" />
+                        <span class="ms-2 text-xs sm:text-sm text-stone-600 dark:text-stone-300 font-medium">
+                            تذكرني على هذا الجهاز
+                        </span>
+                    </label>
+
+                    <Link
+                        v-if="canResetPassword"
+                        :href="route('password.request')"
+                        class="rounded-md text-xs sm:text-sm text-amber-600 dark:text-amber-400 underline hover:text-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 dark:focus:ring-offset-stone-900"
                     >
-                </label>
-            </div>
+                        نسيت كلمة المرور؟
+                    </Link>
+                </div>
 
-            <div class="mt-4 flex items-center justify-end">
-                <Link
-                    v-if="canResetPassword"
-                    :href="route('password.request')"
-                    class="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:text-gray-400 dark:hover:text-gray-100 dark:focus:ring-offset-gray-800"
-                >
-                    Forgot your password?
-                </Link>
-
-                <PrimaryButton
-                    class="ms-4"
-                    :class="{ 'opacity-25': form.processing }"
-                    :disabled="form.processing"
-                >
-                    Log in
-                </PrimaryButton>
-            </div>
-        </form>
+                <div class="mt-6">
+                    <button
+                        type="submit"
+                        class="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-[#BF953F] via-[#E8C265] to-[#B38728] text-stone-950 font-black text-sm shadow-lg shadow-amber-500/20 hover:brightness-105 active:scale-[0.99] transition-all cursor-pointer disabled:opacity-50"
+                        :class="{ 'opacity-50': form.processing }"
+                        :disabled="form.processing"
+                    >
+                        {{ form.processing ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول' }}
+                    </button>
+                </div>
+            </form>
+        </div>
     </GuestLayout>
 </template>

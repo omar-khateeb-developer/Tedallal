@@ -25,6 +25,7 @@ const props = defineProps<{
         logo?: string;
         phone?: string;
         address?: string;
+        menu_url?: string;
     };
     reservation: ReservationTicket;
 }>();
@@ -171,7 +172,14 @@ function copyTicketLink() {
                 </button>
             </div>
 
-            <div class="no-print text-center pt-2">
+            <div class="no-print text-center pt-2 flex flex-col items-center gap-3">
+                <a
+                    :href="restaurant.menu_url || `/m/${restaurant.slug}`"
+                    class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs font-bold text-slate-200 hover:text-amber-300 hover:border-amber-500/40 transition"
+                >
+                    <span>📖</span>
+                    <span>تصفح قائمة الطعام</span>
+                </a>
                 <button
                     type="button"
                     @click="printTicket"

@@ -578,7 +578,7 @@ function exportVoucher(format: 'al_ameen' | 'al_bayan' | 'universal_excel') {
                         <!-- Top 4 Busy Hours Grid -->
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2">
                             <div
-                                v-for="h in (reportData.analytics.hourly || []).filter(item => item.orders_count > 0).sort((a,b) => parseFloat(b.net_sales) - parseFloat(a.net_sales)).slice(0, 4)"
+                                v-for="h in (reportData.analytics.hourly || []).filter((item: any) => item.orders_count > 0).sort((a: any, b: any) => parseFloat(b.net_sales) - parseFloat(a.net_sales)).slice(0, 4)"
                                 :key="h.hour"
                                 class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 text-center"
                             >

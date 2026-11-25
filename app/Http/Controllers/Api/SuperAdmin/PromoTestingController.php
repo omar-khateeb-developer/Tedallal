@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\SuperAdmin;
 use App\Http\Controllers\Api\ApiController;
 use App\Models\PromoCode;
 use App\Models\Restaurant;
-use App\Models\RestaurantTable;
 use App\Models\Setting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -59,13 +58,13 @@ class PromoTestingController extends ApiController
 
         $hasOffersFeature = $restaurant->hasOffersFeature();
 
-        $promo = PromoCode::where('restaurant_id', $restaurant->id)
+        $promo = PromoCode::withoutGlobalScopes()
+            ->where('restaurant_id', $restaurant->id)
             ->where('code', trim($request->code))
             ->first();
 
-        // طاولة تجريبية لأخذ رابط السلة المباشر
-        $sampleTable = RestaurantTable::where('restaurant_id', $restaurant->id)->first();
-        $testUrl = $sampleTable ? url("/t/{$sampleTable->public_token}/cart") : null;
+        // رابط السلة التجريبية عبر نقطة الطلب السفري المعزولة للمطعم (/m/{slug})
+        $testUrl = url("/m/{$restaurant->slug}") . '?cart=1' . ($promo ? '&coupon=' . urlencode($promo->code) : '');
 
         if (!$hasOffersFeature) {
             return $this->success([
@@ -142,7 +141,8 @@ class PromoTestingController extends ApiController
             'restaurant_id' => 'required|exists:restaurants,id',
         ]);
 
-        $promo = PromoCode::where('restaurant_id', $request->restaurant_id)
+        $promo = PromoCode::withoutGlobalScopes()
+            ->where('restaurant_id', $request->restaurant_id)
             ->where('code', trim($request->code))
             ->firstOrFail();
 

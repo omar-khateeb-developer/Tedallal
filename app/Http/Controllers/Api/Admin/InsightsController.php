@@ -3,17 +3,21 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Api\ApiController;
+use App\Services\RestaurantContext;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 use App\Models\Order;
 use Carbon\Carbon;
 
 class InsightsController extends ApiController
 {
+    public function __construct(
+        private readonly RestaurantContext $restaurantContext,
+    ) {}
+
     public function index(Request $request)
     {
-        $restaurant = Auth::user()->restaurant;
+        $restaurant = $this->restaurantContext->current();
 
         if (!$restaurant->hasAnalyticsFeature()) {
             return $this->error('Feature Locked', 403);
@@ -24,7 +28,8 @@ class InsightsController extends ApiController
 
         $insights = [];
 
-        $orders = Order::where('restaurant_id', $restaurant->id)
+        $orders = Order::withoutGlobalScopes()
+            ->where('restaurant_id', $restaurant->id)
             ->where('created_at', '>=', $thirtyDaysAgo);
 
         $totalOrdersCount = (clone $orders)->count();
@@ -41,11 +46,11 @@ class InsightsController extends ApiController
         }
 
         $servedOrdersQuery = DB::table('orders')
-            
+            ->where('restaurant_id', $restaurant->id)
             ->where('status', 'served')
             ->where('created_at', '>=', $thirtyDaysAgo);
             
-        $servedCount = $servedOrdersQuery->count();
+        $servedCount = (clone $servedOrdersQuery)->count();
 
         if ($servedCount > 0) {
             // Find worst performing items (available items that are rarely ordered)
@@ -54,6 +59,7 @@ class InsightsController extends ApiController
                     $join->on('order_items.order_id', '=', 'o.id');
                 })
                 ->join('menu_items', 'order_items.menu_item_id', '=', 'menu_items.id')
+                ->where('menu_items.restaurant_id', $restaurant->id)
                 ->where('menu_items.is_active', true)
                 ->where('menu_items.is_available', true)
                 ->select('menu_items.name', DB::raw('SUM(order_items.quantity) as total_quantity'))
@@ -72,12 +78,16 @@ class InsightsController extends ApiController
                 ];
             }
             
-            // Peak hours insight
+            // Peak hours insight (SQLite + MySQL compatible)
+            $hourExpr = DB::getDriverName() === 'sqlite'
+                ? "CAST(strftime('%H', created_at) AS INTEGER) as hour"
+                : 'HOUR(created_at) as hour';
+
             $peakHours = DB::table('orders')
-                
+                ->where('restaurant_id', $restaurant->id)
                 ->where('status', 'served')
                 ->where('created_at', '>=', $thirtyDaysAgo)
-                ->select(DB::raw('HOUR(created_at) as hour'), DB::raw('COUNT(*) as total'))
+                ->select(DB::raw($hourExpr), DB::raw('COUNT(*) as total'))
                 ->groupBy('hour')
                 ->orderByDesc('total')
                 ->limit(2)

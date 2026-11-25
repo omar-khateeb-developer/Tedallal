@@ -23,6 +23,12 @@ export type PageProps<
             currency: string;
             logo: string | null;
             navbar_image: string | null;
+            plan?: string;
+            plan_label?: string;
+            features?: Record<string, any>;
+            subscription_expires_at?: string | null;
+            days_remaining?: number | null;
+            is_expired?: boolean;
         };
     };
     restaurantId?: number;

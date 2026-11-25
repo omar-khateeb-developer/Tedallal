@@ -801,7 +801,7 @@ onUnmounted(() => {
                         <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[0.625rem] font-bold bg-[#D4AF37]/15 text-[#FCF6BA] border border-[#D4AF37]/30">
                             ✨ عجلة الحظ والهدايا
                         </span>
-                        <span v-if="order_number" class="text-[0.6875rem] text-[#9CA3AF] font-mono">
+                        <span v-if="order_number" dir="ltr" class="text-[0.6875rem] text-[#9CA3AF] font-mono whitespace-nowrap shrink-0">
                             #{{ order_number }}
                         </span>
                     </div>

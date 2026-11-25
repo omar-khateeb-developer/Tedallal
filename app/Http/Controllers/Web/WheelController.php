@@ -152,7 +152,12 @@ class WheelController extends Controller
         }
 
         $table = $wheelToken->order?->table;
-        $menuUrl = $table?->public_token ? route('customer.menu', ['token' => $table->public_token]) : null;
+        $publicMenuUrl = $restaurant->slug
+            ? route('customer.restaurant_menu', ['slug' => $restaurant->slug])
+            : null;
+        $menuUrl = $table?->public_token
+            ? route('customer.menu', ['token' => $table->public_token])
+            : $publicMenuUrl;
         $orderUrl = ($table?->public_token && $wheelToken->order?->order_number)
             ? route('customer.order', ['token' => $table->public_token, 'orderNumber' => $wheelToken->order->order_number])
             : null;
@@ -529,13 +534,9 @@ class WheelController extends Controller
         }
         $currency = $this->normalizeCurrency($restaurant->currency ?? 'ل.س');
 
-        $firstTable = null;
-        try {
-            $firstTable = RestaurantTable::withoutGlobalScopes()->where('restaurant_id', $restaurant->id)->first();
-        } catch (\Throwable $e) {
-            // Silently fallback if table query is unresolvable
-        }
-        $menuUrl = ($firstTable && $firstTable->public_token) ? route('customer.menu', ['token' => $firstTable->public_token]) : null;
+        $menuUrl = $restaurant->slug
+            ? route('customer.restaurant_menu', ['slug' => $restaurant->slug])
+            : null;
 
         $slices = $this->buildSlicesForRestaurant($restaurant);
 

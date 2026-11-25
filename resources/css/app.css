@@ -167,3 +167,17 @@ button, a, input, select, textarea, [role="button"] {
         font-size: 16px !important;
     }
 }
+
+/* Fix RTL <select> chevron overlap across all Arabic forms + Tailwind v4 utility shims */
+[dir="rtl"] select {
+    background-position: left 0.65rem center;
+    padding-right: 0.75rem;
+    padding-left: 2.25rem;
+}
+
+@layer utilities {
+    .outline-hidden {
+        outline: 2px solid transparent;
+        outline-offset: 2px;
+    }
+}

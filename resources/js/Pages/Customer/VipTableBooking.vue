@@ -26,6 +26,7 @@ const props = defineProps<{
         phone?: string;
         address?: string;
         currency?: string;
+        menu_url?: string;
     };
     tables: TableGeometry[];
     timeSlots: string[];
@@ -34,18 +35,44 @@ const props = defineProps<{
     maxDate: string;
 }>();
 
-// State
-const tables = ref<TableGeometry[]>(props.tables.map(t => ({
-    ...t,
-    pos_x: Number(t.pos_x) || 80,
-    pos_y: Number(t.pos_y) || 80,
-    shape: t.shape || 'circle',
-    rotation: Number(t.rotation) || 0,
-    capacity: Number(t.capacity) || 4,
-    zone: t.zone || 'main',
-    width: Number(t.width) || (t.shape === 'vip' ? 140 : (t.shape === 'rectangle' ? 130 : 90)),
-    height: Number(t.height) || (t.shape === 'rectangle' ? 80 : 90),
-})));
+// State — automatically stagger unpositioned or overlapping legacy tables
+const occupiedVipCoords = new Set<string>();
+const tables = ref<TableGeometry[]>(props.tables.map((t, idx) => {
+    let px = Number(t.pos_x) || 0;
+    let py = Number(t.pos_y) || 0;
+    const isUnpositioned = px <= 0 && py <= 0;
+    let key = `${Math.round(px / 20)}:${Math.round(py / 20)}`;
+    if (isUnpositioned || occupiedVipCoords.has(key)) {
+        let slot = idx;
+        while (slot < 100) {
+            const col = slot % 4;
+            const row = Math.floor(slot / 4);
+            const candidateX = 60 + col * 170;
+            const candidateY = 70 + row * 145;
+            const candidateKey = `${Math.round(candidateX / 20)}:${Math.round(candidateY / 20)}`;
+            if (!occupiedVipCoords.has(candidateKey)) {
+                px = candidateX;
+                py = candidateY;
+                key = candidateKey;
+                break;
+            }
+            slot++;
+        }
+    }
+    occupiedVipCoords.add(key);
+
+    return {
+        ...t,
+        pos_x: px,
+        pos_y: py,
+        shape: t.shape || 'circle',
+        rotation: Number(t.rotation) || 0,
+        capacity: Number(t.capacity) || 4,
+        zone: t.zone || 'main',
+        width: Number(t.width) || (t.shape === 'vip' ? 140 : (t.shape === 'rectangle' ? 130 : 90)),
+        height: Number(t.height) || (t.shape === 'rectangle' ? 80 : 90),
+    };
+}));
 
 const selectedDate = ref<string>(props.minDate);
 const selectedTimeSlot = ref<string>(props.timeSlots[4] || props.timeSlots[0] || '19:00');
@@ -54,6 +81,7 @@ const unavailableTableIds = ref<number[]>([]);
 const isCheckingAvailability = ref(false);
 const selectedTable = ref<TableGeometry | null>(null);
 const zoomLevel = ref<number>(1);
+const blueprintWrapperRef = ref<HTMLElement | null>(null);
 
 // Booking Modal State
 const isModalOpen = ref(false);
@@ -114,6 +142,10 @@ watch([selectedDate, selectedTimeSlot], () => {
 });
 
 onMounted(() => {
+    if (blueprintWrapperRef.value && blueprintWrapperRef.value.clientWidth < 1140) {
+        const fitted = Math.max(0.32, Math.min(1, (blueprintWrapperRef.value.clientWidth - 16) / 1140));
+        zoomLevel.value = Number(fitted.toFixed(2));
+    }
     checkAvailability();
 });
 
@@ -263,10 +295,11 @@ function resetZoom() {
 
                 <!-- Back to Menu Button -->
                 <a
-                    :href="`/t/${tables[0]?.public_token || 'demo'}`"
-                    class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs font-bold text-slate-300 hover:text-white hover:border-slate-700 transition"
+                    :href="restaurant.menu_url || `/m/${restaurant.slug}`"
+                    class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs font-bold text-slate-300 hover:text-white hover:border-slate-700 transition whitespace-nowrap shrink-0"
                 >
                     <span>📖</span>
+                    <span class="sm:hidden">المنيو</span>
                     <span class="hidden sm:inline">قائمة الطعام</span>
                 </a>
             </div>
@@ -364,7 +397,11 @@ function resetZoom() {
             </div>
 
             <!-- Interactive Blueprint Canvas -->
-            <div class="relative w-full rounded-3xl bg-[#050810] border-2 border-slate-800/90 shadow-2xl overflow-hidden min-h-[640px] select-none">
+            <div
+                ref="blueprintWrapperRef"
+                class="relative w-full rounded-3xl bg-[#050810] border-2 border-slate-800/90 shadow-2xl overflow-auto select-none"
+                :style="{ minHeight: Math.max(280, Math.round(640 * zoomLevel) + 24) + 'px' }"
+            >
                 <!-- CAD Grid Background -->
                 <div
                     class="absolute inset-0 pointer-events-none opacity-20"
@@ -490,7 +527,7 @@ function resetZoom() {
                                     : (selectedTable?.id === table.id
                                         ? 'bg-amber-950/90 ring-4 ring-amber-400 shadow-[0_0_35px_rgba(251,191,36,0.8)] border-2 border-amber-300 scale-105'
                                         : (table.zone === 'vip'
-                                            ? 'bg-slate-900/90 ring-3 ring-amber-500 shadow-[0_0_25px_rgba(245,158,11,0.5)] border border-amber-400'
+                                            ? 'bg-slate-900/90 ring-2 ring-amber-500 shadow-[0_0_25px_rgba(245,158,11,0.5)] border border-amber-400'
                                             : 'bg-slate-900/90 ring-2 ring-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.4)] border border-emerald-400'))
                             ]"
                         >
@@ -506,7 +543,7 @@ function resetZoom() {
                             >
                                 <span>{{ table.name }}</span>
                                 <span class="opacity-80">
-                                    • {{ isTableAvailable(table.id) ? (table.zone === 'vip' ? 'VIP' : 'Available') : 'Reserved' }}
+                                    • {{ isTableAvailable(table.id) ? (table.zone === 'vip' ? 'VIP' : 'متاحة') : 'محجوزة' }}
                                 </span>
                             </div>
 
@@ -517,7 +554,7 @@ function resetZoom() {
 
                             <!-- Capacity -->
                             <span class="text-[9px] text-slate-400 font-mono mt-0.5">
-                                {{ table.capacity }} Seats
+                                {{ table.capacity }} مقاعد
                             </span>
                         </div>
                     </div>
