@@ -9,6 +9,7 @@ use App\Http\Requests\UpdateOrderRequest;
 use App\Models\Order;
 use App\Services\OrderStatusTransitionService;
 use App\Services\RestaurantContext;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class OrderController extends ApiController
@@ -25,10 +26,46 @@ class OrderController extends ApiController
         $query = Order::query()
             ->with(['items', 'table', 'promoCode'])
             ->where('restaurant_id', $restaurant->id)
-            ->latest();
+            ->orderByDesc('created_at')
+            ->orderByDesc('id');
 
-        if ($request->filled('status')) {
-            $query->where('status', $request->string('status'));
+        if ($request->filled('date')) {
+            $dateInput = trim((string) $request->input('date'));
+            try {
+                $parsedDate = Carbon::createFromFormat('Y-m-d', $dateInput);
+            } catch (\Throwable) {
+                $parsedDate = false;
+            }
+
+            if (! $parsedDate || $parsedDate->format('Y-m-d') !== $dateInput) {
+                return $this->error('صيغة التاريخ غير صالحة.', 422);
+            }
+
+            $query->whereBetween('created_at', [
+                $parsedDate->copy()->startOfDay(),
+                $parsedDate->copy()->endOfDay(),
+            ]);
+        } else {
+            $period = $request->string('period')->toString() ?: 'today';
+
+            if ($period === 'yesterday') {
+                $yesterday = now()->subDay();
+                $query->whereBetween('created_at', [
+                    $yesterday->copy()->startOfDay(),
+                    $yesterday->copy()->endOfDay(),
+                ]);
+            } elseif ($period !== 'all') {
+                // الوضع الافتراضي (today): طلبات اليوم كاملة + أي طلب نشط من قبل منتصف الليل لم يُسلَّم أو يُلغَ بعد
+                $todayStart = now()->startOfDay();
+                $query->where(function ($q) use ($todayStart) {
+                    $q->where('created_at', '>=', $todayStart)
+                        ->orWhereNotIn('status', [OrderStatus::Served->value, OrderStatus::Cancelled->value]);
+                });
+            }
+        }
+
+        if ($request->filled('status') && $request->string('status')->toString() !== 'all') {
+            $query->where('status', $request->string('status')->toString());
         }
 
         if ($request->filled('search')) {
@@ -39,17 +76,13 @@ class OrderController extends ApiController
             });
         }
 
-        $perPage = max(10, min(100, (int) $request->query('per_page', 30)));
-        $paginator = $query->paginate($perPage);
+        $orders = $query->get();
 
         return response()->json([
             'success' => true,
-            'data' => OrderResource::collection($paginator->items())->resolve(),
+            'data' => OrderResource::collection($orders)->resolve(),
             'meta' => [
-                'current_page' => $paginator->currentPage(),
-                'last_page' => $paginator->lastPage(),
-                'per_page' => $paginator->perPage(),
-                'total' => $paginator->total(),
+                'total' => $orders->count(),
             ],
         ]);
     }

@@ -10,7 +10,7 @@ import { useLiveConnection } from '@/composables/useLiveConnection';
 import { soundAlerts } from '@/utils/soundAlerts';
 import { formatMoney, normalizeCurrency } from '@/utils/money';
 import { Head, usePage } from '@inertiajs/vue3';
-import { computed, ref, watch, onMounted, onUnmounted } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
 import axios from 'axios';
 
 interface OrderItem {
@@ -56,10 +56,14 @@ interface ServiceCallItem {
 }
 
 const orders = ref<Order[]>([]);
-const pagination = ref({ current_page: 1, last_page: 1, per_page: 30, total: 0 });
 const serviceCalls = ref<ServiceCallItem[]>([]);
 const attendingCallIds = ref<Set<number>>(new Set());
 const searchQuery = ref('');
+const selectedStatus = ref<string>('all');
+const selectedPeriod = ref<'today' | 'yesterday' | 'date'>('today');
+const selectedDate = ref('');
+const isLoadingOrders = ref(false);
+const todayIsoDate = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 const page = usePage();
 const restaurantId = computed(() => page.props.restaurantId as number | undefined);
 const authRestaurant = computed(() => (page.props.auth as any)?.restaurant);
@@ -73,13 +77,46 @@ const isCashierUser = computed(() => {
     return authUser.value?.role === 'cashier';
 });
 
+const statusTabs = computed(() => [
+    { key: 'all', label: 'الكل' },
+    { key: 'pending', label: isPrepaid.value ? 'بانتظار الدفع 💳' : 'قيد الانتظار ⏳' },
+    { key: 'accepted', label: isPrepaid.value ? 'مدفوع ⏳' : 'مقبول ✓' },
+    { key: 'preparing', label: 'قيد التحضير 👨‍🍳' },
+    { key: 'ready', label: 'جاهز 🔔' },
+    { key: 'served', label: 'تم التسليم ✓' },
+    { key: 'cancelled', label: 'ملغي ✕' },
+]);
+
+const statusCounts = computed<Record<string, number>>(() => {
+    const counts: Record<string, number> = {
+        all: orders.value.length,
+        pending: 0,
+        accepted: 0,
+        preparing: 0,
+        ready: 0,
+        served: 0,
+        cancelled: 0,
+    };
+    for (const o of orders.value) {
+        if (counts[o.status] !== undefined) {
+            counts[o.status]++;
+        }
+    }
+    return counts;
+});
+
 const filteredOrders = computed(() => {
-    if (!searchQuery.value.trim()) return orders.value;
     const q = searchQuery.value.trim().toLowerCase();
-    return orders.value.filter(o => 
-        o.order_number.toLowerCase().includes(q) ||
-        (o.table?.name && o.table.name.toLowerCase().includes(q))
-    );
+    return orders.value.filter(o => {
+        if (selectedStatus.value !== 'all' && o.status !== selectedStatus.value) {
+            return false;
+        }
+        if (!q) return true;
+        return (
+            o.order_number.toLowerCase().includes(q) ||
+            Boolean(o.table?.name && o.table.name.toLowerCase().includes(q))
+        );
+    });
 });
 
 const pendingCashierOrdersCount = computed(() => 
@@ -92,28 +129,60 @@ function playSound() {
     soundAlerts.playCashierAlert();
 }
 
-async function loadOrders(pageNumber = pagination.value.current_page) {
-    const params: Record<string, any> = {
-        page: pageNumber,
-        per_page: pagination.value.per_page,
-    };
-    if (searchQuery.value.trim()) {
-        params.search = searchQuery.value.trim();
-    }
-    const { data } = await axios.get('/api/admin/orders', { params });
-    orders.value = data.data?.data ?? data.data ?? [];
-    if (data.meta) {
-        pagination.value = data.meta;
+function sortOrdersNewestFirst(list: Order[]): Order[] {
+    return [...list].sort((a, b) => {
+        const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+        if (timeB !== timeA) return timeB - timeA;
+        return b.id - a.id;
+    });
+}
+
+function formatOrderTime(isoStr?: string | null): string {
+    if (!isoStr) return '';
+    try {
+        const d = new Date(isoStr);
+        const time = d.toLocaleTimeString('ar-SY-u-nu-latn', { hour: '2-digit', minute: '2-digit' });
+        const localDate = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+        if (selectedPeriod.value === 'today' && localDate < todayIsoDate) {
+            return `${d.toLocaleDateString('ar-SY-u-nu-latn', { month: 'short', day: 'numeric' })} · ${time}`;
+        }
+        return time;
+    } catch {
+        return '';
     }
 }
 
-let ordersSearchTimer: ReturnType<typeof setTimeout> | null = null;
-watch(searchQuery, () => {
-    if (ordersSearchTimer) clearTimeout(ordersSearchTimer);
-    ordersSearchTimer = setTimeout(() => {
-        loadOrders(1);
-    }, 300);
-});
+async function loadOrders() {
+    isLoadingOrders.value = true;
+    try {
+        const params: Record<string, string> = {};
+        if (selectedPeriod.value === 'date' && selectedDate.value) {
+            params.date = selectedDate.value;
+        } else {
+            params.period = selectedPeriod.value;
+        }
+        const { data } = await axios.get('/api/admin/orders', { params });
+        orders.value = sortOrdersNewestFirst(data.data?.data ?? data.data ?? []);
+    } finally {
+        isLoadingOrders.value = false;
+    }
+}
+
+function selectPeriod(period: 'today' | 'yesterday') {
+    selectedPeriod.value = period;
+    selectedDate.value = '';
+    loadOrders();
+}
+
+function onCustomDateChange() {
+    if (selectedDate.value) {
+        selectedPeriod.value = 'date';
+    } else {
+        selectedPeriod.value = 'today';
+    }
+    loadOrders();
+}
 
 async function loadServiceCalls() {
     try {
@@ -263,10 +332,11 @@ useRestaurantOrders(restaurantId.value, {
         loadServiceCalls();
     },
     onOrderCreated: (newOrder) => {
-        // Prepend to array
-        const exists = orders.value.find(o => o.id === newOrder.id);
-        if (!exists) {
-            orders.value.unshift(newOrder as Order);
+        if (selectedPeriod.value === 'today') {
+            const exists = orders.value.find(o => o.id === newOrder.id);
+            if (!exists) {
+                orders.value = sortOrdersNewestFirst([newOrder as Order, ...orders.value]);
+            }
         }
         playSound();
         showToast('طلب جديد', `تم استلام طلب جديد #${newOrder.order_number} ${newOrder.table ? 'من ' + newOrder.table.name : ''}`, 'success');
@@ -275,9 +345,11 @@ useRestaurantOrders(restaurantId.value, {
         const index = orders.value.findIndex(o => o.id === updatedOrder.id);
         const prevStatus = index !== -1 ? orders.value[index].status : null;
         if (index !== -1) {
-            orders.value[index] = updatedOrder as Order;
-        } else {
-            orders.value.unshift(updatedOrder as Order);
+            const nextList = [...orders.value];
+            nextList[index] = updatedOrder as Order;
+            orders.value = sortOrdersNewestFirst(nextList);
+        } else if (selectedPeriod.value === 'today') {
+            orders.value = sortOrdersNewestFirst([updatedOrder as Order, ...orders.value]);
         }
 
         // إذا تم تحويل الطلب إلى "جاهز" من شاشة المطبخ مثلاً وكان خيار الطباعة التلقائية مفعلاً
@@ -401,6 +473,87 @@ useRestaurantOrders(restaurantId.value, {
                     </button>
                 </div>
 
+                <!-- فلترة الفترة الزمنية وحالة الطلب -->
+                <div class="bg-white dark:bg-[#0a0f1d] p-3 rounded-2xl border border-stone-200 dark:border-slate-800 shadow-xs space-y-2.5">
+                    <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-stone-100 dark:border-slate-800/80">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="text-xs font-extrabold text-stone-500 dark:text-slate-400">📅 الفترة:</span>
+                            <button
+                                type="button"
+                                @click="selectPeriod('today')"
+                                :class="[
+                                    'px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border',
+                                    selectedPeriod === 'today'
+                                        ? 'bg-stone-900 dark:bg-amber-500 text-white dark:text-stone-950 border-stone-900 dark:border-amber-500 shadow-xs'
+                                        : 'bg-stone-50 dark:bg-slate-900 text-stone-600 dark:text-slate-300 border-stone-200 dark:border-slate-700 hover:bg-stone-100 dark:hover:bg-slate-800'
+                                ]"
+                            >
+                                اليوم والنشطة
+                            </button>
+                            <button
+                                type="button"
+                                @click="selectPeriod('yesterday')"
+                                :class="[
+                                    'px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border',
+                                    selectedPeriod === 'yesterday'
+                                        ? 'bg-stone-900 dark:bg-amber-500 text-white dark:text-stone-950 border-stone-900 dark:border-amber-500 shadow-xs'
+                                        : 'bg-stone-50 dark:bg-slate-900 text-stone-600 dark:text-slate-300 border-stone-200 dark:border-slate-700 hover:bg-stone-100 dark:hover:bg-slate-800'
+                                ]"
+                            >
+                                أمس
+                            </button>
+                            <label
+                                :class="[
+                                    'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold border transition-all',
+                                    selectedPeriod === 'date'
+                                        ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/50'
+                                        : 'bg-stone-50 dark:bg-slate-900 text-stone-600 dark:text-slate-300 border-stone-200 dark:border-slate-700'
+                                ]"
+                            >
+                                <span>تاريخ محدد:</span>
+                                <input
+                                    v-model="selectedDate"
+                                    type="date"
+                                    :max="todayIsoDate"
+                                    @change="onCustomDateChange"
+                                    class="bg-transparent border-0 p-0 text-xs font-bold text-stone-800 dark:text-slate-200 focus:ring-0 cursor-pointer"
+                                />
+                            </label>
+                        </div>
+                        <div class="flex items-center gap-2 text-[11px] font-bold text-stone-500 dark:text-slate-400">
+                            <span v-if="isLoadingOrders" class="text-amber-600 dark:text-amber-400 animate-pulse">⏳ جاري التحديث...</span>
+                            <span>↓ الأحدث إلى الأقدم</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 overflow-x-auto sm:flex-wrap">
+                        <button
+                            v-for="tab in statusTabs"
+                            :key="tab.key"
+                            type="button"
+                            @click="selectedStatus = tab.key"
+                            :class="[
+                                'shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer select-none border',
+                                selectedStatus === tab.key
+                                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-stone-950 border-amber-500 shadow-sm shadow-amber-500/25 font-black'
+                                    : 'bg-stone-50 dark:bg-slate-900 text-stone-600 dark:text-slate-300 border-stone-200 dark:border-slate-700 hover:bg-stone-100 dark:hover:bg-slate-800'
+                            ]"
+                        >
+                            <span>{{ tab.label }}</span>
+                            <span
+                                :class="[
+                                    'px-1.5 py-0.5 rounded-full text-[10px] font-black',
+                                    selectedStatus === tab.key
+                                        ? 'bg-stone-950/15 text-stone-950'
+                                        : 'bg-stone-200 dark:bg-slate-800 text-stone-700 dark:text-slate-300'
+                                ]"
+                            >
+                                {{ statusCounts[tab.key] ?? 0 }}
+                            </span>
+                        </button>
+                    </div>
+                </div>
+
                 <!-- نداءات الخدمة الصامتة وطلبات الحساب الحية للطاولات -->
                 <div v-if="serviceCalls.length > 0" class="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-purple-500/10 border-2 border-amber-500/60 shadow-lg shadow-amber-500/10">
                     <div class="flex items-center justify-between mb-3">
@@ -451,8 +604,16 @@ useRestaurantOrders(restaurantId.value, {
                     </div>
                 </div>
 
-                <div v-if="filteredOrders.length === 0" class="rounded-2xl bg-white dark:bg-[#0a0f1d] p-8 text-center text-gray-500 dark:text-gray-400 shadow-xs border border-dashed border-gray-300 dark:border-slate-800">
-                    {{ searchQuery ? 'لم يتم العثور على أي طلب يطابق بحثك' : 'لا يوجد طلبات حالياً' }}
+                <div v-if="filteredOrders.length === 0" class="rounded-2xl bg-white dark:bg-[#0a0f1d] p-8 text-center text-gray-500 dark:text-gray-400 shadow-xs border border-dashed border-gray-300 dark:border-slate-800 space-y-3">
+                    <p>{{ searchQuery || selectedStatus !== 'all' ? 'لم يتم العثور على طلبات مطابقة للتصفية الحالية' : 'لا يوجد طلبات حالياً' }}</p>
+                    <button
+                        v-if="searchQuery || selectedStatus !== 'all'"
+                        type="button"
+                        @click="selectedStatus = 'all'; searchQuery = ''"
+                        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 text-xs font-bold hover:bg-amber-500/25 transition cursor-pointer"
+                    >
+                        <span>عرض كل الطلبات</span>
+                    </button>
                 </div>
                 <article
                     v-for="order in filteredOrders"
@@ -480,6 +641,9 @@ useRestaurantOrders(restaurantId.value, {
                                 </span>
                                 <span v-if="order.paid_at" class="text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/40">
                                     ✓ مدفوع
+                                </span>
+                                <span v-if="order.created_at" class="text-xs font-semibold text-stone-500 dark:text-slate-400 bg-stone-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
+                                    🕒 {{ formatOrderTime(order.created_at) }}
                                 </span>
                             </div>
                             <p class="text-sm font-semibold text-stone-600 dark:text-stone-300 mt-1">
@@ -606,31 +770,6 @@ useRestaurantOrders(restaurantId.value, {
                         </div>
                     </div>
                 </article>
-
-                <!-- ترقيم صفحات الطلبات -->
-                <div v-if="pagination.last_page > 1" class="flex items-center justify-between gap-3 rounded-2xl bg-white dark:bg-[#0a0f1d] p-3.5 border border-stone-200 dark:border-slate-800 shadow-xs">
-                    <span class="text-xs font-bold text-stone-500 dark:text-slate-400">
-                        صفحة {{ pagination.current_page }} من {{ pagination.last_page }} (إجمالي {{ pagination.total }} طلب)
-                    </span>
-                    <div class="flex items-center gap-2">
-                        <button
-                            type="button"
-                            :disabled="pagination.current_page <= 1"
-                            @click="loadOrders(pagination.current_page - 1)"
-                            class="px-3.5 py-1.5 rounded-xl bg-stone-100 dark:bg-slate-800 text-stone-700 dark:text-slate-200 text-xs font-bold hover:bg-stone-200 dark:hover:bg-slate-700 disabled:opacity-40 cursor-pointer"
-                        >
-                            السابق
-                        </button>
-                        <button
-                            type="button"
-                            :disabled="pagination.current_page >= pagination.last_page"
-                            @click="loadOrders(pagination.current_page + 1)"
-                            class="px-3.5 py-1.5 rounded-xl bg-amber-500 text-stone-950 text-xs font-black hover:bg-amber-400 disabled:opacity-40 cursor-pointer"
-                        >
-                            التالي
-                        </button>
-                    </div>
-                </div>
             </div>
         </div>
 

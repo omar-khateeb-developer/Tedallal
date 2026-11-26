@@ -136,4 +136,132 @@ class CashierAndWindowOrderWorkflowTest extends TestCase
         $order->refresh();
         $this->assertSame(OrderStatus::Served, $order->status);
     }
+
+    public function test_admin_orders_index_returns_all_orders_without_pagination_and_filters_by_status(): void
+    {
+        $restaurant = Restaurant::factory()->create(['type' => 'prepaid']);
+        $table = RestaurantTable::factory()->create(['restaurant_id' => $restaurant->id]);
+        $session = app(TableSessionService::class)->resolveOrCreate($table);
+        $cashier = User::factory()->create([
+            'restaurant_id' => $restaurant->id,
+            'status' => UserStatus::Active,
+        ]);
+        $cashier->assignRole(UserRole::Cashier->value);
+
+        for ($i = 1; $i <= 35; $i++) {
+            Order::create([
+                'restaurant_id' => $restaurant->id,
+                'table_id' => $table->id,
+                'table_session_id' => $session->id,
+                'order_number' => 'ORD-BULK-'.str_pad((string) $i, 3, '0', STR_PAD_LEFT),
+                'status' => $i <= 25 ? OrderStatus::Pending : OrderStatus::Ready,
+                'service_type' => 'dine_in',
+                'subtotal' => '25.00',
+                'total' => '25.00',
+            ]);
+        }
+
+        Sanctum::actingAs($cashier);
+
+        $allResponse = $this->getJson('/api/admin/orders')->assertOk();
+        $this->assertCount(35, $allResponse->json('data'));
+        $this->assertSame(35, $allResponse->json('meta.total'));
+        $this->assertArrayNotHasKey('last_page', $allResponse->json('meta'));
+
+        $pendingResponse = $this->getJson('/api/admin/orders?status=pending')->assertOk();
+        $this->assertCount(25, $pendingResponse->json('data'));
+
+        $readyResponse = $this->getJson('/api/admin/orders?status=ready')->assertOk();
+        $this->assertCount(10, $readyResponse->json('data'));
+    }
+
+    public function test_admin_orders_index_filters_by_period_with_midnight_open_orders_and_sorts_newest_first(): void
+    {
+        $restaurant = Restaurant::factory()->create(['type' => 'prepaid']);
+        $table = RestaurantTable::factory()->create(['restaurant_id' => $restaurant->id]);
+        $session = app(TableSessionService::class)->resolveOrCreate($table);
+        $cashier = User::factory()->create([
+            'restaurant_id' => $restaurant->id,
+            'status' => UserStatus::Active,
+        ]);
+        $cashier->assignRole(UserRole::Cashier->value);
+
+        $yesterdayMidnightCarryOpen = Order::create([
+            'restaurant_id' => $restaurant->id,
+            'table_id' => $table->id,
+            'table_session_id' => $session->id,
+            'order_number' => 'ORD-YEST-OPEN',
+            'status' => OrderStatus::Pending,
+            'service_type' => 'dine_in',
+            'subtotal' => '20.00',
+            'total' => '20.00',
+        ]);
+        $yesterdayMidnightCarryOpen->created_at = now()->subDay()->setTime(23, 50);
+        $yesterdayMidnightCarryOpen->save();
+
+        $yesterdayServedArchived = Order::create([
+            'restaurant_id' => $restaurant->id,
+            'table_id' => $table->id,
+            'table_session_id' => $session->id,
+            'order_number' => 'ORD-YEST-SERVED',
+            'status' => OrderStatus::Served,
+            'service_type' => 'dine_in',
+            'subtotal' => '30.00',
+            'total' => '30.00',
+        ]);
+        $yesterdayServedArchived->created_at = now()->subDay()->setTime(20, 0);
+        $yesterdayServedArchived->save();
+
+        $todayEarlier = Order::create([
+            'restaurant_id' => $restaurant->id,
+            'table_id' => $table->id,
+            'table_session_id' => $session->id,
+            'order_number' => 'ORD-TODAY-1',
+            'status' => OrderStatus::Served,
+            'service_type' => 'dine_in',
+            'subtotal' => '40.00',
+            'total' => '40.00',
+        ]);
+        $todayEarlier->created_at = now()->startOfDay()->addHours(9);
+        $todayEarlier->save();
+
+        $todayLatest = Order::create([
+            'restaurant_id' => $restaurant->id,
+            'table_id' => $table->id,
+            'table_session_id' => $session->id,
+            'order_number' => 'ORD-TODAY-2',
+            'status' => OrderStatus::Pending,
+            'service_type' => 'dine_in',
+            'subtotal' => '50.00',
+            'total' => '50.00',
+        ]);
+        $todayLatest->created_at = now()->startOfDay()->addHours(12);
+        $todayLatest->save();
+
+        Sanctum::actingAs($cashier);
+
+        // 1. الوضع الافتراضي (today): اليوم + النشط من قبل منتصف الليل، مرتبة من الأحدث للأقدم
+        $todayRes = $this->getJson('/api/admin/orders?period=today')->assertOk();
+        $this->assertSame(
+            ['ORD-TODAY-2', 'ORD-TODAY-1', 'ORD-YEST-OPEN'],
+            array_column($todayRes->json('data'), 'order_number')
+        );
+
+        // 2. فلتر أمس: يعيد طلبات أمس فقط مرتبة من الأحدث للأقدم
+        $yesterdayRes = $this->getJson('/api/admin/orders?period=yesterday')->assertOk();
+        $this->assertSame(
+            ['ORD-YEST-OPEN', 'ORD-YEST-SERVED'],
+            array_column($yesterdayRes->json('data'), 'order_number')
+        );
+
+        // 3. فلتر تاريخ محدد + رفض التاريخ غير الصالح
+        $yesterdayDate = now()->subDay()->toDateString();
+        $customDateRes = $this->getJson("/api/admin/orders?date={$yesterdayDate}")->assertOk();
+        $this->assertSame(
+            ['ORD-YEST-OPEN', 'ORD-YEST-SERVED'],
+            array_column($customDateRes->json('data'), 'order_number')
+        );
+
+        $this->getJson('/api/admin/orders?date=invalid-date')->assertStatus(422);
+    }
 }
