@@ -7,6 +7,7 @@ defineProps<{
     restaurantName: string;
     isWhatsappConnected: boolean;
     isCopiedLink: boolean;
+    isAdmin?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -105,12 +106,20 @@ const emit = defineEmits<{
             >
                 <div>⚠️ تنبيه: يجب ربط «{{ restaurantName }}» برقم واتساب أولاً قبل مشاركة رابط الحجز المسبق ليتمكن الزبائن من استلام رمز التحقق (OTP).</div>
                 <Link
+                    v-if="isAdmin"
                     href="/admin/customers?connect_whatsapp=1"
                     class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-stone-950 text-[11px] font-black transition"
                 >
                     <span>ربط رقم الواتساب الآن</span>
                     <span>←</span>
                 </Link>
+                <div
+                    v-else
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/15 border border-amber-500/40 text-amber-900 dark:text-amber-200 text-[11px] font-bold"
+                >
+                    <span>🔒</span>
+                    <span>ربط الواتساب صلاحية خاصة بمدير المطعم (admin) فقط — يرجى الطلب من المدير تفعيله.</span>
+                </div>
             </div>
             <button
                 type="button"

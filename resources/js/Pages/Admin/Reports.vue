@@ -33,6 +33,10 @@ ChartJS.register(
 
 const page = usePage();
 const restaurant = computed(() => (page.props.auth as any)?.restaurant);
+const isAdmin = computed(() => {
+    const role = (page.props.auth as any)?.user?.role;
+    return role === 'admin' || role === 'super_admin';
+});
 
 // View selection: 'daily' | 'monthly' | 'yearly' | 'custom'
 const activeView = ref<'daily' | 'monthly' | 'yearly' | 'custom'>('daily');
@@ -1047,8 +1051,11 @@ function exportVoucher(format: 'al_ameen' | 'al_bayan' | 'universal_excel') {
 
                 <!-- Footer Close Button -->
                 <div class="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
-                    <p class="text-[11px] text-slate-500 dark:text-slate-400">
+                    <p v-if="isAdmin" class="text-[11px] text-slate-500 dark:text-slate-400">
                         💡 نصيحة: يمكنك تخصيص أرقام الحسابات من <a href="/admin/settings" class="text-amber-600 dark:text-amber-400 underline font-bold">إعدادات المطعم</a>.
+                    </p>
+                    <p v-else class="text-[11px] text-slate-500 dark:text-slate-400">
+                        💡 نصيحة: تخصيص أرقام الحسابات صلاحية خاصة بمدير المطعم (<span dir="ltr">admin</span>) من إعدادات المطعم.
                     </p>
                     <button
                         @click="showAccountingVoucherModal = false"

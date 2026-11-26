@@ -289,6 +289,10 @@ function resetZoom() {
 
 // Copy Public VIP Booking Link
 const page = usePage();
+const isAdmin = computed(() => {
+    const role = (page.props.auth as any)?.user?.role;
+    return role === 'admin' || role === 'super_admin';
+});
 const isRestaurantWhatsappConnected = computed(() => {
     const status = props.restaurant.whatsapp_status || (page.props.auth as any)?.restaurant?.whatsapp_status;
     return status === 'connected';
@@ -620,9 +624,19 @@ onUnmounted(() => {
                     class="mt-4 rounded-2xl border border-amber-500/40 bg-amber-50 dark:bg-amber-950/60 px-4 py-3 text-amber-950 dark:text-amber-100 text-xs sm:text-sm font-bold flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-sm"
                 >
                     <span>⚠️ تم نسخ رابط حجز VIP، لكن مطعم «{{ restaurant.name }}» غير مربوط برقم واتساب! يجب ربط المطعم برقم واتساب أولاً قبل مشاركة الرابط حتى تصل رموز التحقق (OTP) للزبائن.</span>
-                    <Link href="/admin/customers?connect_whatsapp=1" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 text-xs font-black whitespace-nowrap shrink-0">
+                    <Link
+                        v-if="isAdmin"
+                        href="/admin/customers?connect_whatsapp=1"
+                        class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 text-xs font-black whitespace-nowrap shrink-0"
+                    >
                         ربط الواتساب الآن ←
                     </Link>
+                    <span
+                        v-else
+                        class="px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-900 dark:text-amber-200 text-xs font-bold whitespace-nowrap shrink-0"
+                    >
+                        🔒 هذه الصلاحية خاصة بمدير المطعم (admin) فقط
+                    </span>
                 </div>
 
                 <!-- Locked Feature Screen -->
@@ -1319,6 +1333,7 @@ onUnmounted(() => {
                     :restaurant-name="restaurant.name"
                     :is-whatsapp-connected="isRestaurantWhatsappConnected"
                     :is-copied-link="isCopiedLink"
+                    :is-admin="isAdmin"
                     @close="isReservationsDrawerOpen = false"
                     @seat-reservation="markReservationSeated"
                     @copy-link="copyPublicVipBookingLink"

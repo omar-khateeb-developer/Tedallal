@@ -454,9 +454,27 @@ class AuditSecurityAndLogicFixesTest extends TestCase
         $inertia403->assertForbidden();
         $inertia403->assertHeader('X-Inertia', 'true');
         $inertia403->assertJsonPath('component', 'Errors/403');
+        $inertia403->assertJsonPath('props.message', 'عذراً، هذه الصلاحية خاصة بمدير المطعم (admin) فقط.');
+
+        $customers403 = $this->actingAs($supervisor)
+            ->withHeaders([
+                'X-Inertia' => 'true',
+                'X-Inertia-Version' => $inertiaVersion,
+            ])
+            ->get('/admin/customers?connect_whatsapp=1');
+        $customers403->assertForbidden();
+        $customers403->assertJsonPath('component', 'Errors/403');
+        $customers403->assertJsonPath('props.message', 'عذراً، هذه الصلاحية خاصة بمدير المطعم (admin) فقط.');
 
         $this->actingAs($supervisor)->get('/admin/users')->assertForbidden();
         $this->actingAs($supervisor, 'sanctum')->getJson('/api/admin/users')->assertForbidden();
-        $this->actingAs($supervisor, 'sanctum')->getJson('/api/admin/customers')->assertForbidden();
+        $this->actingAs($supervisor, 'sanctum')
+            ->getJson('/api/admin/customers')
+            ->assertForbidden()
+            ->assertJsonPath('message', 'عذراً، هذه الصلاحية خاصة بمدير المطعم (admin) فقط.');
+        $this->actingAs($supervisor, 'sanctum')
+            ->getJson('/api/admin/whatsapp/status')
+            ->assertForbidden()
+            ->assertJsonPath('message', 'عذراً، هذه الصلاحية خاصة بمدير المطعم (admin) فقط.');
     }
 }
