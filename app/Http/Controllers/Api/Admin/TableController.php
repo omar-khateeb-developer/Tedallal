@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use App\Events\TableUpdated;
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Resources\RestaurantTableResource;
 use App\Models\RestaurantTable;
@@ -57,6 +58,7 @@ class TableController extends ApiController
         ]);
 
         $this->qrCodeService->generateForTable($table);
+        TableUpdated::dispatchSafe($table);
 
         \App\Services\ActivityLogger::log('create_table', "قام بإضافة طاولة جديدة: {$table->name}");
 
@@ -114,6 +116,7 @@ class TableController extends ApiController
         $validated = $request->validated();
 
         $table->update($validated);
+        TableUpdated::dispatchSafe($table);
 
         \App\Services\ActivityLogger::log('update_table', "قام بتعديل بيانات الطاولة: {$table->name}");
 
@@ -124,7 +127,7 @@ class TableController extends ApiController
     {
         $this->authorizeTable($table);
 
-        if ($table->tableSessions()->where('status', 'active')->exists()) {
+        if ($table->sessions()->where('status', 'active')->exists()) {
             return $this->error('لا يمكن حذف طاولة توجد عليها جلسة نشطة حالياً. يرجى إخلاء الطاولة أولاً.', 422);
         }
 
@@ -132,12 +135,15 @@ class TableController extends ApiController
             return $this->error('لا يمكن حذف طاولة لها طلبات.', 422);
         }
 
+        $restaurantId = (int) $table->restaurant_id;
+        $tableId = (int) $table->id;
         $tableName = $table->name;
 
         // حذف ملف QR من storage قبل حذف السجل
         $this->qrCodeService->deleteForTable($table);
 
         $table->delete();
+        TableUpdated::dispatchDeletedSafe($restaurantId, $tableId);
 
         \App\Services\ActivityLogger::log('delete_table', "قام بحذف الطاولة: {$tableName}");
 
@@ -154,6 +160,7 @@ class TableController extends ApiController
         $this->qrCodeService->regenerate($table, $newToken);
         
         $table->update(['public_token' => $newToken]);
+        TableUpdated::dispatchSafe($table);
 
         \App\Services\ActivityLogger::log('update_table', "قام بتوليد رمز QR جديد للطاولة: {$table->name}");
 
@@ -184,6 +191,7 @@ class TableController extends ApiController
             'bill_requested_at' => null,
             'current_guest_name' => null,
         ]);
+        TableUpdated::dispatchSafe($table);
 
         \App\Services\ActivityLogger::log('vacate_table', "قام بإنهاء الجلسة وإخلاء الطاولة ونقلها لمرحلة التنظيف: {$table->name}");
 
@@ -233,6 +241,7 @@ class TableController extends ApiController
         }
 
         $table->update($updates);
+        TableUpdated::dispatchSafe($table);
 
         \App\Services\ActivityLogger::log('update_table_stage', "قام بتغيير مرحلة الطاولة {$table->name} إلى {$stage}");
 

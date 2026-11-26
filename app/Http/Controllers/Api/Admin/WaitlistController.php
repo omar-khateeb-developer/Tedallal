@@ -204,6 +204,7 @@ class WaitlistController extends ApiController
             'session_started_at' => now(),
             'current_guest_name' => $entry->guest_name,
         ]);
+        \App\Events\TableUpdated::dispatchSafe($table);
 
         ActivityLogger::log('waitlist_seated', "تم إجلاس الزبون ({$entry->guest_name}) على الطاولة {$table->name}");
 

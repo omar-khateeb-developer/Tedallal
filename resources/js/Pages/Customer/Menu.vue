@@ -59,6 +59,11 @@ const props = defineProps<{
         reason_message: string;
         expires_at?: string | null;
     } | null;
+    tableNotice?: {
+        type: 'cleaning' | 'vip_reserved';
+        title: string;
+        message: string;
+    } | null;
 }>();
 
 const activeCategory = ref<number | 'all'>('all');
@@ -570,6 +575,21 @@ onUnmounted(() => {
                 </button>
             </div>
         </template>
+
+        <!-- تنبيه حالة الطاولة عند مسح QR (مثل التنظيف أو حجز VIP قريب) -->
+        <div
+            v-if="tableNotice && !isTakeawayPoint"
+            class="mb-3 p-3.5 rounded-2xl border text-xs shadow-xs flex items-start gap-2.5"
+            :class="tableNotice.type === 'vip_reserved'
+                ? 'bg-amber-50 dark:bg-amber-950/50 border-amber-400/60 text-amber-950 dark:text-amber-100'
+                : 'bg-sky-50 dark:bg-sky-950/50 border-sky-400/60 text-sky-950 dark:text-sky-100'"
+        >
+            <span class="text-lg shrink-0">{{ tableNotice.type === 'vip_reserved' ? '👑' : '✨' }}</span>
+            <div>
+                <p class="font-black">{{ tableNotice.title }}</p>
+                <p class="mt-0.5 font-semibold opacity-90 leading-relaxed">{{ tableNotice.message }}</p>
+            </div>
+        </div>
 
         <!-- إشعار نجاح طلب الخدمة المؤقت -->
         <transition name="toast-slide">

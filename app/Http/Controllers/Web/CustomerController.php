@@ -8,10 +8,12 @@ use App\Models\Order;
 use App\Models\PromoCode;
 use App\Models\Restaurant;
 use App\Models\RestaurantTable;
+use App\Models\TableReservation;
 use App\Services\CustomerCrmService;
 use App\Services\TableSessionService;
 use App\Services\TokenGenerator;
 use App\Support\MoneyCalculator;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -127,8 +129,50 @@ class CustomerController extends Controller
         return $this->renderMenuResponse($request, $takeawayPoint);
     }
 
+    private function resolveTableNotice(RestaurantTable $table): ?array
+    {
+        if ($table->isTakeaway()) {
+            return null;
+        }
+
+        $upcomingReservation = TableReservation::withoutGlobalScopes()
+            ->where('restaurant_id', $table->restaurant_id)
+            ->where('table_id', $table->id)
+            ->whereDate('reservation_date', now()->toDateString())
+            ->where('status', 'confirmed')
+            ->orderBy('time_slot')
+            ->first();
+
+        if ($upcomingReservation && $upcomingReservation->time_slot) {
+            try {
+                $slotTime = Carbon::createFromFormat('H:i', trim($upcomingReservation->time_slot));
+                $diffMinutes = now()->diffInMinutes($slotTime, false);
+                if ($diffMinutes >= -20 && $diffMinutes <= 120) {
+                    return [
+                        'type' => 'vip_reserved',
+                        'title' => 'تنبيه حجز VIP على هذه الطاولة',
+                        'message' => "هذه الطاولة محجوزة باسم ضيف VIP الساعة {$upcomingReservation->time_slot} — نرحب بكم ونتمنى التنسيق مع الاستقبال عند الحاجة.",
+                    ];
+                }
+            } catch (\Throwable) {
+            }
+        }
+
+        if ($table->operational_stage === 'cleaning') {
+            return [
+                'type' => 'cleaning',
+                'title' => 'جاري تجهيز طاولتكم الآن',
+                'message' => 'أهلاً بكم! يجري حالياً تجهيز وتنظيف الطاولة، يمكنكم تصفح المنيو وبدء طلبكم بكل راحة.',
+            ];
+        }
+
+        return null;
+    }
+
     private function renderMenuResponse(Request $request, RestaurantTable $table): Response
     {
+        $tableNotice = $this->resolveTableNotice($table);
+
         $session = $this->tableSessionService->resolveOrCreate(
             $table,
             $request->cookie('tedallal_session')
@@ -209,6 +253,7 @@ class CustomerController extends Controller
             'openCart' => $request->boolean('cart'),
             'activeOrders' => $activeOrders,
             'urlPromo' => $urlPromoData,
+            'tableNotice' => $tableNotice,
         ]);
     }
 

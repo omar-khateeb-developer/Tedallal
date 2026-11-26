@@ -366,34 +366,78 @@ async function updateSelectedTable() {
     }
 }
 
+function syncTableFromServer(updated: TableItem) {
+    const normalized: TableItem = {
+        ...updated,
+        pos_x: Number(updated.pos_x) || 50,
+        pos_y: Number(updated.pos_y) || 50,
+        rotation: Number(updated.rotation) || 0,
+        capacity: Number(updated.capacity) || 4,
+        zone: updated.zone || 'main',
+        operational_stage: updated.operational_stage || (updated.active_session ? 'seated' : 'available'),
+        turn_minutes: Number(updated.turn_minutes) || 0,
+        stage_minutes: Number(updated.stage_minutes) || 0,
+        bill_wait_minutes: updated.bill_wait_minutes ?? null,
+    };
+    const target = tables.value.find(t => t.id === normalized.id);
+    if (target) {
+        Object.assign(target, normalized);
+    } else {
+        tables.value.push(normalized);
+    }
+    if (selectedTable.value && selectedTable.value.id === normalized.id) {
+        Object.assign(selectedTable.value, normalized);
+    }
+}
+
 // Close active session & vacate table
 async function closeSessionForTable(targetTable?: TableItem) {
     const table = targetTable || selectedTable.value;
     if (!table) return;
     if (!confirm(`هل أنت متأكد من إنهاء جلسة ${table.name} وإخلائها للزبائن القادمين؟`)) return;
     try {
-        await axios.post(`/api/admin/tables/${table.id}/close-session`);
-        table.active_session = null;
-        table.operational_stage = 'available';
-        table.turn_minutes = 0;
-        table.has_waiter_call = false;
-        if (selectedTable.value && selectedTable.value.id === table.id) {
-            selectedTable.value.active_session = null;
-            selectedTable.value.operational_stage = 'available';
-            selectedTable.value.turn_minutes = 0;
-            selectedTable.value.has_waiter_call = false;
-        }
-        const t = tables.value.find(item => item.id === table.id);
-        if (t) {
-            t.active_session = null;
-            t.operational_stage = 'available';
-            t.turn_minutes = 0;
-            t.has_waiter_call = false;
+        const { data } = await axios.post(`/api/admin/tables/${table.id}/close-session`);
+        if (data?.data?.table) {
+            syncTableFromServer(data.data.table);
+        } else {
+            syncTableFromServer({
+                ...table,
+                active_session: null,
+                operational_stage: 'cleaning',
+                turn_minutes: 0,
+                has_waiter_call: false,
+            });
         }
         saveSuccess.value = true;
         setTimeout(() => { saveSuccess.value = false; }, 3000);
     } catch (e: any) {
         alert(e.response?.data?.message || 'تعذر إنهاء الجلسة');
+    }
+}
+
+async function toggleTableStatus(table: TableItem) {
+    const nextStatus = table.status === 'active' ? 'inactive' : 'active';
+    try {
+        const { data } = await axios.patch(`/api/admin/tables/${table.id}`, { status: nextStatus });
+        if (data?.data) {
+            syncTableFromServer(data.data);
+        }
+        triggerSavedToast();
+    } catch (e: any) {
+        alert(e.response?.data?.message || 'تعذر تغيير حالة تفعيل الطاولة');
+    }
+}
+
+async function regenerateTableQr(table: TableItem) {
+    if (!confirm(`سيتم إبطال رمز QR الحالي للطاولة (${table.name}) وتوليد رمز جديد. متابعة؟`)) return;
+    try {
+        const { data } = await axios.post(`/api/admin/tables/${table.id}/regenerate-token`);
+        if (data?.data) {
+            syncTableFromServer(data.data);
+        }
+        triggerSavedToast();
+    } catch (e: any) {
+        alert(e.response?.data?.message || 'تعذر توليد رمز QR جديد');
     }
 }
 
@@ -431,6 +475,8 @@ async function deleteSelectedTable() {
 const stageLabels = TABLE_STAGE_LABELS;
 
 function getTableStageLabel(table: TableItem): string {
+    if (table.status === 'inactive') return 'معطّلة';
+    if (table.active_order?.status === 'ready') return 'الطلب جاهز للتقديم';
     if (table.operational_stage && stageLabels[table.operational_stage]) {
         return stageLabels[table.operational_stage];
     }
@@ -560,8 +606,69 @@ onMounted(() => {
     }
     loadFloorServiceCalls();
 
+    // Deep-link from Tables.vue (?table_id=12)
+    try {
+        const tableIdParam = Number(new URLSearchParams(window.location.search).get('table_id'));
+        if (tableIdParam) {
+            const match = tables.value.find(t => t.id === tableIdParam);
+            if (match) {
+                activeTableId.value = match.id;
+                selectedTable.value = match;
+            }
+        }
+    } catch (_) {}
+
     if (props.restaurant?.id && (window as any).Echo) {
         (window as any).Echo.private(`restaurant.${props.restaurant.id}.orders`)
+            .listen('.table.updated', (payload: { table?: TableItem; deleted?: boolean }) => {
+                if (!payload.table) return;
+                if (payload.deleted) {
+                    tables.value = tables.value.filter(t => t.id !== payload.table?.id);
+                    if (selectedTable.value?.id === payload.table.id) selectedTable.value = null;
+                    if (activeTableId.value === payload.table.id) activeTableId.value = null;
+                    return;
+                }
+                if (payload.table.table_type === 'takeaway') return;
+                syncTableFromServer(payload.table);
+            })
+            .listen('.order.created', (payload: { order?: any }) => {
+                const ord = payload.order;
+                if (!ord?.table_id || ord.service_type === 'takeaway') return;
+                const tbl = tables.value.find(t => t.id === ord.table_id);
+                if (tbl) {
+                    tbl.active_order = {
+                        id: ord.id,
+                        order_number: ord.order_number,
+                        status: ord.status,
+                        total: Number(ord.total || 0),
+                        items_count: Array.isArray(ord.items) ? ord.items.length : (tbl.active_order?.items_count ?? 1),
+                        created_at: ord.created_at,
+                    };
+                    if (!tbl.operational_stage || tbl.operational_stage === 'available' || tbl.operational_stage === 'seated') {
+                        tbl.operational_stage = 'preparing';
+                    }
+                }
+            })
+            .listen('.order.status_changed', (payload: { order?: any }) => {
+                const ord = payload.order;
+                if (!ord?.table_id || ord.service_type === 'takeaway') return;
+                const tbl = tables.value.find(t => t.id === ord.table_id);
+                if (!tbl) return;
+                if (ord.status === 'cancelled') {
+                    if (tbl.active_order?.id === ord.id) {
+                        tbl.active_order = null;
+                    }
+                    return;
+                }
+                tbl.active_order = {
+                    id: ord.id,
+                    order_number: ord.order_number,
+                    status: ord.status,
+                    total: Number(ord.total || 0),
+                    items_count: Array.isArray(ord.items) ? ord.items.length : (tbl.active_order?.items_count ?? 1),
+                    created_at: ord.created_at,
+                };
+            })
             .listen('.table.service_called', (payload: any) => {
                 const sc = payload.service_call;
                 const tbl = tables.value.find(t => t.id === sc.table_id);
@@ -886,6 +993,27 @@ onUnmounted(() => {
                                 <span>{{ isCopiedLink ? 'تم النسخ!' : 'رابط الحجز' }}</span>
                             </button>
 
+                            <!-- Quick Print All Table QRs -->
+                            <a
+                                :href="route('admin.tables.print')"
+                                target="_blank"
+                                class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all"
+                                title="طباعة بطاقات QR لجميع الطاولات الفعالة"
+                            >
+                                <span>🖨️</span>
+                                <span class="hidden sm:inline">طباعة QR</span>
+                            </a>
+
+                            <!-- Quick Jump to Takeaway Counter Points -->
+                            <Link
+                                href="/admin/tables?tab=takeaway"
+                                class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 text-sky-700 dark:text-sky-300 text-xs font-bold transition-all"
+                                title="إدارة نقاط السفري ورموز QR"
+                            >
+                                <span>🥡</span>
+                                <span class="hidden sm:inline">نقاط السفري</span>
+                            </Link>
+
                             <!-- Zoom Controls (Canvas Only) -->
                             <div v-if="displayMode === 'canvas'" class="flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl px-1 py-0.5 text-xs font-mono">
                                 <button @click="zoomOut" class="px-2 py-1 hover:text-amber-500 font-bold" title="تصغير">-</button>
@@ -1086,6 +1214,7 @@ onUnmounted(() => {
                                     editorMode === 'designer' ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer hover:scale-105',
                                     activeTableId === table.id ? 'z-30 ring-2 ring-amber-400 shadow-xl' : '',
                                     selectedTable?.id === table.id ? 'z-30 ring-2 ring-emerald-400 shadow-xl' : '',
+                                    table.status === 'inactive' ? 'opacity-50 grayscale' : '',
                                     table.shape === 'circle' ? 'rounded-full' : (table.shape === 'vip' ? 'rounded-3xl' : 'rounded-2xl')
                                 ]"
                                 :style="{
@@ -1323,6 +1452,8 @@ onUnmounted(() => {
                     @attend-call="attendTableServiceCall"
                     @close-session="closeSessionForTable"
                     @seat-reservation="markReservationSeated"
+                    @toggle-status="toggleTableStatus"
+                    @regenerate-qr="regenerateTableQr"
                     @save="updateSelectedTable"
                     @delete="deleteSelectedTable"
                 />

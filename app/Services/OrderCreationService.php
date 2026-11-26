@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\OrderStatus;
 use App\Events\OrderCreated;
+use App\Events\TableUpdated;
 use App\Models\Order;
 use App\Models\TableSession;
 use App\Support\MoneyCalculator;
@@ -149,6 +150,7 @@ final class OrderCreationService
                     'stage_updated_at' => now(),
                     'session_started_at' => $table->session_started_at ?? now(),
                 ]);
+                DB::afterCommit(fn () => TableUpdated::dispatchSafe($table));
             }
 
             try {

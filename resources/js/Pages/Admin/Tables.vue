@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import AdminNav from '@/Components/Admin/AdminNav.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, router } from '@inertiajs/vue3';
-import { onMounted, ref } from 'vue';
+import { Head, Link, usePage } from '@inertiajs/vue3';
+import { computed, onMounted, ref } from 'vue';
 import axios from 'axios';
+import { getFloorZoneLabel, TABLE_STAGE_LABELS } from '@/types/floorPlan';
 
 interface TableRow {
     id: number;
@@ -12,14 +13,24 @@ interface TableRow {
     qr_url: string;
     status: string;
     table_type?: 'dine_in' | 'takeaway';
+    zone?: string;
+    capacity?: number;
+    operational_stage?: string;
+    active_session?: { id: number } | null;
 }
 
 const props = defineProps<{
     tables: TableRow[];
-    restaurant: { name: string };
+    restaurant: { id?: number; name: string; features?: Record<string, any> };
 }>();
 
+const page = usePage();
+const isFloorPlanEnabled = computed(() =>
+    Boolean(props.restaurant?.features?.floor_plan ?? (page.props.auth as any)?.restaurant?.features?.floor_plan),
+);
+
 const tables = ref([...props.tables]);
+const typeFilter = ref<'all' | 'dine_in' | 'takeaway'>('all');
 const newName = ref('');
 const newTableType = ref<'dine_in' | 'takeaway'>('dine_in');
 const editingId = ref<number | null>(null);
@@ -114,8 +125,55 @@ async function regenerateToken(table: TableRow) {
     }
 }
 
+const visibleTables = computed(() => {
+    if (typeFilter.value === 'all') return tables.value;
+    return tables.value.filter(t => (t.table_type ?? 'dine_in') === typeFilter.value);
+});
+
+const typeCounts = computed(() => {
+    let dineIn = 0;
+    let takeaway = 0;
+    for (const t of tables.value) {
+        if ((t.table_type ?? 'dine_in') === 'takeaway') takeaway++;
+        else dineIn++;
+    }
+    return { all: tables.value.length, dine_in: dineIn, takeaway };
+});
+
+function stageBadgeText(table: TableRow): string {
+    if (table.status !== 'active') return '🚫 معطّلة';
+    if (table.operational_stage && TABLE_STAGE_LABELS[table.operational_stage]) {
+        return TABLE_STAGE_LABELS[table.operational_stage];
+    }
+    return table.active_session ? 'جلسة نشطة' : 'شاغرة';
+}
+
 onMounted(() => {
     tables.value = [...props.tables];
+    try {
+        const tab = new URLSearchParams(window.location.search).get('tab');
+        if (tab === 'takeaway' || tab === 'dine_in') {
+            typeFilter.value = tab;
+        }
+    } catch (_) {}
+
+    const restId = props.restaurant?.id || (page.props.auth as any)?.restaurant?.id;
+    if (restId && (window as any).Echo) {
+        (window as any).Echo.private(`restaurant.${restId}.orders`)
+            .listen('.table.updated', (payload: { table?: TableRow; deleted?: boolean }) => {
+                if (!payload.table) return;
+                if (payload.deleted) {
+                    tables.value = tables.value.filter(t => t.id !== payload.table?.id);
+                    return;
+                }
+                const idx = tables.value.findIndex(t => t.id === payload.table?.id);
+                if (idx !== -1) {
+                    tables.value[idx] = { ...tables.value[idx], ...payload.table };
+                } else {
+                    tables.value.push(payload.table);
+                }
+            });
+    }
 });
 </script>
 
@@ -182,9 +240,45 @@ onMounted(() => {
                 </a>
             </div>
 
+            <!-- تبويبات الفصل بين طاولات الصالة ونقاط السفري -->
+            <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+                <div class="inline-flex flex-wrap gap-1.5 bg-white dark:bg-[#0a0f1d] p-1.5 rounded-2xl border border-stone-200 dark:border-slate-800 shadow-2xs">
+                    <button
+                        v-for="tab in [
+                            { key: 'all', label: 'الكل' },
+                            { key: 'dine_in', label: '🍽️ طاولات الصالة' },
+                            { key: 'takeaway', label: '🥡 نقاط السفري' },
+                        ] as const"
+                        :key="tab.key"
+                        type="button"
+                        @click="typeFilter = tab.key"
+                        :class="[
+                            'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer',
+                            typeFilter === tab.key
+                                ? 'bg-amber-500 text-stone-950 font-black shadow-xs'
+                                : 'text-stone-600 dark:text-slate-300 hover:bg-stone-100 dark:hover:bg-slate-800'
+                        ]"
+                    >
+                        <span>{{ tab.label }}</span>
+                        <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-black/10 dark:bg-white/10 font-mono">
+                            {{ typeCounts[tab.key] }}
+                        </span>
+                    </button>
+                </div>
+
+                <Link
+                    v-if="isFloorPlanEnabled"
+                    :href="route('admin.floor_plan')"
+                    class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/35 text-amber-800 dark:text-amber-300 text-xs font-black transition"
+                >
+                    <span>🗺️</span>
+                    <span>فتح مخطط الصالة التفاعلي ←</span>
+                </Link>
+            </div>
+
             <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <article
-                    v-for="table in tables"
+                    v-for="table in visibleTables"
                     :key="table.id"
                     class="rounded-2xl bg-white dark:bg-[#0a0f1d] p-5 text-center shadow-xs border transition-all"
                     :class="[
@@ -194,7 +288,7 @@ onMounted(() => {
                         table.status !== 'active' && 'opacity-60'
                     ]"
                 >
-                    <div class="mb-2 flex justify-center">
+                    <div class="mb-2 flex flex-wrap items-center justify-center gap-1.5">
                         <span
                             v-if="table.table_type === 'takeaway'"
                             class="inline-flex items-center gap-1 rounded-full bg-sky-50 dark:bg-sky-950/50 border border-sky-200 dark:border-sky-800 px-2.5 py-0.5 text-[11px] font-bold text-sky-700 dark:text-sky-300"
@@ -205,7 +299,18 @@ onMounted(() => {
                             v-else
                             class="inline-flex items-center gap-1 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/50 px-2.5 py-0.5 text-[11px] font-bold text-amber-700 dark:text-amber-300"
                         >
-                            🍽️ طاولة صالة
+                            🍽️ {{ getFloorZoneLabel(table.zone || 'main') }}
+                        </span>
+                        <span
+                            v-if="table.table_type !== 'takeaway'"
+                            class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold border"
+                            :class="table.status !== 'active'
+                                ? 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800'
+                                : (table.active_session || (table.operational_stage && table.operational_stage !== 'available')
+                                    ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+                                    : 'bg-stone-100 dark:bg-slate-800 text-stone-600 dark:text-slate-300 border-stone-200 dark:border-slate-700')"
+                        >
+                            {{ stageBadgeText(table) }}
                         </span>
                     </div>
 
@@ -240,6 +345,13 @@ onMounted(() => {
                         </button>
                         <button class="rounded-lg bg-stone-100 dark:bg-slate-800 text-stone-700 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-slate-700 px-3 py-1 transition-colors" @click="regenerateToken(table)">QR جديد</button>
                         <a :href="table.qr_url" download class="rounded-lg bg-amber-600 dark:bg-amber-500 px-3 py-1 text-white dark:text-slate-950 font-bold">تحميل</a>
+                        <Link
+                            v-if="isFloorPlanEnabled && table.table_type !== 'takeaway'"
+                            :href="route('admin.floor_plan', { table_id: table.id })"
+                            class="rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-200 dark:border-indigo-800 px-3 py-1 font-bold transition-colors"
+                        >
+                            🗺️ المخطط
+                        </Link>
                         <button class="rounded-lg bg-red-100 dark:bg-red-950/60 px-3 py-1 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors" @click="deleteTable(table)">حذف</button>
                     </div>
                 </article>

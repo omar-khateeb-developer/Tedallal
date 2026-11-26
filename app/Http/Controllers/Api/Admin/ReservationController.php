@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use App\Events\TableUpdated;
 use App\Http\Controllers\Api\ApiController;
 use App\Models\TableReservation;
 use App\Services\RestaurantContext;
@@ -88,6 +89,16 @@ class ReservationController extends ApiController
             'confirmed_by_staff_id' => $request->user()?->id,
             'staff_notes' => $validated['staff_notes'] ?? $reservation->staff_notes,
         ]);
+
+        if ($validated['status'] === 'seated' && $reservation->table) {
+            $reservation->table->update([
+                'operational_stage' => 'seated',
+                'stage_updated_at' => now(),
+                'session_started_at' => $reservation->table->session_started_at ?? now(),
+                'current_guest_name' => $reservation->guest_name,
+            ]);
+            TableUpdated::dispatchSafe($reservation->table);
+        }
 
         \App\Services\ActivityLogger::log('update_vip_reservation', "قام بتحديث حالة حجز VIP ({$reservation->getFormattedCode()}) إلى: {$validated['status']}");
 

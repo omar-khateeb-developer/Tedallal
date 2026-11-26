@@ -5,6 +5,7 @@ export interface TableItem {
     qr_url: string;
     public_url?: string;
     status: 'active' | 'inactive';
+    table_type?: 'dine_in' | 'takeaway';
     pos_x: number;
     pos_y: number;
     shape: 'circle' | 'rectangle' | 'booth' | 'vip';

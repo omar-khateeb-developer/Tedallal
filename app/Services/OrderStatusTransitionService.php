@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\OrderStatus;
 use App\Enums\UserRole;
 use App\Events\OrderStatusChanged;
+use App\Events\TableUpdated;
 use App\Models\Order;
 use App\Models\PromoCode;
 use App\Models\User;
@@ -161,6 +162,10 @@ final class OrderStatusTransitionService
                         'order_id' => $freshOrder->id,
                         'order_number' => $freshOrder->order_number,
                     ]);
+                }
+
+                if ($freshOrder->table && $freshOrder->service_type !== 'takeaway') {
+                    TableUpdated::dispatchSafe($freshOrder->table);
                 }
             });
 

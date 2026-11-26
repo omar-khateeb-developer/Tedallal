@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue';
 import type { ReservationItem, TableItem } from '@/types/floorPlan';
 
 defineProps<{
@@ -14,9 +15,21 @@ const emit = defineEmits<{
     (e: 'attend-call', table: TableItem): void;
     (e: 'close-session', table: TableItem): void;
     (e: 'seat-reservation', reservation: ReservationItem): void;
+    (e: 'toggle-status', table: TableItem): void;
+    (e: 'regenerate-qr', table: TableItem): void;
     (e: 'save'): void;
     (e: 'delete'): void;
 }>();
+
+const isQrCopied = ref(false);
+
+function copyTableQrLink(table: TableItem) {
+    const url = table.public_url || `${window.location.origin}/t/${table.public_token}`;
+    navigator.clipboard.writeText(url).then(() => {
+        isQrCopied.value = true;
+        setTimeout(() => { isQrCopied.value = false; }, 2500);
+    });
+}
 
 const stages = [
     { key: 'available', label: 'شاغرة', icon: '🟢' },
@@ -133,6 +146,65 @@ const stages = [
                         <span>📋</span>
                         <span>تكرار الطاولة</span>
                     </button>
+                </div>
+
+                <!-- QR Card & Availability Binding -->
+                <div class="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 rounded-2xl p-4 space-y-3">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-base">📱</span>
+                            <span class="text-xs font-extrabold text-slate-800 dark:text-slate-200">بطاقة QR وحالة الطاولة</span>
+                        </div>
+                        <button
+                            type="button"
+                            @click="emit('toggle-status', table)"
+                            :class="[
+                                'px-2.5 py-1 rounded-full text-[11px] font-black border transition cursor-pointer',
+                                table.status === 'active'
+                                    ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/25'
+                                    : 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/40 hover:bg-rose-500/25'
+                            ]"
+                            title="تفعيل أو تعطيل مسح QR لهذه الطاولة"
+                        >
+                            {{ table.status === 'active' ? '🟢 مفعّلة (انقر للتعطيل)' : '🚫 معطّلة (انقر للتفعيل)' }}
+                        </button>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <div class="w-16 h-16 rounded-xl bg-white p-1 border border-slate-200 dark:border-slate-700 shrink-0 shadow-2xs">
+                            <img :src="table.qr_url" :alt="`QR ${table.name}`" class="w-full h-full object-contain" />
+                        </div>
+                        <div class="grid grid-cols-2 gap-1.5 flex-1 text-[11px] font-bold">
+                            <a
+                                :href="route('admin.tables.print', { table_id: table.id })"
+                                target="_blank"
+                                class="py-1.5 px-2 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-800 dark:text-amber-300 border border-amber-500/30 text-center transition"
+                            >
+                                🖨️ طباعة
+                            </a>
+                            <button
+                                type="button"
+                                @click="copyTableQrLink(table)"
+                                class="py-1.5 px-2 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition cursor-pointer"
+                            >
+                                {{ isQrCopied ? '✓ تم النسخ' : '🔗 نسخ' }}
+                            </button>
+                            <button
+                                type="button"
+                                @click="emit('regenerate-qr', table)"
+                                class="py-1.5 px-2 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition cursor-pointer"
+                            >
+                                🔄 QR جديد
+                            </button>
+                            <a
+                                :href="`/t/${table.public_token}`"
+                                target="_blank"
+                                class="py-1.5 px-2 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-center transition"
+                            >
+                                👁️ معاينة
+                            </a>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- IoT Chipset Binding -->

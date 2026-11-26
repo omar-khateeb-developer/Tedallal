@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\TableUpdated;
 use App\Models\Restaurant;
 use App\Models\RestaurantTable;
 use App\Models\TableSession;
@@ -33,6 +34,12 @@ final class TableSessionService
                     ->where('status', 'active')
                     ->lockForUpdate()
                     ->first();
+
+                // إذا كانت الطاولة في مرحلة التنظيف بعد مغادرة الضيوف، نغلق أي جلسة قديمة عالقة فوراً حتى لا يرثها الضيف الجديد
+                if ($existing && $table->operational_stage === 'cleaning') {
+                    $existing->close();
+                    $existing = null;
+                }
             }
 
             if ($existing) {
@@ -60,6 +67,24 @@ final class TableSessionService
                 'status' => 'active',
                 'started_at' => now(),
             ]);
+
+            if (! $table->isTakeaway()) {
+                $stage = $table->operational_stage ?: 'available';
+                $updates = [
+                    'session_started_at' => $table->session_started_at ?? now(),
+                    'bill_requested_at' => null,
+                ];
+
+                if (in_array($stage, ['available', 'cleaning'], true)) {
+                    $updates['operational_stage'] = 'seated';
+                    $updates['stage_updated_at'] = now();
+                    $updates['current_guest_name'] = $stage === 'cleaning' ? null : $table->current_guest_name;
+                }
+
+                $table->update($updates);
+                DB::afterCommit(fn () => TableUpdated::dispatchSafe($table));
+            }
+
             $newSession->setRelation('table', $table);
 
             return $newSession;
