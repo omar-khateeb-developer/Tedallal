@@ -44,8 +44,9 @@ const allLinks = [
 
 const links = computed(() => allLinks.filter(link => {
     if (isAdmin.value || isSuperAdmin.value) return true;
-    if (link.roles.includes(userRole.value)) return true;
-    return false;
+    if (!link.roles.includes(userRole.value)) return false;
+    if (link.permission && !userPermissions.value.includes(link.permission)) return false;
+    return true;
 }));
 </script>
 

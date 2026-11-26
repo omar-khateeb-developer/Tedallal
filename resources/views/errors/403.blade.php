@@ -507,7 +507,7 @@
 
         <!-- Actions -->
         <div class="actions-grid">
-            <a href="/dashboard" class="btn btn-gold" id="btn-dash">
+            <a href="/dashboard" target="_top" class="btn btn-gold" id="btn-dash">
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
                     <polyline points="9 22 9 12 15 12 15 22"/>
@@ -515,15 +515,25 @@
                 <span id="btn-dash-text">الذهاب للوحة التحكم</span>
             </a>
 
-            <a href="/login" class="btn btn-indigo" id="btn-login">
+            @auth
+            <button type="button" onclick="switchAccount403()" class="btn btn-indigo" id="btn-login">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="8" cy="15" r="4"/>
+                    <path d="m11 12 7-7 3 3-2 2-2-2-3 3"/>
+                </svg>
+                <span id="btn-login-text">تبديل الحساب / تسجيل الدخول</span>
+            </button>
+            @else
+            <a href="/login" target="_top" class="btn btn-indigo" id="btn-login">
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="8" cy="15" r="4"/>
                     <path d="m11 12 7-7 3 3-2 2-2-2-3 3"/>
                 </svg>
                 <span id="btn-login-text">تبديل الحساب / تسجيل الدخول</span>
             </a>
+            @endauth
 
-            <a href="/" class="btn btn-glass" id="btn-home">
+            <a href="/" target="_top" class="btn btn-glass" id="btn-home">
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10"/>
                     <path d="m10 15 5-3-5-3v6z"/>
@@ -531,7 +541,7 @@
                 <span id="btn-home-text">العودة للرئيسية</span>
             </a>
 
-            <button type="button" onclick="history.length > 1 ? history.back() : window.location.href='/'" class="btn btn-glass" id="btn-back">
+            <button type="button" onclick="history.length > 1 ? history.back() : (window.top || window).location.assign('/')" class="btn btn-glass" id="btn-back">
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="m15 18-6-6 6-6"/>
                 </svg>
@@ -603,6 +613,24 @@
         };
 
         let currentLang = 'ar';
+
+        function switchAccount403() {
+            const target = window.top || window;
+            fetch('/logout', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                credentials: 'same-origin'
+            }).finally(function () {
+                try {
+                    target.location.href = '/login';
+                } catch (e) {
+                    window.location.href = '/login';
+                }
+            });
+        }
 
         function toggleLang() {
             currentLang = currentLang === 'ar' ? 'en' : 'ar';

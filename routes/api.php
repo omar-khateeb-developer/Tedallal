@@ -64,8 +64,18 @@ Route::prefix('public')->middleware('throttle:public-api')->group(function () {
 Route::post('whatsapp/webhook', [\App\Http\Controllers\Api\Public\WhatsAppWebhookController::class, 'handle']);
 
 Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
-    Route::middleware('role:admin')->group(function () {
+    Route::middleware('role:admin,supervisor')->group(function () {
         Route::get('dashboard/stats', [AdminDashboardController::class, 'stats']);
+        Route::get('reports/sales', [\App\Http\Controllers\Api\Admin\SalesReportController::class, 'index']);
+        Route::get('reports/sales/export', [\App\Http\Controllers\Api\Admin\SalesReportController::class, 'export']);
+        Route::get('reports/accounting-voucher', [\App\Http\Controllers\Api\Admin\SalesReportController::class, 'getAccountingVoucher']);
+        Route::get('reports/accounting-voucher/export', [\App\Http\Controllers\Api\Admin\SalesReportController::class, 'exportAccountingVoucher']);
+        Route::apiResource('promo-codes', AdminPromoCodeController::class)->parameters([
+            'promo-codes' => 'promoCode',
+        ]);
+    });
+
+    Route::middleware('role:admin')->group(function () {
         Route::get('restaurant', [RestaurantController::class, 'show']);
         Route::patch('restaurant', [RestaurantController::class, 'update']);
         Route::post('restaurant/reset-test-data', [RestaurantController::class, 'resetTestData']);
@@ -77,13 +87,6 @@ Route::prefix('admin')->middleware(['auth:sanctum'])->group(function () {
         Route::get('analytics', [\App\Http\Controllers\Api\Admin\AnalyticsController::class, 'index']);
         Route::get('analytics/menu-engineering', [\App\Http\Controllers\Api\Admin\AnalyticsController::class, 'menuEngineering']);
         Route::get('insights', [\App\Http\Controllers\Api\Admin\InsightsController::class, 'index']);
-        Route::get('reports/sales', [\App\Http\Controllers\Api\Admin\SalesReportController::class, 'index']);
-        Route::get('reports/sales/export', [\App\Http\Controllers\Api\Admin\SalesReportController::class, 'export']);
-        Route::get('reports/accounting-voucher', [\App\Http\Controllers\Api\Admin\SalesReportController::class, 'getAccountingVoucher']);
-        Route::get('reports/accounting-voucher/export', [\App\Http\Controllers\Api\Admin\SalesReportController::class, 'exportAccountingVoucher']);
-        Route::apiResource('promo-codes', AdminPromoCodeController::class)->parameters([
-            'promo-codes' => 'promoCode',
-        ]);
         Route::get('customers', [\App\Http\Controllers\Api\Admin\CustomerCrmController::class, 'index']);
         Route::post('customers', [\App\Http\Controllers\Api\Admin\CustomerCrmController::class, 'store']);
         Route::patch('customers/{customerId}', [\App\Http\Controllers\Api\Admin\CustomerCrmController::class, 'update']);

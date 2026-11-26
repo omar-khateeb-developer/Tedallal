@@ -420,4 +420,43 @@ class AuditSecurityAndLogicFixesTest extends TestCase
         $this->assertSame(12, $crmRes->json('data.pagination.total'));
         $this->assertSame(2, $crmRes->json('data.pagination.last_page'));
     }
+
+    public function test_supervisor_can_login_and_access_permitted_admin_pages_and_inertia_403_renders_vue_component(): void
+    {
+        $supervisor = User::where('email', 'supervisor@jamra.test')->firstOrFail();
+
+        // 1. Login flow redirects supervisor cleanly to /dashboard -> /admin/dashboard (no 403!)
+        $loginRes = $this->post('/login', [
+            'email' => $supervisor->email,
+            'password' => 'password',
+        ]);
+        $loginRes->assertRedirect('/dashboard');
+        $this->get('/dashboard')->assertRedirect('/admin/dashboard');
+
+        // 2. Supervisor can open Dashboard, Reports, Offers & backing APIs
+        $dashRes = $this->actingAs($supervisor)->get('/admin/dashboard')->assertOk();
+        $inertiaVersion = (string) ($dashRes->viewData('page')['version'] ?? '');
+        $this->actingAs($supervisor)->get('/admin/reports')->assertOk();
+        $this->actingAs($supervisor)->get('/admin/offers')->assertOk();
+
+        $this->actingAs($supervisor, 'sanctum')->getJson('/api/admin/dashboard/stats')->assertOk();
+        $this->actingAs($supervisor, 'sanctum')->getJson('/api/admin/reports/sales')->assertOk();
+        $this->actingAs($supervisor, 'sanctum')->getJson('/api/admin/promo-codes')->assertOk();
+
+        // 3. Supervisor still gets 403 on admin-only routes (Settings, Users, Analytics, Customers)
+        $inertia403 = $this->actingAs($supervisor)
+            ->withHeaders([
+                'X-Inertia' => 'true',
+                'X-Inertia-Version' => $inertiaVersion,
+            ])
+            ->get('/admin/settings');
+
+        $inertia403->assertForbidden();
+        $inertia403->assertHeader('X-Inertia', 'true');
+        $inertia403->assertJsonPath('component', 'Errors/403');
+
+        $this->actingAs($supervisor)->get('/admin/users')->assertForbidden();
+        $this->actingAs($supervisor, 'sanctum')->getJson('/api/admin/users')->assertForbidden();
+        $this->actingAs($supervisor, 'sanctum')->getJson('/api/admin/customers')->assertForbidden();
+    }
 }

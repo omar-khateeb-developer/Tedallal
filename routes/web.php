@@ -73,19 +73,22 @@ Route::middleware(['auth', 'verified', 'permission:manage_orders'])->prefix('adm
     Route::get('/orders/{order}/print', \App\Http\Controllers\Web\Admin\OrderPrintController::class)->name('orders.print');
 });
 
-Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'verified', 'role:admin,supervisor'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
-    Route::get('/settings', [AdminDashboardController::class, 'settings'])->name('settings');
-    Route::get('/users', [AdminDashboardController::class, 'users'])->name('users');
-    Route::get('/analytics', function () {
-        return Inertia::render('Admin/Analytics');
-    })->name('analytics');
     Route::get('/reports', function () {
         return Inertia::render('Admin/Reports');
     })->name('reports');
     Route::get('/offers', function () {
         return Inertia::render('Admin/Offers');
     })->name('offers');
+});
+
+Route::middleware(['auth', 'verified', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/settings', [AdminDashboardController::class, 'settings'])->name('settings');
+    Route::get('/users', [AdminDashboardController::class, 'users'])->name('users');
+    Route::get('/analytics', function () {
+        return Inertia::render('Admin/Analytics');
+    })->name('analytics');
     Route::get('/customers', function () {
         return Inertia::render('Admin/Customers');
     })->name('customers');

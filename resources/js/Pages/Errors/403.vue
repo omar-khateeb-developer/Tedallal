@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Head, Link, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import axios from 'axios';
 import { ref, onMounted, computed } from 'vue';
 
 const props = defineProps<{
@@ -50,6 +51,25 @@ const i18n = {
 
 function toggleLanguage() {
     currentLang.value = currentLang.value === 'ar' ? 'en' : 'ar';
+}
+
+const isSwitchingAccount = ref(false);
+
+async function switchAccount() {
+    if (authUser.value) {
+        if (isSwitchingAccount.value) return;
+        isSwitchingAccount.value = true;
+        try {
+            await axios.post(route('logout'));
+        } catch {
+            // Even if session/CSRF expired, continue to login screen
+        } finally {
+            window.location.href = route('login');
+        }
+        return;
+    }
+
+    router.visit(route('login'));
 }
 
 function goBack() {
@@ -218,16 +238,18 @@ onMounted(() => {
                 </Link>
 
                 <!-- Switch Account / Login -->
-                <Link
-                    :href="route('login')"
-                    class="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl font-bold text-sm bg-indigo-500/15 border border-indigo-400/30 text-indigo-200 hover:bg-indigo-500/25 hover:border-indigo-400/60 hover:-translate-y-0.5 transition-all shadow-md shadow-indigo-900/20 cursor-pointer"
+                <button
+                    type="button"
+                    @click="switchAccount"
+                    :disabled="isSwitchingAccount"
+                    class="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl font-bold text-sm bg-indigo-500/15 border border-indigo-400/30 text-indigo-200 hover:bg-indigo-500/25 hover:border-indigo-400/60 hover:-translate-y-0.5 transition-all shadow-md shadow-indigo-900/20 cursor-pointer disabled:opacity-60"
                 >
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="8" cy="15" r="4"/>
                         <path d="m11 12 7-7 3 3-2 2-2-2-3 3"/>
                     </svg>
                     <span>{{ i18n[currentLang].btnLogin }}</span>
-                </Link>
+                </button>
 
                 <!-- Return Home (if logged in) -->
                 <Link

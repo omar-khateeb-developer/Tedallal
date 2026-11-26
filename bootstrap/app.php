@@ -84,6 +84,14 @@ return Application::configure(basePath: dirname(__DIR__))
             return $render403($e, $request);
         });
 
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e, Request $request) use ($render403) {
+            if ($e->getStatusCode() === 403) {
+                return $render403($e, $request);
+            }
+
+            return null;
+        });
+
         $exceptions->render(function (\Illuminate\Database\Eloquent\ModelNotFoundException $e, Request $request) {
             if ($request->is('api/*')) {
                 return response()->json([
