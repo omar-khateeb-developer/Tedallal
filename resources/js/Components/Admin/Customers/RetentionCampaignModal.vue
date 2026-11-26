@@ -60,7 +60,7 @@ const previewCampaignMessage = computed(() => {
     const name = props.customer.name;
     const discountVal = campaignForm.value.create_voucher
         ? (campaignForm.value.discount_type === 'percentage'
-            ? `خصم %${campaignForm.value.discount_value}`
+            ? `خصم ${campaignForm.value.discount_value}%`
             : `خصم ${campaignForm.value.discount_value} ${props.currency}`)
         : '';
     const validDays = campaignForm.value.valid_days;

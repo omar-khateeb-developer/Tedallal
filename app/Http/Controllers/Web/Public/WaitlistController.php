@@ -134,21 +134,33 @@ class WaitlistController extends Controller
             'notes' => ['nullable', 'string', 'max:300'],
         ]);
 
-        $lastQueueNumber = WaitlistEntry::where('restaurant_id', $restaurant->id)
-            ->whereDate('created_at', now()->toDateString())
-            ->max('queue_number') ?? 0;
+        if (! \App\Support\PhoneNormalizer::isValidWhatsAppCandidate($validated['guest_phone'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'يرجى إدخال رقم هاتف / واتساب صحيح (مثال: 0933123456 أو +963933123456).',
+            ], 422);
+        }
 
-        $entry = WaitlistEntry::create([
-            'restaurant_id' => $restaurant->id,
-            'guest_name' => $validated['guest_name'],
-            'guest_phone' => $validated['guest_phone'],
-            'party_size' => $validated['party_size'],
-            'seating_preference' => $validated['seating_preference'] ?? 'any',
-            'estimated_wait_minutes' => 15,
-            'notes' => $validated['notes'] ?? null,
-            'queue_number' => $lastQueueNumber + 1,
-            'status' => 'waiting',
-        ]);
+        $cleanPhone = \App\Support\PhoneNormalizer::toStorageFormat($validated['guest_phone']);
+
+        $entry = \Illuminate\Support\Facades\DB::transaction(function () use ($restaurant, $validated, $cleanPhone) {
+            $lastQueueNumber = WaitlistEntry::where('restaurant_id', $restaurant->id)
+                ->whereDate('created_at', now()->toDateString())
+                ->lockForUpdate()
+                ->max('queue_number') ?? 0;
+
+            return WaitlistEntry::create([
+                'restaurant_id' => $restaurant->id,
+                'guest_name' => $validated['guest_name'],
+                'guest_phone' => $cleanPhone,
+                'party_size' => $validated['party_size'],
+                'seating_preference' => $validated['seating_preference'] ?? 'any',
+                'estimated_wait_minutes' => 15,
+                'notes' => $validated['notes'] ?? null,
+                'queue_number' => $lastQueueNumber + 1,
+                'status' => 'waiting',
+            ]);
+        });
 
         try {
             $this->notificationService->sendJoinedNotification($entry);

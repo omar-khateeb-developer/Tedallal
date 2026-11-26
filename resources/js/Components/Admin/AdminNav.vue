@@ -60,7 +60,7 @@ const links = computed(() => allLinks.filter(link => {
                 :href="route(link.href)"
                 class="shrink-0 rounded-xl px-3.5 py-2 text-xs sm:text-sm font-semibold transition-all duration-300 inline-flex items-center gap-1.5 whitespace-nowrap"
                 :class="route().current(link.href)
-                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/30'
+                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-stone-950 font-bold shadow-md shadow-amber-500/30'
                     : 'text-slate-600 dark:text-slate-300 bg-transparent hover:bg-slate-50 hover:text-slate-900 dark:hover:bg-slate-800/70 dark:hover:text-white'"
             >
                 <span>{{ link.label }}</span>

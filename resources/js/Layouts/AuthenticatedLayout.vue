@@ -19,7 +19,19 @@ const restaurant = computed(() => (page.props.auth as any)?.restaurant);
 const userRole = computed(() => user.value?.role);
 const roleLabel = computed(() => user.value?.role_label);
 
-const whatsappWarnDismissed = ref(false);
+function readInitialWhatsappWarnDismissed(restaurantId?: number): boolean {
+    try {
+        return Boolean(
+            restaurantId &&
+            typeof window !== 'undefined' &&
+            sessionStorage.getItem(`tedallal_hide_wa_warn_${restaurantId}`) === '1'
+        );
+    } catch {
+        return false;
+    }
+}
+
+const whatsappWarnDismissed = ref(readInitialWhatsappWarnDismissed(restaurant.value?.id));
 const whatsappOtpAlert = computed(() => restaurant.value?.whatsapp_otp_alert || null);
 const showProactiveWhatsappWarning = computed(() => {
     if (userRole.value !== 'admin' || !restaurant.value || restaurant.value.is_expired) return false;

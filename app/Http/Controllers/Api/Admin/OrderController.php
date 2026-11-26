@@ -31,7 +31,27 @@ class OrderController extends ApiController
             $query->where('status', $request->string('status'));
         }
 
-        return $this->success(OrderResource::collection($query->paginate(20)));
+        if ($request->filled('search')) {
+            $search = trim((string) $request->input('search'));
+            $query->where(function ($q) use ($search) {
+                $q->where('order_number', 'like', "%{$search}%")
+                    ->orWhereHas('table', fn ($tq) => $tq->withoutGlobalScopes()->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        $perPage = max(10, min(100, (int) $request->query('per_page', 30)));
+        $paginator = $query->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => OrderResource::collection($paginator->items())->resolve(),
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+            ],
+        ]);
     }
 
     public function show(Order $order)

@@ -4,6 +4,7 @@ import CustomerLayout from '@/Layouts/CustomerLayout.vue';
 import { router, Head } from '@inertiajs/vue3';
 import { computed, defineAsyncComponent, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { normalizeVisualViewport } from '@/composables/useVisualViewport';
+import { formatArabicCount } from '@/utils/arabic';
 import { formatMoney } from '@/utils/money';
 import axios from 'axios';
 
@@ -101,13 +102,13 @@ function getDishBadge(item: MenuItem, index: number): { label: string; icon: str
         return { label: 'توصية الشيف', icon: '⭐', style: 'bg-amber-500 text-stone-950 font-black' };
     }
     if (text.includes('حار') || text.includes('سبايسي') || text.includes('spicy')) {
-        return { label: 'حار', icon: '🌶️', style: 'bg-red-500 text-white font-black' };
+        return { label: 'حار', icon: '🌶️', style: 'bg-red-600 text-white font-black' };
     }
     if (text.includes('نباتي') || text.includes('صحي') || text.includes('سلطة') || text.includes('vegan') || text.includes('salad')) {
-        return { label: 'نباتي / صحي', icon: '🥗', style: 'bg-emerald-600 text-white font-bold' };
+        return { label: 'نباتي / صحي', icon: '🥗', style: 'bg-emerald-700 text-white font-bold' };
     }
     if (index === 0) {
-        return { label: 'الأكثر طلباً', icon: '👑', style: 'bg-amber-600 text-white font-bold' };
+        return { label: 'الأكثر طلباً', icon: '👑', style: 'bg-amber-700 text-white font-bold' };
     }
     return null;
 }
@@ -540,7 +541,7 @@ onUnmounted(() => {
                 <button
                     v-if="!isTakeawayPoint"
                     type="button"
-                    class="relative flex h-10 items-center justify-center gap-1.5 px-3 rounded-xl bg-amber-500/15 text-amber-600 hover:bg-amber-500/25 dark:bg-amber-500/20 dark:text-amber-300 dark:hover:bg-amber-500/30 transition-all border border-amber-500/40 active:scale-95 shadow-2xs font-bold text-xs"
+                    class="relative flex h-10 items-center justify-center gap-1.5 px-3 rounded-xl bg-amber-500/15 text-amber-800 hover:bg-amber-500/25 dark:bg-amber-500/20 dark:text-amber-300 dark:hover:bg-amber-500/30 transition-all border border-amber-500/40 active:scale-95 shadow-2xs font-bold text-xs"
                     title="طلب النادل أو الفاتورة"
                     @click="openServiceModal('waiter')"
                 >
@@ -594,7 +595,7 @@ onUnmounted(() => {
                     <span class="animate-pulse">{{ activePendingCall.type === 'bill_request' ? '🧾' : '🛎️' }}</span>
                 </div>
                 <div>
-                    <p class="text-xs font-black text-amber-600 dark:text-amber-400">
+                    <p class="text-xs font-black text-amber-700 dark:text-amber-400">
                         {{ activePendingCall.type === 'bill_request' ? 'تم طلب الفاتورة' : 'النداء قيد التلبية' }}
                     </p>
                     <p class="text-[11px] text-stone-600 dark:text-stone-300">
@@ -752,9 +753,9 @@ onUnmounted(() => {
                     ✕
                 </button>
             </div>
-            <div v-if="searchQuery.trim()" class="mt-1.5 text-[11px] font-semibold text-amber-600 dark:text-amber-400 px-1 flex items-center justify-between">
+            <div v-if="searchQuery.trim()" class="mt-1.5 text-[11px] font-semibold text-amber-700 dark:text-amber-400 px-1 flex items-center justify-between">
                 <span>نتائج البحث عن: "{{ searchQuery }}"</span>
-                <span class="text-stone-400 dark:text-slate-500">({{ visibleItems.length }} صنف مطابق)</span>
+                <span class="text-stone-500 dark:text-slate-400">({{ formatArabicCount(visibleItems.length, 'صنف مطابق', 'صنفان مطابقان', 'أصناف مطابقة', 'صنفاً مطابقاً', 'صنف واحد مطابق') }})</span>
             </div>
         </div>
 
@@ -788,16 +789,17 @@ onUnmounted(() => {
             </div>
 
             <!-- شريط أدوات العرض: عدد الأصناف + مبدل نمط الشبكة/القائمة (مستوحى من Restoria) -->
-            <div class="flex items-center justify-between mt-2 pt-2 border-t border-stone-200/40 dark:border-slate-800/40 text-xs text-stone-500 dark:text-slate-400">
+            <div class="flex items-center justify-between mt-2 pt-2 border-t border-stone-200/40 dark:border-slate-800/40 text-xs text-stone-600 dark:text-slate-400">
                 <span class="font-medium">
-                    {{ visibleItems.length }} {{ visibleItems.length === 1 ? 'صنف' : visibleItems.length === 2 ? 'صنفان' : 'أصناف' }}
+                    {{ formatArabicCount(visibleItems.length, 'صنف', 'صنفان', 'أصناف', 'صنفاً', 'صنف واحد') }}
                 </span>
                 <div class="flex items-center bg-stone-200/70 dark:bg-slate-800/80 p-0.5 rounded-lg gap-0.5">
                     <button
                         type="button"
                         class="flex items-center gap-1 px-2 py-1 rounded-md transition-all font-medium"
-                        :class="viewMode === 'grid' ? 'bg-white dark:bg-stone-900 text-amber-600 dark:text-amber-400 shadow-2xs font-bold' : 'text-stone-500 dark:text-slate-400 hover:text-stone-800'"
+                        :class="viewMode === 'grid' ? 'bg-white dark:bg-stone-900 text-amber-700 dark:text-amber-400 shadow-2xs font-bold' : 'text-stone-600 dark:text-slate-400 hover:text-stone-900 dark:hover:text-white'"
                         title="عرض شبكي (Restoria Grid)"
+                        :aria-pressed="viewMode === 'grid'"
                         @click="setViewMode('grid')"
                     >
                         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
@@ -808,8 +810,9 @@ onUnmounted(() => {
                     <button
                         type="button"
                         class="flex items-center gap-1 px-2 py-1 rounded-md transition-all font-medium"
-                        :class="viewMode === 'list' ? 'bg-white dark:bg-stone-900 text-amber-600 dark:text-amber-400 shadow-2xs font-bold' : 'text-stone-500 dark:text-slate-400 hover:text-stone-800'"
+                        :class="viewMode === 'list' ? 'bg-white dark:bg-stone-900 text-amber-700 dark:text-amber-400 shadow-2xs font-bold' : 'text-stone-600 dark:text-slate-400 hover:text-stone-900 dark:hover:text-white'"
                         title="عرض قائمة (Compact List)"
+                        :aria-pressed="viewMode === 'list'"
                         @click="setViewMode('list')"
                     >
                         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
@@ -873,20 +876,20 @@ onUnmounted(() => {
                         <div>
                             <span
                                 v-if="activeCategory === 'all' && item.category_name"
-                                class="inline-block text-[0.6875rem] font-bold text-amber-600 dark:text-amber-400/90 mb-1"
+                                class="inline-block text-[0.6875rem] font-bold text-amber-700 dark:text-amber-400/90 mb-1"
                             >
                                 {{ item.category_name }}
                             </span>
                             <h3 class="font-bold text-gray-900 dark:text-white text-sm sm:text-base line-clamp-2 leading-snug group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">
                                 {{ item.name }}
                             </h3>
-                            <p v-if="item.description" class="mt-1 text-xs text-stone-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                            <p v-if="item.description" class="mt-1 text-xs text-stone-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
                                 {{ item.description }}
                             </p>
                         </div>
 
                         <div class="flex items-center justify-between mt-3 pt-2 border-t border-stone-100 dark:border-slate-800/60">
-                            <p class="font-black text-amber-600 dark:text-amber-400 text-sm sm:text-base">
+                            <p class="font-black text-amber-700 dark:text-amber-400 text-sm sm:text-base">
                                 {{ formatPrice(item.price) }}
                             </p>
 
@@ -900,6 +903,7 @@ onUnmounted(() => {
                                         type="button"
                                         class="h-7 w-7 rounded-full bg-white dark:bg-slate-800 text-amber-800 dark:text-amber-300 font-bold flex items-center justify-center hover:bg-amber-100 dark:hover:bg-slate-700 active:scale-90 transition-all text-xs"
                                         :disabled="updatingItemIds.has(item.id)"
+                                        :aria-label="`تقليل كمية ${item.name}`"
                                         @click="quickDecrement(item)"
                                     >
                                         −
@@ -909,8 +913,9 @@ onUnmounted(() => {
                                     </span>
                                     <button
                                         type="button"
-                                        class="h-7 w-7 rounded-full bg-amber-600 dark:bg-amber-500 text-white font-bold flex items-center justify-center hover:bg-amber-700 dark:hover:bg-amber-400 active:scale-90 transition-all text-xs"
+                                        class="h-7 w-7 rounded-full bg-amber-700 dark:bg-amber-500 text-white dark:text-stone-950 font-bold flex items-center justify-center hover:bg-amber-800 dark:hover:bg-amber-400 active:scale-90 transition-all text-xs"
                                         :disabled="updatingItemIds.has(item.id)"
+                                        :aria-label="`زيادة كمية ${item.name}`"
                                         @click="quickIncrement(item)"
                                     >
                                         +
@@ -919,9 +924,10 @@ onUnmounted(() => {
                                 <button
                                     v-else
                                     type="button"
-                                    class="h-8 w-8 rounded-full bg-amber-600 dark:bg-amber-500 text-white flex items-center justify-center shadow-md shadow-amber-200 dark:shadow-amber-950/50 hover:bg-amber-700 dark:hover:bg-amber-400 active:scale-90 transition-transform disabled:opacity-50"
+                                    class="h-8 w-8 rounded-full bg-amber-700 dark:bg-amber-500 text-white dark:text-stone-950 flex items-center justify-center shadow-md shadow-amber-200 dark:shadow-amber-950/50 hover:bg-amber-800 dark:hover:bg-amber-400 active:scale-90 transition-transform disabled:opacity-50"
                                     :disabled="updatingItemIds.has(item.id)"
                                     title="إضافة سريعة"
+                                    :aria-label="`إضافة ${item.name} إلى السلة`"
                                     @click="quickAdd(item)"
                                 >
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -972,7 +978,7 @@ onUnmounted(() => {
                         <div>
                             <span
                                 v-if="activeCategory === 'all' && item.category_name"
-                                class="inline-block text-[0.625rem] font-bold text-amber-600 dark:text-amber-400/90 mb-0.5"
+                                class="inline-block text-[0.625rem] font-bold text-amber-700 dark:text-amber-400/90 mb-0.5"
                             >
                                 {{ item.category_name }}
                             </span>
@@ -995,7 +1001,7 @@ onUnmounted(() => {
                         </div>
 
                         <div class="flex items-center justify-between mt-2 pt-1 border-t border-stone-50 dark:border-slate-800/60">
-                            <p class="font-black text-amber-600 dark:text-amber-400 text-sm sm:text-base">
+                            <p class="font-black text-amber-700 dark:text-amber-400 text-sm sm:text-base">
                                 {{ formatPrice(item.price) }}
                             </p>
 
@@ -1010,6 +1016,7 @@ onUnmounted(() => {
                                         class="h-7 w-7 rounded-full bg-white dark:bg-slate-800 text-amber-800 dark:text-amber-300 font-bold flex items-center justify-center hover:bg-amber-100 dark:hover:bg-slate-700 active:scale-90 transition-all shadow-2xs disabled:opacity-50"
                                         :disabled="updatingItemIds.has(item.id)"
                                         title="تقليل"
+                                        :aria-label="`تقليل كمية ${item.name}`"
                                         @click="quickDecrement(item)"
                                     >
                                         −
@@ -1019,9 +1026,10 @@ onUnmounted(() => {
                                     </span>
                                     <button
                                         type="button"
-                                        class="h-7 w-7 rounded-full bg-amber-600 dark:bg-amber-500 text-white font-bold flex items-center justify-center hover:bg-amber-700 dark:hover:bg-amber-400 active:scale-90 transition-all shadow-2xs disabled:opacity-50"
+                                        class="h-7 w-7 rounded-full bg-amber-700 dark:bg-amber-500 text-white dark:text-stone-950 font-bold flex items-center justify-center hover:bg-amber-800 dark:hover:bg-amber-400 active:scale-90 transition-all shadow-2xs disabled:opacity-50"
                                         :disabled="updatingItemIds.has(item.id)"
                                         title="زيادة"
+                                        :aria-label="`زيادة كمية ${item.name}`"
                                         @click="quickIncrement(item)"
                                     >
                                         +
@@ -1031,9 +1039,10 @@ onUnmounted(() => {
                                 <button
                                     v-else
                                     type="button"
-                                    class="h-8 w-8 rounded-full bg-amber-600 dark:bg-amber-500 text-white flex items-center justify-center shadow-md shadow-amber-200 dark:shadow-amber-950/50 hover:bg-amber-700 dark:hover:bg-amber-400 active:scale-90 transition-transform disabled:opacity-50"
+                                    class="h-8 w-8 rounded-full bg-amber-700 dark:bg-amber-500 text-white dark:text-stone-950 flex items-center justify-center shadow-md shadow-amber-200 dark:shadow-amber-950/50 hover:bg-amber-800 dark:hover:bg-amber-400 active:scale-90 transition-transform disabled:opacity-50"
                                     :disabled="updatingItemIds.has(item.id)"
                                     title="إضافة سريعة للطلب"
+                                    :aria-label="`إضافة ${item.name} إلى السلة`"
                                     @click="quickAdd(item)"
                                 >
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1111,7 +1120,7 @@ onUnmounted(() => {
                         <div class="text-right">
                             <p class="font-bold text-sm sm:text-base leading-tight flex items-center gap-1.5">
                                 <span>عرض السلة</span>
-                                <span class="text-xs font-semibold text-stone-400">({{ cartCount }} {{ cartCount === 1 ? 'صنف' : 'أصناف' }})</span>
+                                <span class="text-xs font-semibold text-stone-300">({{ formatArabicCount(cartCount, 'صنف', 'صنفان', 'أصناف', 'صنفاً', 'صنف واحد') }})</span>
                             </p>
                             <p class="text-[0.6875rem] text-amber-400/90 font-medium">اضغط للمراجعة وتأكيد الطلب</p>
                         </div>

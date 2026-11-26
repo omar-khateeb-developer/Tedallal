@@ -38,13 +38,13 @@ class WheelController extends Controller
      * Default fallback rewards if restaurant has not configured custom promo codes
      */
     private const DEFAULT_REWARDS = [
-        ['label' => 'خصم %15', 'type' => 'percentage', 'value' => 15, 'icon' => '🔥'],
+        ['label' => 'خصم 15%', 'type' => 'percentage', 'value' => 15, 'icon' => '🔥'],
         ['label' => 'مشروب ضيافة', 'type' => 'percentage', 'value' => 10, 'icon' => '☕'],
-        ['label' => 'خصم %20', 'type' => 'percentage', 'value' => 20, 'icon' => '🎉'],
+        ['label' => 'خصم 20%', 'type' => 'percentage', 'value' => 20, 'icon' => '🎉'],
         ['label' => 'حلى مجاني', 'type' => 'percentage', 'value' => 12, 'icon' => '🍰'],
-        ['label' => 'خصم %10', 'type' => 'percentage', 'value' => 10, 'icon' => '⭐'],
-        ['label' => 'خصم %25', 'type' => 'percentage', 'value' => 25, 'icon' => '👑'],
-        ['label' => 'خصم %5', 'type' => 'percentage', 'value' => 5, 'icon' => '🎁'],
+        ['label' => 'خصم 10%', 'type' => 'percentage', 'value' => 10, 'icon' => '⭐'],
+        ['label' => 'خصم 25%', 'type' => 'percentage', 'value' => 25, 'icon' => '👑'],
+        ['label' => 'خصم 5%', 'type' => 'percentage', 'value' => 5, 'icon' => '🎁'],
         ['label' => 'مقبلات مجانية', 'type' => 'percentage', 'value' => 15, 'icon' => '🥗'],
     ];
 
@@ -65,20 +65,6 @@ class WheelController extends Controller
             ->firstOrFail();
 
         $restaurant = $wheelToken->restaurant;
-
-        // Allow resetting token if requested by authorized admin/manager only
-        if ($request->has('reset') && auth()->check() && (auth()->user()->isAdmin() || auth()->user()->isSuperAdmin() || auth()->user()->can('manage_orders'))) {
-            $wheelToken->update([
-                'is_claimed' => false,
-                'claimed_at' => null,
-                'won_promo_code_id' => null,
-                'generated_promo_code_id' => null,
-                'customer_id' => null,
-                'customer_name' => null,
-                'customer_phone' => null,
-            ]);
-            $wheelToken->refresh();
-        }
 
         $isExpired = $wheelToken->isExpired();
         $isClaimed = (bool) $wheelToken->is_claimed;
@@ -193,7 +179,7 @@ class WheelController extends Controller
                 'exception' => $e,
             ]);
 
-            if ($token === 'demo' || $request->has('debug') || config('app.debug')) {
+            if ($token === 'demo' || config('app.debug')) {
                 return response()->json([
                     'status' => 'error',
                     'class' => get_class($e),
@@ -389,7 +375,7 @@ class WheelController extends Controller
                     ),
                     'starts_at' => $startsAt->format('Y-m-d h:i A'),
                     'expires_at' => $expiresAt->format('Y-m-d'),
-                    'min_order_value' => (float) ($wonOffer->min_order_value ?? 0),
+                    'min_order_value' => (float) $generatedPromo->min_order_value,
                 ],
             ]);
         });

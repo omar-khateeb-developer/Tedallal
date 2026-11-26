@@ -70,6 +70,7 @@ class HandleInertiaRequests extends Middleware
                 ] : null,
             ],
             'restaurantId' => $request->user()?->restaurant_id,
+            'platformWhatsapp' => (string) config('tedallal.platform_whatsapp', '963947064593'),
             'locale' => app()->getLocale(),
             'translations' => __('app'),
             'vapidPublicKey' => (string) (config('webpush.vapid.public_key') ?? ''),

@@ -30,7 +30,7 @@ Route::get('/', function (\Illuminate\Http\Request $request) {
 
 // Pre-sale Consultation & Strategic Assessment (استمارة ما قبل البيع وتقييم متطلبات المطعم)
 Route::get('/consultation', [ConsultationController::class, 'index'])->name('consultation.index');
-Route::post('/consultation', [ConsultationController::class, 'store'])->name('consultation.store');
+Route::post('/consultation', [ConsultationController::class, 'store'])->middleware('throttle:5,5')->name('consultation.store');
 Route::redirect('/assessment', '/consultation');
 
 // 60-Second Interactive Live Sandbox Demo (المطعم التجريبي التفاعلي الحي في 60 ثانية)

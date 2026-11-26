@@ -12,14 +12,20 @@ const {
     unsubscribeFromPush
 } = usePwa();
 
-const dismissed = ref(false);
+function readPushBannerDismissed(): boolean {
+    try {
+        return typeof window !== 'undefined' && localStorage.getItem('tedallal_dismiss_push_banner') === 'true';
+    } catch {
+        return false;
+    }
+}
+
+const dismissed = ref(readPushBannerDismissed());
 const testSuccess = ref(false);
 const isTesting = ref(false);
 
 onMounted(() => {
-    if (typeof window !== 'undefined') {
-        dismissed.value = localStorage.getItem('tedallal_dismiss_push_banner') === 'true';
-    }
+    dismissed.value = readPushBannerDismissed();
 });
 
 function dismiss() {
@@ -74,9 +80,9 @@ async function sendTestNotification() {
                         <span class="text-lg animate-pulse">🔔</span>
                     </div>
                     <div>
-                        <h4 class="text-sm font-bold text-amber-300 font-cairo">
+                        <p class="text-sm font-bold text-amber-300 font-cairo">
                             تفعيل تنبيهات الطلبات الفورية
-                        </h4>
+                        </p>
                         <p class="text-xs text-zinc-400 font-cairo mt-0.5">
                             ليصلك رنين جرس واهتزاز فور ورود أي طلب جديد أو حجز طاولة حتى عند قفل الهاتف.
                         </p>

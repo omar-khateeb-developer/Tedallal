@@ -104,7 +104,7 @@ final class OrderCreationService
                 if ($promoCode->source === 'demo_wheel' || $promoCode->isDemoCode()) {
                     throw ValidationException::withMessages(['promo_code' => ['عذراً، هذا الكوبون مخصص للعرض التوضيحي والتجريبي فقط ولا يمكن تطبيقه على الطلبات الفعلية.']]);
                 }
-                $discountAmount = $promoCode->calculateExactDiscount($subtotal);
+                $discountAmount = $promoCode->calculateExactDiscount($subtotal, true);
             }
             
             $total = MoneyCalculator::subtract($subtotal, $discountAmount);

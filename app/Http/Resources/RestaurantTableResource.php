@@ -12,23 +12,28 @@ class RestaurantTableResource extends JsonResource
     public function toArray(Request $request): array
     {
         $qrPath = "qr/{$this->restaurant_id}/{$this->public_token}.png";
-        if (! \Illuminate\Support\Facades\Storage::disk('public')->exists($qrPath)) {
-            app(\App\Services\QrCodeService::class)->generateForTable($this->resource);
-        }
+        $isPublicRequest = $request->is('api/public/*');
 
-        $activeSession = $this->relationLoaded('activeSession') ? $this->activeSession : $this->activeSession;
+        $activeSession = null;
         $latestOrder = null;
-        if ($activeSession) {
-            $order = $activeSession->orders()->latest('id')->first();
-            if ($order) {
-                $latestOrder = [
-                    'id' => $order->id,
-                    'order_number' => $order->order_number,
-                    'status' => $order->status->value,
-                    'total' => (float) $order->total,
-                    'items_count' => $order->items()->count(),
-                    'created_at' => $order->created_at?->toIso8601String(),
-                ];
+
+        if (! $isPublicRequest) {
+            $activeSession = $this->activeSession;
+            if ($activeSession) {
+                $order = $activeSession->relationLoaded('orders')
+                    ? $activeSession->orders->sortByDesc('id')->first()
+                    : $activeSession->orders()->withCount('items')->latest('id')->first();
+
+                if ($order) {
+                    $latestOrder = [
+                        'id' => $order->id,
+                        'order_number' => $order->order_number,
+                        'status' => $order->status->value,
+                        'total' => (float) $order->total,
+                        'items_count' => $order->items_count ?? ($order->relationLoaded('items') ? $order->items->count() : $order->items()->count()),
+                        'created_at' => $order->created_at?->toIso8601String(),
+                    ];
+                }
             }
         }
 
@@ -54,15 +59,14 @@ class RestaurantTableResource extends JsonResource
             'iot_device_id' => $this->iot_device_id,
             'operational_stage' => $stage,
             'stage_updated_at' => $this->stage_updated_at?->toIso8601String(),
-            'session_started_at' => $this->session_started_at?->toIso8601String(),
-            'bill_requested_at' => $this->bill_requested_at?->toIso8601String(),
-            'current_guest_name' => $this->current_guest_name,
+            'session_started_at' => $isPublicRequest ? null : $this->session_started_at?->toIso8601String(),
+            'bill_requested_at' => $isPublicRequest ? null : $this->bill_requested_at?->toIso8601String(),
+            'current_guest_name' => $isPublicRequest ? null : $this->current_guest_name,
             'turn_minutes' => $this->getTurnMinutes(),
             'stage_minutes' => $this->getStageMinutes(),
             'bill_wait_minutes' => $this->getBillWaitMinutes(),
             'active_session' => $activeSession ? [
                 'id' => $activeSession->id,
-                'session_token' => $activeSession->session_token,
                 'started_at' => $activeSession->started_at?->toIso8601String(),
             ] : null,
             'active_order' => $latestOrder,

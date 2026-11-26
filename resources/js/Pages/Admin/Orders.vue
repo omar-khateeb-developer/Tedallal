@@ -10,7 +10,7 @@ import { useLiveConnection } from '@/composables/useLiveConnection';
 import { soundAlerts } from '@/utils/soundAlerts';
 import { formatMoney, normalizeCurrency } from '@/utils/money';
 import { Head, usePage } from '@inertiajs/vue3';
-import { computed, ref, onMounted, onUnmounted } from 'vue';
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue';
 import axios from 'axios';
 
 interface OrderItem {
@@ -56,6 +56,7 @@ interface ServiceCallItem {
 }
 
 const orders = ref<Order[]>([]);
+const pagination = ref({ current_page: 1, last_page: 1, per_page: 30, total: 0 });
 const serviceCalls = ref<ServiceCallItem[]>([]);
 const attendingCallIds = ref<Set<number>>(new Set());
 const searchQuery = ref('');
@@ -91,10 +92,28 @@ function playSound() {
     soundAlerts.playCashierAlert();
 }
 
-async function loadOrders() {
-    const { data } = await axios.get('/api/admin/orders');
+async function loadOrders(pageNumber = pagination.value.current_page) {
+    const params: Record<string, any> = {
+        page: pageNumber,
+        per_page: pagination.value.per_page,
+    };
+    if (searchQuery.value.trim()) {
+        params.search = searchQuery.value.trim();
+    }
+    const { data } = await axios.get('/api/admin/orders', { params });
     orders.value = data.data?.data ?? data.data ?? [];
+    if (data.meta) {
+        pagination.value = data.meta;
+    }
 }
+
+let ordersSearchTimer: ReturnType<typeof setTimeout> | null = null;
+watch(searchQuery, () => {
+    if (ordersSearchTimer) clearTimeout(ordersSearchTimer);
+    ordersSearchTimer = setTimeout(() => {
+        loadOrders(1);
+    }, 300);
+});
 
 async function loadServiceCalls() {
     try {
@@ -472,24 +491,23 @@ useRestaurantOrders(restaurantId.value, {
                                 {{ order.status_label }}
                             </span>
 
-                            <!-- دور المحاسب (الكاشير): تحديد أن الطلب تم دفعه ليظهر لنوافذ المطبخ -->
-                            <!-- إذا لم يتم دفع الطلب بعد: يظهر زر الدفع فقط -->
+                            <!-- دور المحاسب / الإدارة حسب نظام المطعم: دفع مسبق vs دفع لاحق -->
                             <button
-                                v-if="order.status === 'pending' && !order.paid_at"
+                                v-if="order.status === 'pending' && (isPrepaid ? !order.paid_at : true)"
                                 type="button"
                                 :disabled="updatingIds.has(order.id)"
                                 class="rounded-xl bg-emerald-600 hover:bg-emerald-700 px-3 py-2 text-xs font-bold text-white shadow-xs disabled:opacity-50 transition-all flex items-center gap-1 cursor-pointer"
                                 @click="updateStatus(order, 'accepted')"
                             >
-                                💳 تحديد أن الطلب تم دفعه
+                                {{ isPrepaid ? '💳 تحديد أن الطلب تم دفعه' : '✓ قبول الطلب' }}
                             </button>
 
-                            <!-- الحالات التالية: المحاسب لا يملك أي أزرار لتغيير الحالة، تظهر مؤشرات توضيحية فقط -->
+                            <!-- الحالات التالية: مؤشرات توضيحية -->
                             <span
                                 v-else-if="order.status === 'accepted'"
                                 class="rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/60 px-3 py-1.5 text-xs font-bold flex items-center gap-1"
                             >
-                                ⏳ مدفوع • بانتظار استلام المطبخ
+                                {{ isPrepaid ? '⏳ مدفوع • بانتظار استلام المطبخ' : '⏳ مقبول • بانتظار استلام المطبخ' }}
                             </span>
 
                             <span
@@ -588,6 +606,31 @@ useRestaurantOrders(restaurantId.value, {
                         </div>
                     </div>
                 </article>
+
+                <!-- ترقيم صفحات الطلبات -->
+                <div v-if="pagination.last_page > 1" class="flex items-center justify-between gap-3 rounded-2xl bg-white dark:bg-[#0a0f1d] p-3.5 border border-stone-200 dark:border-slate-800 shadow-xs">
+                    <span class="text-xs font-bold text-stone-500 dark:text-slate-400">
+                        صفحة {{ pagination.current_page }} من {{ pagination.last_page }} (إجمالي {{ pagination.total }} طلب)
+                    </span>
+                    <div class="flex items-center gap-2">
+                        <button
+                            type="button"
+                            :disabled="pagination.current_page <= 1"
+                            @click="loadOrders(pagination.current_page - 1)"
+                            class="px-3.5 py-1.5 rounded-xl bg-stone-100 dark:bg-slate-800 text-stone-700 dark:text-slate-200 text-xs font-bold hover:bg-stone-200 dark:hover:bg-slate-700 disabled:opacity-40 cursor-pointer"
+                        >
+                            السابق
+                        </button>
+                        <button
+                            type="button"
+                            :disabled="pagination.current_page >= pagination.last_page"
+                            @click="loadOrders(pagination.current_page + 1)"
+                            class="px-3.5 py-1.5 rounded-xl bg-amber-500 text-stone-950 text-xs font-black hover:bg-amber-400 disabled:opacity-40 cursor-pointer"
+                        >
+                            التالي
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 

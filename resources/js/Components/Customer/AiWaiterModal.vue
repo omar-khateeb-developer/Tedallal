@@ -381,6 +381,7 @@ defineExpose({
                             </div>
                             <button
                                 type="button"
+                                aria-label="إغلاق مساعد الضيافة"
                                 @click="closeModal"
                                 class="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors"
                             >
@@ -487,6 +488,7 @@ defineExpose({
                                 />
                                 <button
                                     type="submit"
+                                    aria-label="إرسال الرسالة إلى مساعد الضيافة"
                                     :disabled="!inputMessage.trim() || loading"
                                     class="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-600 text-white font-bold hover:bg-purple-700 active:scale-95 transition-all disabled:opacity-50 shrink-0 shadow-sm shadow-purple-600/30"
                                 >

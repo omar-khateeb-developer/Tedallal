@@ -67,6 +67,20 @@ class Restaurant extends Model
         return ($this->type ?? 'postpaid') === 'prepaid';
     }
 
+    public static function generateUniqueSlug(string $name): string
+    {
+        $base = \Illuminate\Support\Str::slug($name);
+        if ($base === '') {
+            $base = 'restaurant';
+        }
+
+        do {
+            $slug = $base . '-' . random_int(1000, 9999);
+        } while (static::where('slug', $slug)->exists());
+
+        return $slug;
+    }
+
     public function isPostpaid(): bool
     {
         return ($this->type ?? 'postpaid') === 'postpaid';
@@ -326,14 +340,14 @@ class Restaurant extends Model
                 $rewardType = 'percentage';
                 $rewardValue = 50;
                 $monetaryValue = 50;
-                $rewardLabel = 'خصم %50 على الطلب القادم';
+                $rewardLabel = 'خصم 50% على الطلب القادم';
             }
         } elseif ($rewardType === 'fixed') {
             $cleanVal = ($rewardValue == (int) $rewardValue) ? number_format($rewardValue, 0) : number_format($rewardValue, 2);
             $rewardLabel = "قسيمة خصم بقيمة {$cleanVal} {$currency}";
         } else {
             $cleanVal = ($rewardValue == (int) $rewardValue) ? (int) $rewardValue : $rewardValue;
-            $rewardLabel = "خصم %{$cleanVal} على الطلب القادم";
+            $rewardLabel = "خصم {$cleanVal}% على الطلب القادم";
         }
 
         return [

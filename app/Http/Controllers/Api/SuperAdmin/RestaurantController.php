@@ -45,7 +45,7 @@ class RestaurantController extends ApiController
             'phone' => $validated['phone'] ?? null,
             'address' => $validated['address'] ?? null,
             'currency' => $validated['currency'] ?? 'SYP',
-            'slug' => Str::slug($validated['name']) . '-' . rand(1000, 9999),
+            'slug' => Restaurant::generateUniqueSlug($validated['name']),
             'status' => 'active',
         ];
 

@@ -105,17 +105,23 @@ class PromoCodeController extends ApiController
         $diagnostics = $promoCode->getValidationDiagnostics($subtotal, $currency);
 
         if (!$diagnostics['valid']) {
+            $canForceActivate = $isTestingMode
+                && ($diagnostics['can_force_activate'] ?? false)
+                && (! app()->environment('production') || auth('sanctum')->user()?->isSuperAdmin() || auth('web')->user()?->isSuperAdmin());
+
             return response()->json([
                 'success' => false,
                 'message' => $diagnostics['reason_message'],
                 'reason_code' => $diagnostics['reason_code'],
-                'debug' => $isTestingMode ? array_merge(['testing_mode' => true], $diagnostics) : [
+                'debug' => $isTestingMode ? array_merge(['testing_mode' => true], $diagnostics, [
+                    'can_force_activate' => $canForceActivate,
+                ]) : [
                     'can_force_activate' => false,
                 ],
             ], 400);
         }
 
-        $discount = $promoCode->calculateDiscount($subtotal);
+        $discount = $promoCode->calculateDiscount($subtotal, true);
 
         return $this->success([
             'code' => $promoCode->code,
@@ -131,15 +137,23 @@ class PromoCodeController extends ApiController
      */
     public function forceActivate(Request $request)
     {
-        if (!Setting::isPromoTestingModeEnabled()) {
+        if (! Setting::isPromoTestingModeEnabled()) {
             return response()->json([
                 'success' => false,
                 'message' => 'وضع التجريب غير مفعل.',
             ], 403);
         }
 
+        $actor = auth('sanctum')->user() ?? auth('web')->user();
+        if (app()->environment('production') && (! $actor || ! $actor->isSuperAdmin())) {
+            return response()->json([
+                'success' => false,
+                'message' => 'غير مصرح بتفعيل الكوبونات الفوري في بيئة الإنتاج إلا لمدير المنصة.',
+            ], 403);
+        }
+
         $request->validate([
-            'code' => ['required', 'string'],
+            'code' => ['required', 'string', 'max:50'],
         ]);
 
         $session = ValidateTableSession::sessionFrom($request);
@@ -149,6 +163,13 @@ class PromoCodeController extends ApiController
             ->where('restaurant_id', $restaurant->id)
             ->where('code', trim($request->code))
             ->firstOrFail();
+
+        if ($promo->is_single_use && $promo->times_used >= 1) {
+            return response()->json([
+                'success' => false,
+                'message' => 'لا يمكن إعادة تفعيل كوبون فردي مُستهلك مسبقاً.',
+            ], 422);
+        }
 
         $promo->update([
             'starts_at' => now()->subMinute(),

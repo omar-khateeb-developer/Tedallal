@@ -96,37 +96,69 @@ class RestaurantController extends ApiController
         return DB::transaction(function () use ($restaurant) {
             $restaurantId = $restaurant->id;
 
-            // 1. Delete Order Items & Status Histories via orders
+            // 1. Delete Order Items via orders
             $orderIds = Order::withoutGlobalScopes()
                 ->where('restaurant_id', $restaurantId)
                 ->pluck('id');
 
-            OrderItem::withoutGlobalScopes()
-                ->whereIn('order_id', $orderIds)
-                ->delete();
-
-            DB::table('order_status_histories')
-                ->whereIn('order_id', $orderIds)
-                ->delete();
+            if ($orderIds->isNotEmpty()) {
+                OrderItem::withoutGlobalScopes()
+                    ->whereIn('order_id', $orderIds)
+                    ->delete();
+            }
 
             $deletedOrdersCount = Order::withoutGlobalScopes()
                 ->where('restaurant_id', $restaurantId)
                 ->delete();
 
-            // 2. Clear table sessions
-            $resetSessionsCount = TableSession::withoutGlobalScopes()
+            // 2. Clear cart items & table sessions (table_sessions belongs to restaurant_tables)
+            $tableIds = \App\Models\RestaurantTable::withoutGlobalScopes()
                 ->where('restaurant_id', $restaurantId)
-                ->delete();
+                ->pluck('id');
+
+            $sessionIds = $tableIds->isNotEmpty()
+                ? TableSession::withoutGlobalScopes()->whereIn('table_id', $tableIds)->pluck('id')
+                : collect();
+
+            if ($sessionIds->isNotEmpty()) {
+                \App\Models\CartItem::withoutGlobalScopes()
+                    ->whereIn('table_session_id', $sessionIds)
+                    ->delete();
+
+                $resetSessionsCount = TableSession::withoutGlobalScopes()
+                    ->whereIn('id', $sessionIds)
+                    ->delete();
+            } else {
+                $resetSessionsCount = 0;
+            }
 
             // 3. Clear wheel tokens (both test and live)
             $clearedTokensCount = OrderWheelToken::withoutGlobalScopes()
                 ->where('restaurant_id', $restaurantId)
                 ->delete();
 
-            // 4. Clear test waitlist entries
+            // 4. Clear test waitlist entries, service calls & VIP reservations
             $clearedWaitlistCount = WaitlistEntry::withoutGlobalScopes()
                 ->where('restaurant_id', $restaurantId)
                 ->delete();
+
+            \App\Models\TableServiceCall::withoutGlobalScopes()
+                ->where('restaurant_id', $restaurantId)
+                ->delete();
+
+            \App\Models\TableReservation::withoutGlobalScopes()
+                ->where('restaurant_id', $restaurantId)
+                ->delete();
+
+            \App\Models\RestaurantTable::withoutGlobalScopes()
+                ->where('restaurant_id', $restaurantId)
+                ->update([
+                    'operational_stage' => 'available',
+                    'stage_updated_at' => null,
+                    'session_started_at' => null,
+                    'bill_requested_at' => null,
+                    'current_guest_name' => null,
+                ]);
 
             return $this->success([
                 'message' => 'تم تصفير جميع طلبات التجارب والجلسات بنجاح. مطعمك جاهز تماماً للافتتاح الرسمي!',

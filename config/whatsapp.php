@@ -13,7 +13,8 @@ return [
 
     'gateway_url' => env('WHATSAPP_GATEWAY_URL', 'http://127.0.0.1:8082'),
 
-    'gateway_secret' => env('WHATSAPP_GATEWAY_SECRET', 'tedallal_wa_gateway_2026_secure_key'),
+    'gateway_secret' => env('WHATSAPP_GATEWAY_SECRET')
+        ?: (env('APP_ENV', 'production') !== 'production' ? 'tedallal_wa_dev_only_key' : null),
 
     'timeout' => (int) env('WHATSAPP_TIMEOUT', 15),
 

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
+import { formatArabicCount, stripRestaurantPrefix } from '@/utils/arabic';
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import axios from 'axios';
 
@@ -105,7 +106,7 @@ const preferenceLabel = computed(() => {
                     <img :src="restaurant.logo_url" :alt="restaurant.name" class="w-full h-full object-cover rounded-lg" />
                 </div>
                 <div v-else class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center font-black text-amber-400 text-lg">
-                    {{ restaurant.name.charAt(0) }}
+                    {{ stripRestaurantPrefix(restaurant.name).charAt(0) }}
                 </div>
                 <div>
                     <h1 class="font-black text-sm text-white tracking-tight">{{ restaurant.name }}</h1>

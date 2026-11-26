@@ -14,7 +14,7 @@ interface BackupItem {
 const page = usePage();
 const canManageBackups = computed(() => {
     const user = (page.props.auth as any)?.user;
-    return !!user && user.email === 'super@tedallal.test';
+    return !!user && (user.can_toggle_maintenance || user.role === 'super_admin');
 });
 
 const backups = ref<BackupItem[]>([]);

@@ -5,15 +5,20 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Api\ApiController;
 use App\Http\Requests\StorePromoCodeRequest;
 use App\Http\Requests\UpdatePromoCodeRequest;
+use App\Services\RestaurantContext;
 use Illuminate\Http\Request;
 use App\Models\PromoCode;
 use Illuminate\Support\Str;
 
 class PromoCodeController extends ApiController
 {
+    public function __construct(
+        private readonly RestaurantContext $restaurantContext,
+    ) {}
+
     public function index(Request $request)
     {
-        $restaurant = auth()->user()->restaurant;
+        $restaurant = $this->restaurantContext->current();
         
         if (!$restaurant->hasOffersFeature()) {
             return $this->error('Feature Locked', 403);
@@ -49,7 +54,7 @@ class PromoCodeController extends ApiController
 
     public function store(StorePromoCodeRequest $request)
     {
-        $restaurant = auth()->user()->restaurant;
+        $restaurant = $this->restaurantContext->current();
         
         if (!$restaurant->hasOffersFeature()) {
             return $this->error('Feature Locked', 403);
@@ -81,7 +86,7 @@ class PromoCodeController extends ApiController
 
     public function update(UpdatePromoCodeRequest $request, $promoCode)
     {
-        $restaurant = auth()->user()->restaurant;
+        $restaurant = $this->restaurantContext->current();
 
         if (!($promoCode instanceof PromoCode) || !$promoCode->exists) {
             $id = (is_object($promoCode) && !empty($promoCode->id))
@@ -107,7 +112,7 @@ class PromoCodeController extends ApiController
 
     public function destroy($promoCode)
     {
-        $restaurant = auth()->user()->restaurant;
+        $restaurant = $this->restaurantContext->current();
 
         if (!($promoCode instanceof PromoCode) || !$promoCode->exists) {
             $id = (is_object($promoCode) && !empty($promoCode->id))

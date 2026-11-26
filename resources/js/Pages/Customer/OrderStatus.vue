@@ -20,6 +20,9 @@ const props = defineProps<{
     isWheelClaimed?: boolean;
     initialOrder?: any;
     sessionToken?: string | null;
+    broadcastChannel?: string | null;
+    shareUrl?: string | null;
+    isReadOnly?: boolean;
 }>();
 
 const order = ref<{
@@ -70,7 +73,7 @@ const shortOrderNumber = computed(() => {
 
 function shareOrderOnWhatsApp() {
     if (!order.value) return;
-    const url = window.location.href;
+    const url = props.shareUrl || window.location.href;
     const itemsText = order.value.items && order.value.items.length > 0
         ? '\n📋 أصناف الطلب:\n' + order.value.items.map(i => `• ${i.quantity}x ${i.item_name_snapshot}`).join('\n')
         : '';
@@ -98,6 +101,7 @@ function notifyStatusChange(oldStatus?: string, newStatus?: string) {
 }
 
 async function loadOrder() {
+    if (!props.sessionToken && props.isReadOnly) return;
     try {
         const headers: Record<string, string> = {};
         if (props.sessionToken) {
@@ -115,9 +119,10 @@ async function loadOrder() {
 }
 
 function subscribeToRealtime() {
-    if (!window.Echo) return;
+    const channelName = props.broadcastChannel;
+    if (!window.Echo || !channelName) return;
 
-    window.Echo.channel(`order.${props.orderNumber}`).listen(
+    window.Echo.channel(channelName).listen(
         '.order.status_changed',
         (payload: { order: any }) => {
             if (payload.order) {
@@ -151,14 +156,15 @@ onUnmounted(() => {
     if (pollTimer) clearInterval(pollTimer);
     window.removeEventListener('focus', loadOrder);
     document.removeEventListener('visibilitychange', onVisibilityChange);
-    if (window.Echo) {
-        window.Echo.leave(`order.${props.orderNumber}`);
+    if (window.Echo && props.broadcastChannel) {
+        window.Echo.leave(props.broadcastChannel);
     }
 });
 
 const isPrepaid = computed(() => order.value?.restaurant_type === 'prepaid');
 
 const canRequestBill = computed(() => {
+    if (props.isReadOnly) return false;
     if (!order.value) return false;
     if (isPrepaid.value) return false;
     if (order.value.paid_at) return false;

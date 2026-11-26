@@ -11,11 +11,10 @@ const maintenanceMessage = ref('');
 const maintenanceSuccess = ref(false);
 const maintenanceStatusLoaded = ref(false);
 
-// صلاحية إيقاف/تشغيل الصيانة (متاحة حصرياً للمالك super@tedallal.test ومحجوبة عن كل المستخدمين الآخرين)
 const canToggleMaintenance = computed(() => {
     const user = (page.props.auth as any)?.user;
     if (!user) return false;
-    return user.email === 'super@tedallal.test';
+    return Boolean(user.can_toggle_maintenance || user.role === 'super_admin');
 });
 
 const maintenanceBtnClass = computed(() => {

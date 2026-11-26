@@ -212,7 +212,7 @@ async function sendTestMessage() {
         const res = await axios.post('/api/admin/whatsapp/send-test', {
             phone: waTestPhone.value,
         });
-        waTestNotice.value = res.data.message || 'تم إرسال الرسالة التجريبية بنجاح إلى هاتفك ✓';
+        waTestNotice.value = res.data.data?.message || res.data.message || 'تم إرسال الرسالة التجريبية بنجاح إلى هاتفك ✓';
         setTimeout(() => { waTestNotice.value = null; }, 5000);
     } catch (e: any) {
         waTestError.value = e.response?.data?.message || 'تعذر إرسال الرسالة التجريبية. تحقق من الرقم وحالة الاتصال.';
@@ -521,7 +521,7 @@ onUnmounted(stopWaPolling);
                             <span>🔒</span>
                             <span>{{ waFeatureLockedMsg }}</span>
                         </div>
-                        <a href="https://wa.me/963988029051" target="_blank" class="px-3 py-1.5 rounded-lg bg-amber-600 text-white font-bold hover:bg-amber-700 transition">
+                        <a :href="`https://wa.me/${String(($page.props as any).platformWhatsapp || '963947064593')}`" target="_blank" class="px-3 py-1.5 rounded-lg bg-amber-600 text-white font-bold hover:bg-amber-700 transition">
                             ترقية الباقة الآن
                         </a>
                     </div>

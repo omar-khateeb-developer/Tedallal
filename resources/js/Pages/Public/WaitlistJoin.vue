@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
+import { formatArabicCount, stripRestaurantPrefix } from '@/utils/arabic';
 import { ref } from 'vue';
 import axios from 'axios';
 
@@ -49,19 +50,19 @@ async function submitJoin() {
     <Head :title="`انضم لقائمة الانتظار - ${restaurant.name}`" />
 
     <div class="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between selection:bg-amber-500 selection:text-slate-950 font-sans p-4" dir="rtl">
-        <div class="max-w-md w-full mx-auto my-auto space-y-6">
+        <main class="max-w-md w-full mx-auto my-auto space-y-6">
             <!-- Restaurant Logo & Title -->
             <div class="text-center space-y-2">
                 <div v-if="restaurant.logo_url" class="w-16 h-16 mx-auto rounded-2xl overflow-hidden border border-amber-500/30 bg-slate-900 p-1 shadow-xl">
                     <img :src="restaurant.logo_url" :alt="restaurant.name" class="w-full h-full object-cover rounded-xl" />
                 </div>
                 <div v-else class="w-16 h-16 mx-auto rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center font-black text-amber-400 text-2xl shadow-xl">
-                    {{ restaurant.name.charAt(0) }}
+                    {{ stripRestaurantPrefix(restaurant.name).charAt(0) }}
                 </div>
                 <h1 class="text-xl font-black text-white">{{ restaurant.name }}</h1>
                 <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-xs text-amber-400">
                     <span>📋 طابور الانتظار الرقمي</span>
-                    <span v-if="restaurant.active_waiting_count > 0" class="text-slate-400">• {{ restaurant.active_waiting_count }} مجموعات بانتظار طاولة</span>
+                    <span v-if="restaurant.active_waiting_count > 0" class="text-slate-300">• {{ formatArabicCount(restaurant.active_waiting_count, 'مجموعة', 'مجموعتان', 'مجموعات', 'مجموعة', 'مجموعة واحدة') }} بانتظار طاولة</span>
                 </div>
             </div>
 
@@ -111,8 +112,9 @@ async function submitJoin() {
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-300 mb-1.5">تفضيل الجلسة</label>
+                    <label for="waitlist-seating-pref" class="block text-xs font-bold text-slate-300 mb-1.5">تفضيل الجلسة</label>
                     <select
+                        id="waitlist-seating-pref"
                         v-model="form.seating_preference"
                         class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 focus:border-amber-500 text-white text-xs outline-hidden transition-colors"
                     >
@@ -143,16 +145,16 @@ async function submitJoin() {
                     <span>←</span>
                 </button>
             </form>
-        </div>
+        </main>
 
         <footer class="p-4 text-center border-t border-slate-800/60 bg-slate-900/40 flex flex-col items-center gap-1.5">
-            <span class="text-[11px] text-slate-500 font-mono">نظام تدلل لإدارة الطوابير والمطاعم</span>
+            <span class="text-[11px] text-slate-400 font-mono">نظام تدلل لإدارة الطوابير والمطاعم</span>
             <a
                 href="https://tedallal.tech"
                 target="_blank"
                 rel="noopener noreferrer"
                 dir="ltr"
-                class="inline-flex items-center gap-1.5 text-[10.5px] text-slate-500 hover:text-amber-400 font-mono transition-colors"
+                class="inline-flex items-center gap-1.5 text-[10.5px] text-slate-400 hover:text-amber-400 font-mono transition-colors"
             >
                 <span class="text-amber-500">⚡</span>
                 <span>Powered by:</span>

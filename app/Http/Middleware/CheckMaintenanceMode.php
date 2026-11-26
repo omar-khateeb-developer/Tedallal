@@ -54,10 +54,10 @@ class CheckMaintenanceMode
             return $next($request);
         }
 
-        // ③ المستخدم super@tedallal.test حصراً هو المستثنى من وضع الصيانة
+        // ③ مدراء النظام (super_admin) مستثنون من وضع الصيانة
         /** @var \App\Models\User|null $user */
         $user = Auth::guard('sanctum')->user() ?? Auth::guard('web')->user() ?? Auth::user();
-        if ($user && ($user->email === 'super@tedallal.test' || $user->canBypassMaintenance())) {
+        if ($user && $user->canBypassMaintenance()) {
             return $next($request);
         }
 
@@ -75,9 +75,9 @@ class CheckMaintenanceMode
             return response('', 409)->header('X-Inertia-Location', $request->fullUrl());
         }
 
-        // ⑥ تصفح ويب ومسح كود QR على الموبايل → صفحة صيانة مخصصة وسريعة تفتح على أي هاتف فوراً
+        // ⑥ تصفح ويب ومسح كود QR على الموبايل → صفحة صيانة مخصصة وسريعة تفتح على أي هاتف فوراً (HTTP 503)
         return response()->view('maintenance', [
             'isQrScan' => $request->is('t/*'),
-        ], 200);
+        ], 503);
     }
 }

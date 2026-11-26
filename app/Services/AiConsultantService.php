@@ -388,6 +388,8 @@ PROMPT;
         $hasEnglish = (bool) preg_match('/[a-zA-Z]/', $message);
         $isEnglish = $hasEnglish && (! $hasArabic || (preg_match_all('/[a-zA-Z]/', $message) > preg_match_all('/[\x{0600}-\x{06FF}]/u', $message)));
 
+        $waPhone = preg_replace('/[^0-9]/', '', (string) config('tedallal.platform_whatsapp', '963947064593'));
+
         if ($isEnglish) {
             return [
                 [
@@ -408,7 +410,7 @@ PROMPT;
                 [
                     'label' => 'Direct Executive WhatsApp ✆',
                     'action' => 'open_whatsapp',
-                    'url' => 'https://wa.me/963947064593?text=' . urlencode('Hello, I reviewed Tedallal platform and would like to arrange onboarding for my restaurant.'),
+                    'url' => "https://wa.me/{$waPhone}?text=" . urlencode('Hello, I reviewed Tedallal platform and would like to arrange onboarding for my restaurant.'),
                 ],
             ];
         }
@@ -432,7 +434,7 @@ PROMPT;
             [
                 'label' => 'تحدث مع الإدارة والتنفيذ ✆',
                 'action' => 'open_whatsapp',
-                'url' => 'https://wa.me/963947064593?text=' . urlencode('مرحباً، اطلعت على منظومة تدلّل وأرغب في تنسيق تدشين المنظومة لمطعمي.'),
+                'url' => "https://wa.me/{$waPhone}?text=" . urlencode('مرحباً، اطلعت على منظومة تدلّل وأرغب في تنسيق تدشين المنظومة لمطعمي.'),
             ],
         ];
     }

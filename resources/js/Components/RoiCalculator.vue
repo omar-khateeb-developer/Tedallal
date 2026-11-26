@@ -70,7 +70,7 @@ const formatSyp = (amount: number) => {
                 <!-- Control 1: Tables count -->
                 <div class="bg-white/5 border border-white/10 rounded-2xl p-5">
                     <div class="flex items-center justify-between mb-3">
-                        <label class="text-xs sm:text-sm font-bold text-stone-200">
+                        <label for="roi-tables-count" class="text-xs sm:text-sm font-bold text-stone-200">
                             🪑 عدد الطاولات في الصالة:
                         </label>
                         <span class="text-base font-black text-amber-400 px-3 py-1 bg-amber-500/10 rounded-lg border border-amber-500/20">
@@ -78,6 +78,7 @@ const formatSyp = (amount: number) => {
                         </span>
                     </div>
                     <input
+                        id="roi-tables-count"
                         type="range"
                         v-model.number="tablesCount"
                         min="4"
@@ -95,7 +96,7 @@ const formatSyp = (amount: number) => {
                 <!-- Control 2: Monthly revenue -->
                 <div class="bg-white/5 border border-white/10 rounded-2xl p-5">
                     <div class="flex items-center justify-between mb-3">
-                        <label class="text-xs sm:text-sm font-bold text-stone-200">
+                        <label for="roi-monthly-revenue" class="text-xs sm:text-sm font-bold text-stone-200">
                             💰 متوسط المبيعات الشهرية التقديري:
                         </label>
                         <span class="text-base font-black text-emerald-400 px-3 py-1 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
@@ -103,6 +104,7 @@ const formatSyp = (amount: number) => {
                         </span>
                     </div>
                     <input
+                        id="roi-monthly-revenue"
                         type="range"
                         v-model.number="monthlyRevenueM"
                         min="5"
@@ -110,7 +112,7 @@ const formatSyp = (amount: number) => {
                         step="5"
                         class="w-full accent-emerald-500 cursor-pointer"
                     />
-                    <div class="flex justify-between text-[11px] text-stone-500 mt-1">
+                    <div class="flex justify-between text-[11px] text-stone-400 mt-1">
                         <span>5 ملايين</span>
                         <span>50 مليون</span>
                         <span>100 مليون ل.س</span>
@@ -120,11 +122,14 @@ const formatSyp = (amount: number) => {
                 <!-- Control 3: Delivery Apps toggle -->
                 <div class="bg-white/5 border border-white/10 rounded-2xl p-5 flex items-center justify-between">
                     <div>
-                        <p class="text-xs sm:text-sm font-bold text-stone-200">تعتمد على تطبيقات التوصيل والوساطة؟</p>
+                        <p id="roi-delivery-apps-label" class="text-xs sm:text-sm font-bold text-stone-200">تعتمد على تطبيقات التوصيل والوساطة؟</p>
                         <p class="text-[11px] text-stone-400 mt-0.5">تقتطع معظم التطبيقات عمولات تتراوح بين 18% إلى 25% من كل فاتورة</p>
                     </div>
                     <button
                         type="button"
+                        role="switch"
+                        :aria-checked="usesDeliveryApps"
+                        aria-labelledby="roi-delivery-apps-label"
                         @click="usesDeliveryApps = !usesDeliveryApps"
                         class="relative inline-flex h-7 w-13 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden"
                         :class="usesDeliveryApps ? 'bg-amber-600' : 'bg-stone-700'"

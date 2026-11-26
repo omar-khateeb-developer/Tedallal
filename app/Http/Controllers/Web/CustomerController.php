@@ -217,7 +217,7 @@ class CustomerController extends Controller
         return redirect()->route('customer.menu', ['token' => $token, 'cart' => 1]);
     }
 
-    public function order(string $token, string $orderNumber): Response
+    public function order(Request $request, string $token, string $orderNumber): Response
     {
         $table = RestaurantTable::withoutGlobalScopes()
             ->with('restaurant')
@@ -232,29 +232,39 @@ class CustomerController extends Controller
             ->where('order_number', $orderNumber)
             ->firstOrFail();
 
-        // Ensure the session cookie is valid for subsequent requests/polling
-        if ($order->tableSession) {
-            cookie()->queue(cookie(
-                'tedallal_session',
-                $order->tableSession->session_token,
-                60 * 4,
-                '/',
-                null,
-                app()->isProduction(),
-                true,
-                false,
-                'Lax'
-            ));
+        $cookieToken = (string) ($request->cookie('tedallal_session') ?? '');
+        $expectedSessionToken = (string) ($order->tableSession?->session_token ?? '');
+        $isSessionOwner = $cookieToken !== '' && $expectedSessionToken !== '' && hash_equals($expectedSessionToken, $cookieToken);
+
+        $authUser = $request->user('web');
+        $isRestaurantStaff = $authUser && (
+            $authUser->isSuperAdmin()
+            || (int) $authUser->restaurant_id === (int) $table->restaurant_id
+        );
+
+        $viewSig = (string) $request->query('view', '');
+        $isSignedViewer = $viewSig !== '' && hash_equals($order->trackingSignature(), $viewSig);
+
+        if (! $isSessionOwner && ! $isRestaurantStaff && ! $isSignedViewer) {
+            abort(404);
         }
 
-        // Check or generate wheel token for gamification
-        $wheelToken = $order->wheelToken;
-        if (!$wheelToken) {
-            $wheelToken = $order->wheelToken()->create([
-                'restaurant_id' => $table->restaurant_id,
-                'token' => \Illuminate\Support\Str::random(32),
-                'expires_at' => now()->addDays(14),
-            ]);
+        $isReadOnly = ! $isSessionOwner;
+        $wheelToken = null;
+        $isWheelClaimed = false;
+
+        // Only issue/expose wheel token & active session details to the legitimate session holder
+        if ($isSessionOwner) {
+            $wheelTokenModel = $order->wheelToken;
+            if (! $wheelTokenModel) {
+                $wheelTokenModel = $order->wheelToken()->create([
+                    'restaurant_id' => $table->restaurant_id,
+                    'token' => \Illuminate\Support\Str::random(32),
+                    'expires_at' => now()->addDays(14),
+                ]);
+            }
+            $wheelToken = $wheelTokenModel->token;
+            $isWheelClaimed = (bool) $wheelTokenModel->is_claimed;
         }
 
         $cleanCurrency = MoneyCalculator::displayCurrency($table->restaurant->currency);
@@ -267,10 +277,17 @@ class CustomerController extends Controller
             'table' => $table,
             'orderNumber' => $orderNumber,
             'publicToken' => $token,
-            'wheelToken' => $wheelToken->token,
-            'isWheelClaimed' => (bool) $wheelToken->is_claimed,
+            'wheelToken' => $wheelToken,
+            'isWheelClaimed' => $isWheelClaimed,
             'initialOrder' => (new \App\Http\Resources\OrderResource($order))->resolve(),
-            'sessionToken' => $order->tableSession?->session_token,
+            'sessionToken' => $isSessionOwner ? $expectedSessionToken : null,
+            'broadcastChannel' => $order->broadcastChannelKey(),
+            'shareUrl' => route('customer.order', [
+                'token' => $token,
+                'orderNumber' => $orderNumber,
+                'view' => $order->trackingSignature(),
+            ]),
+            'isReadOnly' => $isReadOnly,
         ]);
     }
 }

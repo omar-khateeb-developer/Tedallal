@@ -140,4 +140,28 @@ class Order extends Model
         $num = (int) $last;
         return $num > 0 ? (string) $num : (string) $this->order_number;
     }
+
+    /**
+     * توقيع رابط التتبع العام للقراءة فقط دون كشف الجلسة أو التوكن.
+     */
+    public function trackingSignature(): string
+    {
+        return substr(hash_hmac(
+            'sha256',
+            "order-view|{$this->id}|{$this->order_number}",
+            (string) config('app.key')
+        ), 0, 24);
+    }
+
+    /**
+     * اسم قناة البث العشوائي لتجنب تخمين قنوات الطلبات المتسلسلة.
+     */
+    public function broadcastChannelKey(): string
+    {
+        return 'order.' . substr(hash_hmac(
+            'sha256',
+            "order-channel|{$this->order_number}|{$this->table_session_id}",
+            (string) config('app.key')
+        ), 0, 24);
+    }
 }

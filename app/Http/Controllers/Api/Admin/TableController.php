@@ -27,6 +27,7 @@ class TableController extends ApiController
 
         $tables = RestaurantTable::query()
             ->where('restaurant_id', $restaurant->id)
+            ->with(['activeSession.orders' => fn ($q) => $q->latest('id')->withCount('items')])
             ->orderBy('name')
             ->get();
 

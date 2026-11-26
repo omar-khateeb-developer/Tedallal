@@ -18,7 +18,7 @@ class WhatsAppGatewayService
     public function __construct()
     {
         $this->baseUrl = rtrim((string) config('whatsapp.gateway_url', 'http://127.0.0.1:8082'), '/');
-        $this->secret = (string) config('whatsapp.gateway_secret', 'tedallal_wa_gateway_2026_secure_key');
+        $this->secret = (string) config('whatsapp.gateway_secret', '');
         $this->timeout = (int) config('whatsapp.timeout', 15);
     }
 

@@ -6,9 +6,24 @@ const isIOS = ref(false);
 const isStandalone = ref(false);
 const deferredPrompt = ref<any>(null);
 
+function getInitialPushPermission(): NotificationPermission {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+        return Notification.permission;
+    }
+    return 'denied';
+}
+
+function getCachedPushSubscribed(): boolean {
+    try {
+        return typeof window !== 'undefined' && localStorage.getItem('tedallal_push_subscribed') === '1';
+    } catch {
+        return false;
+    }
+}
+
 // Push Notification States
-const pushPermission = ref<NotificationPermission>('default');
-const isPushSubscribed = ref(false);
+const pushPermission = ref<NotificationPermission>(getInitialPushPermission());
+const isPushSubscribed = ref(getCachedPushSubscribed());
 const isPushLoading = ref(false);
 
 function urlBase64ToUint8Array(base64String: string) {
@@ -75,6 +90,9 @@ export function usePwa() {
                 if ('pushManager' in registration) {
                     registration.pushManager.getSubscription().then((sub) => {
                         isPushSubscribed.value = !!sub;
+                        try {
+                            localStorage.setItem('tedallal_push_subscribed', sub ? '1' : '0');
+                        } catch {}
                     });
                 }
             }).catch((err) => {
@@ -157,6 +175,7 @@ export function usePwa() {
 
             if (response.ok) {
                 isPushSubscribed.value = true;
+                try { localStorage.setItem('tedallal_push_subscribed', '1'); } catch {}
                 isPushLoading.value = false;
                 return true;
             } else {
@@ -194,6 +213,7 @@ export function usePwa() {
                 await subscription.unsubscribe();
             }
             isPushSubscribed.value = false;
+            try { localStorage.setItem('tedallal_push_subscribed', '0'); } catch {}
             isPushLoading.value = false;
             return true;
         } catch (err) {

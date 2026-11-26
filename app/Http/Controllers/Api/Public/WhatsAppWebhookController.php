@@ -116,7 +116,7 @@ class WhatsAppWebhookController extends Controller
                 }
 
                 // كشف ما إذا كان المرسل هو رقم هاتف صاحب المنصة الشخصي الفعلي
-                $ownerPhone = (string) Setting::get('platform_owner_phone', '963934578117');
+                $ownerPhone = (string) Setting::get('platform_owner_phone', (string) config('tedallal.platform_whatsapp', '963947064593'));
                 $cleanFrom = preg_replace('/[^0-9]/', '', (string) $from);
                 $cleanOwner = preg_replace('/[^0-9]/', '', (string) $ownerPhone);
 
@@ -207,7 +207,7 @@ class WhatsAppWebhookController extends Controller
 
                     // إرسال تنبيه واتساب فوري لصاحب المنصة على رقمه الخاص
                     try {
-                        $ownerPhone = Setting::get('platform_owner_phone', '963934578117');
+                        $ownerPhone = Setting::get('platform_owner_phone', (string) config('tedallal.platform_whatsapp', '963947064593'));
                         $cleanFrom = preg_replace('/[^0-9]/', '', (string) $from);
                         $alertMsg = "🔔 *طلب محادثة مباشرة مع الإدارة في منصة تَدلّل!* 👤\n\n"
                             . "📞 *رقم العميل:* {$from}\n"

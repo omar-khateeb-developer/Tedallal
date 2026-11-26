@@ -21,10 +21,16 @@ dotenv.config({ path: path.resolve(__dirname, '../.env'), override: false });
 
 const PORT = parseInt(process.env.PORT || '8082', 10);
 const HOST = process.env.HOST || '127.0.0.1';
+const IS_PRODUCTION = (process.env.APP_ENV || process.env.NODE_ENV || '').toLowerCase() === 'production';
 const GATEWAY_SECRET =
     process.env.GATEWAY_SECRET ||
     process.env.WHATSAPP_GATEWAY_SECRET ||
-    'tedallal_wa_gateway_2026_secure_key';
+    (IS_PRODUCTION ? '' : 'tedallal_wa_dev_only_key');
+
+if (!GATEWAY_SECRET) {
+    console.error('FATAL: WHATSAPP_GATEWAY_SECRET / GATEWAY_SECRET must be configured in production.');
+    process.exit(1);
+}
 
 function resolveWebhookUrl() {
     if (process.env.LARAVEL_WEBHOOK_URL) {
@@ -458,7 +464,10 @@ async function waitForConnectedSession(sId, maxWaitMs = 4500) {
 // ---------------- Express App Setup ---------------- //
 
 const app = express();
-app.use(cors());
+const allowedOrigins = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim()).filter(Boolean)
+    : false;
+app.use(cors({ origin: allowedOrigins }));
 app.use(express.json({ limit: '10mb' }));
 
 // Auth middleware for internal gateway calls
@@ -472,8 +481,17 @@ app.use((req, res, next) => {
     next();
 });
 
-// Health check endpoint
+// Health check endpoint (detailed session summary requires X-Gateway-Secret)
 app.get('/health', (req, res) => {
+    const secret = req.headers['x-gateway-secret'];
+    if (!secret || secret !== GATEWAY_SECRET) {
+        return res.json({
+            success: true,
+            service: 'tedallal-whatsapp-gateway',
+            status: 'UP',
+        });
+    }
+
     const sessionSummaries = [];
     for (const [id, s] of sessions.entries()) {
         sessionSummaries.push({

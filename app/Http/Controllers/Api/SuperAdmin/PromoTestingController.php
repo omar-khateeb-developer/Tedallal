@@ -146,6 +146,10 @@ class PromoTestingController extends ApiController
             ->where('code', trim($request->code))
             ->firstOrFail();
 
+        if ($promo->is_single_use && $promo->times_used >= 1) {
+            return $this->error('لا يمكن إعادة تفعيل كوبون فردي مُستهلك مسبقاً.', 422);
+        }
+
         $promo->update([
             'starts_at' => now()->subMinute(),
             'is_active' => true,

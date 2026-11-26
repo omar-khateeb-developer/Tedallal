@@ -189,9 +189,9 @@ class PromoCode extends Model
         ];
     }
 
-    public function calculateExactDiscount(string $orderTotal): string
+    public function calculateExactDiscount(string $orderTotal, bool $alreadyValidated = false): string
     {
-        if (! $this->isValid((float) $orderTotal) || (float) $orderTotal <= 0) {
+        if ((float) $orderTotal <= 0 || (! $alreadyValidated && ! $this->isValid((float) $orderTotal))) {
             return '0.00';
         }
 
@@ -206,8 +206,8 @@ class PromoCode extends Model
         return \App\Support\MoneyCalculator::percentage($cleanTotal, $percent);
     }
 
-    public function calculateDiscount(float $orderTotal): float
+    public function calculateDiscount(float $orderTotal, bool $alreadyValidated = false): float
     {
-        return (float) $this->calculateExactDiscount(number_format($orderTotal, 2, '.', ''));
+        return (float) $this->calculateExactDiscount(number_format($orderTotal, 2, '.', ''), $alreadyValidated);
     }
 }

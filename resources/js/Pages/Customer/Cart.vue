@@ -28,6 +28,7 @@ const appliedPromoCode = ref('');
 const discountAmount = ref('0.00');
 const validatingPromo = ref(false);
 const promoError = ref('');
+const submitError = ref('');
 
 function formatPrice(price: string | number) {
     return formatMoney(price, props.restaurant.currency);
@@ -75,6 +76,7 @@ async function updateQty(item: CartItem, quantity: number) {
 
 async function submitOrder() {
     submitting.value = true;
+    submitError.value = '';
     try {
         const { data } = await axios.post('/api/public/orders', {
             customer_note: customerNote.value || null,
@@ -82,8 +84,8 @@ async function submitOrder() {
         });
         const orderNumber = data.data.order_number;
         router.visit(`/t/${props.publicToken}/orders/${orderNumber}`);
-    } catch (e: unknown) {
-        alert('تعذر إرسال الطلب. حاول مرة أخرى.');
+    } catch (e: any) {
+        submitError.value = e.response?.data?.message || 'تعذر إرسال الطلب. حاول مرة أخرى.';
     } finally {
         submitting.value = false;
     }
@@ -208,6 +210,10 @@ onMounted(loadCart);
                     <span>الإجمالي</span>
                     <span class="text-amber-600 dark:text-amber-400 font-black">{{ formatPrice(subtractMoney(subtotal, discountAmount)) }}</span>
                 </div>
+            </div>
+
+            <div v-if="submitError" class="rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 p-3 text-xs font-bold text-red-700 dark:text-red-300">
+                ⚠️ {{ submitError }}
             </div>
 
             <button

@@ -25,13 +25,13 @@ class OrderStatusChanged implements ShouldBroadcastNow
     }
 
     /**
-     * @return array<int, PrivateChannel>
+     * @return array<int, Channel|PrivateChannel>
      */
     public function broadcastOn(): array
     {
         return [
             new PrivateChannel('restaurant.'.$this->order->restaurant_id.'.orders'),
-            new Channel('order.'.$this->order->order_number),
+            new Channel($this->order->broadcastChannelKey()),
         ];
     }
 

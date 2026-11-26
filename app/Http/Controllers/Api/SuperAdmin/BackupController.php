@@ -37,7 +37,10 @@ class BackupController extends ApiController
                 'backup' => $result,
             ], 201);
         } catch (\Throwable $e) {
-            return $this->error('فشل إنشاء النسخة الاحتياطية: ' . $e->getMessage(), 500);
+            \Illuminate\Support\Facades\Log::error('Backup creation failed: ' . $e->getMessage(), [
+                'exception' => $e,
+            ]);
+            return $this->error('فشل إنشاء النسخة الاحتياطية، يرجى مراجعة سجلات الخادم.', 500);
         }
     }
 

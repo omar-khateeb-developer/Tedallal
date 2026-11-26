@@ -18,8 +18,8 @@ class EnsureRestaurantIsActive
      */
     public function handle(Request $request, Closure $next)
     {
-        /** @var \App\Models\User $user */
-$user = Auth::user();
+        /** @var \App\Models\User|null $user */
+        $user = Auth::guard('sanctum')->user() ?? Auth::guard('web')->user() ?? Auth::user();
 
         if ($user && !$user->isSuperAdmin()) {
             if ($user->restaurant && !$user->restaurant->isActive()) {

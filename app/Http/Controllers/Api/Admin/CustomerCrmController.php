@@ -73,7 +73,7 @@ class CustomerCrmController extends ApiController
                 $newLeadsCustomersCount++;
             }
 
-            $codes = $customer->promoCodes->map(function (PromoCode $promo) use ($restaurant, $customer, &$activeCouponsCount, &$needsReminderCount) {
+            $codes = $customer->promoCodes->map(function (PromoCode $promo) use ($restaurant, &$activeCouponsCount, &$needsReminderCount) {
                 $isUsed = ($promo->is_single_use && $promo->times_used > 0);
                 $isExpired = $promo->expires_at && $promo->expires_at->isPast();
                 $isFuture = !$promo->isDemoCode() && $promo->starts_at && $promo->starts_at->isFuture();
@@ -97,10 +97,6 @@ class CustomerCrmController extends ApiController
                     $status = 'scheduled';
                 }
 
-                $reminderPayload = $isUsable
-                    ? $this->crmService->buildReminderPayload($restaurant, $customer, $promo)
-                    : null;
-
                 return [
                     'id' => $promo->id,
                     'code' => $promo->code,
@@ -114,8 +110,7 @@ class CustomerCrmController extends ApiController
                     'is_usable' => $isUsable,
                     'reminded_at' => $promo->reminded_at?->format('Y-m-d h:i A'),
                     'reminders_count' => (int) ($promo->reminders_count ?? 0),
-                    'whatsapp_url' => $reminderPayload['whatsapp_url'] ?? null,
-                    'whatsapp_message' => $reminderPayload['message'] ?? null,
+                    '_model' => $promo,
                 ];
             });
 
@@ -148,6 +143,7 @@ class CustomerCrmController extends ApiController
                 'has_active_loyalty_promo' => $hasActiveLoyaltyPromo,
                 'remaining_visits_for_loyalty' => $remainingVisits,
                 'promo_codes' => $codes->values(),
+                '_customer_model' => $customer,
             ];
         });
 
@@ -189,6 +185,33 @@ class CustomerCrmController extends ApiController
             return true;
         })->values();
 
+        // Paginate before generating reminder message payloads to keep memory and payload size bounded
+        $perPage = max(10, min(100, (int) $request->query('per_page', 30)));
+        $totalFiltered = $filtered->count();
+        $lastPage = max(1, (int) ceil($totalFiltered / $perPage));
+        $page = max(1, min($lastPage, (int) $request->query('page', 1)));
+
+        $pagedRows = $filtered->forPage($page, $perPage)->values()->map(function ($row) use ($restaurant, $loyalty) {
+            $customerModel = $row['_customer_model'];
+            unset($row['_customer_model']);
+
+            $row['promo_codes'] = collect($row['promo_codes'])->map(function ($codeArr) use ($restaurant, $customerModel, $loyalty) {
+                $promoModel = $codeArr['_model'];
+                unset($codeArr['_model']);
+
+                $reminderPayload = $codeArr['is_usable']
+                    ? $this->crmService->buildReminderPayload($restaurant, $customerModel, $promoModel, $loyalty)
+                    : null;
+
+                $codeArr['whatsapp_url'] = $reminderPayload['whatsapp_url'] ?? null;
+                $codeArr['whatsapp_message'] = $reminderPayload['message'] ?? null;
+
+                return $codeArr;
+            })->values();
+
+            return $row;
+        });
+
         // Active menu items for selecting a "Free Menu Item" as grand loyalty prize
         $menuItems = MenuItem::withoutGlobalScopes()
             ->where('restaurant_id', $restaurant->id)
@@ -197,7 +220,13 @@ class CustomerCrmController extends ApiController
             ->get(['id', 'name', 'price']);
 
         return $this->success([
-            'customers' => $filtered,
+            'customers' => $pagedRows,
+            'pagination' => [
+                'current_page' => $page,
+                'last_page' => $lastPage,
+                'per_page' => $perPage,
+                'total' => $totalFiltered,
+            ],
             'stats' => [
                 'total_customers' => $totalCustomers,
                 'returning_customers' => $returningCustomers,

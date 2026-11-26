@@ -736,6 +736,7 @@ onUnmounted(() => {
             </div>
         </header>
 
+        <main>
         <!-- ========================================================================= -->
         <!-- 2. EXECUTIVE CHEF LUXURY HERO STAGE (Option 2: Grand Royal Emblem & Luxury Glassmorphic Suite) -->
         <!-- ========================================================================= -->
@@ -1276,7 +1277,8 @@ onUnmounted(() => {
                                     <template v-if="simulatedCart[dish.id]">
                                         <button
                                             type="button"
-                                            class="w-8 h-8 rounded-full bg-stone-800 text-stone-200 font-black flex items-center justify-center hover:bg-stone-700 active:scale-90 transition-all text-sm"
+                                            :class="isDark ? 'bg-stone-800 text-stone-200 hover:bg-stone-700' : 'bg-stone-200 text-stone-800 hover:bg-stone-300'"
+                                            class="w-8 h-8 rounded-full font-black flex items-center justify-center active:scale-90 transition-all text-sm"
                                             @click="removeDishFromSimulatedCart(dish.id)"
                                         >
                                             −
@@ -1636,7 +1638,7 @@ onUnmounted(() => {
                 >
                     <!-- Slider Value -->
                     <div class="flex items-center justify-between mb-4">
-                        <label class="text-xs sm:text-sm font-bold" :class="isDark ? 'text-stone-300' : 'text-stone-700'">
+                        <label for="welcome-monthly-sales" class="text-xs sm:text-sm font-bold" :class="isDark ? 'text-stone-300' : 'text-stone-700'">
                             {{ currentLocale === 'ar' ? 'مبيعات مطعمك الشهرية التقديرية:' : 'Approximate Monthly Sales:' }}
                         </label>
                         <span class="text-base sm:text-2xl font-black text-amber-400">
@@ -1646,6 +1648,7 @@ onUnmounted(() => {
 
                     <!-- Range Input -->
                     <input
+                        id="welcome-monthly-sales"
                         v-model.number="monthlySalesSyp"
                         type="range"
                         min="10000000"
@@ -1797,10 +1800,11 @@ onUnmounted(() => {
 
                     <form class="space-y-4" @submit.prevent="submitDemoRequest">
                         <div>
-                            <label class="block text-xs font-bold mb-1.5">
+                            <label for="demo-restaurant-name" class="block text-xs font-bold mb-1.5">
                                 {{ currentLocale === 'ar' ? 'اسم المطعم أو الكافيه' : 'Restaurant Name' }}
                             </label>
                             <input
+                                id="demo-restaurant-name"
                                 v-model="demoForm.restaurantName"
                                 type="text"
                                 required
@@ -1811,10 +1815,11 @@ onUnmounted(() => {
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold mb-1.5">
+                            <label for="demo-contact-person" class="block text-xs font-bold mb-1.5">
                                 {{ currentLocale === 'ar' ? 'اسم المسؤول أو المدير' : 'Contact Person' }}
                             </label>
                             <input
+                                id="demo-contact-person"
                                 v-model="demoForm.contactPerson"
                                 type="text"
                                 required
@@ -1825,10 +1830,11 @@ onUnmounted(() => {
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold mb-1.5">
+                            <label for="demo-phone" class="block text-xs font-bold mb-1.5">
                                 {{ currentLocale === 'ar' ? 'رقم الهاتف أو الواتساب' : 'Phone / WhatsApp' }}
                             </label>
                             <input
+                                id="demo-phone"
                                 v-model="demoForm.phone"
                                 type="tel"
                                 required
@@ -1841,10 +1847,11 @@ onUnmounted(() => {
 
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-xs font-bold mb-1.5">
+                                <label for="demo-country" class="block text-xs font-bold mb-1.5">
                                     {{ currentLocale === 'ar' ? 'الدولة' : 'Country' }}
                                 </label>
                                 <input
+                                    id="demo-country"
                                     v-model="demoForm.country"
                                     type="text"
                                     readonly
@@ -1853,10 +1860,11 @@ onUnmounted(() => {
                                 />
                             </div>
                             <div>
-                                <label class="block text-xs font-bold mb-1.5">
+                                <label for="demo-tables-count" class="block text-xs font-bold mb-1.5">
                                     {{ currentLocale === 'ar' ? 'عدد الطاولات' : 'Tables Count' }}
                                 </label>
                                 <select
+                                    id="demo-tables-count"
                                     v-model="demoForm.tablesCount"
                                     class="w-full px-3 py-2.5 rounded-xl border text-xs font-bold"
                                     :class="isDark ? 'bg-stone-900 border-[rgba(226,196,133,0.18)] text-white' : 'bg-stone-50 border-stone-200'"
@@ -1909,12 +1917,13 @@ onUnmounted(() => {
                 </div>
             </div>
         </div>
+        </main>
 
         <!-- ========================================================================= -->
         <!-- 9. MINIMALIST LUXURY FOOTER -->
         <!-- ========================================================================= -->
         <footer class="border-t py-12 relative z-10 text-xs transition-colors"
-            :class="isDark ? 'bg-[#03050a] border-[rgba(226,196,133,0.18)] text-stone-500' : 'bg-[#0D0D11] border-t border-[#C5A059]/35 text-stone-300'"
+            :class="isDark ? 'bg-[#03050a] border-[rgba(226,196,133,0.18)] text-stone-400' : 'bg-[#0D0D11] border-t border-[#C5A059]/35 text-stone-300'"
         >
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-right">
@@ -2109,7 +2118,7 @@ onUnmounted(() => {
     color: #524B40 !important;
 }
 
-/* Burnished Antique Gold Typography (WCAG Contrast 5:1+) */
+/* Burnished Antique Gold & Accent Typography (WCAG Contrast 5:1+) */
 .light-mode-theme .text-amber-400,
 .light-mode-theme .text-amber-300,
 .light-mode-theme .text-amber-500,
@@ -2117,6 +2126,18 @@ onUnmounted(() => {
 .light-mode-theme .text-amber-400\/90,
 .light-mode-theme .text-amber-400\/80 {
     color: #8C6010 !important;
+}
+
+.light-mode-theme .text-emerald-400 {
+    color: #047857 !important;
+}
+
+.light-mode-theme .text-blue-400 {
+    color: #1D4ED8 !important;
+}
+
+.light-mode-theme .text-red-400 {
+    color: #B91C1C !important;
 }
 
 /* 3. Capsule Badges in Light Mode */

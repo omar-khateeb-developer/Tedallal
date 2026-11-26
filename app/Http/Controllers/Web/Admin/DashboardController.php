@@ -33,6 +33,7 @@ class DashboardController extends Controller
 
         $tables = RestaurantTable::query()
             ->where('restaurant_id', $restaurant->id)
+            ->with(['activeSession.orders' => fn ($q) => $q->latest('id')->withCount('items')])
             ->orderBy('name')
             ->get();
 
@@ -49,7 +50,7 @@ class DashboardController extends Controller
         $tables = RestaurantTable::query()
             ->where('restaurant_id', $restaurant->id)
             ->dineIn()
-            ->with(['activeSession'])
+            ->with(['activeSession.orders' => fn ($q) => $q->latest('id')->withCount('items')])
             ->orderBy('name')
             ->get();
 

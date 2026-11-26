@@ -772,7 +772,7 @@ function resetZoom() {
                             v-model="form.guest_phone"
                             type="tel"
                             dir="ltr"
-                            placeholder="e.g. 0933123456 أو +9639..."
+                            placeholder="مثال: 0933123456 أو +9639..."
                             class="w-full px-4 py-3 rounded-2xl bg-slate-950 border border-slate-800 text-white text-sm font-mono focus:ring-2 focus:ring-amber-500 focus:outline-hidden"
                         />
                     </div>

@@ -143,6 +143,10 @@ class UserController extends ApiController
             return $this->error('لا يمكن حذف حساب المالك الرئيسي للمنصة.', 403);
         }
 
+        if ($user->isSuperAdmin() && User::role(UserRole::SuperAdmin->value)->count() <= 1) {
+            return $this->error('لا يمكن حذف آخر مدير نظام رئيسي للمنصة.', 403);
+        }
+
         if ($user->id === $request->user()->id) {
             return $this->error('لا يمكنك حذف حسابك.', 422);
         }

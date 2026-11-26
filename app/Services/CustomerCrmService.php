@@ -127,7 +127,7 @@ final class CustomerCrmService
         $cleanVal = ($val == (int) $val) ? (int) $val : $val;
 
         if ($promo->discount_type === 'percentage') {
-            return "خصم %{$cleanVal}";
+            return "خصم {$cleanVal}%";
         }
 
         $currency = $this->normalizeCurrency($restaurant->currency);
@@ -349,7 +349,7 @@ final class CustomerCrmService
     /**
      * Build the WhatsApp reminder message and deep link for the restaurant manager's CRM.
      */
-    public function buildReminderPayload(Restaurant $restaurant, RestaurantCustomer $customer, PromoCode $promo): array
+    public function buildReminderPayload(Restaurant $restaurant, RestaurantCustomer $customer, PromoCode $promo, ?array $loyaltyConfig = null): array
     {
         $discountLabel = $this->formatPromoLabel($promo, $restaurant);
         $expiresText = $promo->expires_at ? $promo->expires_at->format('Y-m-d') : 'قريباً';
@@ -365,7 +365,7 @@ final class CustomerCrmService
             . "📅 ينتهي بتاريخ: {$expiresText}\n"
             . "📲 رابط تطبيق الخصم مباشرة في المنيو:\n{$menuUrl}\n";
 
-        $loyalty = $restaurant->loyaltyConfig();
+        $loyalty = $loyaltyConfig ?? $restaurant->loyaltyConfig();
         if ($loyalty['enabled']) {
             $visits = (int) $customer->visits_count;
             $target = (int) $loyalty['target_visits'];

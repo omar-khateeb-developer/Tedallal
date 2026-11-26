@@ -90,22 +90,25 @@ class WaitlistController extends ApiController
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
 
-        // Calculate next daily queue number
-        $lastQueueNumber = WaitlistEntry::where('restaurant_id', $restaurant->id)
-            ->whereDate('created_at', now()->toDateString())
-            ->max('queue_number') ?? 0;
+        $entry = \Illuminate\Support\Facades\DB::transaction(function () use ($restaurant, $validated) {
+            // Lock today's rows for this restaurant to avoid duplicate queue numbers under concurrent requests
+            $lastQueueNumber = WaitlistEntry::where('restaurant_id', $restaurant->id)
+                ->whereDate('created_at', now()->toDateString())
+                ->lockForUpdate()
+                ->max('queue_number') ?? 0;
 
-        $entry = WaitlistEntry::create([
-            'restaurant_id' => $restaurant->id,
-            'guest_name' => $validated['guest_name'],
-            'guest_phone' => $validated['guest_phone'],
-            'party_size' => $validated['party_size'],
-            'seating_preference' => $validated['seating_preference'] ?? 'any',
-            'estimated_wait_minutes' => $validated['estimated_wait_minutes'] ?? 15,
-            'notes' => $validated['notes'] ?? null,
-            'queue_number' => $lastQueueNumber + 1,
-            'status' => 'waiting',
-        ]);
+            return WaitlistEntry::create([
+                'restaurant_id' => $restaurant->id,
+                'guest_name' => $validated['guest_name'],
+                'guest_phone' => $validated['guest_phone'],
+                'party_size' => $validated['party_size'],
+                'seating_preference' => $validated['seating_preference'] ?? 'any',
+                'estimated_wait_minutes' => $validated['estimated_wait_minutes'] ?? 15,
+                'notes' => $validated['notes'] ?? null,
+                'queue_number' => $lastQueueNumber + 1,
+                'status' => 'waiting',
+            ]);
+        });
 
         // Automatically trigger WhatsApp confirmation if connected
         $waSent = false;
@@ -182,6 +185,11 @@ class WaitlistController extends ApiController
         ]);
 
         $table = RestaurantTable::where('restaurant_id', $restaurant->id)->dineIn()->findOrFail($validated['table_id']);
+
+        $stage = $table->operational_stage ?? 'available';
+        if ($table->activeSession()->exists() || ! in_array($stage, ['available', 'cleaning'], true)) {
+            return $this->error("الطاولة ({$table->name}) مشغولة حالياً ولا يمكن إجلاس زبون جديد عليها قبل إغلاق الجلسة الحالية.", 422);
+        }
 
         $entry->update([
             'status' => 'seated',

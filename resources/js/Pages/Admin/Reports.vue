@@ -386,6 +386,7 @@ function exportVoucher(format: 'al_ameen' | 'al_bayan' | 'universal_excel') {
                         <template v-if="activeView === 'daily'">
                             <select
                                 v-model="selectedMonth"
+                                aria-label="اختر الشهر"
                                 class="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 focus:ring-amber-500 focus:border-amber-500"
                             >
                                 <option v-for="m in monthsList" :key="m.value" :value="m.value">{{ m.label }}</option>
@@ -393,6 +394,7 @@ function exportVoucher(format: 'al_ameen' | 'al_bayan' | 'universal_excel') {
 
                             <select
                                 v-model="selectedYear"
+                                aria-label="اختر السنة"
                                 class="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 focus:ring-amber-500 focus:border-amber-500"
                             >
                                 <option v-for="y in yearsList" :key="y" :value="y">{{ y }}</option>
@@ -402,6 +404,7 @@ function exportVoucher(format: 'al_ameen' | 'al_bayan' | 'universal_excel') {
                         <template v-else-if="activeView === 'monthly'">
                             <select
                                 v-model="selectedYear"
+                                aria-label="اختر السنة"
                                 class="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200 focus:ring-amber-500 focus:border-amber-500"
                             >
                                 <option v-for="y in yearsList" :key="y" :value="y">{{ y }}</option>
@@ -414,12 +417,14 @@ function exportVoucher(format: 'al_ameen' | 'al_bayan' | 'universal_excel') {
                                 <input
                                     v-model="customFromDate"
                                     type="date"
+                                    aria-label="تاريخ البداية"
                                     class="px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200"
                                 />
                                 <span class="text-xs text-slate-500">إلى:</span>
                                 <input
                                     v-model="customToDate"
                                     type="date"
+                                    aria-label="تاريخ النهاية"
                                     class="px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-200"
                                 />
                                 <button
@@ -549,10 +554,10 @@ function exportVoucher(format: 'al_ameen' | 'al_bayan' | 'universal_excel') {
                 <!-- Visual Bar Chart (Hidden during print) -->
                 <div class="p-6 rounded-3xl bg-white dark:bg-[#0a0f1d] border border-slate-100 dark:border-slate-800 shadow-sm print:hidden">
                     <div class="flex items-center justify-between mb-4" dir="rtl">
-                        <h4 class="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+                        <h3 class="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
                             <span>📈</span>
                             <span>المنحنى البياني للمبيعات</span>
-                        </h4>
+                        </h3>
                         <span class="text-xs text-slate-400 font-mono">{{ displayCurrency }}</span>
                     </div>
                     <div class="h-72">
@@ -565,10 +570,10 @@ function exportVoucher(format: 'al_ameen' | 'al_bayan' | 'universal_excel') {
                     <!-- Peak Hours Card -->
                     <div class="p-6 rounded-3xl bg-white dark:bg-[#0a0f1d] border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
                         <div class="flex items-center justify-between">
-                            <h4 class="font-black text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                            <h3 class="font-black text-sm text-slate-900 dark:text-white flex items-center gap-2">
                                 <span>⏰</span>
                                 <span>ساعات الذروة الذهبية (Peak Hours)</span>
-                            </h4>
+                            </h3>
                             <span v-if="reportData.analytics.peak_hour" class="px-2.5 py-1 rounded-full text-[11px] font-black bg-amber-500/15 text-amber-500 border border-amber-500/30">
                                 الذروة: {{ reportData.analytics.peak_hour.label }}
                             </span>
@@ -595,10 +600,10 @@ function exportVoucher(format: 'al_ameen' | 'al_bayan' | 'universal_excel') {
                     <!-- Top 5 Revenue Dishes -->
                     <div class="p-6 rounded-3xl bg-white dark:bg-[#0a0f1d] border border-slate-100 dark:border-slate-800 shadow-sm space-y-4">
                         <div class="flex items-center justify-between">
-                            <h4 class="font-black text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                            <h3 class="font-black text-sm text-slate-900 dark:text-white flex items-center gap-2">
                                 <span>🍽️</span>
                                 <span>الأطباق الأكثر مساهمة في الدخل</span>
-                            </h4>
+                            </h3>
                             <span class="text-xs text-slate-400">أفضل 5 أطباق</span>
                         </div>
 
@@ -638,10 +643,10 @@ function exportVoucher(format: 'al_ameen' | 'al_bayan' | 'universal_excel') {
                 <!-- Detailed Accounting Ledger Table -->
                 <div class="rounded-3xl bg-white dark:bg-[#0a0f1d] border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden" dir="rtl">
                     <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                        <h4 class="font-black text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                        <h3 class="font-black text-sm text-slate-900 dark:text-white flex items-center gap-2">
                             <span>📋</span>
                             <span>جدول التدقيق المالي اليومي والتفصيلي</span>
-                        </h4>
+                        </h3>
                         <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                             {{ reportData.records?.length || 0 }} سجلات مسجلة
                         </span>
@@ -665,7 +670,7 @@ function exportVoucher(format: 'al_ameen' | 'al_bayan' | 'universal_excel') {
                                     v-for="(row, idx) in reportData.records"
                                     :key="idx"
                                     class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
-                                    :class="row.orders_count === 0 ? 'opacity-40' : ''"
+                                    :class="row.orders_count === 0 ? 'opacity-75' : ''"
                                 >
                                     <td class="p-3.5 font-bold text-slate-900 dark:text-white">
                                         <template v-if="activeView === 'daily'">
@@ -870,6 +875,7 @@ function exportVoucher(format: 'al_ameen' | 'al_bayan' | 'universal_excel') {
                         <span class="text-xs font-bold text-slate-600 dark:text-slate-400">تاريخ السند:</span>
                         <input
                             type="date"
+                            aria-label="تاريخ السند المحاسبي"
                             v-model="voucherDate"
                             @change="fetchAccountingVoucher"
                             class="px-3 py-1.5 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono font-bold text-xs focus:ring-amber-500 focus:border-amber-500"
@@ -1002,9 +1008,9 @@ function exportVoucher(format: 'al_ameen' | 'al_bayan' | 'universal_excel') {
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-2">
                                 <span class="text-base">📦</span>
-                                <h4 class="font-black text-xs text-slate-900 dark:text-white">
+                                <h3 class="font-black text-xs text-slate-900 dark:text-white">
                                     كشف إخراج المواد المستودعية واستهلاك الأصناف (Inventory Depletion)
-                                </h4>
+                                </h3>
                             </div>
                             <span class="text-[11px] text-slate-500 dark:text-slate-400">
                                 {{ voucherData.itemized_sales.length }} صنف تم بيعه اليوم

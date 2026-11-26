@@ -4,6 +4,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import { ref, onMounted, onUnmounted, computed, defineAsyncComponent } from 'vue';
 import axios from 'axios';
+import { formatArabicCount } from '@/utils/arabic';
 import type { CustomerRow, PromoItem, WaConnectionStatus } from '@/types/customers';
 
 const AddCustomerModal = defineAsyncComponent(() => import('@/Components/Admin/Customers/AddCustomerModal.vue'));
@@ -20,6 +21,7 @@ interface MenuItemOption {
 const loading = ref(true);
 const isLocked = ref(false);
 const customers = ref<CustomerRow[]>([]);
+const pagination = ref({ current_page: 1, last_page: 1, per_page: 30, total: 0 });
 const menuItems = ref<MenuItemOption[]>([]);
 const currency = ref('ل.س');
 const stats = ref({
@@ -184,17 +186,22 @@ function formatNum(val: number | string): string {
     return n % 1 === 0 ? String(Math.round(n)) : n.toFixed(2).replace(/\.00$/, '');
 }
 
-async function fetchCustomers() {
+async function fetchCustomers(pageNumber = pagination.value.current_page) {
     loading.value = true;
     try {
         const res = await axios.get('/api/admin/customers', {
             params: {
                 filter: activeFilter.value,
                 search: searchQuery.value,
+                page: pageNumber,
+                per_page: pagination.value.per_page,
             },
         });
         const data = res.data.data;
         customers.value = data.customers || [];
+        if (data.pagination) {
+            pagination.value = data.pagination;
+        }
         stats.value = data.stats || stats.value;
         menuItems.value = data.menu_items || [];
         currency.value = data.currency || 'ل.س';
@@ -256,12 +263,12 @@ onUnmounted(() => {
 let searchTimer: ReturnType<typeof setTimeout> | null = null;
 function onSearchInput() {
     if (searchTimer) clearTimeout(searchTimer);
-    searchTimer = setTimeout(fetchCustomers, 350);
+    searchTimer = setTimeout(() => fetchCustomers(1), 350);
 }
 
 function setFilter(filter: typeof activeFilter.value) {
     activeFilter.value = filter;
-    fetchCustomers();
+    fetchCustomers(1);
 }
 
 async function saveSettings() {
@@ -436,8 +443,8 @@ function statusBadge(promo: PromoItem) {
                                 :class="waStatus === 'connected'
                                     ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700/60 hover:bg-emerald-100'
                                     : waStatus === 'scan_qr'
-                                    ? 'bg-amber-500 text-white border-amber-500 animate-pulse'
-                                    : 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-600'"
+                                    ? 'bg-amber-500 text-stone-950 border-amber-500 animate-pulse'
+                                    : 'bg-emerald-700 hover:bg-emerald-600 text-white border-emerald-700'"
                             >
                                 <span v-if="waStatus === 'connected'">🟢 واتساب المطعم متصل ({{ waPhone }})</span>
                                 <span v-else-if="waStatus === 'scan_qr'">🟡 بانتظار مسح الباركود (QR)</span>
@@ -459,7 +466,7 @@ function statusBadge(promo: PromoItem) {
                             <button
                                 @click="showAddModal = true"
                                 type="button"
-                                class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition shadow-xs cursor-pointer"
+                                class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-emerald-700 hover:bg-emerald-600 text-white transition shadow-xs cursor-pointer"
                             >
                                 <span>➕ إضافة عميل يدوياً</span>
                             </button>
@@ -631,7 +638,7 @@ function statusBadge(promo: PromoItem) {
                             type="button"
                             class="px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer"
                             :class="activeFilter === tab.id
-                                ? 'bg-slate-900 dark:bg-amber-500 text-white shadow-xs'
+                                ? 'bg-slate-900 dark:bg-amber-500 text-white dark:text-stone-950 font-black shadow-xs'
                                 : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'"
                         >
                             {{ tab.label }}
@@ -704,7 +711,7 @@ function statusBadge(promo: PromoItem) {
                                 <div class="text-xs text-slate-500 dark:text-slate-400 flex flex-wrap gap-3">
                                     <span v-if="customer.last_visit_at">آخر زيارة: <span dir="ltr">{{ customer.last_visit_at }}</span></span>
                                     <span v-if="customer.remaining_visits_for_loyalty !== null && customer.remaining_visits_for_loyalty > 0" class="text-amber-700 dark:text-amber-400 font-semibold">
-                                        • متبقي {{ customer.remaining_visits_for_loyalty }} زيارات للجائزة الكبرى
+                                        • متبقي {{ formatArabicCount(customer.remaining_visits_for_loyalty, 'زيارة', 'زيارتان', 'زيارات', 'زيارة', 'زيارة واحدة') }} للجائزة الكبرى
                                     </span>
                                 </div>
 
@@ -777,7 +784,7 @@ function statusBadge(promo: PromoItem) {
                                             @click="sendDirectBackgroundReminder(customer, promo)"
                                             :disabled="directReminderPendingId === promo.id"
                                             type="button"
-                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black transition shadow-xs disabled:opacity-50 cursor-pointer"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-black transition shadow-xs disabled:opacity-50 cursor-pointer"
                                             title="إرسال رسالة تذكير فوري في الخلفية عبر رقم واتساب المطعم"
                                         >
                                             <span>📲</span>
@@ -792,7 +799,7 @@ function statusBadge(promo: PromoItem) {
                                             class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-xs disabled:opacity-60 cursor-pointer"
                                             :class="waStatus === 'connected'
                                                 ? 'bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
-                                                : 'bg-emerald-600 hover:bg-emerald-500 text-white font-black'"
+                                                : 'bg-emerald-700 hover:bg-emerald-600 text-white font-black'"
                                         >
                                             <span>💬</span>
                                             <span>{{ waStatus === 'connected' ? 'فتح بواتساب' : (promo.reminded_at ? 'تذكير مجدداً بالواتساب' : 'إرسال تذكير واتساب') }}</span>
@@ -800,6 +807,31 @@ function statusBadge(promo: PromoItem) {
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Pagination Controls -->
+                    <div v-if="pagination.last_page > 1" class="flex items-center justify-between gap-3 pt-2 bg-white dark:bg-[#0f172a] rounded-2xl p-3.5 border border-slate-100 dark:border-slate-800 shadow-xs">
+                        <span class="text-xs font-bold text-slate-500 dark:text-slate-400">
+                            صفحة {{ pagination.current_page }} من {{ pagination.last_page }} (إجمالي {{ pagination.total }} عميل)
+                        </span>
+                        <div class="flex items-center gap-2">
+                            <button
+                                type="button"
+                                :disabled="pagination.current_page <= 1"
+                                @click="fetchCustomers(pagination.current_page - 1)"
+                                class="px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 cursor-pointer"
+                            >
+                                السابق
+                            </button>
+                            <button
+                                type="button"
+                                :disabled="pagination.current_page >= pagination.last_page"
+                                @click="fetchCustomers(pagination.current_page + 1)"
+                                class="px-3.5 py-1.5 rounded-xl bg-amber-500 text-stone-950 text-xs font-black hover:bg-amber-400 disabled:opacity-40 cursor-pointer"
+                            >
+                                التالي
+                            </button>
                         </div>
                     </div>
                 </div>

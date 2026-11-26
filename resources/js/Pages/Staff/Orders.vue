@@ -161,7 +161,7 @@ const { isSupported: isWakeLockSupported, isActive: isWakeLockActive, toggleLock
 const { isOnline, isSocketConnected, showReconnectedBanner, reconnectNow } = useLiveConnection(loadOrders);
 
 async function loadOrders() {
-    const { data } = await axios.get('/api/admin/orders');
+    const { data } = await axios.get('/api/admin/orders', { params: { per_page: 100 } });
     const list = data.data?.data ?? data.data ?? [];
     orders.value = list;
     // Auto-expand orders so kitchen staff sees items and notes immediately

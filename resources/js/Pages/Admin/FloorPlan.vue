@@ -5,6 +5,7 @@ import { Head, Link, usePage } from '@inertiajs/vue3';
 import { ref, computed, onMounted, onUnmounted, defineAsyncComponent } from 'vue';
 import axios from 'axios';
 import { formatMoney } from '@/utils/money';
+import { formatArabicCount, formatTableBadgeCode } from '@/utils/arabic';
 import { soundAlerts } from '@/utils/soundAlerts';
 import {
     getFloorZoneLabel,
@@ -942,7 +943,7 @@ onUnmounted(() => {
                                 <div>
                                     <h3 class="text-base font-black text-slate-900 dark:text-white leading-snug">{{ table.name }}</h3>
                                     <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                                        {{ getZoneLabel(table.zone) }} • {{ table.capacity }} مقاعد
+                                        {{ getZoneLabel(table.zone) }} • {{ formatArabicCount(table.capacity, 'مقعد', 'مقعدان', 'مقاعد', 'مقعداً', 'مقعد واحد') }}
                                     </p>
                                 </div>
                                 <span
@@ -1142,14 +1143,17 @@ onUnmounted(() => {
                                     </div>
 
                                     <!-- Table Number Inside -->
-                                    <span class="font-black text-sm text-white drop-shadow-md tracking-tight leading-none">
-                                        {{ table.name.replace(/[^0-9]/g, '') ? '#' + table.name.replace(/[^0-9]/g, '') : table.name }}
+                                    <span
+                                        class="font-black text-white drop-shadow-md tracking-tight leading-none text-center px-1"
+                                        :class="formatTableBadgeCode(table.name).length > 5 ? 'text-[11px]' : 'text-sm'"
+                                    >
+                                        {{ formatTableBadgeCode(table.name) }}
                                     </span>
 
                                     <!-- Seat Capacity (Arabic) & Humanized Duration -->
                                     <div class="flex items-center gap-1 mt-1">
                                         <span class="text-[9px] text-slate-300 font-bold">
-                                            {{ table.capacity }} مقاعد
+                                            {{ formatArabicCount(table.capacity, 'مقعد', 'مقعدان', 'مقاعد', 'مقعداً', 'مقعد واحد') }}
                                         </span>
                                     </div>
 
@@ -1210,7 +1214,7 @@ onUnmounted(() => {
                                             </span>
                                         </h4>
                                         <p class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-2">
-                                            <span>{{ getZoneLabel(activeTable.zone) }} • {{ activeTable.capacity }} مقاعد</span>
+                                            <span>{{ getZoneLabel(activeTable.zone) }} • {{ formatArabicCount(activeTable.capacity, 'مقعد', 'مقعدان', 'مقاعد', 'مقعداً', 'مقعد واحد') }}</span>
                                             <span v-if="activeTable.current_guest_name" class="text-amber-300 font-bold">• الضيف: {{ activeTable.current_guest_name }}</span>
                                         </p>
                                     </div>
@@ -1219,7 +1223,7 @@ onUnmounted(() => {
                                 <!-- Session or Reservation or Order Summary -->
                                 <div v-if="activeTable.active_order" class="text-xs bg-slate-950/80 border border-slate-800 px-3 py-1.5 rounded-xl text-slate-200 flex items-center gap-2">
                                     <span class="text-amber-400 font-bold font-mono">#{{ activeTable.active_order.order_number }}</span>
-                                    <span>{{ activeTable.active_order.items_count }} أصناف</span>
+                                    <span>{{ formatArabicCount(activeTable.active_order.items_count, 'صنف', 'صنفان', 'أصناف', 'صنفاً', 'صنف واحد') }}</span>
                                     <span class="font-mono font-black text-emerald-400">{{ formatMoney(activeTable.active_order.total, restaurant.currency) }}</span>
                                 </div>
                                 <div v-else-if="activeTable.active_session" class="text-xs bg-emerald-950/60 border border-emerald-800/60 px-3 py-1.5 rounded-xl text-emerald-300">

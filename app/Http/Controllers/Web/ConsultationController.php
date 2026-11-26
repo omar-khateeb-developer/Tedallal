@@ -80,7 +80,7 @@ class ConsultationController extends Controller
 
         // Send instant WhatsApp notification to Omar's personal phone
         try {
-            $ownerPhone = \App\Models\Setting::get('platform_owner_phone', '963934578117');
+            $ownerPhone = \App\Models\Setting::get('platform_owner_phone', (string) config('tedallal.platform_whatsapp', '963947064593'));
             $featuresList = is_array($lead->desired_features) ? implode('، ', $lead->desired_features) : (string)$lead->desired_features;
             $cleanCustomerPhone = preg_replace('/[^0-9]/', '', (string)$lead->phone);
 

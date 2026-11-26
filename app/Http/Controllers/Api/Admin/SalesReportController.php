@@ -190,6 +190,18 @@ class SalesReportController extends ApiController
         $startDate = $from ? Carbon::parse($from)->startOfDay() : Carbon::now()->subDays(30)->startOfDay();
         $endDate = $to ? Carbon::parse($to)->endOfDay() : Carbon::now()->endOfDay();
 
+        if ($startDate->greaterThan($endDate)) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'from_date' => ['تاريخ البداية يجب أن يسبق تاريخ النهاية.'],
+            ]);
+        }
+
+        if ($startDate->diffInDays($endDate) > 366) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'to_date' => ['الحد الأقصى لعرض التقرير المخصص هو 366 يوماً (سنة واحدة) حفاظاً على سرعة النظام.'],
+            ]);
+        }
+
         $validOrders = (clone $baseQuery)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->get(['id', 'subtotal', 'discount_amount', 'total', 'service_type', 'promo_code_id', 'created_at']);
@@ -350,28 +362,41 @@ class SalesReportController extends ApiController
             }
         }
 
-        $orderIds = $validOrders->pluck('id')->filter()->all();
+        $orderIds = $validOrders->pluck('id')->filter()->values()->all();
         $topDishes = [];
         if (! empty($orderIds)) {
-            $rows = DB::table('order_items')
-                ->whereIn('order_id', $orderIds)
-                ->select(
-                    'item_name_snapshot as name',
-                    DB::raw('SUM(quantity) as total_qty'),
-                    DB::raw('SUM(subtotal) as total_revenue')
-                )
-                ->groupBy('item_name_snapshot')
-                ->orderByDesc('total_revenue')
-                ->limit(5)
-                ->get();
+            $aggregatedDishes = [];
+            foreach (array_chunk($orderIds, 500) as $idChunk) {
+                $rows = DB::table('order_items')
+                    ->whereIn('order_id', $idChunk)
+                    ->select(
+                        'item_name_snapshot as name',
+                        DB::raw('SUM(quantity) as total_qty'),
+                        DB::raw('SUM(subtotal) as total_revenue')
+                    )
+                    ->groupBy('item_name_snapshot')
+                    ->get();
+
+                foreach ($rows as $r) {
+                    $name = (string) $r->name;
+                    if (! isset($aggregatedDishes[$name])) {
+                        $aggregatedDishes[$name] = ['qty' => 0, 'revenue' => 0.0];
+                    }
+                    $aggregatedDishes[$name]['qty'] += (int) $r->total_qty;
+                    $aggregatedDishes[$name]['revenue'] += (float) $r->total_revenue;
+                }
+            }
+
+            uasort($aggregatedDishes, fn ($a, $b) => $b['revenue'] <=> $a['revenue']);
+            $topSlice = array_slice($aggregatedDishes, 0, 5, true);
 
             $totalGrossSum = (float) $validOrders->sum('subtotal');
 
-            foreach ($rows as $r) {
-                $rev = (float) $r->total_revenue;
+            foreach ($topSlice as $name => $stats) {
+                $rev = (float) $stats['revenue'];
                 $topDishes[] = [
-                    'name' => $r->name,
-                    'quantity' => (int) $r->total_qty,
+                    'name' => $name,
+                    'quantity' => (int) $stats['qty'],
                     'revenue' => number_format($rev, 2, '.', ''),
                     'share_percentage' => $totalGrossSum > 0 ? round(($rev / $totalGrossSum) * 100, 1) : 0,
                 ];

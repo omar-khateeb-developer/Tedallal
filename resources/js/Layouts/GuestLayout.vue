@@ -95,12 +95,12 @@ onMounted(() => {
         </div>
 
         <!-- Glassmorphic Login Card -->
-        <div
+        <main
             class="relative z-10 w-full overflow-hidden backdrop-blur-2xl px-7 py-8 shadow-2xl border sm:max-w-md sm:rounded-3xl transition-all"
             :class="isDark ? 'bg-[#0C0C0E]/90 border-[rgba(226,196,133,0.3)] text-white shadow-[0_25px_60px_rgba(0,0,0,0.95)]' : 'bg-white/95 border-stone-200 text-stone-900 shadow-[0_20px_50px_rgba(180,140,60,0.12)]'"
         >
             <div class="absolute -top-12 -right-12 w-36 h-36 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
             <slot />
-        </div>
+        </main>
     </div>
 </template>

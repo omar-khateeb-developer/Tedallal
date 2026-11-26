@@ -115,11 +115,7 @@ class ConsultationLeadController extends ApiController
         }
 
         // 1. توليد اسم نطاق فرعي وحيد للمطعم (Slug)
-        $baseSlug = \Illuminate\Support\Str::slug($lead->restaurant_name) ?: 'restaurant';
-        $slug = $baseSlug . '-' . rand(100, 999);
-        while (\App\Models\Restaurant::where('slug', $slug)->exists()) {
-            $slug = $baseSlug . '-' . rand(1000, 9999);
-        }
+        $slug = \App\Models\Restaurant::generateUniqueSlug($lead->restaurant_name);
 
         // 2. إنشاء سجل المطعم
         $isPrepaid = str_contains($lead->payment_model ?? '', 'مسبق');
@@ -176,7 +172,7 @@ class ConsultationLeadController extends ApiController
         ]);
         \App\Models\MenuItem::create([
             'restaurant_id' => $restaurant->id,
-            'menu_category_id' => $catMain->id,
+            'category_id' => $catMain->id,
             'name' => 'طبق شاورما عربي دبل',
             'description' => 'شاورما دجاج مميزة مع صوص الثومية والبطاطا المقرمشة ومخلل الخيار',
             'price' => 38000,
@@ -184,7 +180,7 @@ class ConsultationLeadController extends ApiController
         ]);
         \App\Models\MenuItem::create([
             'restaurant_id' => $restaurant->id,
-            'menu_category_id' => $catMain->id,
+            'category_id' => $catMain->id,
             'name' => 'برغر لحم أنجوس كلاسيك',
             'description' => 'لحم أنجوس مشوي مع جبنة الشيدر وصلصة تَدلّل الخاصة في خبز البريوش الطازج',
             'price' => 45000,
@@ -199,7 +195,7 @@ class ConsultationLeadController extends ApiController
         ]);
         \App\Models\MenuItem::create([
             'restaurant_id' => $restaurant->id,
-            'menu_category_id' => $catDrinks->id,
+            'category_id' => $catDrinks->id,
             'name' => 'عصير برتقال طبيعي طازج',
             'description' => 'عصير برتقال طبيعي طازج معصور على الطلب',
             'price' => 18000,

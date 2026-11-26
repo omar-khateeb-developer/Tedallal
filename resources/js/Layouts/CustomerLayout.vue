@@ -40,7 +40,7 @@ onMounted(() => {
                     </div>
                     <div class="min-w-0">
                         <slot name="title">
-                            <p class="text-[0.6875rem] font-semibold text-stone-400 dark:text-amber-400/90 tracking-wide leading-none mb-1">تدلّل</p>
+                            <p class="text-[0.6875rem] font-semibold text-stone-600 dark:text-amber-400/90 tracking-wide leading-none mb-1">تدلّل</p>
                             <h1 class="text-base sm:text-lg font-bold text-stone-900 dark:text-white truncate">{{ title }}</h1>
                         </slot>
                     </div>
@@ -51,6 +51,7 @@ onMounted(() => {
                         type="button"
                         class="flex h-10 items-center gap-1.5 rounded-xl px-2.5 text-xs font-semibold transition-all duration-200 border active:scale-95 shadow-2xs select-none bg-stone-100/90 border-stone-200 text-stone-700 hover:bg-stone-200 dark:bg-slate-800/90 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:border-amber-500/40"
                         :title="isDark ? 'التبديل إلى الألوان الفاتحة' : 'التبديل إلى الألوان الداكنة الفاخرة'"
+                        :aria-label="isDark ? 'التبديل إلى الوضع الفاتح' : 'التبديل إلى الوضع الداكن'"
                         @click="toggleTheme"
                     >
                         <span v-if="isDark" class="flex items-center gap-1.5">
