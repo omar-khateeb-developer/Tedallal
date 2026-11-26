@@ -22,7 +22,9 @@ fi
 echo "🗄️ [3/5] تشغيل المايجريشن وإعداد التخزين..."
 php artisan migrate --force
 php artisan db:seed --class=PlatformSuperAdminsSeeder --force || true
-php artisan db:seed --class=FlagshipRestaurantsSeeder --force
+if [ "${RUN_FLAGSHIP_SEED:-0}" = "1" ] || ! php -r "require 'vendor/autoload.php'; \$app = require 'bootstrap/app.php'; \$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); exit(App\Models\Restaurant::whereIn('slug', ['jamra-craft', 'dar-alyasmin'])->exists() ? 0 : 1);"; then
+    php artisan db:seed --class=FlagshipRestaurantsSeeder --force
+fi
 php artisan storage:link || true
 chmod -R 777 /var/www/tedallal/storage/app/public/qr 2>/dev/null || true
 chmod 777 /var/www/tedallal/storage/logs/laravel.log 2>/dev/null || true
