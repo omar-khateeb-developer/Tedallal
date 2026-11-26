@@ -14,14 +14,39 @@ const props = withDefaults(
     },
 );
 
+const open = ref(false);
+const dropdownRef = ref<HTMLElement | null>(null);
+
 const closeOnEscape = (e: KeyboardEvent) => {
     if (open.value && e.key === 'Escape') {
         open.value = false;
     }
 };
 
-onMounted(() => document.addEventListener('keydown', closeOnEscape));
-onUnmounted(() => document.removeEventListener('keydown', closeOnEscape));
+const closeOnClickOutside = (e: PointerEvent) => {
+    if (!open.value) return;
+    const target = e.target;
+    if (target instanceof Node && dropdownRef.value && !dropdownRef.value.contains(target)) {
+        open.value = false;
+    }
+};
+
+const handleContentClick = (e: MouseEvent) => {
+    const target = e.target as HTMLElement | null;
+    if (target?.closest('a, button')) {
+        open.value = false;
+    }
+};
+
+onMounted(() => {
+    document.addEventListener('keydown', closeOnEscape);
+    document.addEventListener('pointerdown', closeOnClickOutside, true);
+});
+
+onUnmounted(() => {
+    document.removeEventListener('keydown', closeOnEscape);
+    document.removeEventListener('pointerdown', closeOnClickOutside, true);
+});
 
 const widthClass = computed(() => {
     return {
@@ -41,22 +66,13 @@ const alignmentClasses = computed(() => {
         return 'origin-top';
     }
 });
-
-const open = ref(false);
 </script>
 
 <template>
-    <div class="relative">
+    <div ref="dropdownRef" class="relative">
         <div @click="open = !open">
             <slot name="trigger" />
         </div>
-
-        <!-- Full Screen Dropdown Overlay -->
-        <div
-            v-show="open"
-            class="fixed inset-0 z-40"
-            @click="open = false"
-        ></div>
 
         <Transition
             enter-active-class="transition ease-out duration-200"
@@ -70,7 +86,7 @@ const open = ref(false);
                 v-if="open"
                 class="absolute top-full z-50 mt-2 rounded-2xl shadow-2xl"
                 :class="[widthClass, alignmentClasses]"
-                @click="open = false"
+                @click="handleContentClick"
             >
                 <div
                     class="rounded-2xl ring-1 ring-black/5 dark:ring-white/10 overflow-hidden shadow-2xl"
