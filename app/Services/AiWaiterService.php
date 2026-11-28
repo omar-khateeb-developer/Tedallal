@@ -168,7 +168,12 @@ class AiWaiterService
 
         $menuSummary = $items->map(function (MenuItem $item) use ($currency) {
             $cat = $item->category?->name ?? 'عام';
-            return "- [ITEM:{$item->id}] {$item->name} (قسم: {$cat}) - السعر: {$item->price} {$currency}." . ($item->description ? " الوصف: {$item->description}" : '');
+            $discountPct = $item->discountPercentage();
+            $offerNote = $discountPct
+                ? " (عرض خاص بدلاً من {$item->compare_at_price} {$currency} - وفر {$discountPct}%!)"
+                : '';
+
+            return "- [ITEM:{$item->id}] {$item->name} (قسم: {$cat}) - السعر: {$item->price} {$currency}{$offerNote}." . ($item->description ? " الوصف: {$item->description}" : '');
         })->implode("\n");
 
         $systemPrompt = <<<PROMPT

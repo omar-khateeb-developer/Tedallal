@@ -19,6 +19,7 @@ class MenuItem extends Model
         'description',
         'image',
         'price',
+        'compare_at_price',
         'sort_order',
         'is_available',
         'is_active',
@@ -30,6 +31,7 @@ class MenuItem extends Model
     {
         return [
             'price' => 'decimal:2',
+            'compare_at_price' => 'decimal:2',
             'sort_order' => 'integer',
             'is_available' => 'boolean',
             'is_active' => 'boolean',
@@ -93,6 +95,24 @@ class MenuItem extends Model
     public function isOrderable(): bool
     {
         return $this->is_active && $this->is_available;
+    }
+
+    public function discountPercentage(): ?int
+    {
+        if ($this->compare_at_price === null) {
+            return null;
+        }
+
+        $compareAt = (float) $this->compare_at_price;
+        $current = (float) $this->price;
+
+        if ($compareAt <= 0 || $compareAt <= $current) {
+            return null;
+        }
+
+        $pct = (int) round((($compareAt - $current) / $compareAt) * 100);
+
+        return $pct > 0 ? $pct : null;
     }
 
     public function scopeOrderable($query)

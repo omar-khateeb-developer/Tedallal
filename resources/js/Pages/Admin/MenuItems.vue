@@ -6,11 +6,11 @@ import AdminNav from '@/Components/Admin/AdminNav.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 
 interface Category { id: number; name: string }
-interface MenuItemRow { id: number; name: string; external_sku?: string | null; description: string; price: string; is_available: boolean; is_active: boolean; category_id: number; image: string | null }
+interface MenuItemRow { id: number; name: string; external_sku?: string | null; description: string; price: string; compare_at_price?: string | null; discount_percent?: number | null; is_available: boolean; is_active: boolean; category_id: number; image: string | null }
 
 const categories = ref<Category[]>([]);
 const items = ref<MenuItemRow[]>([]);
-const form = ref({ category_id: '', name: '', external_sku: '', description: '', price: '', image: null as File | null });
+const form = ref({ category_id: '', name: '', external_sku: '', description: '', price: '', compare_at_price: '', image: null as File | null });
 const toastMessage = ref('');
 const selectedImage = ref<string | null>(null);
 const creatingItem = ref(false);
@@ -40,6 +40,9 @@ async function createItem() {
         }
         formData.append('description', form.value.description);
         formData.append('price', form.value.price);
+        if (form.value.compare_at_price !== '') {
+            formData.append('compare_at_price', form.value.compare_at_price);
+        }
         if (form.value.image) {
             formData.append('image', form.value.image);
         }
@@ -51,12 +54,17 @@ async function createItem() {
         form.value.name = '';
         form.value.external_sku = '';
         form.value.price = '';
+        form.value.compare_at_price = '';
         form.value.description = '';
         form.value.image = null;
         const fileInput = document.getElementById('createImageInput') as HTMLInputElement;
         if (fileInput) fileInput.value = '';
         
         await load();
+        toastMessage.value = 'تمت إضافة الصنف بنجاح';
+        setTimeout(() => toastMessage.value = '', 3000);
+    } catch (error: any) {
+        alert(error.response?.data?.message || 'تعذر إضافة الصنف، تحقق من القيم المدخلة.');
     } finally {
         creatingItem.value = false;
     }
@@ -100,20 +108,23 @@ onMounted(load);
         <div class="mx-auto max-w-4xl p-6" dir="rtl">
             <AdminNav />
             <div class="mb-4 space-y-2">
-                <div class="grid gap-2 sm:grid-cols-6">
-                    <select v-model="form.category_id" class="rounded-xl border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white text-sm focus:border-amber-500 focus:ring-amber-500">
+                <div class="grid gap-2 sm:grid-cols-12">
+                    <select v-model="form.category_id" class="sm:col-span-2 rounded-xl border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white text-sm focus:border-amber-500 focus:ring-amber-500">
                         <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
                     </select>
-                    <input v-model="form.name" class="rounded-xl border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white text-sm focus:border-amber-500 focus:ring-amber-500" placeholder="الاسم" />
-                    <input v-model="form.external_sku" class="rounded-xl border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white text-xs font-mono focus:border-amber-500 focus:ring-amber-500" placeholder="رمز SKU (محاسبة)" dir="ltr" title="رمز المادة في برنامج المحاسبة (الأمين / البيان) لخصم المخزون" />
-                    <input v-model="form.price" class="rounded-xl border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white text-sm focus:border-amber-500 focus:ring-amber-500" placeholder="السعر" dir="ltr" />
-                    <input type="file" id="createImageInput" accept="image/*" class="rounded-xl border border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-700 dark:text-stone-300 text-xs file:mr-2 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-amber-50 dark:file:bg-amber-950/60 file:text-amber-700 dark:file:text-amber-400 hover:file:bg-amber-100" @change="e => form.image = (e.target as HTMLInputElement).files?.[0] ?? null" />
-                    <button class="rounded-xl bg-amber-600 dark:bg-amber-500 text-white dark:text-slate-950 font-bold flex items-center justify-center transition-all disabled:opacity-50 hover:bg-amber-700 dark:hover:bg-amber-400" :disabled="creatingItem" @click="createItem">
+                    <input v-model="form.name" class="sm:col-span-3 rounded-xl border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white text-sm focus:border-amber-500 focus:ring-amber-500" placeholder="اسم الصنف" />
+                    <input v-model="form.external_sku" class="sm:col-span-2 rounded-xl border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white text-xs font-mono focus:border-amber-500 focus:ring-amber-500" placeholder="رمز SKU (محاسبة)" dir="ltr" title="رمز المادة في برنامج المحاسبة (الأمين / البيان) لخصم المخزون" />
+                    <input v-model="form.price" class="sm:col-span-2 rounded-xl border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white text-sm focus:border-amber-500 focus:ring-amber-500" placeholder="السعر الفعلي" dir="ltr" />
+                    <input v-model="form.compare_at_price" class="sm:col-span-3 rounded-xl border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white text-sm focus:border-amber-500 focus:ring-amber-500" placeholder="قبل الخصم (مشطوب اختياري)" dir="ltr" title="اتركه فارغاً إذا لم يكن عليه عرض — يجب أن يكون أكبر من السعر الفعلي" />
+                </div>
+                <div class="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
+                    <textarea v-model="form.description" class="flex-1 rounded-xl border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white text-sm focus:border-amber-500 focus:ring-amber-500" rows="1" placeholder="مواصفات الصنف ومكوناته (اختياري)"></textarea>
+                    <input type="file" id="createImageInput" accept="image/*" class="sm:w-56 rounded-xl border border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-700 dark:text-stone-300 text-xs file:mr-2 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-amber-50 dark:file:bg-amber-950/60 file:text-amber-700 dark:file:text-amber-400 hover:file:bg-amber-100" @change="e => form.image = (e.target as HTMLInputElement).files?.[0] ?? null" />
+                    <button class="sm:w-28 py-2 rounded-xl bg-amber-600 dark:bg-amber-500 text-white dark:text-slate-950 font-bold flex items-center justify-center transition-all disabled:opacity-50 hover:bg-amber-700 dark:hover:bg-amber-400" :disabled="creatingItem" @click="createItem">
                         <span v-if="creatingItem" class="inline-block h-4 w-4 border-2 border-white dark:border-slate-950 border-t-transparent rounded-full animate-spin ml-2"></span>
                         إضافة
                     </button>
                 </div>
-                <textarea v-model="form.description" class="w-full rounded-xl border-stone-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-stone-900 dark:text-white text-sm focus:border-amber-500 focus:ring-amber-500" rows="2" placeholder="مواصفات الصنف ومكوناته (اختياري)"></textarea>
             </div>
             <ul class="space-y-2">
                 <li
@@ -151,8 +162,25 @@ onMounted(load);
                                 :value="item.price"
                                 class="w-24 rounded-lg border-stone-200 dark:border-slate-700 bg-stone-50 dark:bg-slate-900 text-stone-900 dark:text-white text-sm px-3 py-1.5 focus:border-amber-500 focus:ring-amber-500"
                                 dir="ltr"
+                                title="السعر الفعلي"
                                 @change="updateItem(item, 'price', ($event.target as HTMLInputElement).value)"
                             />
+                            <div class="flex items-center gap-1.5">
+                                <input
+                                    :value="item.compare_at_price ?? ''"
+                                    class="w-28 rounded-lg border-stone-200 dark:border-slate-700 bg-stone-50 dark:bg-slate-900 text-stone-900 dark:text-white text-xs px-2.5 py-1.5 focus:border-amber-500 focus:ring-amber-500"
+                                    dir="ltr"
+                                    placeholder="قبل الخصم"
+                                    title="السعر قبل الخصم (مشطوب) — اتركه فارغاً لإلغاء العرض"
+                                    @change="updateItem(item, 'compare_at_price', ($event.target as HTMLInputElement).value.trim() || null)"
+                                />
+                                <span
+                                    v-if="item.discount_percent"
+                                    class="rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/50 px-2 py-0.5 text-[11px] font-black whitespace-nowrap"
+                                >
+                                    🔥 -{{ item.discount_percent }}%
+                                </span>
+                            </div>
                             <input 
                                 type="file" 
                                 accept="image/*"

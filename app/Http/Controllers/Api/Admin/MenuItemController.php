@@ -82,6 +82,12 @@ class MenuItemController extends ApiController
             $validated['image'] = '/storage/' . $request->file('image')->store('menu', 'public');
         }
 
+        if ($request->exists('price') && ! $request->exists('compare_at_price') && $item->compare_at_price !== null) {
+            if ((float) $validated['price'] >= (float) $item->compare_at_price) {
+                $validated['compare_at_price'] = null;
+            }
+        }
+
         $item->update($validated);
 
         \App\Services\ActivityLogger::log('update_item', "قام بتعديل بيانات الصنف: {$item->name}");

@@ -18,6 +18,7 @@ interface MenuItem {
     name: string;
     description: string | null;
     price: string;
+    compare_at_price?: string | null;
     image: string | null;
     category_name?: string;
 }
@@ -66,7 +67,7 @@ const props = defineProps<{
     } | null;
 }>();
 
-const activeCategory = ref<number | 'all'>('all');
+const activeCategory = ref<number | 'all' | 'offers'>('all');
 const viewMode = ref<'grid' | 'list'>(
     typeof window !== 'undefined' && localStorage.getItem('tedallal_menu_view') === 'list' ? 'list' : 'grid'
 );
@@ -82,7 +83,7 @@ function triggerHaptic(type: 'light' | 'medium' | 'success' | 'warning' = 'light
     }
 }
 
-function selectCategory(id: number | 'all', event?: MouseEvent) {
+function selectCategory(id: number | 'all' | 'offers', event?: MouseEvent) {
     activeCategory.value = id;
     triggerHaptic('light');
     if (event?.currentTarget) {
@@ -101,7 +102,35 @@ function setViewMode(mode: 'grid' | 'list') {
     } catch {}
 }
 
+function getOfferInfo(item: MenuItem): { hasOffer: boolean; discountPercent: number } {
+    const compareAt = Number(item.compare_at_price ?? 0);
+    const current = Number(item.price ?? 0);
+    if (!compareAt || compareAt <= current || compareAt <= 0) {
+        return { hasOffer: false, discountPercent: 0 };
+    }
+    const pct = Math.round(((compareAt - current) / compareAt) * 100);
+    return pct > 0 ? { hasOffer: true, discountPercent: pct } : { hasOffer: false, discountPercent: 0 };
+}
+
+const offerItemsCount = computed(() => {
+    const seen = new Set<number>();
+    let count = 0;
+    for (const cat of props.categories) {
+        for (const item of (cat.active_items ?? [])) {
+            if (!seen.has(item.id) && getOfferInfo(item).hasOffer) {
+                seen.add(item.id);
+                count++;
+            }
+        }
+    }
+    return count;
+});
+
 function getDishBadge(item: MenuItem, index: number): { label: string; icon: string; style: string } | null {
+    const offer = getOfferInfo(item);
+    if (offer.hasOffer) {
+        return { label: `خصم ${offer.discountPercent}%`, icon: '🔥', style: 'bg-rose-600 text-white font-black' };
+    }
     const text = (item.name + ' ' + (item.description || '')).toLowerCase();
     if (text.includes('شيف') || text.includes('chef') || text.includes('توصية') || text.includes('مميز')) {
         return { label: 'توصية الشيف', icon: '⭐', style: 'bg-amber-500 text-stone-950 font-black' };
@@ -161,12 +190,15 @@ function onDishImageError(event: Event) {
 
 const visibleItems = computed<MenuItem[]>(() => {
     let items: MenuItem[] = [];
-    if (activeCategory.value === 'all') {
+    if (activeCategory.value === 'all' || activeCategory.value === 'offers') {
         const seenIds = new Set<number>();
         for (const cat of props.categories) {
             for (const item of (cat.active_items ?? [])) {
                 if (!seenIds.has(item.id)) {
                     seenIds.add(item.id);
+                    if (activeCategory.value === 'offers' && !getOfferInfo(item).hasOffer) {
+                        continue;
+                    }
                     items.push({
                         ...item,
                         category_name: cat.name,
@@ -794,6 +826,20 @@ onUnmounted(() => {
                     <span>الكل</span>
                 </button>
 
+                <!-- تبويب العروض (يظهر تلقائياً عند وجود أصناف بسعر مشطوب) -->
+                <button
+                    v-if="offerItemsCount > 0"
+                    type="button"
+                    class="whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 shrink-0 flex items-center gap-1.5 active:scale-95 select-none"
+                    :class="activeCategory === 'offers'
+                        ? 'bg-gradient-to-r from-rose-600 to-amber-500 text-white font-bold shadow-md shadow-rose-500/25 ring-1 ring-rose-400/50 scale-[1.02]'
+                        : 'bg-rose-50/90 text-rose-700 ring-1 ring-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:ring-rose-800/60 hover:dark:bg-rose-900/40'"
+                    @click="selectCategory('offers', $event)"
+                >
+                    <span>🔥 العروض</span>
+                    <span class="text-[11px] opacity-90 font-black">({{ offerItemsCount }})</span>
+                </button>
+
                 <button
                     v-for="category in categories"
                     :key="category.id"
@@ -908,10 +954,18 @@ onUnmounted(() => {
                             </p>
                         </div>
 
-                        <div class="flex items-center justify-between mt-3 pt-2 border-t border-stone-100 dark:border-slate-800/60">
-                            <p class="font-black text-amber-700 dark:text-amber-400 text-sm sm:text-base">
-                                {{ formatPrice(item.price) }}
-                            </p>
+                        <div class="flex items-center justify-between mt-3 pt-2 border-t border-stone-100 dark:border-slate-800/60 gap-2">
+                            <div class="flex flex-col leading-tight min-w-0">
+                                <span
+                                    v-if="getOfferInfo(item).hasOffer && item.compare_at_price"
+                                    class="text-[11px] line-through text-stone-400 dark:text-slate-500 font-semibold truncate"
+                                >
+                                    {{ formatPrice(item.compare_at_price) }}
+                                </span>
+                                <p class="font-black text-amber-700 dark:text-amber-400 text-sm sm:text-base">
+                                    {{ formatPrice(item.price) }}
+                                </p>
+                            </div>
 
                             <!-- أزرار الإضافة السريعة -->
                             <div @click.stop>
@@ -1020,10 +1074,18 @@ onUnmounted(() => {
                             </p>
                         </div>
 
-                        <div class="flex items-center justify-between mt-2 pt-1 border-t border-stone-50 dark:border-slate-800/60">
-                            <p class="font-black text-amber-700 dark:text-amber-400 text-sm sm:text-base">
-                                {{ formatPrice(item.price) }}
-                            </p>
+                        <div class="flex items-center justify-between mt-2 pt-1 border-t border-stone-50 dark:border-slate-800/60 gap-2">
+                            <div class="flex items-baseline gap-2 flex-wrap">
+                                <p class="font-black text-amber-700 dark:text-amber-400 text-sm sm:text-base">
+                                    {{ formatPrice(item.price) }}
+                                </p>
+                                <span
+                                    v-if="getOfferInfo(item).hasOffer && item.compare_at_price"
+                                    class="text-xs line-through text-stone-400 dark:text-slate-500 font-semibold"
+                                >
+                                    {{ formatPrice(item.compare_at_price) }}
+                                </span>
+                            </div>
 
                             <!-- أزرار الإضافة السريعة أو العداد المباشر في البطاقة -->
                             <div @click.stop>

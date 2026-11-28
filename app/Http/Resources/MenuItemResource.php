@@ -18,6 +18,8 @@ class MenuItemResource extends JsonResource
             'description' => $this->description,
             'image' => $this->image,
             'price' => $this->price,
+            'compare_at_price' => $this->compare_at_price,
+            'discount_percent' => $this->discountPercentage(),
             'is_available' => $this->is_available,
             'is_active' => $this->is_active,
         ];

@@ -34,10 +34,21 @@ class StoreMenuItemRequest extends FormRequest
             'external_sku' => ['nullable', 'string', 'max:100'],
             'description' => ['nullable', 'string'],
             'price' => ['required', 'numeric', 'min:0'],
+            'compare_at_price' => ['nullable', 'numeric', 'min:0', 'gt:price'],
             'image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:10240'],
             'sort_order' => ['sometimes', 'integer', 'min:0'],
             'is_available' => ['sometimes', 'boolean'],
             'is_active' => ['sometimes', 'boolean'],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'compare_at_price.gt' => 'السعر قبل الخصم (المشطوب) يجب أن يكون أكبر من السعر الحالي.',
         ];
     }
 }

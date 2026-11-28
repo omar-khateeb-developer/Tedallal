@@ -7,6 +7,7 @@ export interface MenuItemOption {
     id: number;
     name: string;
     price: string;
+    compare_at_price?: string | null;
 }
 
 const props = defineProps<{
@@ -87,7 +88,21 @@ function onImageError(event: Event) {
                         />
                     </div>
                     <h3 class="text-xl font-bold text-stone-900 dark:text-white">{{ item.name }}</h3>
-                    <p class="text-amber-700 dark:text-amber-400 font-bold text-lg">{{ formatUnitPrice(item.price) }} {{ currency }}</p>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <p class="text-amber-700 dark:text-amber-400 font-black text-lg">{{ formatUnitPrice(item.price) }} {{ currency }}</p>
+                        <p
+                            v-if="item.compare_at_price && Number(item.compare_at_price) > Number(item.price)"
+                            class="text-sm line-through text-stone-400 dark:text-slate-500 font-semibold"
+                        >
+                            {{ formatUnitPrice(item.compare_at_price) }} {{ currency }}
+                        </p>
+                        <span
+                            v-if="item.compare_at_price && Number(item.compare_at_price) > Number(item.price)"
+                            class="rounded-full bg-rose-600 text-white px-2 py-0.5 text-[11px] font-black"
+                        >
+                            🔥 خصم {{ Math.round(((Number(item.compare_at_price) - Number(item.price)) / Number(item.compare_at_price)) * 100) }}%
+                        </span>
+                    </div>
 
                     <div class="mt-2 flex items-center justify-center gap-4">
                         <button
