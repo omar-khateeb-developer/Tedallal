@@ -277,9 +277,10 @@ final class CustomerCrmService
         ?PromoCode $loyaltyVoucher
     ): string {
         $isDemo = $promo->isDemoCode();
+        $isImmediate = !$isDemo && (!$promo->starts_at || $promo->starts_at->lte(now()));
         $startsText = $isDemo
             ? 'مفعّل فوراً للتجربة'
-            : ($promo->starts_at ? $promo->starts_at->format('Y-m-d h:i A') : 'الآن');
+            : ($isImmediate ? 'مفعّل فوراً (الآن)' : $promo->starts_at->format('Y-m-d h:i A'));
         $expiresText = $promo->expires_at ? $promo->expires_at->format('Y-m-d') : 'مفتوح';
 
         $greeting = $this->getRandomVoucherGreeting($customer->name, $restaurant->name);

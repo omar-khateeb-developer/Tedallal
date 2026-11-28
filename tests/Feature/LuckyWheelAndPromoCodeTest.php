@@ -426,4 +426,112 @@ class LuckyWheelAndPromoCodeTest extends TestCase
         $successResp->assertOk();
         $successResp->assertJsonPath('data.code', 'FUTURE-WHEEL-1');
     }
+
+    public function test_restaurant_manager_can_configure_wheel_activation_delay_between_immediate_and_delayed(): void
+    {
+        Carbon::setTestNow('2026-10-30 12:00:00');
+
+        $admin = User::where('email', 'admin@bait-alsham.test')->firstOrFail();
+        $restaurant = Restaurant::findOrFail($admin->restaurant_id);
+
+        $features = $restaurant->features ?? [];
+        $features['offers'] = true;
+        $features['whatsapp_reminders'] = true;
+        $features['wheel_require_whatsapp'] = false;
+        $restaurant->update(['features' => $features]);
+
+        PromoCode::where('restaurant_id', $restaurant->id)->update(['is_active' => false]);
+
+        PromoCode::create([
+            'restaurant_id' => $restaurant->id,
+            'code' => 'WHEEL-DELAY-TEST',
+            'discount_type' => 'percentage',
+            'discount_value' => 15,
+            'min_order_value' => 0,
+            'is_active' => true,
+            'is_single_use' => false,
+        ]);
+
+        $table = RestaurantTable::where('restaurant_id', $restaurant->id)->firstOrFail();
+        $session = app(TableSessionService::class)->resolveOrCreate($table);
+        $item = MenuItem::where('restaurant_id', $restaurant->id)->where('is_available', true)->firstOrFail();
+        $this->withHeader('X-Session-Token', $session->session_token)
+            ->postJson('/api/public/cart/items', [
+                'menu_item_id' => $item->id,
+                'quantity' => 5,
+            ])
+            ->assertSuccessful();
+
+        $order = Order::create([
+            'restaurant_id' => $restaurant->id,
+            'table_id' => $table->id,
+            'table_session_id' => $session->id,
+            'order_number' => 'ORD-DELAY-01',
+            'status' => 'served',
+            'subtotal' => 100,
+            'total' => 100,
+        ]);
+
+        // 1. Default is 2 hours delay -> spun voucher is not valid immediately in cart
+        $this->assertSame(2, $restaurant->wheelActivationDelayHours());
+
+        $delayedToken = OrderWheelToken::create([
+            'restaurant_id' => $restaurant->id,
+            'order_id' => $order->id,
+            'token' => 'wheel_delay_2h_token_123456',
+            'expires_at' => now()->addDays(14),
+        ]);
+
+        $delayedSpin = $this->postJson("/wheel/{$delayedToken->token}/spin")->assertOk();
+        $delayedSpin->assertJsonPath('voucher.is_immediate', false);
+        $delayedCode = $delayedSpin->json('voucher.code');
+
+        $this->withHeader('X-Session-Token', $session->session_token)
+            ->postJson('/api/public/promo-codes/validate', ['code' => $delayedCode])
+            ->assertStatus(400);
+
+        // 2. Manager switches setting to 0 hours (immediate activation)
+        $this->actingAs($admin)->postJson('/api/admin/crm-settings', [
+            'wheel_require_whatsapp' => false,
+            'wheel_reveal_code_after_save' => false,
+            'wheel_activation_delay_hours' => 0,
+            'loyalty_enabled' => false,
+            'loyalty_target_visits' => 5,
+            'loyalty_reward_type' => 'percentage',
+            'loyalty_reward_value' => 15,
+        ])->assertOk()
+          ->assertJsonPath('data.wheel_activation_delay_hours', 0);
+
+        $this->assertSame(0, $restaurant->fresh()->wheelActivationDelayHours());
+
+        $secondOrder = Order::create([
+            'restaurant_id' => $restaurant->id,
+            'table_id' => $table->id,
+            'table_session_id' => $session->id,
+            'order_number' => 'ORD-DELAY-02',
+            'status' => 'served',
+            'subtotal' => 100,
+            'total' => 100,
+        ]);
+
+        $immediateToken = OrderWheelToken::create([
+            'restaurant_id' => $restaurant->id,
+            'order_id' => $secondOrder->id,
+            'token' => 'wheel_delay_0h_token_123456',
+            'expires_at' => now()->addDays(14),
+        ]);
+
+        $immediateSpin = $this->postJson("/wheel/{$immediateToken->token}/spin")->assertOk();
+        $immediateSpin->assertJsonPath('voucher.is_immediate', true);
+        $immediateSpin->assertJsonPath('voucher.starts_at', null);
+        $immediateCode = $immediateSpin->json('voucher.code');
+
+        // Immediately usable in the same session!
+        $this->withHeader('X-Session-Token', $session->session_token)
+            ->postJson('/api/public/promo-codes/validate', ['code' => $immediateCode])
+            ->assertOk()
+            ->assertJsonPath('data.code', $immediateCode);
+
+        Carbon::setTestNow();
+    }
 }

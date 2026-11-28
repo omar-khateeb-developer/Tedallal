@@ -240,6 +240,7 @@ class CustomerCrmController extends ApiController
             'crm_settings' => [
                 'wheel_require_whatsapp' => $restaurant->shouldRequireWheelWhatsapp(),
                 'wheel_reveal_code_after_save' => $restaurant->shouldRevealWheelCodeAfterSave(),
+                'wheel_activation_delay_hours' => $restaurant->wheelActivationDelayHours(),
                 'loyalty' => $loyalty,
             ],
             'menu_items' => $menuItems,
@@ -365,6 +366,7 @@ class CustomerCrmController extends ApiController
         $validated = $request->validate([
             'wheel_require_whatsapp' => ['required', 'boolean'],
             'wheel_reveal_code_after_save' => ['required', 'boolean'],
+            'wheel_activation_delay_hours' => ['sometimes', 'integer', 'in:0,2,12,24'],
             'loyalty_enabled' => ['required', 'boolean'],
             'loyalty_target_visits' => ['required', 'integer', 'min:2', 'max:50'],
             'loyalty_reward_type' => ['required', 'string', 'in:percentage,fixed,free_item'],
@@ -395,6 +397,9 @@ class CustomerCrmController extends ApiController
         $features = is_array($restaurant->features) ? $restaurant->features : [];
         $features['wheel_require_whatsapp'] = (bool) $validated['wheel_require_whatsapp'];
         $features['wheel_reveal_code_after_save'] = (bool) $validated['wheel_reveal_code_after_save'];
+        if (array_key_exists('wheel_activation_delay_hours', $validated)) {
+            $features['wheel_activation_delay_hours'] = (int) $validated['wheel_activation_delay_hours'];
+        }
         $features['loyalty_enabled'] = (bool) $validated['loyalty_enabled'];
         $features['loyalty_target_visits'] = (int) $validated['loyalty_target_visits'];
         $features['loyalty_reward_type'] = $validated['loyalty_reward_type'];
@@ -405,11 +410,13 @@ class CustomerCrmController extends ApiController
 
         $restaurant->update(['features' => $features]);
         $this->restaurantContext->forget();
+        $freshRestaurant = $restaurant->fresh();
 
         return $this->success([
-            'wheel_require_whatsapp' => $restaurant->shouldRequireWheelWhatsapp(),
-            'wheel_reveal_code_after_save' => $restaurant->shouldRevealWheelCodeAfterSave(),
-            'loyalty' => $restaurant->fresh()->loyaltyConfig(),
+            'wheel_require_whatsapp' => $freshRestaurant->shouldRequireWheelWhatsapp(),
+            'wheel_reveal_code_after_save' => $freshRestaurant->shouldRevealWheelCodeAfterSave(),
+            'wheel_activation_delay_hours' => $freshRestaurant->wheelActivationDelayHours(),
+            'loyalty' => $freshRestaurant->loyaltyConfig(),
         ]);
     }
 

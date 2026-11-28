@@ -289,9 +289,25 @@ class Restaurant extends Model
         return $this->hasMany(RestaurantCustomer::class);
     }
 
+    public function autoPrintTrigger(): string
+    {
+        $trigger = ($this->features ?? [])['auto_print_trigger'] ?? null;
+
+        if (in_array($trigger, ['off', 'on_ready', 'on_served'], true)) {
+            return $trigger;
+        }
+
+        return ! empty(($this->features ?? [])['auto_print_on_ready']) ? 'on_ready' : 'off';
+    }
+
     public function shouldAutoPrintOnReady(): bool
     {
-        return (bool) (($this->features ?? [])['auto_print_on_ready'] ?? false);
+        return $this->autoPrintTrigger() === 'on_ready';
+    }
+
+    public function shouldAutoPrintOnServed(): bool
+    {
+        return $this->autoPrintTrigger() === 'on_served';
     }
 
     public function shouldRequireWheelWhatsapp(): bool
@@ -305,6 +321,13 @@ class Restaurant extends Model
     public function shouldRevealWheelCodeAfterSave(): bool
     {
         return (bool) (($this->features ?? [])['wheel_reveal_code_after_save'] ?? false);
+    }
+
+    public function wheelActivationDelayHours(): int
+    {
+        $delay = (int) (($this->features ?? [])['wheel_activation_delay_hours'] ?? 2);
+
+        return in_array($delay, [0, 2, 12, 24], true) ? $delay : 2;
     }
 
     /**

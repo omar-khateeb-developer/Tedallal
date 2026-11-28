@@ -13,6 +13,7 @@ const restaurant = ref<{
     address: string | null;
     currency: string;
     auto_print_on_ready?: boolean;
+    auto_print_trigger?: 'off' | 'on_ready' | 'on_served';
 } | null>(null);
 
 const form = ref({
@@ -22,6 +23,7 @@ const form = ref({
     currency: 'SYP',
     windows_count: 1,
     auto_print_on_ready: false,
+    auto_print_trigger: 'off' as 'off' | 'on_ready' | 'on_served',
     navbar_image: null as File | null,
     logo: null as File | null,
     accounting_mapping: {
@@ -233,6 +235,7 @@ async function load() {
         currency: data.data.currency,
         windows_count: data.data.windows_count ?? 1,
         auto_print_on_ready: !!data.data.auto_print_on_ready,
+        auto_print_trigger: data.data.auto_print_trigger || (data.data.auto_print_on_ready ? 'on_ready' : 'off'),
         navbar_image: null,
         logo: null,
         accounting_mapping: {
@@ -260,7 +263,8 @@ async function save() {
         formData.append('phone', form.value.phone);
         formData.append('address', form.value.address);
         formData.append('currency', form.value.currency);
-        formData.append('auto_print_on_ready', form.value.auto_print_on_ready ? '1' : '0');
+        formData.append('auto_print_trigger', form.value.auto_print_trigger);
+        formData.append('auto_print_on_ready', form.value.auto_print_trigger === 'on_ready' ? '1' : '0');
         if (restaurant.value?.type === 'prepaid') {
             formData.append('windows_count', form.value.windows_count.toString());
         }
@@ -457,19 +461,64 @@ onUnmounted(stopWaPolling);
                         </div>
                     </div>
 
-                    <label class="flex items-start gap-3 cursor-pointer p-3 rounded-lg bg-white dark:bg-slate-800 border border-stone-200 dark:border-slate-700 hover:border-amber-400 transition-colors">
-                        <input
-                            type="checkbox"
-                            v-model="form.auto_print_on_ready"
-                            class="mt-1 h-4 w-4 rounded border-stone-300 dark:border-slate-600 text-amber-600 focus:ring-amber-500"
-                        />
-                        <div class="select-none">
-                            <span class="block text-sm font-bold text-stone-800 dark:text-stone-100">الطباعة التلقائية عند تم التحضير</span>
-                            <span class="block text-xs text-stone-500 dark:text-slate-400 mt-0.5">
-                                إرسال الفاتورة الحرارية للطابعة تلقائياً فور تحويل الطلب إلى «تم التحضير» (جاهز)، لتوضع الفاتورة فوراً مع الصينية أو كيس الطلب قبل التسليم.
-                            </span>
-                        </div>
-                    </label>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+                        <label
+                            class="flex items-start gap-2.5 cursor-pointer p-3 rounded-lg bg-white dark:bg-slate-800 border transition-colors"
+                            :class="form.auto_print_trigger === 'off' ? 'border-amber-500 ring-1 ring-amber-500/40' : 'border-stone-200 dark:border-slate-700 hover:border-amber-400'"
+                        >
+                            <input
+                                type="radio"
+                                value="off"
+                                v-model="form.auto_print_trigger"
+                                class="mt-1 h-4 w-4 border-stone-300 dark:border-slate-600 text-amber-600 focus:ring-amber-500"
+                            />
+                            <div class="select-none">
+                                <span class="block text-sm font-bold text-stone-800 dark:text-stone-100">متوقفة (طباعة يدوية)</span>
+                                <span class="block text-xs text-stone-500 dark:text-slate-400 mt-0.5">
+                                    تُطبع الفاتورة فقط عند الضغط يدوياً على زر الطباعة.
+                                </span>
+                            </div>
+                        </label>
+
+                        <label
+                            class="flex items-start gap-2.5 cursor-pointer p-3 rounded-lg bg-white dark:bg-slate-800 border transition-colors"
+                            :class="form.auto_print_trigger === 'on_ready' ? 'border-amber-500 ring-1 ring-amber-500/40' : 'border-stone-200 dark:border-slate-700 hover:border-amber-400'"
+                        >
+                            <input
+                                type="radio"
+                                value="on_ready"
+                                v-model="form.auto_print_trigger"
+                                class="mt-1 h-4 w-4 border-stone-300 dark:border-slate-600 text-amber-600 focus:ring-amber-500"
+                            />
+                            <div class="select-none">
+                                <span class="block text-sm font-bold text-stone-800 dark:text-stone-100">عند جاهزية المطبخ (جاهز)</span>
+                                <span class="block text-xs text-stone-500 dark:text-slate-400 mt-0.5">
+                                    تُطبع الفاتورة تلقائياً فور تحوّل الطلب إلى «جاهز» لتُرفق مع الصينية قبل الخروج.
+                                </span>
+                            </div>
+                        </label>
+
+                        <label
+                            class="flex items-start gap-2.5 cursor-pointer p-3 rounded-lg bg-white dark:bg-slate-800 border transition-colors"
+                            :class="form.auto_print_trigger === 'on_served' ? 'border-amber-500 ring-1 ring-amber-500/40' : 'border-stone-200 dark:border-slate-700 hover:border-amber-400'"
+                        >
+                            <input
+                                type="radio"
+                                value="on_served"
+                                v-model="form.auto_print_trigger"
+                                class="mt-1 h-4 w-4 border-stone-300 dark:border-slate-600 text-amber-600 focus:ring-amber-500"
+                            />
+                            <div class="select-none">
+                                <span class="block text-sm font-bold text-stone-800 dark:text-stone-100">عند التسليم (تم التسليم)</span>
+                                <span class="block text-xs text-stone-500 dark:text-slate-400 mt-0.5">
+                                    تُطبع الفاتورة تلقائياً فور تسليم الطلب من المطبخ وتحويله إلى «تم التسليم ✓».
+                                </span>
+                            </div>
+                        </label>
+                    </div>
+                    <p class="text-[11px] text-stone-500 dark:text-slate-400">
+                        ملاحظة: تنطلق الطباعة التلقائية من شاشة الكاشير/الطلبات لتفادي طباعة نسختين عند فتح شاشة المطبخ على جهاز آخر.
+                    </p>
                 </div>
 
                 <!-- بطاقة بوابة واتساب المطعم والأتمتة الذكية (WhatsApp Integration) -->

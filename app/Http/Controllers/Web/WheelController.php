@@ -79,6 +79,7 @@ class WheelController extends Controller
         $claimedCustomer = null;
         if ($isClaimed && $wheelToken->generatedPromoCode) {
             $gen = $wheelToken->generatedPromoCode;
+            $isImmediate = $gen->isDemoCode() || !$gen->starts_at || $gen->starts_at->lte(now());
             $claimedVoucher = [
                 'code' => $shouldShowCode ? $gen->code : null,
                 'code_locked' => $codeLocked,
@@ -90,7 +91,8 @@ class WheelController extends Controller
                     $gen->discount_value,
                     $restaurant->currency
                 ),
-                'starts_at' => $gen->starts_at ? $gen->starts_at->format('Y-m-d h:i A') : null,
+                'starts_at' => $isImmediate ? null : $gen->starts_at->format('Y-m-d h:i A'),
+                'is_immediate' => $isImmediate,
                 'expires_at' => $gen->expires_at ? $gen->expires_at->format('Y-m-d') : null,
                 'min_order_value' => (float) $gen->min_order_value,
                 'is_used' => $gen->times_used > 0 || !$gen->is_active,
@@ -100,7 +102,7 @@ class WheelController extends Controller
                 $crmService = app(CustomerCrmService::class);
                 $waMessage = "🎁 مبروك {$wheelToken->customer->name}! لقد ربحت {$claimedVoucher['discount_text']} من مطعمنا «{$restaurant->name}».\n\n"
                     . "🎟️ كود الخصم: {$gen->code}\n"
-                    . "⏳ يبدأ من: " . ($claimedVoucher['starts_at'] ?? 'الآن') . "\n"
+                    . "⏳ يبدأ من: " . ($isImmediate ? 'مفعّل فوراً (الآن)' : $claimedVoucher['starts_at']) . "\n"
                     . "📅 صالح لغاية تاريخ: " . ($claimedVoucher['expires_at'] ?? 'مفتوح') . "\n"
                     . "\n✨ نتطلع لخدمتكم دائماً!";
                 $restaurantTargetPhone = $restaurant->whatsapp_phone ?: $restaurant->phone;
@@ -328,8 +330,10 @@ class WheelController extends Controller
                 $uniqueCode = 'LUCK-' . strtoupper(Str::random(6));
             } while (PromoCode::withoutGlobalScopes()->where('restaurant_id', $restaurant->id)->where('code', $uniqueCode)->exists());
 
-            // Next visit validity: begins in 2 hours, valid for 14 days
-            $startsAt = now()->addHours(2);
+            // Activation timing is controlled by the restaurant manager (default: 2 hours; 0 = immediate).
+            $delayHours = $restaurant->wheelActivationDelayHours();
+            $isImmediate = $delayHours === 0;
+            $startsAt = $isImmediate ? now()->subMinute() : now()->addHours($delayHours);
             $expiresAt = now()->addDays(14);
 
             // Minimum order value: use manager's setting or smart safety default (3x discount)
@@ -373,7 +377,8 @@ class WheelController extends Controller
                         $wonOffer->discount_value,
                         $restaurant->currency
                     ),
-                    'starts_at' => $startsAt->format('Y-m-d h:i A'),
+                    'starts_at' => $isImmediate ? null : $startsAt->format('Y-m-d h:i A'),
+                    'is_immediate' => $isImmediate,
                     'expires_at' => $expiresAt->format('Y-m-d'),
                     'min_order_value' => (float) $generatedPromo->min_order_value,
                 ],

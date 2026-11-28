@@ -6,25 +6,39 @@ const isIOS = ref(false);
 const isStandalone = ref(false);
 const deferredPrompt = ref<any>(null);
 
+function checkPushSupported(): boolean {
+    return (
+        typeof window !== 'undefined' &&
+        'serviceWorker' in navigator &&
+        'PushManager' in window &&
+        'Notification' in window
+    );
+}
+
 function getInitialPushPermission(): NotificationPermission {
     if (typeof window !== 'undefined' && 'Notification' in window) {
         return Notification.permission;
     }
-    return 'denied';
+    return 'default';
 }
 
 function getCachedPushSubscribed(): boolean {
     try {
-        return typeof window !== 'undefined' && localStorage.getItem('tedallal_push_subscribed') === '1';
+        if (typeof window === 'undefined' || !('Notification' in window) || Notification.permission !== 'granted') {
+            return false;
+        }
+        return localStorage.getItem('tedallal_push_subscribed') === '1';
     } catch {
         return false;
     }
 }
 
 // Push Notification States
+const isPushSupported = ref<boolean>(checkPushSupported());
 const pushPermission = ref<NotificationPermission>(getInitialPushPermission());
-const isPushSubscribed = ref(getCachedPushSubscribed());
-const isPushLoading = ref(false);
+const isPushSubscribed = ref<boolean>(getCachedPushSubscribed());
+const isPushLoading = ref<boolean>(false);
+const pushError = ref<string | null>(null);
 
 function urlBase64ToUint8Array(base64String: string) {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -81,6 +95,17 @@ export function usePwa() {
             console.log('[Tedallal PWA] App successfully installed on device!');
         });
 
+        isPushSupported.value = checkPushSupported();
+
+        // Check current notification permission
+        if ('Notification' in window) {
+            pushPermission.value = Notification.permission;
+            if (Notification.permission !== 'granted') {
+                isPushSubscribed.value = false;
+                try { localStorage.setItem('tedallal_push_subscribed', '0'); } catch {}
+            }
+        }
+
         // Register Service Worker
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js').then((registration) => {
@@ -89,9 +114,10 @@ export function usePwa() {
                 // Check initial push subscription status
                 if ('pushManager' in registration) {
                     registration.pushManager.getSubscription().then((sub) => {
-                        isPushSubscribed.value = !!sub;
+                        const active = !!sub && (!('Notification' in window) || Notification.permission === 'granted');
+                        isPushSubscribed.value = active;
                         try {
-                            localStorage.setItem('tedallal_push_subscribed', sub ? '1' : '0');
+                            localStorage.setItem('tedallal_push_subscribed', active ? '1' : '0');
                         } catch {}
                     });
                 }
@@ -99,12 +125,19 @@ export function usePwa() {
                 console.warn('[Tedallal SW] Registration failed:', err);
             });
         }
-
-        // Check current notification permission
-        if ('Notification' in window) {
-            pushPermission.value = Notification.permission;
-        }
     });
+
+    function refreshPushStatus() {
+        isPushSupported.value = checkPushSupported();
+        if (typeof window !== 'undefined' && 'Notification' in window) {
+            pushPermission.value = Notification.permission;
+            if (Notification.permission !== 'granted') {
+                isPushSubscribed.value = false;
+                try { localStorage.setItem('tedallal_push_subscribed', '0'); } catch {}
+            }
+        }
+        pushError.value = null;
+    }
 
     // Trigger installation
     async function promptInstall(): Promise<'accepted' | 'dismissed' | 'ios_modal'> {
@@ -134,8 +167,17 @@ export function usePwa() {
 
     // Subscribe to Background WebPush Notifications
     async function subscribeToPush(vapidPublicKey: string): Promise<boolean> {
-        if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) {
-            console.warn('[Tedallal Push] Push notifications not supported on this browser.');
+        pushError.value = null;
+
+        if (!checkPushSupported()) {
+            pushError.value = isIOS.value && !isStandalone.value
+                ? 'على أجهزة آيفون/آيباد، يجب تثبيت التطبيق على الشاشة الرئيسية أولاً لتعمل الإشعارات.'
+                : 'متصفحك الحالي لا يدعم إشعارات الخلفية الفورية.';
+            return false;
+        }
+
+        if (!vapidPublicKey) {
+            pushError.value = 'مفتاح الإشعارات غير مهيأ حالياً على الخادم.';
             return false;
         }
 
@@ -145,6 +187,9 @@ export function usePwa() {
             const permission = await Notification.requestPermission();
             pushPermission.value = permission;
             if (permission !== 'granted') {
+                pushError.value = permission === 'denied'
+                    ? 'تم رفض الإذن من المتصفح. اسمح بالإشعارات من إعدادات الموقع ثم أعد المحاولة.'
+                    : 'لم يتم منح إذن الإشعارات بعد — اضغط «سماح» عند ظهور نافذة المتصفح.';
                 isPushLoading.value = false;
                 return false;
             }
@@ -180,11 +225,13 @@ export function usePwa() {
                 return true;
             } else {
                 console.error('[Tedallal Push] Failed to store subscription on server:', await response.text());
+                pushError.value = 'تعذر حفظ اشتراك التنبيهات على الخادم، يرجى إعادة المحاولة.';
                 isPushLoading.value = false;
                 return false;
             }
         } catch (err) {
             console.error('[Tedallal Push] Subscription error:', err);
+            pushError.value = 'حدث خطأ أثناء تفعيل الإشعارات على هذا المتصفح.';
             isPushLoading.value = false;
             return false;
         }
@@ -228,10 +275,13 @@ export function usePwa() {
         isInstalled,
         isIOS,
         isStandalone,
+        isPushSupported,
         pushPermission,
         isPushSubscribed,
         isPushLoading,
+        pushError,
         promptInstall,
+        refreshPushStatus,
         subscribeToPush,
         unsubscribeFromPush
     };

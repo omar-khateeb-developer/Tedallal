@@ -21,6 +21,7 @@ interface Voucher {
     claim_ref?: string | null;
     discount_text: string;
     starts_at: string | null;
+    is_immediate?: boolean;
     expires_at: string | null;
     min_order_value: number;
     is_used?: boolean;
@@ -183,9 +184,12 @@ const whatsappShareUrl = computed(() => {
     const restaurantName = props.restaurant.name || 'المطعم';
     const discountText = formatVoucherDisplay(voucher.value.discount_text);
     const isDemo = voucher.value.is_demo || props.is_demo;
+    const isImmediate = !isDemo && (voucher.value.is_immediate || !voucher.value.starts_at);
     const validityText = isDemo
         ? 'مفعّل فوراً للتجربة (بدون انتظار)'
-        : (voucher.value.starts_at || 'الآن');
+        : isImmediate
+            ? 'مفعّل فوراً — صالح للاستخدام الآن مباشرة'
+            : voucher.value.starts_at;
     const text = `🎁 مبارك! لقد حصلت على ${discountText} من ${restaurantName}.\n\n` +
         `🎟️ كود الخصم: ${voucher.value.code}\n` +
         `⏳ الصلاحية: ${validityText}\n` +
@@ -1113,7 +1117,8 @@ onUnmounted(() => {
                                 <div class="flex items-center gap-2 text-[#FCF6BA]">
                                     <span>📅</span>
                                     <span v-if="voucher.is_demo || props.is_demo" class="text-emerald-400 font-bold">✓ مفعّل فوراً للتجربة: يمكنك استخدامه في السلة الآن مباشرة</span>
-                                    <span v-else>صالح لزيارتك القادمة ابتداءً من: {{ voucher.starts_at || 'الآن' }}</span>
+                                    <span v-else-if="voucher.is_immediate || !voucher.starts_at" class="text-emerald-400 font-bold">✓ مفعّل فوراً: يمكنك استخدامه في السلة الآن مباشرة</span>
+                                    <span v-else>صالح لزيارتك القادمة ابتداءً من: {{ voucher.starts_at }}</span>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <span>⏳</span>

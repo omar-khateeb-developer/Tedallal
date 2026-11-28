@@ -21,7 +21,8 @@ class RestaurantResource extends JsonResource
             'phone' => $this->phone,
             'address' => $this->address,
             'currency' => $this->currency,
-            'auto_print_on_ready' => (bool) (($this->features ?? [])['auto_print_on_ready'] ?? false),
+            'auto_print_trigger' => $this->autoPrintTrigger(),
+            'auto_print_on_ready' => $this->shouldAutoPrintOnReady(),
             'accounting_mapping' => array_merge([
                 'cash_account_code' => '10101',
                 'cash_account_name' => 'الصندوق الرئيسي',

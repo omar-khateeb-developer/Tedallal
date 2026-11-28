@@ -23,6 +23,7 @@ class UpdateRestaurantSettingsRequest extends FormRequest
             'navbar_image' => ['nullable', 'image', 'max:2048'],
             'logo' => ['nullable', 'image', 'max:2048'],
             'auto_print_on_ready' => ['nullable', 'boolean'],
+            'auto_print_trigger' => ['nullable', 'string', 'in:off,on_ready,on_served'],
             'accounting_mapping' => ['nullable', 'array'],
             'accounting_mapping.cash_account_code' => ['nullable', 'string', 'max:50'],
             'accounting_mapping.cash_account_name' => ['nullable', 'string', 'max:100'],

@@ -63,6 +63,7 @@ const settingsNotice = ref<string | null>(null);
 const settingsForm = ref({
     wheel_require_whatsapp: true,
     wheel_reveal_code_after_save: false,
+    wheel_activation_delay_hours: 2,
     loyalty_enabled: false,
     loyalty_target_visits: 5,
     loyalty_reward_type: 'percentage' as 'percentage' | 'fixed' | 'free_item',
@@ -209,6 +210,7 @@ async function fetchCustomers(pageNumber = pagination.value.current_page) {
         if (data.crm_settings) {
             settingsForm.value.wheel_require_whatsapp = Boolean(data.crm_settings.wheel_require_whatsapp);
             settingsForm.value.wheel_reveal_code_after_save = Boolean(data.crm_settings.wheel_reveal_code_after_save);
+            settingsForm.value.wheel_activation_delay_hours = Number(data.crm_settings.wheel_activation_delay_hours ?? 2);
             if (data.crm_settings.loyalty) {
                 const l = data.crm_settings.loyalty;
                 settingsForm.value.loyalty_enabled = Boolean(l.enabled);
@@ -522,6 +524,27 @@ function statusBadge(promo: PromoItem) {
                                     </p>
                                 </div>
                             </label>
+
+                            <!-- Option 3: Wheel Promo Activation Timing -->
+                            <div class="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700/70 bg-slate-50/60 dark:bg-slate-900/50 space-y-2 md:col-span-2">
+                                <label class="block text-sm font-bold text-slate-900 dark:text-white">
+                                    ⏱️ توقيت تفعيل كود خصم عجلة الحظ بعد اللعب
+                                </label>
+                                <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+                                    <select
+                                        v-model.number="settingsForm.wheel_activation_delay_hours"
+                                        class="w-full sm:w-80 rounded-xl border-slate-300 dark:border-slate-700 dark:bg-slate-800 text-sm font-bold text-slate-900 dark:text-white"
+                                    >
+                                        <option :value="2">بعد ساعتين (للزيارة القادمة — الافتراضي)</option>
+                                        <option :value="0">تفعيل فوري مباشرةً (يمكن استخدامه في نفس الجلسة)</option>
+                                        <option :value="12">بعد 12 ساعة (الزيارة التالية)</option>
+                                        <option :value="24">بعد 24 ساعة (اليوم التالي)</option>
+                                    </select>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400">
+                                        يحدد متى يصبح الكود صالحاً للتطبيق في السلة: «بعد ساعتين» يمنع استخدامه خلال نفس الجلسة، بينما «فوري» يسمح باستخدامه الآن.
+                                    </p>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Loyalty Milestone Settings -->

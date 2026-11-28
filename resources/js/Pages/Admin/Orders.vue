@@ -273,10 +273,49 @@ onUnmounted(() => {
     }
 });
 
-// الطباعة التلقائية للفاتورة عند اكتمال التحضير (جاهز)
-const isAutoPrintActive = ref<boolean>(
-    !!((page.props.auth as any)?.restaurant?.effective_features?.auto_print_on_ready ?? (page.props.auth as any)?.restaurant?.features?.auto_print_on_ready)
+// الطباعة التلقائية للفاتورة (معطّلة / عند جاهزية المطبخ / عند التسليم النهائي)
+type AutoPrintTrigger = 'off' | 'on_ready' | 'on_served';
+const initialAutoPrintFeatures = (page.props.auth as any)?.restaurant?.effective_features ?? (page.props.auth as any)?.restaurant?.features;
+const autoPrintTrigger = ref<AutoPrintTrigger>(
+    initialAutoPrintFeatures?.auto_print_trigger === 'on_ready' || initialAutoPrintFeatures?.auto_print_trigger === 'on_served' || initialAutoPrintFeatures?.auto_print_trigger === 'off'
+        ? initialAutoPrintFeatures.auto_print_trigger
+        : (initialAutoPrintFeatures?.auto_print_on_ready ? 'on_ready' : 'off')
 );
+const savingAutoPrint = ref(false);
+
+function maybeAutoPrint(orderId: number, newStatus: string, prevStatus?: string | null) {
+    if (autoPrintTrigger.value === 'on_ready' && newStatus === 'ready' && prevStatus !== 'ready') {
+        triggerAutoPrint(orderId);
+    } else if (autoPrintTrigger.value === 'on_served' && newStatus === 'served' && prevStatus !== 'served') {
+        triggerAutoPrint(orderId);
+    }
+}
+
+async function onAutoPrintModeChange(nextMode: AutoPrintTrigger) {
+    const previous = autoPrintTrigger.value;
+    autoPrintTrigger.value = nextMode;
+
+    if (authUser.value?.role !== 'admin') {
+        showToast('تم التحديث للجلسة', 'تم تغيير وضع الطباعة التلقائية لهذه الجلسة (الحفظ الدائم متاح لمدير المطعم)', 'info');
+        return;
+    }
+
+    savingAutoPrint.value = true;
+    try {
+        await axios.patch('/api/admin/restaurant', { auto_print_trigger: nextMode });
+        const labels: Record<AutoPrintTrigger, string> = {
+            off: 'تم تعطيل الطباعة التلقائية وحفظ الإعداد',
+            on_ready: 'تم تفعيل الطباعة التلقائية عند جاهزية المطبخ (جاهز)',
+            on_served: 'تم تفعيل الطباعة التلقائية عند التسليم من المطبخ (تم التسليم)',
+        };
+        showToast('إعدادات الطباعة', labels[nextMode], 'success');
+    } catch (e: any) {
+        autoPrintTrigger.value = previous;
+        showToast('خطأ', e.response?.data?.message ?? 'تعذر حفظ إعداد الطباعة التلقائية', 'error');
+    } finally {
+        savingAutoPrint.value = false;
+    }
+}
 
 function triggerAutoPrint(orderId: number) {
     let iframe = document.getElementById('auto-print-receipt-frame') as HTMLIFrameElement;
@@ -307,16 +346,15 @@ async function updateStatus(order: Order, status: string, pickupWindow?: number 
             payload.pickup_window = pickupWindow;
         }
 
+        const prevStatus = order.status;
         const { data } = await axios.patch(`/api/admin/orders/${order.id}/status`, payload);
         const index = orders.value.findIndex(o => o.id === order.id);
         if (index !== -1) {
             orders.value[index] = data.data ?? { ...order, status, pickup_window: payload.pickup_window };
         }
 
-        // تشغيل الطباعة التلقائية فور تحويل الطلب إلى "جاهز / تم التحضير" لتوضع الفاتورة مع الوجبة
-        if (status === 'ready' && isAutoPrintActive.value) {
-            triggerAutoPrint(order.id);
-        }
+        // تشغيل الطباعة التلقائية حسب توقيت المطعم المحدد (عند الجاهزية أو عند التسليم)
+        maybeAutoPrint(order.id, status, prevStatus);
     } catch (error: any) {
         showToast('خطأ', error.response?.data?.message ?? 'تعذّر تحديث حالة الطلب', 'error');
         await loadOrders();
@@ -352,10 +390,8 @@ useRestaurantOrders(restaurantId.value, {
             orders.value = sortOrdersNewestFirst([updatedOrder as Order, ...orders.value]);
         }
 
-        // إذا تم تحويل الطلب إلى "جاهز" من شاشة المطبخ مثلاً وكان خيار الطباعة التلقائية مفعلاً
-        if (updatedOrder.status === 'ready' && prevStatus !== 'ready' && isAutoPrintActive.value) {
-            triggerAutoPrint(updatedOrder.id);
-        }
+        // إذا وصل تحديث الحالة (مثلاً من شاشة المطبخ KDS) وكان وضع الطباعة التلقائية مطابقاً
+        maybeAutoPrint(updatedOrder.id, updatedOrder.status, prevStatus);
     },
     onServiceCalled: ({ service_call }) => {
         const exists = serviceCalls.value.some(c => c.id === service_call.id);
@@ -446,21 +482,29 @@ useRestaurantOrders(restaurantId.value, {
                         <span>{{ isWakeLockActive ? '💡 الشاشة نشطة' : '💤 شاشة عادية' }}</span>
                     </button>
 
-                    <!-- زر تفعيل/إيقاف الطباعة التلقائية عند تم التحضير -->
-                    <button
-                        @click="isAutoPrintActive = !isAutoPrintActive"
-                        type="button"
+                    <!-- اختيار وضع الطباعة التلقائية (حفظ مباشر للمدير) -->
+                    <div
                         :class="[
-                            'flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all select-none cursor-pointer shrink-0',
-                            isAutoPrintActive
-                                ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/40'
-                                : 'bg-stone-50 dark:bg-slate-900 text-stone-500 dark:text-slate-400 border-stone-200 dark:border-slate-800'
+                            'flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-xs font-bold transition-all shrink-0',
+                            autoPrintTrigger !== 'off'
+                                ? 'bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/40'
+                                : 'bg-stone-50 dark:bg-slate-900 text-stone-600 dark:text-slate-400 border-stone-200 dark:border-slate-800'
                         ]"
-                        :title="isAutoPrintActive ? 'الطباعة التلقائية عند تم التحضير مفعّلة' : 'انقر لتفعيل الطباعة التلقائية عند تم التحضير'"
+                        title="اختيار توقيت الطباعة التلقائية للفاتورة"
                     >
                         <span>🖨️</span>
-                        <span>{{ isAutoPrintActive ? 'طباعة تلقائية: مفعّلة' : 'طباعة تلقائية: متوقفة' }}</span>
-                    </button>
+                        <select
+                            :value="autoPrintTrigger"
+                            :disabled="savingAutoPrint"
+                            @change="onAutoPrintModeChange(($event.target as HTMLSelectElement).value as AutoPrintTrigger)"
+                            class="bg-transparent border-0 p-0 pl-5 text-xs font-bold focus:ring-0 cursor-pointer text-current"
+                            aria-label="وضع الطباعة التلقائية"
+                        >
+                            <option value="off" class="bg-white dark:bg-slate-900 text-stone-800 dark:text-stone-200">طباعة تلقائية: متوقفة</option>
+                            <option value="on_ready" class="bg-white dark:bg-slate-900 text-stone-800 dark:text-stone-200">طباعة تلقائية: عند الجاهزية</option>
+                            <option value="on_served" class="bg-white dark:bg-slate-900 text-stone-800 dark:text-stone-200">طباعة تلقائية: عند التسليم</option>
+                        </select>
+                    </div>
 
                     <button
                         @click="soundAlerts.playCashierAlert()"
